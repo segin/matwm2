@@ -1,0 +1,30 @@
+# Project: KeyGrab
+# Makefile created by Dev-C++ 4.9.9.2
+
+CPP  = g++.exe
+CC   = gcc.exe
+WINDRES = windres.exe
+RES  = 
+OBJ  = keygrab.o $(RES)
+LINKOBJ  = keygrab.o $(RES)
+LIBS =  -L"I:/Dev-Cpp/lib"  
+INCS =  -I"I:/Dev-Cpp/include" 
+CXXINCS =  -I"I:/Dev-Cpp/lib/gcc/mingw32/3.4.2/include"  -I"I:/Dev-Cpp/include/c++/3.4.2/backward"  -I"I:/Dev-Cpp/include/c++/3.4.2/mingw32"  -I"I:/Dev-Cpp/include/c++/3.4.2"  -I"I:/Dev-Cpp/include" 
+BIN  = keygrab.exe
+CXXFLAGS = $(CXXINCS)  
+CFLAGS = $(INCS)  
+RM = rm -f
+
+.PHONY: all all-before all-after clean clean-custom
+
+all: all-before keygrab.exe all-after
+
+
+clean: clean-custom
+	${RM} $(OBJ) $(BIN)
+
+$(BIN): $(OBJ)
+	$(CPP) $(LINKOBJ) -o "keygrab.exe" $(LIBS)
+
+keygrab.o: keygrab.c
+	$(CPP) -c keygrab.c -o keygrab.o $(CXXFLAGS)
