@@ -1,0 +1,18 @@
+README FOR CLOCKRESET
+==============================================
+Pokemon Gold/Silver Clock Reset Code Generator
+==============================================
+
+Copyright © 2009, 2010 Kirn Gill <segin2005@gmail.com>
+
+This program can generate the clock reset code for Pokemon Gold/Silver/Crystal 
+Version(s). The clock can be reset by pressing Down + Select + B at the logo
+screen.
+
+The clock reset code depends on three things:
+
+ * Your Trainer Name
+ * Your Trainer ID
+ * How muich cash you have on you.
+
+The trainer will ask these things when you run it. 
