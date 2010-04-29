@@ -1,0 +1,70 @@
+README and last minute changes for STO, segin's STOrage format, version 1.0
+
+STO is a simplistic binary archival format for creating reliable structurless
+archives and data backups. `structurless' means that directories aren't (yet)
+supported, and in fact, trying to archive a directory produces undefined 
+results. Under FreeBSD, due to the OS's (or may it be the C library's?) 
+sematics for opening and reading directories, you will end up archiving the raw
+disectory data on the disk, in whatever format the filesystem specifies. (try
+it on a mounted msdos floppy!)
+
+The storage and preservation of time stamps and file premissions are supported
+by storing the data in Unix format (which is what the various C libraries 
+provide to my program), under MS-DOS, the group and world premissions are always
+set to ------ (nothing), and the user premission is always at least r--, with
+write premission set if the DOS attribute 'read-only' is cleared, and 
+execute premission set for any file ending in .EXE and .COM. The Windows
+version sets the premissions to match the NT ACLs under NT (which are Unix
+compatable anyways) and sets execute flag for .exe, .com, .bat, .pif, and .cmd,
+unless the NT ACL execute flag for the (user,group,world) is cleared. Under 9x,
+the DOS model is followed, except that group and world premissions always match
+the user premissions, and .pif files are set to execute.
+
+Windows 95/98/ME follow the NT model if the source files are on a NT share
+on a NTFS filesystem. Windows NT does the 9x model for 9x shares and
+CDs/FAT filesystems
+
+STO is known to work properly under the following OSes:
+GNU/Linux 2.x/1.x (who cares if it works on 1.x)
+ELKS
+FreeBSD 5.x/6.x (This implies OpenBSD and NetBSD)
+OpenBSD (Implied by FreeBSD)
+NetBSD  (   "     "    "   )
+MS-DOS 3.32 or later
+Microsoft Windows NT 4.0 or later (probably implies NT 3.x, and XP IS NT!!!)
+Microsoft Windows 95, 98 and ME (Probably runs on Windows 3.1 with Win32s)
+Sun Solaris 2.7 or later
+
+The provided binary files are as follows:
+sto: Linux ELF executable, use with glibc 2.3.6 or later.
+sto-elks: ELKS executable.
+sto.exe: MS-DOS executable.
+sto32.exe: Windows executable (console)
+sto-reloc.exe: Windows executable that probably works in Win32s, note:
+The sto-reloc.exe probably works on Win32s, and since the only notification
+that the program completed anyhow is it's console window closing up or 
+the command prompt returning, this one displays a dialog box when complete, 
+because win32s doesn't do consoles for win32 console apps.
+
+TECHNICAL CRAP WHICH BORES EVEN ME:
+STO uses a simplistic file format for archival. the file header is "STO!",
+followed by the OS magic number (1 for UNIX, 2 for DOS, 3 for Windows), and 
+the number of file headers (including "null" headers).
+
+In case STO is running on an undefined platform, the OS magic number is set to
+0xdeadbeef.
+
+All numbers are 32-bit little-endian.
+
+FILE HEADERS:
+
+The first value determines if the file header is to be used or ignored. Since 
+a header count comes from argc - 3, and not by checking all files for validity
+before entering the number of file entries, the number of file headers specified
+in the archive header must appear in the archive. Since the file is checked
+for readability just before the header is created, if the file open fails,
+(e.g. the file doesn't exist, no read premission, locked, filesystem error)
+this field is set to 0 to indicate we had a problem, and to skip this header.
+Any value other than 1 means to skip, not just 0.
+
+
