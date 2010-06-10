@@ -1,3 +1,4 @@
+/* cc osd.c -o osd `xosd-config --libs --cflags xosd` `pkg-config --libs --cflags x11` -lossaudio */
 #include <xosd.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -5,6 +6,8 @@
 #include <sys/ioctl.h>
 #include <soundcard.h>
 #include <X11/Xlib.h>
+
+#define Y_OFFSET 700
 
 #ifndef __progname
 	#define __progname "osd"
@@ -22,6 +25,7 @@ int main(int argc, char *argv[]) {
 	}
 	root = DefaultRootWindow(dpy);
 
+	/* modify keycodes for other lappies */
 	XGrabKey(dpy, 174, AnyModifier, root, True, GrabModeAsync, GrabModeAsync);
 	XGrabKey(dpy, 176, AnyModifier, root, True, GrabModeAsync, GrabModeAsync);
 
@@ -36,7 +40,7 @@ int main(int argc, char *argv[]) {
 	xosd_set_timeout(osd, 1);
 	xosd_set_shadow_offset(osd, 1);
 	xosd_set_align(osd, XOSD_center);
-	xosd_set_vertical_offset(osd, 650);
+	xosd_set_vertical_offset(osd, Y_OFFSET);
 
 	while (1) {
 		XEvent ev;
