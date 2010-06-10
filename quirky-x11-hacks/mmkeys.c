@@ -42,7 +42,7 @@ struct key {
 };
 
 #ifndef __progname
-	#define __progname "keys"
+	#define __progname "mmkeys"
 #endif
 
 void spawn(char *cmd) { /* runs a command with sh -c */
