@@ -1,4 +1,5 @@
 /* cc osd.c -o osd `xosd-config --libs --cflags xosd` `pkg-config --libs --cflags x11` -lossaudio */
+/* GPL are teh sux */
 #include <xosd.h>
 #include <stdlib.h>
 #include <fcntl.h>
