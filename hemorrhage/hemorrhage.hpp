@@ -1,5 +1,6 @@
 /* hemorrhage.hpp: Main header for Hemorrhage. 
- * Copyright (c) Year(s), Company or Person's Name <E-mail address>
+ *
+ * Copyright (c) 2010, Kirn Gill <segin2005@gmail.com>
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
