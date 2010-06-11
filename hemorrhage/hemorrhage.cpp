@@ -15,4 +15,35 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
  
-#include <hemorrhage.hpp>
+#include "hemorrhage.hpp"
+
+Hemorrhage::Scrobble::Scrobble() 
+{
+	this->m_length = 0;
+	this->m_curtime = 0;
+}
+
+Hemorrhage::Scrobble::~Scrobble() 
+{
+	this->m_length = 0;
+	this->m_curtime = 0;
+}
+
+Hemorrhage::Scrobble::Scrobble(string artist, string title, string album, unsigned int length, unsigned int curtime)
+{
+	setScrobbleData(artist, title, album, length, curtime);
+}
+
+void Hemorrhage::Scrobble::setScrobbleData(string artist, string title, string album, unsigned int length, unsigned int curtime)
+{
+	this->m_artist = artist;
+	this->m_title = title;
+	this->m_album = album;
+	this->m_length = length;
+	this->m_curtime = curtime;
+}
+
+void Hemorrhage::Scrobble::fb_setScrobbleData(const char *artist, const char *title, const char *album, unsigned int length, unsigned int curtime)
+{
+	setScrobbleData(artist, title, album, length, curtime);
+}

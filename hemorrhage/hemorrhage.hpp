@@ -15,6 +15,10 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+//#include <boost/asio.hpp>
+#include <iostream>
+#include <string>
+using namespace std;
 
 /*
 Type LastFM Alias "LastFM"
@@ -52,6 +56,32 @@ End Type
 namespace Hemorrhage {
 
 	class Scrobble { 
-	
-	class Hemorrhage { 
+		private: 
+			string m_artist;
+			string m_title;
+			string m_album;
+			unsigned int m_length;
+			unsigned int m_curtime;
+		public: 
+			Scrobble();
+			Scrobble(string artist, string title, string album, unsigned int length, unsigned int curtime);
+			~Scrobble();
+			void setScrobbleData(string artist, string title, string album, unsigned int length, unsigned int curtime);\
+			void fb_setScrobbleData(const char *artist, const char *title, const char *album, unsigned int length, unsigned int curtime);
+	};
+
+	class Scrobbler { 
+		private:
+			Scrobble m_scrobbles[500];
+			string	m_session;
+			string	c_username;
+			string	c_password;
+			string	c_apihost[2];
+			short 	c_apiport[2];
+			string	c_apipath[2];
+			string	c_xmlpath;
 		public:
+	
+	};
+	
+}
