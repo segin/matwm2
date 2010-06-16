@@ -47,3 +47,9 @@ void Hemorrhage::Scrobble::fb_setScrobbleData(const char *artist, const char *ti
 {
 	setScrobbleData(artist, title, album, length, curtime);
 }
+
+
+Hemorrhage::Scrobbler::Scrobbler()
+{
+	std::cout << "Fuck me." << std::endl;
+}

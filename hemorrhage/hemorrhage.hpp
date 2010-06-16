@@ -81,7 +81,7 @@ namespace Hemorrhage {
 			string	c_apipath[2];
 			string	c_xmlpath;
 		public:
-	
+		Scrobbler();
 	};
 	
 }
