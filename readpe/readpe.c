@@ -76,7 +76,28 @@ main(int argc, char *argv[])
 			fclose(pefile);
 			continue;
 		}
-			
+		
+		char e_magic[2];
+		memcpy(e_magic, exe.dosHeader.e_magic, 2);
+		
+		printf("DOS header:\n");
+		printf("Header magic:				%#x \"%2s\"\n", exe.dosHeader.e_magic, &exe.dosHeader.e_magic);
+		printf("Bytes on last page: 			%d\n", exe.dosHeader.e_cblp);
+		printf("Pages in file				%d\n", exe.dosHeader.e_cp);
+		printf("Relocations count:			%d\n", exe.dosHeader.e_crlc);
+		printf("Size of header in paragraphs:		%d\n", exe.dosHeader.e_cparhdr);
+		printf("Minimum extra pgraph needed: 		%d\n", exe.dosHeader.e_minalloc);
+		printf("Maximum extra pgraph needed:		%d\n", exe.dosHeader.e_maxalloc);
+		printf("Initial SS value:			%#x\n", exe.dosHeader.e_ss);
+		printf("Initial SP value:			%#x\n", exe.dosHeader.e_sp);
+		printf("Checksum				%#x\n", exe.dosHeader.e_csum);
+		printf("Initial IP value:			%#x\n", exe.dosHeader.e_ip);
+		printf("Initial CS value:			%#x\n", exe.dosHeader.e_cs);
+		printf("Offset of relocation table: 		%#x\n", exe.dosHeader.e_lfarlc);
+		printf("Overlay number: 			%#x\n", exe.dosHeader.e_ovno);
+		printf("OEM Identifier:				%#x\n", exe.dosHeader.e_oemid);
+		printf("OEM Information:			%#x\n", exe.dosHeader.e_oeminfo);
+		printf("Offset of next header:			%#x\n",exe.dosHeader.e_lfanew);
 			
 	/* Fuck all this for now. 
 	static struct option long_options[] = { 
