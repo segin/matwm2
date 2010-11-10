@@ -10,7 +10,7 @@ void version(void);
 
 static int flags[8];
 
-
+enum {
 	FLAG_FILEMODE = 0,
 	FLAG_CHECK,
 	FLAG_QUIET,
