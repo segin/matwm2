@@ -13,7 +13,7 @@ int tcp_connect(char *hostname, char *servname) {
 	int ret;
 	struct addrinfo hints, *addrinfo;
 	/* get adress information */
-  bzero((void *) &hints, sizeof(hints));
+	memset((void *) &hints, 0, sizeof(hints));
 	hints.ai_family = PF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 	ret = getaddrinfo(hostname, servname, &hints, &addrinfo);

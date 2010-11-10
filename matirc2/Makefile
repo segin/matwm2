@@ -1,4 +1,4 @@
-CC       = cc
+CC       = gcc
 RM       = rm -f
 
 OBJFILES = tcp.o irc.o misc.o main.o screen.o commands.o
