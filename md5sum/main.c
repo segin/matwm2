@@ -73,6 +73,17 @@ void usage(const char *argv0)
 	exit(flags[FLAG_BAD]);
 }
 
+void set_file_mode(int mode)
+{
+	if(flags[FLAG_FILEMODE] != 0) { 
+		fprintf(stderr, "%s: --binary and --text are mutually "
+			        "exclusive.\n", argv[0]);
+		exit(1);
+	}
+	flags[FLAG_FILEMODE] = mode;
+}	
+
+
 int main(int argc, char *argv[])
 {
 	md5_state_t state;
@@ -91,7 +102,7 @@ int main(int argc, char *argv[])
 		{ "version",	no_argument,	0,	'v' }
 	};
 
-	*((int *) (&sumstr[32])) = 0;
+	*((uint32_t *) (&sumstr[32])) = 0;
 	memset(flags, 0, sizeof(flags));
 	memset(sum, 0, sizeof(sum));
 
@@ -108,16 +119,29 @@ int main(int argc, char *argv[])
 				} 
 				break;
 			case 'b':
-				flags[FLAG_FILEMODE] = MODE_BINARY;
+				if(flags[FLAG_FILEMODE] == 0) {
+					flags[FLAG_FILEMODE] = MODE_BINARY;
+				} else {
+					fprintf(stderr, "%s: --binary and "
+						"--text are mutually "
+						"exclusive.\n", argv[0]);
+					exit(1);
+				} 
 				break;
 			case 'c':
 				flags[FLAG_CHECK] = 1;
+				printf("%s: -%c flag unimplemented.\n", 
+				      argv[0], ch);
 				break;
 			case 'q':
 				flags[FLAG_QUIET] = 1;
+				printf("%s: --quiet unimplemented.\n",
+				       argv[0]);
 				break;
 			case 's':
 				flags[FLAG_STATUS] = 1;
+				printf("%s: --silent unimplemented.\n",
+				       argv[0]);
 				break;
 			case 'w':
 				flags[FLAG_WARN] = 1;
@@ -143,6 +167,10 @@ int main(int argc, char *argv[])
 				"meaningless with --check.\n", argv[0]);
 		exit(2);
 	}
+	if((flags[FLAG_QUIET] | flags[FLAG_STATUS] | flags[FLAG_WARN]) != 0) &&
+	   (flags[FLAG_CHECK] == 0)) { 
+		fprintf(stderr, "%s: --quiet, --status, -w, and --warn are "
+			"useless without -c or --check.\n", argv[0]);
 	for(ch = 0; ch < 8; ch++) printf("%d ", flags[ch]);
 	putchar('\n');
 	while(optind < argc) {
