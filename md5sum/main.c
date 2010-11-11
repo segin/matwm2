@@ -54,7 +54,7 @@ int do_md5sum(const char *file, md5_byte_t *sum)
 	}
 	mem = malloc(4096);
 	md5_init(&state);
-	while((r = fread(mem, 4096, 1, fd)) == 4096) { 
+	while(r = fread(mem, 1, 4096, fd)) {		
 		if(r == -1) {
 			fprintf(stderr, "%s: Cannot read file: %s", file, 
 				strerror(errno));
@@ -199,6 +199,7 @@ int main(int argc, char *argv[])
 		if(flags[FLAG_CHECK] == 1) {
 		/* check_list(argv[optind++]); */
 		} else {
+			memset(sum, 0, 16);
 			r = do_md5sum(argv[optind++], sum);
 			if(r == -1) ;
 			else {
