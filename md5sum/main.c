@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
 	   (flags[FLAG_CHECK] == 0)) { 
 		fprintf(stderr, "%s: --quiet, --status, -w, and --warn are "
 			"useless without -c or --check.\n", argv[0]);
-		exit(1)
+		exit(1);
 	}
 	for(ch = 0; ch < 8; ch++) printf("%d ", flags[ch]);
 	putchar('\n');
