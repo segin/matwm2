@@ -85,14 +85,14 @@ void usage(void)
 	printf("\nOptions:\n\n\t-b, --binary\tread in binary mode\n"
 	       "\t-c, --check\tcheck files from MD5 lists in FILES\n"
 	       "\t-t, --text\tread in text mode (default)\n"
-	       "\nThe next three are only valid when checking"
+	       "\nThe next three are only valid when checking "
 	       "files against lists:\n"
 	       "\t    --quiet\tdon't print OK for each file passing as valid\n"
 	       "\t    --status\tdon't output anything, status codes show success\n"
 	       "\t-w, --warn\twarn about invalid formatting in listfiles\n\n"
 	       "\t    --help\tPrints usage and quits.\n"
-	       "\t    --version\t Prints version and quits.\n\n"
-	       "The -c, --check flag is unimplemented.\n"
+	       "\t    --version\tPrints version and quits.\n\n"
+	       "The -c, -w, --check, --quiet, --silent, and --warn flags are unimplemented.\n"
 	       "Send bug reports to <segin2005@gmail.com>.\n");
 	exit(flags[FLAG_BAD]);
 }
