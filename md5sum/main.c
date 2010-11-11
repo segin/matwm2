@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <errno.h>
+#include <string.h>
 #include "md5.h"
 
 void usage(const char *argv0);
@@ -37,11 +39,19 @@ int do_md5sum(const char *file, md5_byte_t *sum)
 	FILE *fd;
 	char *md;
 	if(flags[FLAG_FILEMODE] == MODE_BINARY) {
-		md = "bt";
+		md = "rb";
 	} else {
 		md = "rt";
 	}
-	/* if((fd = fopen( */
+	if((fd = fopen(file, md)) == NULL) {
+		fprintf(stderr, "Cannot open %s: %s\n", file, strerror(errno));
+		return -1;
+	}
+
+	/* Compute MD5 here */
+
+	fclose(fd);
+	return 0;	
 }
 
 void usage(const char *argv0)
@@ -69,6 +79,7 @@ int main(int argc, char *argv[])
 	int ch;
 	md5_byte_t sum[16];
 
+	static char sumstr[36]; /* 33 + alignment */
 	static struct option longopts[] = {
 		{ "text",	no_argument,	0,	't' },
 		{ "binary",	no_argument,	0,	'b' },
@@ -79,7 +90,8 @@ int main(int argc, char *argv[])
 		{ "help",	no_argument,	0,	'h' },
 		{ "version",	no_argument,	0,	'v' }
 	};
-	
+
+	*((int *) (&sumstr[32])) = 0;
 	memset(flags, 0, sizeof(flags));
 	memset(sum, 0, sizeof(sum));
 
@@ -91,7 +103,9 @@ int main(int argc, char *argv[])
 				} else {
 					fprintf(stderr, "%s: --binary and "
 						"--text are mutually "
-						"exclusive.\n", argv[0]); 
+						"exclusive.\n", argv[0]);
+					exit(1);
+				} 
 				break;
 			case 'b':
 				flags[FLAG_FILEMODE] = MODE_BINARY;
