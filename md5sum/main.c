@@ -56,11 +56,12 @@ int do_md5sum(const char *file, md5_byte_t *sum)
 	md5_init(&state);
 	while((r = fread(mem, 4096, 1, fd)) == 4096) { 
 		if(r == -1) {
-			ferror(stderr, "%s: Cannot read file: %s", file, 
+			fprintf(stderr, "%s: Cannot read file: %s", file, 
 				strerror(errno));
 			free(mem);
 			md5_finish(&state, sum);
 			return -1;
+		}
 		md5_append(&state, (const md5_byte_t *) mem, r);
 	}
 	md5_finish(&state, sum);
@@ -200,14 +201,15 @@ int main(int argc, char *argv[])
 		} else {
 			r = do_md5sum(argv[optind++], sum);
 			if(r == -1) ;
-				else {
+			else {
 				for(ch = 0; ch < 16; ch++) { 
 					printf("%02x", sum[ch]);
-				}
+				};
 				putchar(32);
 				putchar(flags[FLAG_FILEMODE] 
 					== MODE_BINARY? '*':' ');
 				printf("%s\n", argv[optind - 1]);
+			}
 		}
 	};
 	return 0;	
