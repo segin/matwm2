@@ -39,6 +39,10 @@ int do_md5sum(const char *file, md5_byte_t *sum)
 {
 	FILE *fd;
 	char *md;
+	int r;
+	md5_state_t state;
+	void *mem; 
+	memset(&state, 0, sizeof(md5_state_t));
 	if(flags[FLAG_FILEMODE] == MODE_BINARY) {
 		md = "rb";
 	} else {
@@ -48,10 +52,23 @@ int do_md5sum(const char *file, md5_byte_t *sum)
 		fprintf(stderr, "Cannot open %s: %s\n", file, strerror(errno));
 		return -1;
 	}
+	mem = malloc(4096);
+	md5_init(&state);
+	while((r = fread(mem, 4096, 1, fd)) == 4096) { 
+		if(r == -1) {
+			ferror(stderr, "%s: Cannot read file: %s", file, 
+				strerror(errno));
+			free(mem);
+			md5_finish(&state, sum);
+			return -1;
+		md5_append(&state, (const md5_byte_t *) mem, r);
+	}
+	md5_finish(&state, sum);
 
 	/* Compute MD5 here */
 
 	fclose(fd);
+	free(mem);
 	return 0;	
 }
 
@@ -87,8 +104,7 @@ void set_file_mode(int mode)
 
 int main(int argc, char *argv[])
 {
-	md5_state_t state;
-	int ch;
+	int ch, r;
 	md5_byte_t sum[16];
 
 	static char sumstr[36]; /* 33 + alignment */
@@ -182,13 +198,16 @@ int main(int argc, char *argv[])
 		if(flags[FLAG_CHECK] == 1) {
 		/* check_list(argv[optind++]); */
 		} else {
-			do_md5sum(argv[optind++], sum);
-			for(ch = 0; ch < 16; ch++) { 
-				printf("%02x", sum[ch]);
-			}
-			putchar(32);
-			putchar(flags[FLAG_FILEMODE] == MODE_BINARY? '*':' ');
-			printf("%s\n", argv[optind - 1]);
+			r = do_md5sum(argv[optind++], sum);
+			if(r == -1) ;
+				else {
+				for(ch = 0; ch < 16; ch++) { 
+					printf("%02x", sum[ch]);
+				}
+				putchar(32);
+				putchar(flags[FLAG_FILEMODE] 
+					== MODE_BINARY? '*':' ');
+				printf("%s\n", argv[optind - 1]);
 		}
 	};
 	return 0;	
