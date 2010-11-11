@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
 				"meaningless with --check.\n", argv[0]);
 		exit(2);
 	}
-	if((flags[FLAG_QUIET] | flags[FLAG_STATUS] | flags[FLAG_WARN]) != 0) &&
+	if(((flags[FLAG_QUIET] | flags[FLAG_STATUS] | flags[FLAG_WARN]) != 0) &&
 	   (flags[FLAG_CHECK] == 0)) { 
 		fprintf(stderr, "%s: --quiet, --status, -w, and --warn are "
 			"useless without -c or --check.\n", argv[0]);
