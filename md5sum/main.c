@@ -41,16 +41,23 @@ int do_md5sum(const char *file, md5_byte_t *sum)
 	char *md;
 	int r;
 	md5_state_t state;
-	void *mem; 
+	void *mem;
+	int si;
+	si = 0;
 	memset(&state, 0, sizeof(md5_state_t));
 	if(flags[FLAG_FILEMODE] == MODE_BINARY) {
 		md = "rb";
 	} else {
 		md = "rt";
 	}
-	if((fd = fopen(file, md)) == NULL) {
-		fprintf(stderr, "Cannot open %s: %s\n", file, strerror(errno));
-		return -1;
+	if (strcmp(file, "-") != 0) { 
+		if((fd = fopen(file, md)) == NULL) {
+			fprintf(stderr, "Cannot open %s: %s\n", file, strerror(errno));
+			return -1;
+		}
+	} else {
+			fd = stdin;
+			si = 1;
 	}
 	mem = malloc(4096);
 	md5_init(&state);
@@ -60,15 +67,13 @@ int do_md5sum(const char *file, md5_byte_t *sum)
 				strerror(errno));
 			free(mem);
 			md5_finish(&state, sum);
+			if(!si) fclose(fd);			
 			return -1;
 		}
 		md5_append(&state, (const md5_byte_t *) mem, r);
 	}
 	md5_finish(&state, sum);
-
-	/* Compute MD5 here */
-
-	fclose(fd);
+	if(!si) fclose(fd);
 	free(mem);
 	return 0;	
 }
@@ -102,12 +107,21 @@ void set_file_mode(int mode)
 	flags[FLAG_FILEMODE] = mode;
 }	
 
+void print_md5(const char *file, const md5_byte_t *sum)
+{
+	register int i;
+	for(i = 0; i < 16; i++) { 
+		printf("%02x", sum[i]);
+	};
+	putchar(32);
+	putchar(flags[FLAG_FILEMODE] == MODE_BINARY? '*':' ');
+	printf("%s\n", file);
+}
 
 int main(int argc, char *argv[])
 {
 	int ch, r;
 	md5_byte_t sum[16];
-
 	static char sumstr[36]; /* 33 + alignment */
 	static struct option longopts[] = {
 		{ "text",	no_argument,	0,	't' },
@@ -119,34 +133,17 @@ int main(int argc, char *argv[])
 		{ "help",	no_argument,	0,	'h' },
 		{ "version",	no_argument,	0,	'v' }
 	};
-
 	argv0 = argv[0];
-
 	*((uint32_t *) (&sumstr[32])) = 0;
 	memset(flags, 0, sizeof(flags));
 	memset(sum, 0, sizeof(sum));
-
 	while((ch = getopt_long(argc, argv, "bctw", longopts, NULL)) != -1) {
 		switch(ch) { 
 			case 't':
-				if(flags[FLAG_FILEMODE] == 0) {
-					flags[FLAG_FILEMODE] = MODE_TEXT;
-				} else {
-					fprintf(stderr, "%s: --binary and "
-						"--text are mutually "
-						"exclusive.\n", argv[0]);
-					exit(1);
-				} 
+				set_file_mode(MODE_TEXT);
 				break;
 			case 'b':
-				if(flags[FLAG_FILEMODE] == 0) {
-					flags[FLAG_FILEMODE] = MODE_BINARY;
-				} else {
-					fprintf(stderr, "%s: --binary and "
-						"--text are mutually "
-						"exclusive.\n", argv[0]);
-					exit(1);
-				} 
+				set_file_mode(MODE_BINARY);
 				break;
 			case 'c':
 				flags[FLAG_CHECK] = 1;
@@ -188,28 +185,26 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	if(((flags[FLAG_QUIET] | flags[FLAG_STATUS] | flags[FLAG_WARN]) != 0)
- 	   && (flags[FLAG_CHECK] == 0)) { 
+	   && (flags[FLAG_CHECK] == 0)) { 
 		fprintf(stderr, "%s: --quiet, --status, -w, and --warn are "
 			"useless without -c or --check.\n", argv[0]);
 		exit(1);
 	}
 	for(ch = 0; ch < 8; ch++) printf("%d ", flags[ch]);
 	putchar('\n');
+	if(optind == argc) { 
+		argc++;
+		argv[optind] = "-";
+	}
 	while(optind < argc) {
 		if(flags[FLAG_CHECK] == 1) {
 		/* check_list(argv[optind++]); */
 		} else {
 			memset(sum, 0, 16);
 			r = do_md5sum(argv[optind++], sum);
-			if(r == -1) ;
+			if(r == -1) { /* Do nothing, for now */ }
 			else {
-				for(ch = 0; ch < 16; ch++) { 
-					printf("%02x", sum[ch]);
-				};
-				putchar(32);
-				putchar(flags[FLAG_FILEMODE] 
-					== MODE_BINARY? '*':' ');
-				printf("%s\n", argv[optind - 1]);
+				print_md5(argv[optind - 1], sum);
 			}
 		}
 	};
