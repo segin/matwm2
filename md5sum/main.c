@@ -121,6 +121,8 @@ int main(int argc, char *argv[])
 				break;
 			case 'w':
 				flags[FLAG_WARN] = 1;
+				printf("%s: -%c flag unimplemented.\n", 
+				      argv[0], ch);
 				break;
 			case 'h':
 				version();
