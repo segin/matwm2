@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
 	};
 	if((flags[FLAG_FILEMODE] > 0) && (flags[FLAG_CHECK] > 0)) {
 		fprintf(stderr, "%s: --binary and --text are "
-				"meaningless with --check.\n", argv[0]);
+				"meaningless with -c or --check.\n", argv[0]);
 		exit(1);
 	}
 	if(((flags[FLAG_QUIET] | flags[FLAG_STATUS] | flags[FLAG_WARN]) != 0) &&
