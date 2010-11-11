@@ -180,9 +180,15 @@ int main(int argc, char *argv[])
 	putchar('\n');
 	while(optind < argc) {
 		if(flags[FLAG_CHECK] == 1) {
-			/* check_list(argv[optind++]); */
+		/* check_list(argv[optind++]); */
 		} else {
 			do_md5sum(argv[optind++], sum);
+			for(ch = 0; ch < 16; ch++) { 
+				printf("%02x", sum[ch]);
+			}
+			putchar(32);
+			putchar(flags[FLAG_FILEMODE] == MODE_BINARY? '*':' ');
+			printf("%s\n", argv[optind - 1]);
 		}
 	};
 	return 0;	
