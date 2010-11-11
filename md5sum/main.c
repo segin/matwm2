@@ -7,11 +7,12 @@
 #include <string.h>
 #include "md5.h"
 
-void usage(const char *argv0);
+void usage(void);
 void version(void);
 int do_md5sum(const char *file, md5_byte_t *sum);
 
 static int flags[8];
+static char *argv0;
 
 enum {
 	FLAG_FILEMODE = 0,
@@ -54,7 +55,7 @@ int do_md5sum(const char *file, md5_byte_t *sum)
 	return 0;	
 }
 
-void usage(const char *argv0)
+void usage(void)
 {
 	printf("usage: %s [OPTION]... [FILE]...\n", argv0);
 	printf("\nWhen FILE is - or not specified, read standard input.\n");
@@ -77,7 +78,7 @@ void set_file_mode(int mode)
 {
 	if(flags[FLAG_FILEMODE] != 0) { 
 		fprintf(stderr, "%s: --binary and --text are mutually "
-			        "exclusive.\n", argv[0]);
+			        "exclusive.\n", argv0);
 		exit(1);
 	}
 	flags[FLAG_FILEMODE] = mode;
@@ -101,6 +102,8 @@ int main(int argc, char *argv[])
 		{ "help",	no_argument,	0,	'h' },
 		{ "version",	no_argument,	0,	'v' }
 	};
+
+	argv0 = argv[0];
 
 	*((uint32_t *) (&sumstr[32])) = 0;
 	memset(flags, 0, sizeof(flags));
@@ -150,7 +153,7 @@ int main(int argc, char *argv[])
 				break;
 			case 'h':
 				version();
-				usage(argv[0]);	
+				usage();	
 				break;
 			case 'v':
 				version();
@@ -158,7 +161,7 @@ int main(int argc, char *argv[])
 				break;
 			case '?':
 				flags[FLAG_BAD] = 1;
-				usage(argv[0]);
+				usage();
 				break; 
 		};
 	};
