@@ -9,7 +9,7 @@
 #include <string.h>
 #include <ctype.h>
 
-class FBSTRING {
+struct FBSTRING {
 public:
 	FBSTRING();
 	FBSTRING(const char *);
@@ -33,6 +33,8 @@ public:
 	int operator==(const FBSTRING &);
 	int operator!=(const FBSTRING &);
 	int operator+=(const FBSTRING &);
+	static int asc(const FBSTRING &);
+	static int val(const FBSTRING &);
 private:
 	void *data;
 	int len;
@@ -73,7 +75,7 @@ void FBSTRING::init_FBSTRING(void *str, int length);
 	len = length;
 	::memcpy(data, str, length);
 	(char *) data[length] = 0;
-}
+}	
 
 void FBSTRING::fini_FBSTRING()
 {
@@ -264,8 +266,8 @@ FBSTRING& chr(integer i)
 	((char *)result->data)[0] = i;
 	return *result;
 }
-
-integer val(const FBSTRING& s)
+*/
+static int FBSTRING::val(const FBSTRING& s)
 {
 	int n;
 	char *tmp = (char *)calloc(s.len + 1, 1);
@@ -275,9 +277,9 @@ integer val(const FBSTRING& s)
 	return n;
 }
 
-integer asc(const FBSTRING& s)
+static int FBSTRING::asc(const FBSTRING& s)
 {
 	if(s.data == 0) return -1;
 	return ((char *)s.data)[0];
 }
-*/
+
