@@ -95,8 +95,11 @@ void client_hide(client *c) {
   XUnmapWindow(dpy, c->parent);
   XUnmapWindow(dpy, c->window);
   XIfEvent(dpy, &ev, &isunmap, (XPointer) &c->window);
-  if(current == c && evh == drag_handle_event)
-    evh = drag_release_wait;
+  if(c == current) {
+    if(evh == drag_handle_event)
+      evh = drag_release_wait;
+    client_focus(NULL);
+  }
 }
 
 void client_deparent(client *c) {
@@ -123,10 +126,12 @@ void client_remove(client *c) {
     stacking[i - 1] = stacking[i];
   cn--;
   if(c == current) {
-    current = NULL;
+    client_focus(NULL);
     for(i = 0; i < cn; i++)
-      if(stacking[i]->desktop == desktop || stacking[i]->desktop == STICKY)
+      if(stacking[i]->desktop == desktop || stacking[i]->desktop == STICKY) {
         client_focus(stacking[i]);
+        break;
+      }
   }
   free(c);
   clients_alloc();
@@ -144,7 +149,7 @@ void client_grab_buttons(client *c) {
   client_grab_button(c, Button2);
   client_grab_button(c, Button3);
   client_grab_button(c, Button4);
-  client_grab_button(c, Button5);
+  client_grab_button(c, Button5); 
 }
 
 void client_draw_title(client *c) {
@@ -172,7 +177,7 @@ void client_set_bg(client *c, XColor color, XColor border) {
   XSetWindowBackground(dpy, c->button_maximise, color.pixel);
   XSetWindowBackground(dpy, c->button_close, color.pixel);
   XSetWindowBackground(dpy, c->wlist_item, color.pixel);
-  if(c->desktop == desktop) {
+  if(c->desktop == desktop || c->desktop == STICKY) {
     XClearWindow(dpy, c->parent);
     XClearWindow(dpy, c->title);
     XClearWindow(dpy, c->button_parent);

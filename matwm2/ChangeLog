@@ -96,3 +96,12 @@
 	several changes/additions here and there to make the above two possible
 	ewmh_update_desktop() uses long for storing the data, as i think this is more correct
 
+0.0.60:
+	drag modes defined in enum statement
+	set input focus to PointerRoot on exit, not root
+	GrabModeAsync for keyboard, on mouse grabbing
+	cleaned up the mess in events.c a bit
+	prevent losing focus better, client_focus(NULL) now possible
+	on hiding/removing client, focus is restored to topmost window instead of lowest one
+	fixed redrawing of sticky windows when focussed/defocussed
+

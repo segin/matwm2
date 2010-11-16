@@ -105,9 +105,16 @@ int key_to_mask(KeyCode key) {
 
 void button_grab(Window w, unsigned int button, unsigned int modmask, unsigned int event_mask) {
   int i;
-  XGrabButton(dpy, button, modmask, w, False, event_mask, GrabModeAsync, GrabModeSync, None, None);
+  XGrabButton(dpy, button, modmask, w, False, event_mask, GrabModeAsync, GrabModeAsync, None, CurrentTime);
   for(i = 0; i < nmod_ignore; i++)
-    XGrabButton(dpy, button, modmask | mod_ignore[i], w, False, event_mask, GrabModeAsync, GrabModeSync, None, None);
+    XGrabButton(dpy, button, modmask | mod_ignore[i], w, False, event_mask, GrabModeAsync, GrabModeAsync, None, CurrentTime);
+}
+
+void button_ungrab(Window w, unsigned int button, unsigned int modmask) {
+  int i;
+  XUngrabButton(dpy, button, modmask, w);
+  for(i = 0; i < nmod_ignore; i++)
+    XUngrabButton(dpy, button, modmask | mod_ignore[i], w);
 }
 
 int cmpmodmask(int m1, int m2) {

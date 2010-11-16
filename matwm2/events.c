@@ -9,12 +9,115 @@ void handle_event(XEvent ev) {
   if(c) printf("%s: %s\n", c->name, event_name(ev));
   else printf("%i: %s\n", ev.xany.window, event_name(ev));
 #endif
-  if(evh && evh(ev))
+  if((evh && evh(ev)) || button_handle_event(ev) || ewmh_handle_event(ev))
     return;
-  if(button_handle_event(ev) || ewmh_handle_event(ev))
-    return;
-  if(c && !has_child(c->parent, c->window) && ev.type != DestroyNotify)
-    return;
+  if(c) {
+    if(!has_child(c->parent, c->window) && ev.type != DestroyNotify)
+      return;
+    switch(ev.type) {
+      case UnmapNotify:
+        if(c->window == ev.xunmap.window) {
+          client_deparent(c);
+          set_wm_state(c->window, WithdrawnState);
+          client_remove(c);
+          ewmh_update_clist();
+        }
+        return;
+      case PropertyNotify:
+        if(ev.xproperty.atom == XA_WM_NAME) {
+          if(c->name != no_title)
+            XFree(c->name);
+          XFreePixmap(dpy, c->title_pixmap);
+          XFetchName(dpy, c->window, &c->name);
+          client_update_name(c);
+          XClearWindow(dpy, c->title);
+          if(evh == wlist_handle_event) {
+            XClearWindow(dpy, c->wlist_item);
+            wlist_item_draw(c);
+          }
+        }
+        if(ev.xproperty.atom == XA_WM_NORMAL_HINTS)
+          get_normal_hints(c);
+        return;
+      case ClientMessage:
+        if(ev.xclient.message_type == xa_wm_change_state && ev.xclient.data.l[0] == IconicState)
+          client_iconify(c);
+        return;
+      case EnterNotify:
+        if(c != current)
+          client_focus(c);
+        return;
+      case Expose:
+        if(ev.xexpose.count == 0 && evh == wlist_handle_event && c && ev.xexpose.window == c->wlist_item)
+          wlist_item_draw(c);
+        return;
+      case ButtonPress:
+        if(buttonaction(ev.xbutton.button) == BA_MOVE)
+          drag_start(MOVE, ev.xbutton.button, ev.xbutton.x_root, ev.xbutton.y_root);
+        if(buttonaction(ev.xbutton.button) == BA_RESIZE)
+          drag_start(RESIZE, ev.xbutton.button, ev.xbutton.x_root, ev.xbutton.y_root);
+        return;
+      case ButtonRelease:
+        if(buttonaction(ev.xbutton.button) == BA_RAISE)
+          client_raise(c);
+        if(buttonaction(ev.xbutton.button) == BA_LOWER)
+          client_lower(c);
+        return;
+      default:
+        if(ev.type == shape_event) {
+          set_shape(c);
+          return;
+        }
+    }
+  }
+  if(current && ev.type == KeyPress)
+    switch(keyaction(ev)) {
+      case KA_ICONIFY:
+        client_iconify(current);
+        return;
+      case KA_MAXIMISE:
+        client_maximise(current);
+        return;
+      case KA_FULLSCREEN:
+        client_fullscreen(current);
+        return;
+      case KA_EXPAND:
+        client_expand(current);
+        return;
+      case KA_STICKY:
+        client_to_desktop(current, (current->desktop == STICKY) ? desktop : STICKY);
+        return;
+      case KA_TITLE:
+        client_toggle_title(current);
+        return;
+      case KA_BOTTOMLEFT:
+        client_move(current, ewmh_strut[0], display_height - (client_height_total(current) + ewmh_strut[3]));
+        client_warp(current);
+        return;
+      case KA_BOTTOMRIGHT:
+        client_move(current, display_width - (client_width_total(current) + ewmh_strut[1]), display_height - (client_height_total(current) + ewmh_strut[3]));
+        client_warp(current);
+        return;
+      case KA_TOPRIGHT:
+        client_move(current, display_width - (client_width_total(current) - ewmh_strut[1]), ewmh_strut[2]);
+        client_warp(current);
+        return;
+      case KA_TOPLEFT:
+        client_move(current, ewmh_strut[0], ewmh_strut[2]);
+        client_warp(current);
+        return;
+      case KA_ONTOP:
+        if(!(current->layer == DESKTOP))
+          client_set_layer(current, (current->layer == TOP) ? NORMAL : TOP);
+        return;
+      case KA_BELOW:
+        if(!(current->layer == DESKTOP))
+          client_set_layer(current, (current->layer == BOTTOM) ? NORMAL : BOTTOM);
+        return;
+      case KA_CLOSE:
+        delete_window(current);
+        return;
+    }
   switch(ev.type) {
     case MapRequest:
       c = owner(ev.xmaprequest.window);
@@ -29,14 +132,6 @@ void handle_event(XEvent ev) {
     case DestroyNotify:
       c = owner(ev.xdestroywindow.window);
       if(c && c->window == ev.xdestroywindow.window) {
-        client_remove(c);
-        ewmh_update_clist();
-      }
-      break;
-    case UnmapNotify:
-      if(c && c->window == ev.xunmap.window) {
-        client_deparent(c);
-        set_wm_state(c->window, WithdrawnState);
         client_remove(c);
         ewmh_update_clist();
       }
@@ -66,48 +161,6 @@ void handle_event(XEvent ev) {
         XConfigureWindow(dpy, ev.xconfigurerequest.window, ev.xconfigurerequest.value_mask, &wc);
       }
       break;
-    case PropertyNotify:
-     if(c && ev.xproperty.atom == XA_WM_NAME) {
-        if(c->name != no_title)
-          XFree(c->name);
-        XFreePixmap(dpy, c->title_pixmap);
-        XFetchName(dpy, c->window, &c->name);
-        client_update_name(c);
-        XClearWindow(dpy, c->title);
-        if(evh == wlist_handle_event) {
-          XClearWindow(dpy, c->wlist_item);
-          wlist_item_draw(c);
-        }
-      }
-      if(ev.xproperty.atom == XA_WM_NORMAL_HINTS && c)
-        get_normal_hints(c);
-      break;
-    case ClientMessage:
-      if(c && ev.xclient.message_type == xa_wm_change_state && ev.xclient.data.l[0] == IconicState)
-        client_iconify(c);
-      break;
-    case EnterNotify:
-      if(c && c != current)
-        client_focus(c);
-      break;
-    case Expose:
-      if(ev.xexpose.count == 0 && evh == wlist_handle_event && c && ev.xexpose.window == c->wlist_item)
-        wlist_item_draw(c);
-      break;
-    case ButtonPress:
-      if(c && buttonaction(ev.xbutton.button) == BA_MOVE)
-        drag_start(MOVE, ev.xbutton.button, ev.xbutton.x_root, ev.xbutton.y_root);
-      if(c && buttonaction(ev.xbutton.button) == BA_RESIZE)
-        drag_start(RESIZE, ev.xbutton.button, ev.xbutton.x_root, ev.xbutton.y_root);
-      break;
-    case ButtonRelease:
-      if(c) {
-        if(buttonaction(ev.xbutton.button) == BA_RAISE)
-          client_raise(c);
-        if(buttonaction(ev.xbutton.button) == BA_LOWER)
-          client_lower(c);
-      }
-      break;
     case MappingNotify:
       if(ev.xmapping.request != MappingPointer) {
         keys_ungrab();
@@ -116,42 +169,8 @@ void handle_event(XEvent ev) {
       }
       break;
     case KeyPress:
-      if(current && keyaction(ev) == KA_CLOSE)
-        delete_window(current);
       if(keyaction(ev) == KA_NEXT || keyaction(ev) == KA_PREV)
         wlist_start(ev);
-      if(current && keyaction(ev) == KA_ICONIFY)
-        client_iconify(current);
-      if(current && keyaction(ev) == KA_MAXIMISE)
-        client_maximise(current);
-      if(current && keyaction(ev) == KA_FULLSCREEN)
-        client_fullscreen(current);
-      if(current && keyaction(ev) == KA_EXPAND)
-        client_expand(current);
-      if(current && keyaction(ev) == KA_STICKY)
-        client_to_desktop(current, (current->desktop == STICKY) ? desktop : STICKY);
-      if(current && keyaction(ev) == KA_TITLE)
-        client_toggle_title(current);
-      if(current && keyaction(ev) == KA_BOTTOMLEFT) {
-        client_move(current, ewmh_strut[0], display_height - (client_height_total(current) + ewmh_strut[3]));
-        client_warp(current);
-      }
-      if(current && keyaction(ev) == KA_BOTTOMRIGHT) {
-        client_move(current, display_width - (client_width_total(current) + ewmh_strut[1]), display_height - (client_height_total(current) + ewmh_strut[3]));
-        client_warp(current);
-      }
-      if(current && keyaction(ev) == KA_TOPRIGHT) {
-        client_move(current, display_width - (client_width_total(current) - ewmh_strut[1]), ewmh_strut[2]);
-        client_warp(current);
-      }
-      if(current && keyaction(ev) == KA_TOPLEFT) {
-        client_move(current, ewmh_strut[0], ewmh_strut[2]);
-        client_warp(current);
-      }
-      if(current && !(current->layer == DESKTOP) && keyaction(ev) == KA_ONTOP)
-        client_set_layer(current, (current->layer == TOP) ? NORMAL : TOP);
-      if(current && !(current->layer == DESKTOP) && keyaction(ev) == KA_BELOW)
-        client_set_layer(current, (current->layer == BOTTOM) ? NORMAL : BOTTOM);
       if(cn && keyaction(ev) == KA_ICONIFY_ALL)
         for(i = 0; i < cn; i++)
           client_iconify(clients[i]);
@@ -172,10 +191,6 @@ void handle_event(XEvent ev) {
         for(i = 0; i < cn; i++)
           client_update_size(clients[i]);
       }
-      break;
-    default:
-      if(c && ev.type == shape_event)
-        set_shape(c);
       break;
   }
 }

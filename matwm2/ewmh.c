@@ -188,7 +188,10 @@ void ewmh_set_desktop(int d) {
 }
 
 void ewmh_set_active(client *c) {
-  XChangeProperty(dpy, root, ewmh_atoms[NET_ACTIVE_WINDOW], XA_WINDOW, 32, PropModeReplace, (unsigned char *) &c->window, 1);
+  if(c)
+    XChangeProperty(dpy, root, ewmh_atoms[NET_ACTIVE_WINDOW], XA_WINDOW, 32, PropModeReplace, (unsigned char *) &c->window, 1);
+  else
+    XDeleteProperty(dpy, root, ewmh_atoms[NET_ACTIVE_WINDOW]);
 }
 
 void ewmh_update_allowed_actions(client *c) {

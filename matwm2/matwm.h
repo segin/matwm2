@@ -88,8 +88,10 @@ enum {
   BA_LOWER
 };
 
-#define MOVE    0
-#define RESIZE  1
+enum {
+  MOVE,
+  RESIZE
+};
 
 #include "mwm_hints.h"
 #include "ewmh.h"

@@ -68,6 +68,7 @@ int main(int argc, char *argv[]) {
   p_attr.background_pixel = ibg.pixel;
   have_shape = XShapeQueryExtension(dpy, &shape_event, &di);
   ewmh_initialize();
+  XSetInputFocus(dpy, PointerRoot, RevertToPointerRoot, CurrentTime);
   XQueryTree(dpy, root, &dw, &dw, &wins, &nwins);
   for(i = 0; i < nwins; i++) {
     XGetWindowAttributes(dpy, wins[i], &attr);
@@ -119,7 +120,7 @@ void end(void) {
   if(clients)
     free((void *) clients);
   keys_free();
-  XSetInputFocus(dpy, root, RevertToPointerRoot, CurrentTime);
+  XSetInputFocus(dpy, PointerRoot, RevertToPointerRoot, CurrentTime);
   XCloseDisplay(dpy);
 }
 

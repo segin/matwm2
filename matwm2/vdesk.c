@@ -14,9 +14,12 @@ void desktop_goto(int d) {
     }
   desktop = d;
   if(evh != drag_handle_event) {
-    for(i = 0; i < cn; i++)
-      if(stacking[i]->desktop == desktop || stacking[i]->desktop == STICKY)
-        client_focus(stacking[i]);
+    if(!current)
+      for(i = 0; i < cn; i++)
+        if(stacking[i]->desktop == desktop || stacking[i]->desktop == STICKY) {
+          client_focus(stacking[i]);
+          break;
+        }
   } else {
     current->desktop = desktop;
     ewmh_update_desktop(current);
@@ -25,8 +28,16 @@ void desktop_goto(int d) {
 }
 
 void client_to_desktop(client *c, int d) {
-  if((c->desktop == desktop || c->desktop == STICKY) && (d != desktop && d != STICKY))
+  int i;
+  if((c->desktop == desktop || c->desktop == STICKY) && (d != desktop && d != STICKY))  {
     client_hide(c);
+    if(!current)
+      for(i = 0; i < cn; i++)
+        if(stacking[i] != c && (stacking[i]->desktop == desktop || stacking[i]->desktop == STICKY)) {
+          client_focus(stacking[i]);
+          break;
+        }
+  }
   if((c->desktop != desktop || c->desktop != STICKY) && (d == desktop || d == STICKY))
     client_show(c);
   if(!(c->flags & DONT_LIST)) {

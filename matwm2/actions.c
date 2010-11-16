@@ -61,9 +61,13 @@ void client_focus(client *c) {
   current = c;
   if(prev)
     client_set_bg(prev, ibg, ifg);
-  client_set_bg(c, bg, fg);
-  if(c->desktop == desktop || c->desktop == STICKY && isviewable(c->window))
-    XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
+  if(!c) {
+    XSetInputFocus(dpy, PointerRoot, RevertToPointerRoot, CurrentTime);
+  } else {
+    client_set_bg(c, bg, fg);
+    if(c->desktop == desktop || c->desktop == STICKY && isviewable(c->window))
+      XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
+  }
   ewmh_set_active(c);
 }
 
@@ -173,9 +177,6 @@ void client_iconify(client *c) {
   for(i = client_number(stacking, c); i < cn - 1; i++)
     stacking[i] = stacking[i + 1];
   stacking[cn - 1] = c;
-  for(i = 0; i < cn; i++)
-    if(stacking[i]->desktop == desktop || stacking[i]->desktop == STICKY)
-      client_focus(stacking[i]);  
   ewmh_update_stacking();
 }
 

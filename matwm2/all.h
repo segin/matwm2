@@ -138,6 +138,7 @@ int keyaction(XEvent ev);
 char *keyarg(XEvent ev);
 int key_to_mask(KeyCode key);
 void button_grab(Window w, unsigned int button, unsigned int modmask, unsigned int event_mask);
+void button_ungrab(Window w, unsigned int button, unsigned int modmask);
 int cmpmodmask(int m1, int m2);
 
 // global variables from main.c
