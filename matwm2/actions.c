@@ -178,6 +178,8 @@ void client_iconify(client *c) {
     stacking[i] = stacking[i + 1];
   stacking[cn - 1] = c;
   ewmh_update_stacking();
+  if(evh == wlist_handle_event)
+    wlist_update();
 }
 
 void client_restore(client *c) {
@@ -190,6 +192,8 @@ void client_restore(client *c) {
   set_wm_state(c->window, NormalState);
   if(c == current)
     XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
+  if(evh == wlist_handle_event)
+    wlist_update();
 }
 
 void client_save(client *c) {

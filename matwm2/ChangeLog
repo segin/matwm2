@@ -112,3 +112,6 @@
 	do not try to unfocus removed clients
 	always show window id in debugging messages
 
+0.0.62:
+	update window list when clients iconified/restored/restacked
+

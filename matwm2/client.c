@@ -200,6 +200,8 @@ void clients_apply_stacking(void) {
     wins[i + 1] = stacking[i]->parent;
   XRestackWindows(dpy, wins, i + 1);
   ewmh_update_stacking();
+  if(evh == wlist_handle_event)
+    wlist_update();
 }
 
 void client_update_pos(client *c) {
