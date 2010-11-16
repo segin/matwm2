@@ -2,9 +2,16 @@
 
 int (*evh)(XEvent) = NULL;
 
+Bool isgone(Display *display, XEvent *event, XPointer arg) {
+  if(event->type == DestroyNotify && event->xdestroywindow.window == *(Window *) arg)
+    return True;
+  return False;
+}
+
 void handle_event(XEvent ev) {
   client *c = owner(ev.xany.window);
 //  if(c) printf("%s: %s\n", c->name, event_name(ev));
+//  else printf("%i: %s\n", ev.xany.window, event_name(ev));
   if(evh && evh(ev))
     return;
   switch(ev.type) {
@@ -16,12 +23,13 @@ void handle_event(XEvent ev) {
       } else add_client(ev.xmaprequest.window);
       break;
     case DestroyNotify:
+      c = owner(ev.xdestroywindow.window);
       if(c && c->window == ev.xdestroywindow.window)
         remove_client(c);
       break;
     case UnmapNotify:
       if(c && c->window == ev.xunmap.window) {
-        if(XCheckTypedWindowEvent(dpy, c->parent, DestroyNotify, &ev) == False) {
+        if(XCheckIfEvent(dpy, &ev, &isgone, (XPointer) &c->window) == False) {
           deparent_client(c);
           set_wm_state(c->window, WithdrawnState);
         }

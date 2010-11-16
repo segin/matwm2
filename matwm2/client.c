@@ -8,6 +8,7 @@ void add_client(Window w) {
   int i, di, bounding_shaped, wm_state = get_wm_state(w);
   unsigned int dui;
   client *new = (client *) malloc(sizeof(client));
+  wm_state = get_wm_state(w);
   XGetWindowAttributes(dpy, w, &attr);
   if(wm_state == WithdrawnState) {
     wm_state = getstatehint(w);
@@ -90,7 +91,7 @@ void deparent_client(client *c) {
 
 void draw_client(client *c) {
   if(c->name && title(c)) {
-    XDrawString(dpy, c->parent, (c == current) ? gc : igc, border_width + font->max_bounds.lbearing, border_width + font->max_bounds.ascent, c->name, strlen(c->name));
+    XDrawString(dpy, c->parent, (c == current) ? gc : igc, border_width, border_width + font->max_bounds.ascent, c->name, strlen(c->name));
     XClearArea(dpy, c->parent, c->width + border_width - 1, border_width, border_width, title_height, False);
   }
   if(border(c))

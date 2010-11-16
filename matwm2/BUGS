@@ -1,6 +1,3 @@
-destroynotify doesnt arrive in time whilst dragging windows sometimes i think - badwindow errors
-if gvim starts (in some configurations) lower scrollbar is gone under window, also happens with some other wms and no wm - in fvwm it starts with same size but gvim updates itself, and in mwm it is mapped with the correct size for the scrollbar to apear (how is that done? does it include basesize in initial size?)
 nothing is documented
-once rtcw console icon stayed there whilst window was gone
 windows with same title are confusing
 

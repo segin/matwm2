@@ -59,7 +59,7 @@ void wlist_update(void) {
     wlist_end();
   for(i = 0; i < cn; i++)
     if(clients[i]->name) {
-      tl = XTextWidth(font, clients[i]->name, strlen(clients[i]->name)) + font->max_bounds.lbearing + font->max_bounds.rbearing + 6;
+      tl = XTextWidth(font, clients[i]->name, strlen(clients[i]->name)) + 6;
       if(tl > wlist_width)
         wlist_width = tl;
     }
@@ -74,6 +74,6 @@ void wlist_update(void) {
 
 void wlist_item_draw(client *c) {
   if(c->name)
-    XDrawString(dpy, c->wlist_item, (c == current) ? gc : igc, 2 + font->max_bounds.lbearing, 2 + font->max_bounds.ascent, c->name, strlen(c->name));
+    XDrawString(dpy, c->wlist_item, (c == current) ? gc : igc, 2, 2 + font->max_bounds.ascent, c->name, strlen(c->name));
 }
 

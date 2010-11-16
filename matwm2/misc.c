@@ -17,9 +17,9 @@ int read_file(char *path, char **buf) {
       if(buf == NULL)
         error();
       r = read(fd, (void *) *buf, sb.st_size);
-      if(r <= 0)
+      if(r <= 0) {
         free((void *) *buf);
-      else buf[r] = 0;
+      } else (*buf)[r] = 0;
     }
     close(fd);
   }

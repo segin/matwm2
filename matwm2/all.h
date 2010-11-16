@@ -44,7 +44,11 @@ int snapv(client *c, int nx, int ny);
 
 // events.c
 extern int (*evh)(XEvent);
+Bool isgone(Display *display, XEvent *event, XPointer arg);
 void handle_event(XEvent ev);
+
+// evn.c
+char *event_name(XEvent ev);
 
 // icons.c
 Bool isunmap(Display *display, XEvent *event, XPointer arg);
@@ -108,7 +112,4 @@ int has_protocol(Window w, Atom protocol);
 void delete_window(client *c);
 int gxo(client *c, int initial);
 int gyo(client *c, int initial);
-
-// xev.c
-char *event_name(XEvent ev);
 

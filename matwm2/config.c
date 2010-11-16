@@ -43,6 +43,7 @@ void cfg_parse(char *cfg) {
   keybind *old_keys = keys;
   while(cfg) {
     opt = eat(&cfg, "\n");
+    opt = eat(&opt, "#");
     key = eat(&opt, ":");
     if(opt == NULL)
       continue;
