@@ -5,14 +5,13 @@
 Display *dpy;
 int screen;
 Window root;
-Atom wm_protocols, wm_delete;
+Atom wm_protocols, wm_delete, wm_state;
 
-void open_display() {
+void open_display(char *display) {
   struct sigaction qsa;
-
-  dpy = XOpenDisplay(0);
+  dpy = XOpenDisplay(display);
   if(!dpy) {
-    fprintf(stderr, "error: can't open display %s\n", XDisplayName(0));
+    fprintf(stderr, "error: can't open display\n");
     exit(1);
   }
   screen = DefaultScreen(dpy);
@@ -25,33 +24,30 @@ void open_display() {
   sigaction(SIGHUP, &qsa, NULL);
 }
 
-void quit(int sig) {
+void end(void) {
   while(cn) {
     XReparentWindow(dpy, clients->window, root, clients->x, clients->y);
     remove_client(0);
   }
   free(clients);
   XCloseDisplay(dpy);
+}
+
+void quit(int sig) {
+  end();
   exit(0);
 }
 
 int main(int argc, char *argv[]) {
   XEvent ev;
-  Window dw1, dw2, *wins;
-  int nwins;
-#ifdef FREEBSD_MALLOC_DEBUG
-  _malloc_options = "X";
-#endif
-  open_display();
+  open_display(0);
   XSetErrorHandler(&xerrorhandler);
-  /* Detects other WM, such as Xfwm4 */
-  XQueryTree(dpy, root, &dw1, &dw2, &wins, &nwins);
   config_read();
-  init_input();
   add_initial_clients();
   wm_protocols = XInternAtom(dpy, "WM_PROTOCOLS", False);
   wm_delete = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
-  XSelectInput(dpy, root, SubstructureRedirectMask | SubstructureNotifyMask | PropertyChangeMask | ButtonPressMask);
+  wm_state = XInternAtom(dpy, "WM_STATE", False);
+  XSelectInput(dpy, root, SubstructureRedirectMask | SubstructureNotifyMask);
   while(1) {
     XNextEvent(dpy, &ev);
     handle_event(ev);

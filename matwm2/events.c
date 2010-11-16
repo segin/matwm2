@@ -3,33 +3,36 @@
 
 void handle_event(XEvent ev) {
   int c, i;
-  long sr;
   for(c = 0; c < cn; c++)
-     if(clients[c].parent == ev.xany.window)
-       break;
+    if(clients[c].parent == ev.xany.window)
+      break;
   switch(ev.type) {
     case MapRequest:
-      new_client(ev.xmaprequest.window);
+      add_client(ev.xmaprequest.window);
       break;
     case UnmapNotify:
-        if(c < cn)
-          remove_client(c);
+      if(c < cn)
+        remove_client(c);
       break;
     case ConfigureRequest:
-      if(c < cn) {
-        move(c, ev.xconfigurerequest.value_mask & CWX ? ev.xconfigurerequest.x : clients[c].x, ev.xconfigurerequest.value_mask & CWY ? ev.xconfigurerequest.y : clients[c].y);
-        resize(c, ev.xconfigurerequest.width, ev.xconfigurerequest.height);
-      } else XMoveResizeWindow(dpy, ev.xconfigure.window, ev.xconfigure.x, ev.xconfigure.y, ev.xconfigure.width, ev.xconfigure.height);
+      for(i = 0; i < cn; i++)
+        if(clients[i].window == ev.xconfigurerequest.window)
+          break;
+      configure(i, &ev.xconfigurerequest);
       break;
     case PropertyNotify:
-      if(ev.xproperty.atom == XA_WM_NAME)
-        for(i = 0; i < cn; i++)
-          if(clients[i].window == ev.xproperty.window) {
-            XFree(clients[i].name);
-            XFetchName(dpy, clients[i].window, &clients[i].name);
-            XClearWindow(dpy, clients[i].parent);
-            client_draw(i);
-          }
+      for(i = 0; i < cn; i++)
+        if(clients[i].window == ev.xproperty.window)
+          break;
+      if(ev.xproperty.atom == XA_WM_NAME && i < cn) {
+        if(clients[i].name)
+          XFree(clients[i].name);
+        XFetchName(dpy, clients[i].window, &clients[i].name);
+        XClearWindow(dpy, clients[i].parent);
+        client_draw(i);
+      }
+      if(ev.xproperty.atom == XA_WM_NORMAL_HINTS && i < cn)
+        getnormalhints(i);
       break;
     case EnterNotify:
       if(c < cn)
@@ -40,9 +43,18 @@ void handle_event(XEvent ev) {
         client_draw(c);
       break;
     case ButtonPress:
-      if(c < cn)
-        buttonpress(c, ev.xbutton.button);
+      if(c < cn) {
+        if(ev.xbutton.button == move_button || ev.xbutton.button == resize_button) {
+          XRaiseWindow(dpy, clients[c].parent);
+          drag(c, &ev.xbutton);
+        } else if(ev.xbutton.button == lower_button)
+          XLowerWindow(dpy, clients[c].parent);
+      }
       break;
+    case KeyPress:
+      if(ev.xkey.keycode == XKeysymToKeycode(dpy, XK_Tab))
+        next();
+        break;
   }
 }
 

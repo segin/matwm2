@@ -1,13 +1,5 @@
 XROOT = /usr/X11R6
-CC = gcc
-#could put something here in the future
-DEFINES = 
-CFLAGS = -I$(XROOT)/include $(DEFINES)
-LDFLAGS = -lX11 -L$(XROOT)/lib 
+all:
+	perl makeheader
+	cc -lX11 -I$(XROOT)/include -L$(XROOT)/lib *.c -o matwm2
 
-all: 
-	./makeheader
-	$(CC) $(CFLAGS) $(LDFLAGS) *.c -o matwm2
-
-clean:
-	rm -f *.o *~ matwm2 core *.core matwm.h

@@ -1,4 +1,3 @@
-#!/usr/local/bin/perl -W
 use strict;
 open H, "> matwm.h";
 print H <<ENDTOP;
@@ -11,8 +10,7 @@ print H <<ENDTOP;
 // client structure
 typedef struct client {
   Window window, parent;
-  int x, y, width, height;
-  int minimised, maximised;
+  int x, y, width, height, oldbw;
   XSizeHints normal_hints;
   char *name;
 } client;
@@ -28,9 +26,10 @@ foreach(sort(@dir)) {
     foreach(<FILE>) {
       if(m/^(\w+\ [\*\w ,=]+);/) {
         my $a = $1;
-        $a =~ s/\ *=.+//g;
+        $a =~ s/\ *=.+([,])/$1/g;
+        $a =~ s/\ *=.+$//g;
         print H "extern $a;\n";
-      } elsif(m/^(\w+\ \w+\(.*\))/) {
+      } elsif(m/^(\w+\ \**\w+\(.*\))/) {
         print H "$1;\n";
       }
     }
