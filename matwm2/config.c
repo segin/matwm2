@@ -46,7 +46,7 @@ void cfg_parse(char *cfg) {
   while(cfg) {
     opt = eat(&cfg, "\n");
     opt = eat(&opt, "#");
-    key = eat(&opt, ":");
+    key = eat(&opt, "\t ");
     if(opt == NULL)
       continue;
     while(*opt == ' ' || *opt == '\t')
@@ -106,6 +106,8 @@ void cfg_set_opt(char *key, char *value) {
         mod_ignore[nmod_ignore + 1 + i] = mod_ignore[i] | mod_ignore[nmod_ignore];
       nmod_ignore += nmod_ignore + 1;
     }
+  if(strcmp(key, "exec") == 0)
+    spawn(value);
 }
 
 KeySym str_key(char **str, unsigned int *mask) {

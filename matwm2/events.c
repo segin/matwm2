@@ -85,7 +85,7 @@ void handle_event(XEvent ev) {
         iconify(c);
       break;
     case EnterNotify:
-      if(c)
+      if(c && c != current)
         focus(c);
       break;
     case Expose:

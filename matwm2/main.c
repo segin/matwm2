@@ -76,20 +76,18 @@ int main(int argc, char *argv[]) {
   FD_ZERO(&fds);
   FD_SET(qsfd[0], &fds);
   FD_SET(dfd, &fds);
-  while(1) {
-    if(!XPending(dpy)) {
+  while(1)
+    if(XPending(dpy)) {
+      XNextEvent(dpy, &ev);
+      handle_event(ev);
+    } else {
       fdsr = fds;
       sr = select((qsfd[0] < dfd ? dfd : qsfd[0]) + 1, &fdsr, (fd_set *) NULL, (fd_set *) NULL, (struct timeval *) NULL);
       if(sr == -1 && errno != EINTR)
         error();
-      if(sr == 0)
-        continue;
       if(FD_ISSET(qsfd[0], &fdsr))
         exit(0);
     }
-    XNextEvent(dpy, &ev);
-    handle_event(ev);
-  }
 }
 
 void end(void) {

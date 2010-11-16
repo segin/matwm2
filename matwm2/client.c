@@ -69,6 +69,8 @@ void add_client(Window w) {
 void remove_client(client *c) {
   XEvent ev;
   int i;
+  if(button_current == c->button_iconify || button_current == c->button_expand || button_current == c->button_maximise || button_current == c->button_close)
+    button_current = root;
   XDestroyWindow(dpy, c->parent);
   XDestroyWindow(dpy, c->wlist_item);
   if(c->name != no_title)

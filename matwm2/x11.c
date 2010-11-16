@@ -1,16 +1,17 @@
 #include "matwm.h"
 
 int xerrorhandler(Display *display, XErrorEvent *xerror) {
-  if(display) {};
-#ifdef DEBUG
-  char ret[666];
-  XGetErrorText(xerror->display, xerror->error_code, ret, 666);
-  printf("x error: %s\n", ret);
-#endif
   if(xerror->error_code == BadAccess && xerror->resourceid == root) {
     fprintf(stderr,"error: root window at display %s is not available\n", XDisplayName(dn));
     exit(1);
   }
+#ifdef DEBUG
+  else {
+    char ret[666];
+    XGetErrorText(xerror->display, xerror->error_code, ret, 666);
+    printf("x error: %s\n", ret);
+  }
+#endif
   return 0;
 }
 
