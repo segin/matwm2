@@ -30,11 +30,20 @@
 #define MWM_DECOR_MINIMIZE      (1L << 5)
 #define MWM_DECOR_MAXIMIZE      (1L << 6)
 
+#define BA_NONE         0
+#define BA_MOVE         1
+#define BA_RESIZE       2
+#define BA_RAISE        3
+#define BA_LOWER        4
+
 #define border(c)       ((!clients[c].shaped && clients[c].border) ? border_width : 0)
 #define title(c)        ((!clients[c].shaped && clients[c].title && clients[c].border) ? title_height : 0)
 #define total_width(n)  (clients[n].width + (border(n) * 2))
 #define total_height(n) (clients[n].height + (border(n) * 2) + title(n))
-#define warp()          XWarpPointer(dpy, None, clients[current].iconic ? clients[current].icon : clients[current].parent, 0, 0, 0, 0, clients[current].iconic ? icon_width - 1 : clients[current].width + (border(current) ? border_width : -1), clients[current].iconic ? 3 + title_height : ((clients[current].height + (border(current) ? border_width : -1)) + title(current)));
+#define warp()          XWarpPointer(dpy, None, clients[current].parent, 0, 0, 0, 0, clients[current].width + (border(current) ? border_width : -1), (clients[current].height + (border(current) ? border_width : -1)) + title(current));
+#define cmpmask(m1, m2) (m1 == m2 || m1 == (m2 | numlockmask) || m1 == (m2 | LockMask) || m1 == (m2 | LockMask | numlockmask))
+#define iskey(k)        (cmpmask(ev.xkey.state, k.mask) && ev.xkey.keycode == k.code)
+#define rmbit(m, b)     (m ^ (m & b))
 
 typedef struct {
   Window        window, parent, icon;

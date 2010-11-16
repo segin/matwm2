@@ -1,9 +1,9 @@
 #include "matwm.h"
 
 XColor bg, ibg, fg, ifg;
-int border_width, title_height, hmaxicons, icon_width, snapat;
-char *cbutton1, *cbutton2, *cbutton3, *cbutton4, *cbutton5, *ibutton1, *ibutton2, *ibutton3, *ibutton4, *ibutton5;
-key key_next, key_prev, key_next_icon, key_prev_icon, key_iconify, key_maximise, key_close, key_bottomleft, key_bottomright, key_topleft, key_topright;
+int border_width, title_height, snapat;
+int button1, button2, button3, button4, button5;
+key key_next, key_prev, key_iconify, key_maximise, key_close, key_bottomleft, key_bottomright, key_topleft, key_topright;
 XFontStruct *font;
 GC gc, igc;
 XrmDatabase cfg = NULL;
@@ -31,33 +31,32 @@ int xrm_getint(XrmDatabase db, char *opt_name, int def) {
   return def;
 }
 
-char *buttonaction(int n, int button) {
-  if(clients[n].iconic) {
-    switch(button) {
-      case Button1:
-        return ibutton1;
-      case Button2:
-        return ibutton2;
-      case Button3:
-        return ibutton3;
-      case Button4:
-        return ibutton4;
-      case Button5:
-        return ibutton5;
-    }
-  } else switch(button) {
+int strbuttonaction(char *str) {
+  if(strcmp(str, "move") == 0)
+    return BA_MOVE;
+  if(strcmp(str, "resize") == 0)
+    return BA_RESIZE;
+  if(strcmp(str, "raise") == 0)
+    return BA_RAISE;
+  if(strcmp(str, "lower") == 0)
+    return BA_LOWER;
+  return BA_NONE;
+}
+
+int buttonaction(int button) {
+  switch(button) {
     case Button1:
-      return cbutton1;
+      return button1;
     case Button2:
-      return cbutton2;
+      return button2;
     case Button3:
-      return cbutton3;
+      return button3;
     case Button4:
-      return cbutton4;
+      return button4;
     case Button5:
-      return cbutton5;
+      return button5;
   }
-  return "";
+  return BA_NONE;
 }
 
 KeyCode string_to_key(char *str, int *mask) {
@@ -95,19 +94,12 @@ void config_read(void) {
     strncat(cfgfn, CFGFN, cfglen);
     cfg = XrmGetFileDatabase(cfgfn);
   }
-  cbutton1 = xrm_getstr(cfg, "client_button1", DEF_CBUTTON1);
-  cbutton2 = xrm_getstr(cfg, "client_button2", DEF_CBUTTON2);
-  cbutton3 = xrm_getstr(cfg, "client_button3", DEF_CBUTTON3);
-  cbutton4 = xrm_getstr(cfg, "client_button4", DEF_CBUTTON4);
-  cbutton5 = xrm_getstr(cfg, "client_button5", DEF_CBUTTON5);
-  ibutton1 = xrm_getstr(cfg, "icon_button1", DEF_IBUTTON1);
-  ibutton2 = xrm_getstr(cfg, "icon_button2", DEF_IBUTTON2);
-  ibutton3 = xrm_getstr(cfg, "icon_button3", DEF_IBUTTON3);
-  ibutton4 = xrm_getstr(cfg, "icon_button4", DEF_IBUTTON4);
-  ibutton5 = xrm_getstr(cfg, "icon_button5", DEF_IBUTTON5);
-  mapkeys();
+  button1 = strbuttonaction(xrm_getstr(cfg, "button1", DEF_BUTTON1));
+  button2 = strbuttonaction(xrm_getstr(cfg, "button2", DEF_BUTTON2));
+  button3 = strbuttonaction(xrm_getstr(cfg, "button3", DEF_BUTTON3));
+  button4 = strbuttonaction(xrm_getstr(cfg, "button4", DEF_BUTTON4));
+  button5 = strbuttonaction(xrm_getstr(cfg, "button5", DEF_BUTTON5));
   border_width = xrm_getint(cfg, "border_width", DEF_BW);
-  hmaxicons = xrm_getint(cfg, "icons_per_line", DEF_H_ICON_COUNT);
   snapat = xrm_getint(cfg, "snap", DEF_SNAP);
   XAllocNamedColor(dpy, DefaultColormap(dpy, screen), xrm_getstr(cfg, "active.background", DEF_BG), &bg, &dummy);
   XAllocNamedColor(dpy, DefaultColormap(dpy, screen), xrm_getstr(cfg, "inactive.background", DEF_IBG), &ibg, &dummy);
@@ -128,6 +120,5 @@ void config_read(void) {
   gc = XCreateGC(dpy, root, GCFunction | GCSubwindowMode | GCLineWidth | GCForeground | GCFont, &gv);
   gv.foreground = ifg.pixel;
   igc = XCreateGC(dpy, root, GCFunction | GCSubwindowMode | GCLineWidth | GCForeground | GCFont, &gv);
-  icon_width = (display_width - (hmaxicons - 1)) / hmaxicons;
 }
 

@@ -62,8 +62,13 @@ int main(int argc, char *argv[]) {
   config_read();
   p_attr.override_redirect = True;
   p_attr.background_pixel = ibg.pixel;
+  p_attr.event_mask = ExposureMask | KeyReleaseMask;
+  wlist = XCreateWindow(dpy, root, 0, 0, 1, 1, 0,
+                        DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
+                        CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
   p_attr.event_mask = SubstructureRedirectMask | SubstructureNotifyMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask | ExposureMask;
   have_shape = XShapeQueryExtension(dpy, &shape_event, &di);
+  mapkeys();
   XQueryTree(dpy, root, &dw, &dw, &wins, &nwins);
   for(i = 0; i < nwins; i++) {
     XGetWindowAttributes(dpy, wins[i], &attr);

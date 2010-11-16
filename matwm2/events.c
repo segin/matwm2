@@ -1,11 +1,13 @@
 #include "matwm.h"
 
-#define iskey(k) ((ev.xkey.state == k.mask || ev.xkey.state == (k.mask | numlockmask) || ev.xkey.state == (k.mask | LockMask) || ev.xkey.state == (k.mask | LockMask | numlockmask)) && ev.xkey.keycode == k.code)
+int (*evh)() = NULL;
 
 void handle_event(XEvent ev) {
   int c, i;
+  if(evh && evh(ev))
+    return;
   for(c = 0; c < cn; c++)
-    if(clients[c].parent == ev.xany.window || clients[c].icon == ev.xany.window)
+    if(clients[c].parent == ev.xany.window)
       break;
   switch(ev.type) {
     case MapRequest:
@@ -18,18 +20,10 @@ void handle_event(XEvent ev) {
       } else add_client(ev.xmaprequest.window);
       break;
     case DestroyNotify:
-#ifdef DEBUG
-      if(c < cn && clients[c].window != ev.xdestroywindow.window)
-        printf("destroynotify (%s) && xany.window == parent - but window != xdestroywindow.window, Why is this? has x11 gone insane?\n", clients[c].name);
-#endif
       if(c < cn && clients[c].window == ev.xdestroywindow.window)
         remove_client(c, 2);
       break;
     case UnmapNotify:
-#ifdef DEBUG
-      if(c < cn && clients[c].window != ev.xunmap.window)
-        printf("unmapnotify (%s) && xany.window == parent - but window != xunmap.window, Why is this? has x11 gone insane?\n", clients[c].name);
-#endif
       if(c < cn && clients[c].window == ev.xunmap.window)
         remove_client(c, 1);
       break;
@@ -59,8 +53,10 @@ void handle_event(XEvent ev) {
         if(clients[i].name)
           XFree(clients[i].name);
         XFetchName(dpy, clients[i].window, &clients[i].name);
-        XClearWindow(dpy, clients[i].iconic ? clients[i].icon : clients[i].parent);
+        XClearWindow(dpy, clients[i].parent);
+        XClearWindow(dpy, clients[i].icon);
         draw_client(i);
+        draw_icon(i);
       }
       if(ev.xproperty.atom == XA_WM_NORMAL_HINTS && i < cn)
         getnormalhints(i);
@@ -82,29 +78,37 @@ void handle_event(XEvent ev) {
         for(c = 0; c < cn; c++)
           if(clients[c].window == ev.xcrossing.window)
             break;
+      if(c == cn)
+        for(c = 0; c < cn; c++)
+          if(clients[c].icon == ev.xcrossing.window)
+            break;
       if(c < cn)
         focus(c);
       break;
     case Expose:
-      if(c < cn && ev.xexpose.count == 0)
-        draw_client(c);
-      break;
-    case ButtonPress:
-      if(c < cn) {
-        if(strcmp(buttonaction(c, ev.xbutton.button), "move") == 0)
-          drag(&ev.xbutton, 0);
-        if(strcmp(buttonaction(c, ev.xbutton.button), "resize") == 0 && clients[c].resize)
-          drag(&ev.xbutton, 1);
+      for(i = 0; i < cn; i++)
+        if(clients[i].icon == ev.xexpose.window)
+          break;
+      if(ev.xexpose.count == 0) {
+        if(c < cn)
+          draw_client(c);
+        else if(i < cn)
+          draw_icon(i);
+        else if(ev.xexpose.window == wlist)
+          wlist_draw();
       }
       break;
+    case ButtonPress:
+      if(c < cn && (buttonaction(ev.xbutton.button) == BA_MOVE || buttonaction(ev.xbutton.button) == BA_RESIZE))
+        drag_start(ev);
+      break;
     case ButtonRelease:
-      if(c < cn)
-        if(strcmp(buttonaction(c, ev.xbutton.button), "raise") == 0) {
-          clients[c].iconic ? restack_icons(1) : restack_client(c, 1);
-        } else if(strcmp(buttonaction(c, ev.xbutton.button), "lower") == 0) {
-          clients[c].iconic ? restack_icons(0) : restack_client(c, 0);
-        } else if(clients[c].iconic && strcmp(buttonaction(c, ev.xbutton.button), "restore") == 0)
-          restore(c);
+      if(c < cn) {
+        if(buttonaction(ev.xbutton.button) == BA_RAISE)
+          restack_client(c, 1);
+        if(buttonaction(ev.xbutton.button) == BA_LOWER)
+          restack_client(c, 0);
+      }
       break;
     case MappingNotify:
       if(ev.xmapping.request != MappingPointer) {
@@ -116,29 +120,12 @@ void handle_event(XEvent ev) {
     case KeyPress:
       if(current < cn && iskey(key_close))
         delete_window(current);
-      if(iskey(key_next))
-        next(0);
-      if(iskey(key_prev))
-        prev(0);
-      if(iskey(key_next_icon)) {
-        next(1);
-        restack_icons(1);
-      }
-      if(iskey(key_prev_icon)) {
-        prev(1);
-        restack_icons(1);
-      }
-      if(current < cn && iskey(key_iconify)) {
-        icons_ontop = 0;
-        clients[current].iconic ? restore(current) : iconify(current);
-        if(!clients[current].iconic)
-          warp();
-      }
-      if(current < cn && iskey(key_maximise)) {
-        if(clients[current].iconic)
-          restore(current);
+      if(iskey(key_next) || iskey(key_prev))
+        wlist_start(ev);
+      if(current < cn && iskey(key_iconify))
+        iconify(current);
+      if(current < cn && iskey(key_maximise))
         maximise(current);
-      }
       if(current < cn && iskey(key_bottomleft))
         move(current, 0, display_height - total_height(current));
       if(current < cn && iskey(key_bottomright))
@@ -152,7 +139,6 @@ void handle_event(XEvent ev) {
       if(root == ev.xconfigure.window) {
         display_width = ev.xconfigure.width;
         display_height = ev.xconfigure.height;
-        sort_icons();
       }
       break;
     default:
