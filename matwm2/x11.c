@@ -171,3 +171,9 @@ int gyo(client *c, int initial) {
   return 0;
 }
 
+Bool isunmap(Display *display, XEvent *event, XPointer arg) {
+  if(event->type == UnmapNotify && event->xunmap.window == *(Window *) arg)
+    return True;
+  return False;
+}
+

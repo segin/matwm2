@@ -1,3 +1,15 @@
+// functions from actions.c
+int client_move(client *c, int x, int y);
+int client_resize(client *c, int width, int height);
+void client_focus(client *c);
+void client_raise(client *c);
+void client_lower(client *c);
+void client_maximise(client *c);
+void client_expand(client *c);
+void client_toggle_title(client *c);
+void client_iconify(client *c);
+void client_restore(client *c);
+
 // global variables from buttons.c
 extern Window button_current;
 extern int button_down;
@@ -20,15 +32,7 @@ void client_remove(client *c);
 void client_draw_border(client *c);
 void client_draw_title(client *c);
 void clients_alloc(void);
-int client_move(client *c, int x, int y);
-int client_resize(client *c, int width, int height);
-void client_focus(client *c);
-void client_raise(client *c);
-void client_lower(client *c);
-void client_maximise(client *c);
-void client_expand(client *c);
 void client_set_bg(client *c, XColor color);
-void client_toggle_title(client *c);
 int has_window(client *c);
 int client_number(client *c);
 client *owner(Window w);
@@ -67,16 +71,10 @@ int snapv(client *c, int nx, int ny);
 extern int (*evh)(XEvent);
 
 // functions from events.c
-Bool isgone(Display *display, XEvent *event, XPointer arg);
 void handle_event(XEvent ev);
 
 // functions from evn.c
 char *event_name(XEvent ev);
-
-// functions from icons.c
-Bool isunmap(Display *display, XEvent *event, XPointer arg);
-void client_iconify(client *c);
-void client_restore(client *c);
 
 // global variables from input.c
 extern unsigned int mousemodmask, *mod_ignore;
@@ -141,4 +139,5 @@ int has_protocol(Window w, Atom protocol);
 void delete_window(client *c);
 int gxo(client *c, int initial);
 int gyo(client *c, int initial);
+Bool isunmap(Display *display, XEvent *event, XPointer arg);
 

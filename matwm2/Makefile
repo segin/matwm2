@@ -3,7 +3,7 @@ XROOT   = /usr/X11R6
 CC      = cc
 
 CFLAGS  += -lXext -lX11 -I$(XROOT)/include -L$(XROOT)/lib
-CFLAGS += -DDEBUG -ggdb3
+CFLAGS += -DDEBUG -ggdb3 -Os
 
 all:		matwm2
 

@@ -41,30 +41,29 @@ void cfg_read(void) {
 }
 
 void cfg_parse(char *cfg) {
-  char *opt, *key, *val;
-  keybind *old_keys = keys;
+  char *opt, *key;
   while(cfg) {
     opt = eat(&cfg, "\n");
     opt = eat(&opt, "#");
     key = eat(&opt, "\t ");
-    if(opt == NULL)
-      continue;
-    while(*opt == ' ' || *opt == '\t')
-      opt++;
-    val = opt;
-    if(strcmp(key, "key") == 0) {
-      if(old_keys) {
-        keys_free();
-        old_keys = NULL;
-      }
-      key_bind(val);
-    } else cfg_set_opt(key, val);
+    if(opt)
+      while(*opt == ' ' || *opt == '\t')
+        opt++;
+    cfg_set_opt(key, opt);
   }
 }
 
 void cfg_set_opt(char *key, char *value) {
   XColor dummy;
   int i;
+  if(strcmp(key, "resetkeys") == 0)
+    keys_free();
+  if(!value)
+    return;
+  if(strcmp(key, "key") == 0)
+    key_bind(value);
+  if(strcmp(key, "exec") == 0)
+    spawn(value);
   if(strcmp(key, "background") == 0)
     XAllocNamedColor(dpy, DefaultColormap(dpy, screen), value, &bg, &dummy);
   if(strcmp(key, "inactive_background") == 0)
@@ -106,8 +105,6 @@ void cfg_set_opt(char *key, char *value) {
         mod_ignore[nmod_ignore + 1 + i] = mod_ignore[i] | mod_ignore[nmod_ignore];
       nmod_ignore += nmod_ignore + 1;
     }
-  if(strcmp(key, "exec") == 0)
-    spawn(value);
 }
 
 KeySym str_key(char **str, unsigned int *mask) {

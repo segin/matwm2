@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
   sigaction(SIGTERM, &qsa, NULL);
   sigaction(SIGINT, &qsa, NULL);
   sigaction(SIGHUP, &qsa, NULL);
-#ifdef DEBUG_EVENTS
+#ifdef SYNC
   XSynchronize(dpy, True);
 #endif
   XSetErrorHandler(&xerrorhandler);

@@ -2,12 +2,6 @@
 
 int (*evh)(XEvent) = NULL;
 
-Bool isgone(Display *display, XEvent *event, XPointer arg) {
-  if(event->type == DestroyNotify && event->xdestroywindow.window == *(Window *) arg)
-    return True;
-  return False;
-}
-
 void handle_event(XEvent ev) {
   client *c = owner(ev.xany.window);
   int i;

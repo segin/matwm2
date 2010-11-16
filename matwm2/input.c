@@ -80,11 +80,11 @@ int buttonaction(int button) {
 }
 
 int keyaction(XEvent ev) {
-  int i;
+  int i, a = KA_NONE;
   for(i = 0; i < keyn; i++)
     if(keys[i].code == ev.xkey.keycode && cmpmodmask(keys[i].mask, ev.xkey.state))
-      return keys[i].action;
-  return KA_NONE;
+      a = keys[i].action;
+  return a;
 }
 
 char *keyarg(XEvent ev) {
