@@ -5,7 +5,7 @@
 void handle_event(XEvent ev) {
   int c, i;
   for(c = 0; c < cn; c++)
-    if(clients[c].parent == ev.xany.window)
+    if(clients[c].parent == ev.xany.window || clients[c].icon == ev.xany.window)
       break;
   switch(ev.type) {
     case MapRequest:
@@ -67,7 +67,7 @@ void handle_event(XEvent ev) {
       if(ev.xproperty.atom == xa_motif_wm_hints && i < cn) {
         get_mwm_hints(i);
         XMoveWindow(dpy, clients[i].window, border(i), border(i) + title(i));
-        XResizeWindow(dpy, clients[i].parent, (clients[i].iconic && !clients[i].transient) ? icon_width : total_width(i), (clients[i].iconic && !clients[i].transient) ? title_height + 4 : total_height(i));
+        XResizeWindow(dpy, clients[i].parent, total_width(i), total_height(i));
       }
       break;
     case ClientMessage:
@@ -90,7 +90,7 @@ void handle_event(XEvent ev) {
         draw_client(c);
       break;
     case ButtonPress:
-      if(c < cn && !clients[c].iconic) {
+      if(c < cn) {
         if(strcmp(buttonaction(c, ev.xbutton.button), "move") == 0)
           drag(&ev.xbutton, 0);
         if(strcmp(buttonaction(c, ev.xbutton.button), "resize") == 0 && clients[c].resize)

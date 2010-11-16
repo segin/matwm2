@@ -47,6 +47,8 @@ void grab_key(Window w, unsigned int modmask, KeyCode key);
 void grab_button(Window w, unsigned int button, unsigned int modmask, unsigned int event_mask);
 int snapx(int n, int nx, int ny);
 int snapy(int n, int nx, int ny);
+int snaph(int n, int nx, int ny);
+int snapv(int n, int nx, int ny);
 void drag(XButtonEvent *be, int res);
 int getmodifier(char *name);
 void mapkeys(void);

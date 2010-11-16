@@ -34,10 +34,10 @@
 #define title(c)        ((!clients[c].shaped && clients[c].title && clients[c].border) ? title_height : 0)
 #define total_width(n)  (clients[n].width + (border(n) * 2))
 #define total_height(n) (clients[n].height + (border(n) * 2) + title(n))
-#define warp()          XWarpPointer(dpy, None, clients[current].parent, 0, 0, 0, 0, clients[current].iconic ? icon_width - 1 : clients[current].width + (border(current) ? border_width : -1), clients[current].iconic ? 3 + title_height : ((clients[current].height + (border(current) ? border_width : -1)) + title(current)));
+#define warp()          XWarpPointer(dpy, None, clients[current].iconic ? clients[current].icon : clients[current].parent, 0, 0, 0, 0, clients[current].iconic ? icon_width - 1 : clients[current].width + (border(current) ? border_width : -1), clients[current].iconic ? 3 + title_height : ((clients[current].height + (border(current) ? border_width : -1)) + title(current)));
 
 typedef struct {
-  Window        window, parent, transient_for;
+  Window        window, parent, icon, transient_for;
   int           x, y, width, height, iconic, maximised;
   int           oldbw, prev_x, prev_y, prev_width, prev_height;
   int           title, border, resize, shaped, transient;

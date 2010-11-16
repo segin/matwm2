@@ -62,14 +62,44 @@ int snapy(int n, int nx, int ny) {
   return ny;
 }
 
+int snaph(int n, int nx, int ny) {
+  int i;
+  if(nx < display_width + snapat && nx > display_width - snapat)
+    return display_width;
+  for(i = 0; i < cn; i++) {
+    if(i == n || clients[i].iconic || ny < clients[i].y || clients[n].y > clients[i].y + total_height(i))
+      continue;
+    if(nx < clients[i].x + snapat && nx > clients[i].x - snapat)
+      return clients[i].x;
+    if(nx < clients[i].x + total_width(i) + snapat && nx > clients[i].x + total_width(i) - snapat)
+      return clients[i].x + total_width(i);
+  }
+  return nx;
+}
+
+int snapv(int n, int nx, int ny) {
+  int i;
+  if(ny < display_height + snapat && ny > display_height - snapat)
+    return display_height;
+  for(i = 0; i < cn; i++) {
+    if(i == n || clients[i].iconic || nx < clients[i].x || clients[n].x > clients[i].x + total_width(i))
+      continue;
+    if(ny < clients[i].y + snapat && ny > clients[i].y - snapat)
+      return clients[i].y;
+    if(ny < clients[i].y + total_height(i) + snapat && ny > clients[i].y + total_height(i) - snapat)
+      return clients[i].y + total_height(i);
+  }
+  return ny;
+}
+
 void drag(XButtonEvent *be, int res) {
   int xo, yo;
   XEvent ev;
   restack_client(current, 1);
   if(res) {
     warp();
-    xo = clients[current].x + border(current);
-    yo = clients[current].y + border(current) + title(current);
+    xo = clients[current].x + (border(current) * 2);
+    yo = clients[current].y + (border(current) * 2) + title(current);
   }
   XGrabPointer(dpy, root, True, ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, None, 0, CurrentTime);
   while(1) {
@@ -79,7 +109,7 @@ void drag(XButtonEvent *be, int res) {
     if(ev.type == MotionNotify) {
       while(XCheckTypedEvent(dpy, MotionNotify, &ev));
       if(res) {
-        resize(current, ev.xmotion.x - xo,  ev.xmotion.y - yo);
+        resize(current, snaph(current, ev.xmotion.x, snapv(current, ev.xmotion.x, ev.xmotion.y)) - xo, snapv(current, snaph(current, ev.xmotion.x, ev.xmotion.y), ev.xmotion.y) - yo);
       } else move(current, snapx(current, ev.xmotion.x - be->x, snapy(current, ev.xmotion.x - be->x, ev.xmotion.y - be->y)), snapy(current, snapx(current, ev.xmotion.x - be->x, ev.xmotion.y - be->y), ev.xmotion.y - be->y)); // i schould make a little this more readable, no?
     } else if(ev.type == ButtonRelease && ev.xbutton.button == be->button) {
       break;
