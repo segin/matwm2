@@ -37,6 +37,7 @@ typedef struct {
 #define CAN_MOVE        (1 << 8)
 #define CAN_RESIZE      (1 << 9)
 #define NO_STRUT        (1 << 10)
+#define DONT_LIST       (1 << 11)
 
 enum layers {
   TOPMOST,

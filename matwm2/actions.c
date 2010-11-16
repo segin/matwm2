@@ -5,8 +5,10 @@ int client_move(client *c, int x, int y) {
     return 0;
   c->width = client_width(c);
   c->height = client_height(c);
-  c->flags ^= current->flags & (MAXIMISED | FULLSCREEN | EXPANDED);
-  ewmh_update_state(c); // schould actualy do this only when state really changes
+  if(current->flags & (MAXIMISED | FULLSCREEN | EXPANDED)) {
+    c->flags ^= current->flags & (MAXIMISED | FULLSCREEN | EXPANDED);
+    ewmh_update_state(c);
+  }
   c->x = x;
   c->y = y;
   client_update_pos(c);
@@ -16,8 +18,10 @@ int client_move(client *c, int x, int y) {
 int client_resize(client *c, int width, int height) {
   c->x = client_x(c);
   c->y = client_y(c);
-  c->flags ^= c->flags & (MAXIMISED | FULLSCREEN | EXPANDED);
-  ewmh_update_state(c); // same here
+  if(current->flags & (MAXIMISED | FULLSCREEN | EXPANDED)) {
+    c->flags ^= c->flags & (MAXIMISED | FULLSCREEN | EXPANDED);
+    ewmh_update_state(c);
+  }
   if(c->normal_hints.flags & PResizeInc) {
     width -= (width - ((c->normal_hints.flags & PBaseSize) ? c->normal_hints.base_width : 0)) % c->normal_hints.width_inc;
     height -= (height - ((c->normal_hints.flags & PBaseSize) ? c->normal_hints.base_height : 0)) % c->normal_hints.height_inc;
@@ -148,7 +152,7 @@ void client_toggle_title(client *c) {
 void client_iconify(client *c) {
   int i;
   XEvent ev;
-  if(c->flags & ICONIC)
+  if(c->flags & ICONIC || c->flags & DONT_LIST)
     return;
   nicons++;
   set_wm_state(c->window, IconicState);
@@ -168,7 +172,7 @@ void client_iconify(client *c) {
 
 void client_restore(client *c) {
   int i;
-  if(!(c->flags & ICONIC))
+  if(!(c->flags & ICONIC) || c->flags & DONT_LIST)
     return;
   nicons--;
   c->flags ^= ICONIC;

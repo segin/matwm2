@@ -60,3 +60,14 @@
 	client_deparents puts windows where the new client_x() and client_y() functions say it is
 	free title pixmap on client_remove() - how could i forget that
 
+0.0.55:
+	fixed bug that made clients with the title "" have fucked up titlebars
+	fixed bug in updating the size of titles (buttons_update() was done after call to title_width(), had to be before it)
+	only update ewmh state when nececarry @ move/resize
+	same for client list
+	taskbar and desktop no longer show up in task list, thanks to the new DONT_LIST flag
+	fullscreen bit now set for desktop
+	fullscreen windows resized on resolution change
+	repairered ewmh strutting thing (confused top and right)
+	_NET_DESKTOP_GEOMETRY now updated on root window resize
+

@@ -21,19 +21,24 @@ void handle_event(XEvent ev) {
       if(c) {
         if(c->flags & ICONIC && has_child(c->parent, c->window))
           client_restore(c);
-      } else if(has_child(root, ev.xmaprequest.window))
+      } else if(has_child(root, ev.xmaprequest.window)) {
         client_add(ev.xmaprequest.window);
+        ewmh_update_clist();
+      }
       break;
     case DestroyNotify:
       c = owner(ev.xdestroywindow.window);
-      if(c && c->window == ev.xdestroywindow.window)
+      if(c && c->window == ev.xdestroywindow.window) {
         client_remove(c);
+        ewmh_update_clist();
+      }
       break;
     case UnmapNotify:
       if(c && c->window == ev.xunmap.window) {
         client_deparent(c);
         set_wm_state(c->window, WithdrawnState);
         client_remove(c);
+        ewmh_update_clist();
       }
       break;
     case ConfigureRequest:
@@ -65,6 +70,7 @@ void handle_event(XEvent ev) {
      if(c && ev.xproperty.atom == XA_WM_NAME) {
         if(c->name != no_title)
           XFree(c->name);
+        XFreePixmap(dpy, c->title_pixmap);
         XFetchName(dpy, c->window, &c->name);
         client_update_name(c);
         XClearWindow(dpy, c->title);
@@ -141,8 +147,8 @@ void handle_event(XEvent ev) {
         client_warp(current);
       }
       if(cn && keyaction(ev) == KA_ICONIFY_ALL)
-        while(!(stacking[0]->flags & ICONIC))
-          client_iconify(stacking[0]);
+        for(i = 0; i < cn; i++)
+          client_iconify(clients[i]);
       if(keyaction(ev) == KA_EXEC)
         spawn(keyarg(ev));
       break;
@@ -152,6 +158,9 @@ void handle_event(XEvent ev) {
         display_height = ev.xconfigure.height;
         if(evh == wlist_handle_event)
           wlist_update();
+        ewmh_update_geometry();
+        for(i = 0; i < cn; i++)
+          client_update_size(clients[i]);
       }
       break;
     default:

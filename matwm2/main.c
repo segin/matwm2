@@ -76,6 +76,7 @@ int main(int argc, char *argv[]) {
   }
   if(wins != NULL)
     XFree(wins);
+  ewmh_update_clist();
   dfd = ConnectionNumber(dpy);
   FD_ZERO(&fds);
   FD_SET(qsfd[0], &fds);

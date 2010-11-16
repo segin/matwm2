@@ -28,14 +28,30 @@ void wlist_end(void) {
   client_warp(current);
 }
 
+client *wlist_next(void) {
+  int i = current ? client_number(stacking, current) + 1 : 0;
+  for(i = (i < cn) ? i : 0; stacking[i]->flags & DONT_LIST; i++)
+    if(i >= cn - 1)
+      i = -1;
+  return stacking[i];
+}
+
+client *wlist_prev(void) {
+  int i = current ? client_number(stacking, current) - 1 : cn - 1;
+  for(i = (i >= 0) ? i : cn - 1; stacking[i]->flags & DONT_LIST; i--)
+    if(i <= 0)
+      i = cn - 1;
+  return stacking[i];
+}
+
 int wlist_handle_event(XEvent ev) {
   int mask, i;
   switch(ev.type) {
     case KeyPress:
       if(keyaction(ev) == KA_NEXT) {
-        client_focus((client_number(stacking, current) < cn - 1) ? stacking[client_number(stacking, current) + 1] : stacking[0]);
+        client_focus(wlist_next());
       } else if(keyaction(ev) == KA_PREV) {
-        client_focus((client_number(stacking, current) > 0) ? stacking[client_number(stacking, current) - 1] : stacking[cn - 1]);
+        client_focus(wlist_prev());
       } else break;
       XWarpPointer(dpy, None, current->wlist_item, 0, 0, 0, 0, wlist_width - 2, 3 + title_height);
       break;
@@ -59,24 +75,26 @@ int wlist_handle_event(XEvent ev) {
 }
 
 void wlist_update(void) {
-  int i, tl, nc = 0, offset = 1;
-  if(!cn)
-    wlist_end();
+  int i, nc = 0, offset = 1, nl = 0;
   for(i = 0; i < cn; i++)
-    if(stacking[i]->name) {
-      tl = XTextWidth(font, stacking[i]->name, strlen(stacking[i]->name)) + 6;
-      if(tl > wlist_width)
-        wlist_width = tl;
+    if(!(stacking[i]->flags & DONT_LIST)) {
+      if(stacking[i]->title_width + 6 > wlist_width)
+        wlist_width = stacking[i]->title_width + 6;
+      nl++;
     }
+  if(nl == cn)
+    wlist_end();
   if(wlist_width > display_width)
     wlist_width = display_width;
   for(i = 0; i < cn; i++) {
     if(i == cn - nicons)
       offset = 2;
-    XMoveResizeWindow(dpy, stacking[i]->wlist_item, 1, offset + ((title_height + 5) * nc), wlist_width - 2, title_height + 4);
-    nc++;
+    if(!(stacking[i]->flags & DONT_LIST)) {
+      XMoveResizeWindow(dpy, stacking[i]->wlist_item, 1, offset + ((title_height + 5) * nc), wlist_width - 2, title_height + 4);
+      nc++;
+    }
   }
-  XMoveResizeWindow(dpy, wlist, (display_width / 2) - (wlist_width / 2), (display_height / 2) - (1 + ((title_height + 5) * cn) / 2), wlist_width, offset + ((title_height + 5) * cn));
+  XMoveResizeWindow(dpy, wlist, (display_width / 2) - (wlist_width / 2), (display_height / 2) - (1 + ((title_height + 5) * nc) / 2), wlist_width, offset + ((title_height + 5) * nc));
 }
 
 void wlist_item_draw(client *c) {

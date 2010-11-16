@@ -90,6 +90,7 @@ extern long ewmh_strut[4];
 void ewmh_initialize(void);
 int ewmh_handle_event(XEvent ev);
 int get_ewmh_hints(client *c);
+void ewmh_update_geometry(void);
 void ewmh_set_desktop(client *c, long desktop);
 void ewmh_set_active(client *c);
 void ewmh_update_allowed_actions(client *c);
@@ -160,6 +161,8 @@ extern int wlist_width;
 // functions from wlist.c
 void wlist_start(XEvent ev);
 void wlist_end(void);
+client *wlist_next(void);
+client *wlist_prev(void);
 int wlist_handle_event(XEvent ev);
 void wlist_update(void);
 void wlist_item_draw(client *c);

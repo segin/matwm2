@@ -14,7 +14,7 @@ int client_y(client *c) {
   if(c->flags & FULLSCREEN)
     return -(client_border(c) + client_title(c));
   if(c->flags & MAXIMISED)
-    return ewmh_strut[1];
+    return ewmh_strut[2];
   if(c->flags & EXPANDED)
     return c->expand_y;
   return c->y;

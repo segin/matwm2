@@ -31,7 +31,6 @@ void client_add(Window w) {
   new->y = attr.y - new->yo;
   if(wm_state == IconicState)
     new->flags |= ICONIC;
-  XFetchName(dpy, w, &new->name);
   XSelectInput(dpy, w, PropertyChangeMask | EnterWindowMask);
   XShapeSelectInput(dpy, w, ShapeNotifyMask);
   XSetWindowBorderWidth(dpy, w, 0);
@@ -44,12 +43,14 @@ void client_add(Window w) {
   new->wlist_item = XCreateWindow(dpy, wlist, 0, 0, 1, 1, 0,
                                   DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
                                   CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
+  XFetchName(dpy, w, &new->name);
   client_update_name(new);
   buttons_create(new);
   buttons_update(new);
   client_grab_buttons(new);
   XMapWindow(dpy, new->title);
-  XMapWindow(dpy, new->wlist_item);
+  if(!(new->flags & DONT_LIST))
+    XMapWindow(dpy, new->wlist_item);
   XAddToSaveSet(dpy, w);
   XReparentWindow(dpy, w, new->parent, client_border_intern(new), client_border_intern(new) + client_title(new));
   if(new->flags & FULLSCREEN || new->flags & MAXIMISED)
@@ -59,7 +60,7 @@ void client_add(Window w) {
   set_shape(new);
   cn++;
   clients_alloc();
-  if(!(new->flags & ICONIC)) {
+  if(!(new->flags & ICONIC) || new->flags & DONT_LIST) {
     for(i = cn - 1; i > 0 && (stacking[i - 1]->flags & ICONIC || stacking[i - 1]->layer >= new->layer); i--)
       stacking[i] = stacking[i - 1];
     stacking[i] = new;
@@ -80,7 +81,6 @@ void client_add(Window w) {
   ewmh_set_desktop(new, 0);
   ewmh_update_allowed_actions(new);
   ewmh_update_state(new);
-  ewmh_update_clist();
 }
 
 void client_deparent(client *c) {
@@ -115,7 +115,6 @@ void client_remove(client *c) {
   clients_alloc();
   if(evh == wlist_handle_event)
     wlist_update();
-  ewmh_update_clist();
 }
 
 void client_grab_button(client *c, int button) {
@@ -137,15 +136,12 @@ void client_draw_title(client *c) {
 }
 
 void client_update_name(client *c) {
-  Pixmap old = c->title_pixmap;
-  if(!c->name)
+  if(!c->name || strlen(c->name) == 0)
     c->name = no_title;
   c->title_width = XTextWidth(font, c->name, strlen(c->name));
   c->title_pixmap = XCreatePixmap(dpy, c->title, c->title_width, text_height, DefaultDepth(dpy, screen));
   client_draw_title(c);
   XSetWindowBackgroundPixmap(dpy, c->title, c->title_pixmap);
-  if(old)
-    XFreePixmap(dpy, old);
   XResizeWindow(dpy, c->title, title_width(c), text_height);
 }
 
@@ -189,11 +185,11 @@ void client_update_pos(client *c) {
 
 void client_update_size(client *c) {
   int width = client_width(c);
+  buttons_update(c);
   XMoveWindow(dpy, c->button_parent, (width + border_width - 1) - button_parent_width, border_width - 1);
   XResizeWindow(dpy, c->title, title_width(c), text_height);
   XResizeWindow(dpy, c->parent, client_width_total_intern(c), client_height_total_intern(c));
   XResizeWindow(dpy, c->window, width, client_height(c));
-  buttons_update(c);
   buttons_draw(c);
 }
 
