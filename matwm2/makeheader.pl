@@ -1,3 +1,4 @@
+#!/usr/bin/env perl
 open H, ">", "all.h";
 opendir DIR, ".";
 foreach(readdir DIR) {

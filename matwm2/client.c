@@ -26,8 +26,9 @@ void client_add(Window w) {
 	if(wm_state == IconicState)
 		new->flags |= ICONIC;
 #ifdef SHAPE
-	if(have_shape && XShapeQueryExtents(dpy, new->window, &bounding_shaped, &di, &di, &dui, &dui, &di, &di, &di, &dui, &dui) && bounding_shaped)
-		new->flags |= SHAPED;
+	if(have_shape)
+		if(XShapeQueryExtents(dpy, new->window, &bounding_shaped, &di, &di, &dui, &dui, &di, &di, &di, &dui, &dui) && bounding_shaped)
+			new->flags |= SHAPED;
 #endif
 	/* read hints - these eventually override stuff we have just set */
 	get_normal_hints(new);
@@ -64,9 +65,9 @@ void client_add(Window w) {
 	XShapeSelectInput(dpy, w, ShapeNotifyMask);
 #endif
 	client_grab_buttons(new);
-  /* reparent the client window */
+	/* reparent the client window */
 	XAddToSaveSet(dpy, w);
-  XReparentWindow(dpy, w, new->parent, client_border_intern(new), client_border_intern(new) + client_title(new));
+	XReparentWindow(dpy, w, new->parent, client_border_intern(new), client_border_intern(new) + client_title(new));
 	if(new->flags & FULLSCREEN || new->flags & MAXIMIZED_L || new->flags & MAXIMIZED_R || new->flags & MAXIMIZED_T || new->flags & MAXIMIZED_B)
 		client_update_size(new);
 	else
@@ -188,7 +189,9 @@ void client_draw_title(client *c) { /* draw the title pixmap for a client */
 }
 
 void client_update_name(client *c) { /* apply changes in the name of a client */
-	if(!c->name || strlen(c->name) == 0)
+	if(!c->name)
+		c->name = no_title;
+	if(strlen(c->name) == 0)
 		c->name = no_title;
 	c->title_width = XTextWidth(font, c->name, strlen(c->name)) + 1;
 	c->title_pixmap = XCreatePixmap(dpy, c->title, c->title_width, text_height, DefaultDepth(dpy, screen));

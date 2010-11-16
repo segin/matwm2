@@ -1,9 +1,18 @@
 #include "matwm.h"
 
 void spawn(char *cmd) { /* run a command with sh -c */
-	int pid = vfork(); /* we fork from a forked off process here to prevent creating zombie children (process information that is left there for the next call to wait()) */
+#ifdef NO_VFORK
+	int pid = fork();
+#else
+	int pid = vfork();
+#endif
 	if(pid == 0) {
+	/* we fork from a forked off process here to prevent creating zombie children (process information that is left there for the next call to wait()) */
+#ifdef NO_VFORK
+		if(fork() == 0) {
+#else
 		if(vfork() == 0) {
+#endif
 			setsid();
 			if(dn)
 				setenv("DISPLAY", dn, 1);

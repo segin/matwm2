@@ -50,10 +50,14 @@ void client_resize(client *c, int width, int height) {
 
 void client_focus(client *c) {
 	client *prev = current;
-	if((c && c->flags & DONT_FOCUS) || evh == drag_handle_event)
+	if(c)
+		if(c->flags & DONT_FOCUS)
+			return;
+	if(evh == drag_handle_event)
 		return;
-	if(current && !(current->flags & ICONIC))
-		previous = current;
+	if(current)
+		if(!(current->flags & ICONIC))
+			previous = current;
 	current = c;
 	if(prev)
 		client_set_bg(prev, ibg, ifg);

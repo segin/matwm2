@@ -15,8 +15,9 @@ int main(int argc, char *argv[]) {
 	Window dw, *wins;
 	XWindowAttributes attr;
 	struct sigaction qsa;
-	int dfd, di, sr, act;
+	int dfd, di, sr;
 	fd_set fds, fdsr;
+	char act;
 	for(i = 1; i < argc; i++) {
 		if(strcmp(argv[i], "-defaults") == 0) {
 			for(ui = 0; ui < DEF_CFG_LINES; ui++)
@@ -99,14 +100,16 @@ int main(int argc, char *argv[]) {
 			handle_event(ev);
 		} else {
 			fdsr = fds;
-			sr = select((qsfd[0] < dfd ? dfd : qsfd[0]) + 1, &fdsr, (fd_set *) NULL, (fd_set *) NULL, (struct timeval *) NULL);
+			sr = select(((qsfd[0] < dfd) ? dfd : qsfd[0]) + 1, &fdsr, (fd_set *) NULL, (fd_set *) NULL, (struct timeval *) NULL);
 			if(sr == -1 && errno != EINTR)
 				error();
-			if(sr && FD_ISSET(qsfd[0], &fdsr) && read(qsfd[0], &act, sizeof(int)) == sizeof(int)) {
-				if(act == REINIT)
-					cfg_reinitialize();
-				else exit((act == ERROR) ? 1 : 0);
-			}
+			if(sr > 0)
+				if(FD_ISSET(qsfd[0], &fdsr))
+					if(read(qsfd[0], &act, sizeof(act)) == sizeof(act)) {
+						if(act == REINIT)
+							cfg_reinitialize();
+						else exit((act == ERROR) ? 1 : 0);
+					}
 		}
 }
 
@@ -142,7 +145,7 @@ void quit(void) {
 	XCloseDisplay(dpy);
 }
 
-void qsfd_send(int s) {
+void qsfd_send(char s) {
 	write(qsfd[1], &s, sizeof(s));
 }
 

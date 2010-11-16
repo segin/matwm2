@@ -5,7 +5,9 @@ int wlist_width;
 client *client_before_wlist;
 
 void wlist_start(XEvent ev) {
-	if(evh || !cn || !wlist_update())
+	if(evh || !cn)
+		return;
+	if(!wlist_update())
 		return;
 	XMapRaised(dpy, wlist);
 	XGrabKeyboard(dpy, root, True, GrabModeAsync, GrabModeAsync, CurrentTime);
@@ -52,9 +54,10 @@ int wlist_handle_event(XEvent ev) {
 	client *c;
 	switch(ev.type) {
 		case KeyPress:
-			if(keyaction(ev) == KA_NEXT) {
+			i = keyaction(ev);
+			if(i == KA_NEXT) {
 				client_focus(wlist_next());
-			} else if(keyaction(ev) == KA_PREV) {
+			} else if(i == KA_PREV) {
 				client_focus(wlist_prev());
 			} else break;
 			XWarpPointer(dpy, None, current->wlist_item, 0, 0, 0, 0, wlist_width - 2, 3 + title_height);
@@ -93,7 +96,7 @@ int wlist_update(void) {
 			if(stacking[i]->title_width + 6 > wlist_width)
 				wlist_width = stacking[i]->title_width + 6;
 		} else nl++;
-	if(nl == cn) {
+	if(nl == cn) { /* no clients that have to be listed */
 		wlist_end(1);
 		return 0;
 	}

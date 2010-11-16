@@ -4,22 +4,23 @@ XROOT     = /usr/X11R6
 CC        = cc
 RM        = rm -f
 
+CFLAGS    += -I$(XROOT)/include # remove the + for this and the next line if make complains about being unable to add to a non-existing macro
+LDFLAGS   += -lX11 -L$(XROOT)/lib
 CFLAGS    += -DSHAPE # comment out this line to disable shape support
 LDFLAGS   += -lXext # if shape support is disabled, this normally is no longer necessary and schould probally be commented out too
-CFLAGS    += -I$(XROOT)/include
-LDFLAGS   += -lX11 -L$(XROOT)/lib
-CFLAGS    += -DDEBUG -ggdb3 # -DDEBUG_EVENTS -DSYNC # for debugging
-CFLAGS    += -pedantic -std=c89 -Wall -W -Wno-unused-parameter
-CFLAGS    += -DVERSION=\"0.0.93pre1\"
+#CFLAGS    += -DNO_VFORK # uncomment this out to compile on minix or other operating systems that lack vfork()
 
-SRCFILES  = actions.c buttons.c client.c config.c defcfg.c drag.c events.c evn.c ewmh.c info.c input.c main.c misc.c vdesk.c wlist.c x11.c
-OBJFILES  = $(SRCFILES:.c=.o)
+#CFLAGS    += -DDEBUG -ggdb3 # -DDEBUG_EVENTS -DSYNC # for debugging
+#CFLAGS    += -pedantic -std=c89 -W -Wall -Wno-unused-parameter
+CFLAGS    += -DVERSION=\"0.0.93\"
+
+OBJFILES  = actions.o buttons.o client.o config.o defcfg.o drag.o events.o evn.o ewmh.o info.o input.o main.o misc.o vdesk.o wlist.o x11.o
 HEADERS   = all.h defcfg.h ewmh.h matwm.h mwm_hints.h
 
 all: matwm2
 
 matwm2: $(OBJFILES) $(HEADERS)
-	$(CC) $(LDFLAGS) $(OBJFILES) -o $@
+	$(CC) -o $@ $(OBJFILES) $(LDFLAGS)
 
 clean:
 	$(RM) matwm2 *.o

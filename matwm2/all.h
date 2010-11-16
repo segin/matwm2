@@ -10,7 +10,7 @@ extern Colormap colormap;
 /* functions from main.c */
 int main(int argc, char *argv[]);
 void quit(void);
-void qsfd_send(int s);
+void qsfd_send(char s);
 void error(void);
 void qsh(int sig);
 

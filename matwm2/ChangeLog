@@ -2,6 +2,18 @@
 	revised motif hints implementation once more (decoration hints schould be fixed now)
 	mid-sentence tabs in mwm_hints.h replaced by spaces, added comments
 	little correction in README to sound less stupid
+	**pre1 release
+	modified makefile to work with minix
+	added ifdefs for people without vfork
+	a few spaces in client() replaced by tab
+	made make*.pl executable
+	using nested if's instead of one big if in main loop and other places (for i am uncertain if the language implies that in if(this() && that()) that won't be called if this() returns 0 - and it's more readable anyway)
+	prevent strlen on NULL pointer in client_update_name() for similar reasons
+	replaced load of if's for some key actions with case statement in events.c
+	only call keyaction() once in wlist.c
+	more parenthesis in call to select() in main() in main.c 
+	explicity check if sr is zero in main loop
+	send only one char to qsfd instead of an integer
 
 0.0.92:
 	makeheader now allows comments next to global variables - needed for client.c since 0.0.91

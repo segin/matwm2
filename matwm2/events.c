@@ -177,8 +177,9 @@ void handle_event(XEvent ev) {
 			return;
 		case DestroyNotify:
 			c = owner(ev.xdestroywindow.window);
-			if(c && c->window == ev.xdestroywindow.window)
-				client_remove(c);
+			if(c)
+				if(c->window == ev.xdestroywindow.window)
+					client_remove(c);
 			return;
 		case ConfigureRequest:
 			c = owner(ev.xconfigurerequest.window);
@@ -213,16 +214,26 @@ void handle_event(XEvent ev) {
 			}
 			return;
 		case KeyPress:
-			if(keyaction(ev) == KA_NEXT || keyaction(ev) == KA_PREV)
-				wlist_start(ev);
-			if(cn && keyaction(ev) == KA_ICONIFY_ALL)
-				client_iconify_all();
-			if(keyaction(ev) == KA_EXEC)
-				spawn(keyarg(ev));
-			if(keyaction(ev) == KA_NEXT_DESKTOP && desktop < dc - 1)
-				desktop_goto(desktop + 1);
-			if(keyaction(ev) == KA_PREV_DESKTOP && desktop > 0)
-				desktop_goto(desktop - 1);
+			switch(keyaction(ev)) {
+			  case KA_NEXT:
+				case KA_PREV:
+					wlist_start(ev);
+					break;
+				case KA_ICONIFY_ALL:
+					if(cn)
+						client_iconify_all();
+					break;
+				case KA_EXEC:
+					spawn(keyarg(ev));
+					break;
+				case KA_NEXT_DESKTOP:
+					if(desktop < dc - 1)
+						desktop_goto(desktop + 1);
+					break;
+				case KA_PREV_DESKTOP:
+					if(desktop > 0)
+						desktop_goto(desktop - 1);
+			}
 			return;
 		case ConfigureNotify:
 			if(root == ev.xconfigure.window) {

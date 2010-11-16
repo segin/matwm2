@@ -1,3 +1,4 @@
+#!/usr/bin/env perl
 open CFG, "<", "default_matwmrc";
 my @lines = <CFG>;
 close CFG;
