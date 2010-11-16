@@ -5,5 +5,5 @@ watch config file for changes in thread (fstat, time) - and adapt select loop so
 xinerama support
 make window buttons configureable
 site, evt new name
--- these done, release 0.1.0
+-- if above done and stable, release 0.1.0
 

@@ -63,7 +63,7 @@ void ewmh_initialize(void) {
 				*d = 0;
 			desktop_goto(*d);
 		}
-		XFree(d);
+		XFree((void *) d);
 	}
 	ewmh_set_desktop(desktop);
 	ewmh_update_geometry();
@@ -95,7 +95,7 @@ int ewmh_handle_event(XEvent ev) {
 			}
 			if(ev.xclient.message_type == ewmh_atoms[NET_ACTIVE_WINDOW]) {
 				if(c) {
-					if(c->desktop == ICONS) {
+					if(c->flags & ICONIC) {
 						client_restore(c);
 						client_focus(c);
 					} else {
@@ -153,7 +153,7 @@ int ewmh_handle_event(XEvent ev) {
 int get_ewmh_hints(client *c) {
 	Atom rt, *data;
 	int rf;
-	unsigned long nir, bar, *d;
+	long nir, bar, *d;
 	if(XGetWindowProperty(dpy, c->window, ewmh_atoms[NET_WM_WINDOW_TYPE], 0, 1, False, XA_ATOM, &rt, &rf, &nir, &bar, (unsigned char **) &data) == Success) {
 		if(nir) {
 			if(*data == ewmh_atoms[NET_WM_WINDOW_TYPE_DESKTOP]) {
@@ -172,10 +172,11 @@ int get_ewmh_hints(client *c) {
 	}
 	if(XGetWindowProperty(dpy, c->window, ewmh_atoms[NET_WM_DESKTOP], 0, 1, False, XA_CARDINAL, &rt, &rf, &nir, &bar, (unsigned char **) &d) == Success) {
 		if(nir) {
-			if(*d >= 0 && *d < dc)
-				c->desktop = *d;
-			else if(*d == 0xffffffff)
-				c->desktop = STICKY;
+			if(*d < STICKY)
+				c->desktop = 0;
+			else if(*d >= dc)
+				c->desktop = dc - 1;
+			else c->desktop = *d;
 		}
 		XFree((void *) d);
 	}
@@ -203,8 +204,7 @@ void ewmh_update_geometry(void) {
 }
 
 void ewmh_update_desktop(client *c) {
-	long d = (c->desktop < 0) ? 0xffffffff : c->desktop;
-	XChangeProperty(dpy, c->window, ewmh_atoms[NET_WM_DESKTOP], XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &d, 1);
+	XChangeProperty(dpy, c->window, ewmh_atoms[NET_WM_DESKTOP], XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &c->desktop, 1);
 }
 
 void ewmh_set_desktop(int d) {

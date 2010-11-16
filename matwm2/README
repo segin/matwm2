@@ -4,7 +4,7 @@ It is written and maintained by Mattis Michel <sic_zer0@hotmail.com>, and distri
 To compile and install, review the first block of text in the Makefile to specify the right folders to look for headers and libraries in and install to.
 If you want to define any extra flags for compiling (like debugging symbols) look at the second paragraph in the Makefile.
 After that run "make" and "make install" - if all goes well it schould then be compiled and installed.
+Default built-in configuration is in defaults.h if you would want to change it.
 
-To launch matwm2 when starting X you might want to add "exec matwm2" at the end of your $HOME/.xinitrc or (if you use xdm) $HOME/.xsession file, if matwm2 schouldn't be the magic process you can use "matwm2&" in one of these files.
 Before usage and for further information, please consult the manual page (run "man matwm2" on a terminal, after it has been installed).
 

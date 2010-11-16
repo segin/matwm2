@@ -66,7 +66,9 @@ int main(int argc, char *argv[]) {
 												CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
 	p_attr.event_mask = SubstructureRedirectMask | SubstructureNotifyMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask | LeaveWindowMask | ExposureMask;
 	p_attr.background_pixel = ibg.pixel;
+#ifdef SHAPE
 	have_shape = XShapeQueryExtension(dpy, &shape_event, &di);
+#endif
 	ewmh_initialize();
 	XSetInputFocus(dpy, PointerRoot, RevertToPointerRoot, CurrentTime);
 	XQueryTree(dpy, root, &dw, &dw, &wins, &nwins);
@@ -98,17 +100,15 @@ int main(int argc, char *argv[]) {
 
 void quit(void) {
 	int i, d;
-	d = ICONS;
+	d = dc;
 	while(d != -1) {
 		if(d != desktop)
 			for(i = cn - 1; i >= 0; i--)
-				if(stacking[i]->desktop == d) {
+				if(stacking[i]->desktop == d || (d == dc && stacking[i]->flags & ICONIC)) {
 					client_deparent(stacking[i]);
 					XMapWindow(dpy, stacking[i]->window);
 				}
-		if(d == ICONS)
-			d = dc - 1;
-		else d--;
+		d--;
 	}
 	for(i = cn - 1; i >= 0; i--)
 		if(stacking[i]->desktop == desktop || stacking[i]->desktop == STICKY)

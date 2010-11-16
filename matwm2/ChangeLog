@@ -377,3 +377,11 @@
 	added info about how to exit matwm, and how it will restore windows at exit in the manual page
 	restored old (0.0.5 - 0.0.48) changelog from e-mails
 
+0.0.67:
+	a few updates to the man page and readme file
+	don't include anything from evn.c if DEBUG_EVENTS not defined
+	made use of shape extention optional
+	ICONIC windows no longer have their own desktop, but their own bit flag - to fix sticky
+	added cast for current desktop value at XFree() in ewmh_initialize()
+	fixed sticky windows (ICONIC is a bit flag again, no desktop), they will stay sticky after iconifying and restoring, dragging over the desktop edge and restarting the window manager
+

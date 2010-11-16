@@ -17,7 +17,7 @@ void wlist_end(int err) {
 	evh = NULL;
 	if(current && !err) {
 		client_save(current);
-		if(current->desktop == ICONS)
+		if(current->flags & ICONIC)
 			client_restore(current);
 		else
 			client_raise(current);
@@ -28,7 +28,7 @@ void wlist_end(int err) {
 
 client *wlist_next(void) {
 	int i = current ? client_number(stacking, current) + 1 : 0;
-	for(i = (i < cn) ? i : 0; stacking[i]->flags & DONT_LIST || !(stacking[i]->desktop == desktop || stacking[i]->desktop == ICONS || stacking[i]->desktop == STICKY); i++)
+	for(i = (i < cn) ? i : 0; stacking[i]->flags & DONT_LIST || !(stacking[i]->desktop == desktop || stacking[i]->flags & ICONIC || stacking[i]->desktop == STICKY); i++)
 		if(i >= cn - 1)
 			i = -1;
 	return stacking[i];
@@ -36,7 +36,7 @@ client *wlist_next(void) {
 
 client *wlist_prev(void) {
 	int i = current ? client_number(stacking, current) - 1 : cn - 1;
-	for(i = (i >= 0) ? i : cn - 1; stacking[i]->flags & DONT_LIST || !(stacking[i]->desktop == desktop || stacking[i]->desktop == ICONS || stacking[i]->desktop == STICKY); i--)
+	for(i = (i >= 0) ? i : cn - 1; stacking[i]->flags & DONT_LIST || !(stacking[i]->desktop == desktop || stacking[i]->flags & ICONIC || stacking[i]->desktop == STICKY); i--)
 		if(i <= 0)
 			i = cn - 1;
 	return stacking[i];
@@ -84,7 +84,7 @@ int wlist_update(void) {
 	int i, nc = 0, offset = 1, nl = 0;
 	wlist_width = 3;
 	for(i = 0; i < cn; i++)
-		if(!(stacking[i]->flags & DONT_LIST) && (stacking[i]->desktop == desktop || stacking[i]->desktop == ICONS || stacking[i]->desktop == STICKY)) {
+		if(!(stacking[i]->flags & DONT_LIST) && (stacking[i]->desktop == desktop || stacking[i]->flags & ICONIC || stacking[i]->desktop == STICKY)) {
 			if(stacking[i]->title_width + 6 > wlist_width)
 				wlist_width = stacking[i]->title_width + 6;
 		} else nl++;
@@ -97,7 +97,7 @@ int wlist_update(void) {
 	for(i = 0; i < cn; i++) {
 		if(i == cn - nicons)
 			offset = 2;
-		if(!(stacking[i]->flags & DONT_LIST) && (stacking[i]->desktop == desktop || stacking[i]->desktop == ICONS || stacking[i]->desktop == STICKY)) {
+		if(!(stacking[i]->flags & DONT_LIST) && (stacking[i]->desktop == desktop || stacking[i]->flags & ICONIC || stacking[i]->desktop == STICKY)) {
 			XMoveResizeWindow(dpy, stacking[i]->wlist_item, 1, offset + ((title_height + 5) * nc), wlist_width - 2, title_height + 4);
 			nc++;
 		}

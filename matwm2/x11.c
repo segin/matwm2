@@ -86,10 +86,12 @@ void get_mwm_hints(client *c) {
 	}
 }
 
+#ifdef SHAPE
 void set_shape(client *c) {
 	if(c->flags & SHAPED)
 		XShapeCombineShape(dpy, c->parent, ShapeBounding, client_border(c), client_border(c) + client_title(c), c->window, ShapeBounding, ShapeSet);
 }
+#endif
 
 void configurenotify(client *c)
 {

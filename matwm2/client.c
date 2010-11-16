@@ -21,8 +21,10 @@ void client_add(Window w) {
 	new->flags = HAS_TITLE | HAS_BORDER | HAS_BUTTONS | CAN_MOVE | CAN_RESIZE;
 	new->layer = NORMAL;
 	new->desktop = desktop;
+#ifdef SHAPE
 	if(have_shape && XShapeQueryExtents(dpy, new->window, &bounding_shaped, &di, &di, &dui, &dui, &di, &di, &di, &dui, &dui) && bounding_shaped)
 		new->flags |= SHAPED;
+#endif
 	get_normal_hints(new);
 	get_mwm_hints(new);
 	get_ewmh_hints(new);
@@ -31,9 +33,11 @@ void client_add(Window w) {
 	new->x = attr.x - new->xo;
 	new->y = attr.y - new->yo;
 	if(wm_state == IconicState)
-		new->desktop = ICONS;
+		new->flags |= ICONIC;
 	XSelectInput(dpy, w, PropertyChangeMask | EnterWindowMask | FocusChangeMask);
+#ifdef SHAPE
 	XShapeSelectInput(dpy, w, ShapeNotifyMask);
+#endif
 	XSetWindowBorderWidth(dpy, w, 0);
 	new->parent = XCreateWindow(dpy, root, client_x(new), client_y(new), client_width_total_intern(new), client_height_total_intern(new), (new->flags & HAS_BORDER) ? 1 : 0,
 															DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
@@ -58,11 +62,13 @@ void client_add(Window w) {
 		client_update_size(new);
 	else
 		configurenotify(new);
+#ifdef SHAPE
 	set_shape(new);
+#endif
 	cn++;
 	clients_alloc();
-	if(new->desktop != ICONS) {
-		for(i = cn - 1; i > 0 && (stacking[i - 1]->desktop == ICONS || stacking[i - 1]->layer >= new->layer); i--)
+	if(!(new->flags & ICONIC)) {
+		for(i = cn - 1; i > 0 && (stacking[i - 1]->flags & ICONIC || stacking[i - 1]->layer >= new->layer); i--)
 			stacking[i] = stacking[i - 1];
 		stacking[i] = new;
 		if(evh == drag_handle_event)
@@ -111,7 +117,7 @@ void client_deparent(client *c) {
 void client_remove(client *c) {
 	XEvent ev;
 	int i;
-	if(c->desktop == ICONS)
+	if(c->flags & ICONIC)
 		nicons--;
 	if(button_current == c->button_iconify || button_current == c->button_expand || button_current == c->button_maximise || button_current == c->button_close)
 		button_current = None;
@@ -197,7 +203,7 @@ void clients_apply_stacking(void) {
 	int i = 0;
 	Window wins[cn + 1];
 	wins[0] = wlist;
-	for(i = 0; i < cn && stacking[i]->desktop != ICONS; i++)
+	for(i = 0; i < cn && !(stacking[i]->flags & ICONIC); i++)
 		wins[i + 1] = stacking[i]->parent;
 	XRestackWindows(dpy, wins, i + 1);
 	ewmh_update_stacking();

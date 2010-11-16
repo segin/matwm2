@@ -17,7 +17,7 @@ void drag_start(int mode, int button, int x, int y) {
 		drag_xo = x - client_x(current);
 		drag_yo = y - client_y(current);
 	}
-	if(current->desktop == ICONS)
+	if(current->flags & ICONIC)
 		client_restore(current);
 	drag_mode = mode;
 	drag_button = button;

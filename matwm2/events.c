@@ -76,11 +76,13 @@ void handle_event(XEvent ev) {
 				if(c == current && ev.xfocus.mode != NotifyGrab)
 					XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
 				return;
+#ifdef SHAPE
 			default:
 				if(ev.type == shape_event) {
 					set_shape(c);
 					return;
 				}
+#endif
 		}
 	}
 	if(current && ev.type == KeyPress)
@@ -160,7 +162,7 @@ void handle_event(XEvent ev) {
 		case MapRequest:
 			c = owner(ev.xmaprequest.window);
 			if(c) {
-				if(c->desktop == ICONS && has_child(c->parent, c->window))
+				if(c->flags & ICONIC && has_child(c->parent, c->window))
 					client_restore(c);
 			} else if(has_child(root, ev.xmaprequest.window)) {
 				client_add(ev.xmaprequest.window);

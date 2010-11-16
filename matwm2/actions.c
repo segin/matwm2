@@ -67,7 +67,7 @@ void client_focus(client *c) {
 		XSetInputFocus(dpy, PointerRoot, RevertToPointerRoot, CurrentTime);
 	} else {
 		client_set_bg(c, bg, fg);
-		if(c->desktop == desktop || c->desktop == STICKY && isviewable(c->window))
+		if((c->desktop == desktop || c->desktop == STICKY) && isviewable(c->window))
 			XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
 	}
 	ewmh_set_active(c);
@@ -75,7 +75,7 @@ void client_focus(client *c) {
 
 void client_raise(client *c) {
 	int i;
-	for(i = client_number(stacking, c); i > 0 && (stacking[i - 1]->layer >= c->layer || stacking[i - 1]->desktop == ICONS); i--)
+	for(i = client_number(stacking, c); i > 0 && (stacking[i - 1]->layer >= c->layer || stacking[i - 1]->flags & ICONIC); i--)
 		stacking[i] = stacking[i - 1];
 	stacking[i] = c;
 	clients_apply_stacking();
@@ -83,7 +83,7 @@ void client_raise(client *c) {
 
 void client_lower(client *c) {
 	int i;
-	for(i = client_number(stacking, c); i < cn - 1 && stacking[i + 1]->layer <= c->layer && stacking[i + 1]->desktop != ICONS; i++)
+	for(i = client_number(stacking, c); i < cn - 1 && stacking[i + 1]->layer <= c->layer && !(stacking[i + 1]->flags & ICONIC); i++)
 		stacking[i] = stacking[i + 1];
 	stacking[i] = c;
 	clients_apply_stacking();
@@ -93,7 +93,7 @@ void client_set_layer(client *c, int layer) {
 	int i, prev = c->layer;
 	c->layer = layer;
 	if(layer > prev)
-		for(i = client_number(stacking, c); i < cn - 1 && stacking[i + 1]->layer < c->layer && stacking[i + 1]->desktop != ICONS; i++)
+		for(i = client_number(stacking, c); i < cn - 1 && stacking[i + 1]->layer < c->layer && !(stacking[i + 1]->flags & ICONIC); i++)
 			stacking[i] = stacking[i + 1];
 	else
 		for(i = client_number(stacking, c); i > 0 && stacking[i - 1]->layer > c->layer; i--)
@@ -158,11 +158,14 @@ void client_toggle_title(client *c) {
 
 void client_iconify(client *c) {
 	int i;
-	if(c->desktop == ICONS || c->flags & DONT_LIST)
+	if(c->flags & ICONIC || c->flags & DONT_LIST)
 		return;
 	nicons++;
 	set_wm_state(c->window, IconicState);
-	client_to_desktop(c, ICONS);
+	client_hide(c);
+	if(c->desktop != desktop || c->desktop != STICKY)
+		XMapWindow(dpy, c->wlist_item);
+	c->flags |= ICONIC;
 	for(i = client_number(stacking, c); i < cn - 1; i++)
 		stacking[i] = stacking[i + 1];
 	stacking[cn - 1] = c;
@@ -173,10 +176,13 @@ void client_iconify(client *c) {
 
 void client_restore(client *c) {
 	int i;
-	if(c->desktop != ICONS)
+	if(!(c->flags & ICONIC))
 		return;
 	nicons--;
-	client_to_desktop(c, desktop);
+	client_show(c);
+	if(c->desktop != STICKY)
+		c->desktop = desktop;
+	c->flags ^=ICONIC;
 	client_raise(c);
 	set_wm_state(c->window, NormalState);
 	if(c == current)
@@ -228,7 +234,7 @@ void client_iconify_all(void) {
 			}
 	} else {
 		for(i = 0; i < cn; i++)
-			if(clients[i]->desktop != ICONS && !(clients[i]->flags & DONT_LIST)) {
+			if((clients[i]->desktop == desktop || clients[i]->desktop == STICKY) && !(clients[i]->flags & ICONIC) && !(clients[i]->flags & DONT_LIST)) {
 				client_iconify(clients[i]);
 				clients[i]->flags |= RESTORE;
 			} else clients[i]->flags ^= clients[i]->flags & RESTORE;

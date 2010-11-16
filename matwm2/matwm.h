@@ -26,27 +26,27 @@ typedef struct {
 	char				*name;
 } client;
 
-#define MAXIMISED_L			(1 << 0)
-#define MAXIMISED_R			(1 << 1)
-#define MAXIMISED_T			(1 << 2)
-#define MAXIMISED_B			(1 << 3)
-#define EXPANDED_L			(1 << 4)
-#define EXPANDED_R			(1 << 5)
-#define EXPANDED_T			(1 << 6)
-#define EXPANDED_B			(1 << 7)
-#define FULLSCREEN			(1 << 8)
-#define SHAPED					(1 << 9)
-#define HAS_TITLE				(1 << 10)
-#define HAS_BORDER			(1 << 11)
-#define HAS_BUTTONS			(1 << 12)
-#define CAN_MOVE				(1 << 13)
-#define CAN_RESIZE			(1 << 14)
-#define NO_STRUT				(1 << 15)
-#define DONT_LIST				(1 << 16)
-#define RESTORE					(1 << 17)
+#define ICONIC					(1 << 0)
+#define MAXIMISED_L			(1 << 1)
+#define MAXIMISED_R			(1 << 2)
+#define MAXIMISED_T			(1 << 3)
+#define MAXIMISED_B			(1 << 4)
+#define EXPANDED_L			(1 << 5)
+#define EXPANDED_R			(1 << 6)
+#define EXPANDED_T			(1 << 7)
+#define EXPANDED_B			(1 << 8)
+#define FULLSCREEN			(1 << 9)
+#define SHAPED					(1 << 10)
+#define HAS_TITLE				(1 << 11)
+#define HAS_BORDER			(1 << 12)
+#define HAS_BUTTONS			(1 << 13)
+#define CAN_MOVE				(1 << 14)
+#define CAN_RESIZE			(1 << 15)
+#define NO_STRUT				(1 << 16)
+#define DONT_LIST				(1 << 17)
+#define RESTORE					(1 << 18)
 
 #define STICKY					-1
-#define ICONS						-2
 
 enum layers {
 	TOPMOST,

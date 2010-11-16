@@ -1,6 +1,6 @@
+#ifdef DEBUG_EVENTS
 #include "matwm.h"
 
-#ifdef DEBUG_EVENTS
 char *event_name(XEvent ev) {
 	switch(ev.type) {
 		case KeyPress:
