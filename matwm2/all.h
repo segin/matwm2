@@ -18,7 +18,7 @@ void set_shape(int c);
 
 // config.c
 extern XColor bg, ibg, fg, ifg;
-extern int border_width, title_height, hmaxicons, icon_width;
+extern int border_width, title_height, hmaxicons, icon_width, snapat;
 extern char *cbutton1, *cbutton2, *cbutton3, *cbutton4, *cbutton5, *ibutton1, *ibutton2, *ibutton3, *ibutton4, *ibutton5;
 extern key key_next, key_prev, key_next_icon, key_prev_icon, key_iconify, key_maximise, key_close, key_bottomleft, key_bottomright, key_topleft, key_topright;
 extern XFontStruct *font;
@@ -45,6 +45,8 @@ void restore(int n);
 extern unsigned int mousemodmask, numlockmask;
 void grab_key(Window w, unsigned int modmask, KeyCode key);
 void grab_button(Window w, unsigned int button, unsigned int modmask, unsigned int event_mask);
+int snapx(int n, int nx, int ny);
+int snapy(int n, int nx, int ny);
 void drag(XButtonEvent *be, int res);
 int getmodifier(char *name);
 void mapkeys(void);

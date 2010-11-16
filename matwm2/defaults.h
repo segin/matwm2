@@ -27,6 +27,7 @@
 #define DEF_KEY_BOTTOMRIGHT     "control mod1 n"
 #define DEF_BW                  4
 #define DEF_H_ICON_COUNT        6
+#define DEF_SNAP                5
 #define MINSIZE                 5
 #define CFGFN                   ".matwmrc"
 

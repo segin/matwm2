@@ -46,7 +46,7 @@ void restore(int n) {
   int i;
   if(!clients[n].iconic)
     return;
-  clients[n].transient ? XMapWindow(dpy, clients[n].parent) : XMoveResizeWindow(dpy, clients[n].parent, clients[n].x, clients[n].y, clients[n].width + (border(n) * 2), clients[n].height + (border(n) * 2) + title(n));
+  clients[n].transient ? XMapWindow(dpy, clients[n].parent) : XMoveResizeWindow(dpy, clients[n].parent, clients[n].x, clients[n].y, total_width(n), total_height(n));
   XRaiseWindow(dpy, clients[n].parent);
   XMapWindow(dpy, clients[n].window);
   if(clients[n].shaped)

@@ -1,7 +1,7 @@
 #include "matwm.h"
 
 XColor bg, ibg, fg, ifg;
-int border_width, title_height, hmaxicons, icon_width;
+int border_width, title_height, hmaxicons, icon_width, snapat;
 char *cbutton1, *cbutton2, *cbutton3, *cbutton4, *cbutton5, *ibutton1, *ibutton2, *ibutton3, *ibutton4, *ibutton5;
 key key_next, key_prev, key_next_icon, key_prev_icon, key_iconify, key_maximise, key_close, key_bottomleft, key_bottomright, key_topleft, key_topright;
 XFontStruct *font;
@@ -108,6 +108,7 @@ void config_read(void) {
   mapkeys();
   border_width = xrm_getint(cfg, "border_width", DEF_BW);
   hmaxicons = xrm_getint(cfg, "icons_per_line", DEF_H_ICON_COUNT);
+  snapat = xrm_getint(cfg, "snap", DEF_SNAP);
   XAllocNamedColor(dpy, DefaultColormap(dpy, screen), xrm_getstr(cfg, "active.background", DEF_BG), &bg, &dummy);
   XAllocNamedColor(dpy, DefaultColormap(dpy, screen), xrm_getstr(cfg, "inactive.background", DEF_IBG), &ibg, &dummy);
   XAllocNamedColor(dpy, DefaultColormap(dpy, screen), xrm_getstr(cfg, "active.foreground", DEF_FG), &fg, &dummy);

@@ -37,7 +37,7 @@ void add_client(Window w) {
   XSelectInput(dpy, w, PropertyChangeMask | EnterWindowMask);
   XShapeSelectInput(dpy, w, ShapeNotifyMask);
   XSetWindowBorderWidth(dpy, w, 0);
-  clients[cn].parent = XCreateWindow(dpy, root, clients[cn].x, clients[cn].y, (wm_state == IconicState && !clients[cn].transient) ? icon_width : (clients[cn].width + (border(cn) * 2)), ((wm_state == IconicState && !clients[cn].transient) ? title_height + 4 : (clients[cn].height + (border(cn) * 2) + title(cn))), 0,
+  clients[cn].parent = XCreateWindow(dpy, root, clients[cn].x, clients[cn].y, (wm_state == IconicState && !clients[cn].transient) ? icon_width : total_width(cn), (wm_state == IconicState && !clients[cn].transient) ? title_height + 4 : total_height(cn), 0,
                                      DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
                                      CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
   XAddToSaveSet(dpy, w);
@@ -135,11 +135,11 @@ void resize(int n, int width, int height) {
   if(width == clients[n].width && height == clients[n].height)
     return;
   clients[n].maximised = 0;
-  if(!clients[n].iconic)
-    XResizeWindow(dpy, clients[n].parent, width + (border(n) * 2), height + (border(n) * 2) + title(n));
-  XResizeWindow(dpy, clients[n].window, width, height);
   clients[n].width = width;
   clients[n].height = height;
+  if(!clients[n].iconic)
+    XResizeWindow(dpy, clients[n].parent, total_width(n), total_height(n));
+  XResizeWindow(dpy, clients[n].window, width, height);
   draw_client(n);
 }
 

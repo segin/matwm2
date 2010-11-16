@@ -67,7 +67,7 @@ void handle_event(XEvent ev) {
       if(ev.xproperty.atom == xa_motif_wm_hints && i < cn) {
         get_mwm_hints(i);
         XMoveWindow(dpy, clients[i].window, border(i), border(i) + title(i));
-        XResizeWindow(dpy, clients[i].parent, (clients[i].iconic && !clients[i].transient) ? icon_width : (clients[i].width + (border(i) * 2)), (clients[i].iconic && !clients[i].transient) ? title_height + 4 : (clients[i].height + (border(i) * 2) + title(i)));
+        XResizeWindow(dpy, clients[i].parent, (clients[i].iconic && !clients[i].transient) ? icon_width : total_width(i), (clients[i].iconic && !clients[i].transient) ? title_height + 4 : total_height(i));
       }
       break;
     case ClientMessage:
@@ -140,11 +140,11 @@ void handle_event(XEvent ev) {
         maximise(current);
       }
       if(current < cn && iskey(key_bottomleft))
-        move(current, 0, display_height - (clients[current].height + (border(current) * 2) + title(current)));
+        move(current, 0, display_height - total_height(current));
       if(current < cn && iskey(key_bottomright))
-        move(current, display_width - (clients[current].width + (border(current) * 2)), display_height - (clients[current].height + (border(current) * 2) + title(current)));
+        move(current, display_width - total_width(current), display_height - total_height(current));
       if(current < cn && iskey(key_topright))
-        move(current, display_width - (clients[current].width + (border(current) * 2)), 0);
+        move(current, display_width - total_width(current), 0);
       if(current < cn && iskey(key_topleft))
         move(current, 0, 0);
       break;

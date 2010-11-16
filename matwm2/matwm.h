@@ -32,6 +32,8 @@
 
 #define border(c)       ((!clients[c].shaped && clients[c].border) ? border_width : 0)
 #define title(c)        ((!clients[c].shaped && clients[c].title && clients[c].border) ? title_height : 0)
+#define total_width(n)  (clients[n].width + (border(n) * 2))
+#define total_height(n) (clients[n].height + (border(n) * 2) + title(n))
 #define warp()          XWarpPointer(dpy, None, clients[current].parent, 0, 0, 0, 0, clients[current].iconic ? icon_width - 1 : clients[current].width + (border(current) ? border_width : -1), clients[current].iconic ? 3 + title_height : ((clients[current].height + (border(current) ? border_width : -1)) + title(current)));
 
 typedef struct {
