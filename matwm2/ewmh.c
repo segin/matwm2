@@ -99,7 +99,7 @@ int ewmh_handle_event(XEvent ev) {
 						client_restore(c);
 						client_focus(c);
 					} else {
-						if(c->desktop != desktop)
+						if(c->desktop != desktop || c->desktop != STICKY)
 							desktop_goto(c->desktop);
 						client_raise(c);
 						client_focus(c);
@@ -127,12 +127,9 @@ int ewmh_handle_event(XEvent ev) {
 			}
 			if(ev.xclient.message_type == ewmh_atoms[NET_CURRENT_DESKTOP])
 				desktop_goto(ev.xclient.data.l[0]);
-			if(c && ev.xclient.message_type == ewmh_atoms[NET_WM_DESKTOP]) {
-				if(ev.xclient.data.l[0] == 0xffffffff)
-					client_to_desktop(c, STICKY);
-				else if(ev.xclient.data.l[0] >= 0)
-					client_to_desktop(c, (ev.xclient.data.l[0] >= dc) ? ev.xclient.data.l[0] : dc - 1);
-			}
+			if(c && ev.xclient.message_type == ewmh_atoms[NET_WM_DESKTOP])
+				if(ev.xclient.data.l[0] >= STICKY)
+					client_to_desktop(c, (ev.xclient.data.l[0] <= dc) ? ev.xclient.data.l[0] : dc - 1);
 			if(ev.xclient.message_type == ewmh_atoms[NET_REQUEST_FRAME_EXTENTS]) {
 				long e[] = {border_width, border_width, border_width + title_height, border_width};
 				XChangeProperty(dpy, ev.xclient.window, ewmh_atoms[NET_FRAME_EXTENTS], XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &e, 4);	

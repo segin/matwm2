@@ -384,4 +384,5 @@
 	ICONIC windows no longer have their own desktop, but their own bit flag - to fix sticky
 	added cast for current desktop value at XFree() in ewmh_initialize()
 	fixed sticky windows (ICONIC is a bit flag again, no desktop), they will stay sticky after iconifying and restoring, dragging over the desktop edge and restarting the window manager
+	don't go to sticky desktop if EWMH hint activates a sticky window
 
