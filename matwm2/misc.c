@@ -3,6 +3,8 @@
 void spawn(char *cmd) {
   if(vfork() == 0) {
     setsid();
+    if(dn)
+      setenv("DISPLAY", dn, 1);
     execlp("sh", "sh", "-c", cmd, (char *) 0);
     _exit(1);
   }

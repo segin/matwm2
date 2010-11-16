@@ -1,6 +1,6 @@
 #include "matwm.h"
 
-Window button_current;
+Window button_current, button_down;
 
 void buttons_create(client *c) {
   c->button_parent = XCreateWindow(dpy, c->parent, (c->width + border_width) - button_parent_width, border_width, button_parent_width, text_height, 0,
@@ -59,10 +59,15 @@ int handle_button_event(XEvent ev) {
       return 1;
     case LeaveNotify:
       button_current = root; // make sure its not a button (i chose root because its always there and i assumed any value could be a window)
+      button_down = root;
       buttons_draw(c);
       return 1;
+    case ButtonPress:
+      if(ev.xbutton.button == Button1)
+        button_down = ev.xbutton.window;
+      return 1;
     case ButtonRelease:
-      if(ev.xbutton.button == Button1) {
+      if(ev.xbutton.button == Button1 && button_down == ev.xbutton.window) {
         if(ev.xbutton.window == c->button_iconify)
           iconify(c);
         if(ev.xbutton.window == c->button_expand)

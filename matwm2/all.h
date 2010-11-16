@@ -1,5 +1,5 @@
 // buttons.c
-extern Window button_current;
+extern Window button_current, button_down;
 void buttons_create(client *c);
 void buttons_draw(client *c);
 int handle_button_event(XEvent ev);

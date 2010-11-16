@@ -61,7 +61,8 @@ int main(int argc, char *argv[]) {
                         CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
   p_attr.background_pixel = ibg.pixel;
   p_attr.event_mask = SubstructureRedirectMask | SubstructureNotifyMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask | LeaveWindowMask | ExposureMask;
-  button_current = root;
+  button_current = root; // haxorish way to assure myself the window is not a button window
+  button_down = root;
   have_shape = XShapeQueryExtension(dpy, &shape_event, &di);
   XQueryTree(dpy, root, &dw, &dw, &wins, &nwins);
   for(ui = 0; ui < nwins; ui++) {
