@@ -1,17 +1,20 @@
 // client.c
-extern client *clients;
-extern int cn, current;
+extern client **clients, *current;
+extern int cn;
 void add_client(Window w);
-void remove_client(int n, int fc);
-void draw_client(int n);
-void draw_icon(int n);
+void remove_client(client *c, int fc);
+void draw_client(client *c);
+void draw_icon(client *c);
 void alloc_clients(void);
-void move(int n, int x, int y);
-void resize(int n, int width, int height);
-void focus(int n);
-void restack_client(int n, int top);
-void maximise(int n);
-void set_shape(int c);
+void move(client *c, int x, int y);
+void resize(client *c, int width, int height);
+void focus(client *c);
+void raise_client(client *c);
+void lower_client(client *c);
+void maximise(client *c);
+void set_shape(client *c);
+int client_number(client *c);
+client *owner(Window w);
 
 // config.c
 extern XColor bg, ibg, fg, ifg;
@@ -37,10 +40,10 @@ void drag_start(XEvent ev);
 void drag_end(void);
 int drag_handle_event(XEvent ev);
 int drag_release_wait(XEvent ev);
-int snapx(int n, int nx, int ny);
-int snapy(int n, int nx, int ny);
-int snaph(int n, int nx, int ny);
-int snapv(int n, int nx, int ny);
+int snapx(client *c, int nx, int ny);
+int snapy(client *c, int nx, int ny);
+int snaph(client *c, int nx, int ny);
+int snapv(client *c, int nx, int ny);
 
 // events.c
 extern int (*evh)();
@@ -48,8 +51,8 @@ void handle_event(XEvent ev);
 
 // icons.c
 Bool isunmap(Display *display, XEvent *event, XPointer arg);
-void iconify(int n);
-void restore(int n);
+void iconify(client *c);
+void restore(client *c);
 
 // input.c
 extern unsigned int mousemodmask, numlockmask;
@@ -78,19 +81,21 @@ void wlist_start(XEvent ev);
 void wlist_end(void);
 int wlist_handle_event(XEvent ev);
 void wlist_update(void);
-void wlist_draw(void);
 
 // x11.c
 int xerrorhandler(Display *display, XErrorEvent *xerror);
-void getnormalhints(int n);
+void getnormalhints(client *c);
 int getstatehint(Window w);
 int get_wm_state(Window w);
 int get_wm_transient_for(Window w, Window *ret);
 void set_wm_state(Window w, long state);
-void get_mwm_hints(int n);
-void configurenotify(int n);
+void get_mwm_hints(client *c);
+void configurenotify(client *c);
 int has_protocol(Window w, Atom protocol);
-void delete_window(int n);
-int gxo(int c, int i);
-int gyo(int c, int i);
+void delete_window(client *c);
+int gxo(client *c, int i);
+int gyo(client *c, int i);
+
+// xev.c
+char *event_name(XEvent ev);
 

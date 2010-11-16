@@ -36,11 +36,11 @@
 #define BA_RAISE        3
 #define BA_LOWER        4
 
-#define border(c)       ((!clients[c].shaped && clients[c].border) ? border_width : 0)
-#define title(c)        ((!clients[c].shaped && clients[c].title && clients[c].border) ? title_height : 0)
-#define total_width(n)  (clients[n].width + (border(n) * 2))
-#define total_height(n) (clients[n].height + (border(n) * 2) + title(n))
-#define warp()          XWarpPointer(dpy, None, clients[current].parent, 0, 0, 0, 0, clients[current].width + (border(current) ? border_width : -1), (clients[current].height + (border(current) ? border_width : -1)) + title(current));
+#define border(c)       ((!c->shaped && c->border) ? border_width : 0)
+#define title(c)        ((!c->shaped && c->title && c->border) ? title_height : 0)
+#define total_width(c)  (c->width + (border(c) * 2))
+#define total_height(c) (c->height + (border(c) * 2) + title(c))
+#define warp()          XWarpPointer(dpy, None, current->parent, 0, 0, 0, 0, current->width + (border(current) ? border_width : -1), (current->height + (border(current) ? border_width : -1)) + title(current));
 #define cmpmask(m1, m2) (m1 == m2 || m1 == (m2 | numlockmask) || m1 == (m2 | LockMask) || m1 == (m2 | LockMask | numlockmask))
 #define iskey(k)        (cmpmask(ev.xkey.state, k.mask) && ev.xkey.keycode == k.code)
 #define rmbit(m, b)     (m ^ (m & b))

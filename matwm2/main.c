@@ -13,9 +13,9 @@ void error(void) {
 
 void end(void) {
   while(cn) {
-    if(clients[0].iconic)
-      XMapWindow(dpy, clients[0].window);
-    remove_client(0, 0);
+    if(clients[0]->iconic)
+      XMapWindow(dpy, clients[0]->window);
+    remove_client(clients[0], 0);
   }
   if(clients)
     free(clients);
@@ -61,11 +61,12 @@ int main(int argc, char *argv[]) {
   display_height = XDisplayHeight(dpy, screen);
   config_read();
   p_attr.override_redirect = True;
-  p_attr.background_pixel = ibg.pixel;
+  p_attr.background_pixel = fg.pixel;
   p_attr.event_mask = ExposureMask | KeyReleaseMask;
   wlist = XCreateWindow(dpy, root, 0, 0, 1, 1, 0,
                         DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
                         CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
+  p_attr.background_pixel = ibg.pixel;
   p_attr.event_mask = SubstructureRedirectMask | SubstructureNotifyMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask | ExposureMask;
   have_shape = XShapeQueryExtension(dpy, &shape_event, &di);
   mapkeys();

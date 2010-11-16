@@ -6,26 +6,32 @@ Bool isunmap(Display *display, XEvent *event, XPointer arg) {
   return False;
 }
 
-void iconify(int n) {
+void iconify(client *c) {
   int i;
   XEvent ev;
-  if(clients[n].iconic)
+  if(c->iconic)
     return;
-  set_wm_state(clients[n].window, IconicState);
-  XUnmapWindow(dpy, clients[n].window);
-  XUnmapWindow(dpy, clients[n].parent);
-  XMapWindow(dpy, clients[n].icon);
-  clients[n].iconic = 1;
-  XIfEvent(dpy, &ev, &isunmap, (XPointer) &clients[n].window);
+  set_wm_state(c->window, IconicState);
+  XUnmapWindow(dpy, c->window);
+  XUnmapWindow(dpy, c->parent);
+  XMapWindow(dpy, c->icon);
+  c->iconic = 1;
+  XIfEvent(dpy, &ev, &isunmap, (XPointer) &c->window);
+  for(i = client_number(c); i < cn - 1; i++)
+    clients[i] = clients[i + 1];
+  clients[cn - 1] = c;
 }
 
-void restore(int n) {
+void restore(client *c) {
   int i;
-  if(!clients[n].iconic)
+  if(!c->iconic)
     return;
-  XMapRaised(dpy, clients[n].parent);
-  XMapWindow(dpy, clients[n].window);
-  set_wm_state(clients[n].window, NormalState);
-  clients[n].iconic = 0;
+  XMapRaised(dpy, c->parent);
+  XMapWindow(dpy, c->window);
+  set_wm_state(c->window, NormalState);
+  c->iconic = 0;
+  for(i = client_number(c); i > 0; i--)
+    clients[i] = clients[i - 1];
+  clients[0] = c;
 }
 

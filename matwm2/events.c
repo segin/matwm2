@@ -3,37 +3,29 @@
 int (*evh)() = NULL;
 
 void handle_event(XEvent ev) {
-  int c, i;
+  client *c = owner(ev.xany.window);
+//  if(c) printf("%s: %s\n", c->name, event_name(ev));
   if(evh && evh(ev))
     return;
-  for(c = 0; c < cn; c++)
-    if(clients[c].parent == ev.xany.window)
-      break;
   switch(ev.type) {
     case MapRequest:
-      for(i = 0; i < cn; i++)
-        if(clients[i].window == ev.xmaprequest.window)
-          break;
-      if(i < cn) {
-        if(clients[c].iconic)
+      if(c) {
+        if(c->iconic)
           restore(c);
       } else add_client(ev.xmaprequest.window);
       break;
     case DestroyNotify:
-      if(c < cn && clients[c].window == ev.xdestroywindow.window)
+      if(c && c->window == ev.xdestroywindow.window)
         remove_client(c, 2);
-      break;
+        break;
     case UnmapNotify:
-      if(c < cn && clients[c].window == ev.xunmap.window)
+      if(c && c->window == ev.xunmap.window)
         remove_client(c, 1);
-      break;
+        break;
     case ConfigureRequest:
-      for(i = 0; i < cn; i++)
-        if(clients[i].window == ev.xconfigurerequest.window)
-          break;
-      if(i < cn) {
-        resize(i, (ev.xconfigurerequest.value_mask & CWWidth) ? ev.xconfigurerequest.width : clients[i].width, (ev.xconfigurerequest.value_mask & CWHeight) ? ev.xconfigurerequest.height : clients[i].height);
-        move(i, (ev.xconfigurerequest.value_mask & CWX) ? ev.xconfigurerequest.x - gxo(i, 0) : clients[i].x, (ev.xconfigurerequest.value_mask & CWY) ? ev.xconfigurerequest.y - gyo(i, 0) : clients[i].y);
+      if(c) {
+        resize(c, (ev.xconfigurerequest.value_mask & CWWidth) ? ev.xconfigurerequest.width : c->width, (ev.xconfigurerequest.value_mask & CWHeight) ? ev.xconfigurerequest.height : c->height);
+        move(c, (ev.xconfigurerequest.value_mask & CWX) ? ev.xconfigurerequest.x - gxo(c, 0) : c->x, (ev.xconfigurerequest.value_mask & CWY) ? ev.xconfigurerequest.y - gyo(c, 0) : c->y);
       } else {
         XWindowChanges wc;
         wc.sibling = ev.xconfigurerequest.above;
@@ -46,68 +38,49 @@ void handle_event(XEvent ev) {
       }
       break;
     case PropertyNotify:
-      for(i = 0; i < cn; i++)
-        if(clients[i].window == ev.xproperty.window)
-          break;
-     if(i < cn && ev.xproperty.atom == XA_WM_NAME) {
-        if(clients[i].name)
-          XFree(clients[i].name);
-        XFetchName(dpy, clients[i].window, &clients[i].name);
-        XClearWindow(dpy, clients[i].parent);
-        XClearWindow(dpy, clients[i].icon);
-        draw_client(i);
-        draw_icon(i);
+     if(c && ev.xproperty.atom == XA_WM_NAME) {
+        if(c->name != NO_TITLE)
+          XFree(c->name);
+        XFetchName(dpy, c->window, &c->name);
+        XClearWindow(dpy, c->parent);
+        XClearWindow(dpy, c->icon);
+        draw_client(c);
+        draw_icon(c);
       }
-      if(ev.xproperty.atom == XA_WM_NORMAL_HINTS && i < cn)
-        getnormalhints(i);
-      if(ev.xproperty.atom == xa_motif_wm_hints && i < cn) {
-        get_mwm_hints(i);
-        XMoveWindow(dpy, clients[i].window, border(i), border(i) + title(i));
-        XResizeWindow(dpy, clients[i].parent, total_width(i), total_height(i));
+      if(ev.xproperty.atom == XA_WM_NORMAL_HINTS && c)
+        getnormalhints(c);
+      if(ev.xproperty.atom == xa_motif_wm_hints && c) {
+        get_mwm_hints(c);
+        XMoveWindow(dpy, c->window, border(c), border(c) + title(c));
+        XResizeWindow(dpy, c->parent, total_width(c), total_height(c));
       }
       break;
     case ClientMessage:
-      for(i = 0; i < cn; i++)
-        if(clients[i].window == ev.xclient.window)
-          break;
-      if(i < cn && ev.xclient.message_type == xa_wm_change_state && ev.xclient.data.l[0] == IconicState)
-        iconify(i);
+      if(c && ev.xclient.message_type == xa_wm_change_state && ev.xclient.data.l[0] == IconicState)
+        iconify(c);
       break;
     case EnterNotify:
-      if(c == cn)
-        for(c = 0; c < cn; c++)
-          if(clients[c].window == ev.xcrossing.window)
-            break;
-      if(c == cn)
-        for(c = 0; c < cn; c++)
-          if(clients[c].icon == ev.xcrossing.window)
-            break;
-      if(c < cn)
+      if(c)
         focus(c);
       break;
     case Expose:
-      for(i = 0; i < cn; i++)
-        if(clients[i].icon == ev.xexpose.window)
-          break;
       if(ev.xexpose.count == 0) {
-        if(c < cn)
+        if(c && ev.xexpose.window == c->parent)
           draw_client(c);
-        else if(i < cn)
-          draw_icon(i);
-        else if(ev.xexpose.window == wlist)
-          wlist_draw();
+        if(evh == wlist_handle_event && c && ev.xexpose.window == c->icon)
+          draw_icon(c);
       }
       break;
     case ButtonPress:
-      if(c < cn && (buttonaction(ev.xbutton.button) == BA_MOVE || buttonaction(ev.xbutton.button) == BA_RESIZE))
+      if(c && (buttonaction(ev.xbutton.button) == BA_MOVE || buttonaction(ev.xbutton.button) == BA_RESIZE))
         drag_start(ev);
       break;
     case ButtonRelease:
-      if(c < cn) {
+      if(c) {
         if(buttonaction(ev.xbutton.button) == BA_RAISE)
-          restack_client(c, 1);
+          raise_client(c);
         if(buttonaction(ev.xbutton.button) == BA_LOWER)
-          restack_client(c, 0);
+          lower_client(c);
       }
       break;
     case MappingNotify:
@@ -118,35 +91,34 @@ void handle_event(XEvent ev) {
       }
       break;
     case KeyPress:
-      if(current < cn && iskey(key_close))
+      if(current && iskey(key_close))
         delete_window(current);
       if(iskey(key_next) || iskey(key_prev))
         wlist_start(ev);
-      if(current < cn && iskey(key_iconify))
+      if(current && iskey(key_iconify))
         iconify(current);
-      if(current < cn && iskey(key_maximise))
+      if(current && iskey(key_maximise))
         maximise(current);
-      if(current < cn && iskey(key_bottomleft))
+      if(current && iskey(key_bottomleft))
         move(current, 0, display_height - total_height(current));
-      if(current < cn && iskey(key_bottomright))
+      if(current && iskey(key_bottomright))
         move(current, display_width - total_width(current), display_height - total_height(current));
-      if(current < cn && iskey(key_topright))
+      if(current && iskey(key_topright))
         move(current, display_width - total_width(current), 0);
-      if(current < cn && iskey(key_topleft))
+      if(current && iskey(key_topleft))
         move(current, 0, 0);
       break;
     case ConfigureNotify:
       if(root == ev.xconfigure.window) {
         display_width = ev.xconfigure.width;
         display_height = ev.xconfigure.height;
+        if(evh == wlist_handle_event)
+          wlist_update();
       }
       break;
     default:
-      for(i = 0; i < cn; i++)
-        if(clients[i].window == ev.xany.window)
-          break;
-      if(i < cn && ev.type == shape_event)
-        set_shape(i);
+      if(c && ev.type == shape_event)
+        set_shape(c);
       break;
   }
 }

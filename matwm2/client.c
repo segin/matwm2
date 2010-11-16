@@ -1,189 +1,233 @@
 #include "matwm.h"
 
-client *clients = NULL;
-int cn = 0, current = 0;
+client **clients = NULL, *current = NULL;
+int cn = 0;
 
 void add_client(Window w) {
   XWindowAttributes attr;
-  XGetWindowAttributes(dpy, w, &attr);
   int i, di, bounding_shaped, wm_state = get_wm_state(w);
-  alloc_clients();
+  client *new = (client *) malloc(sizeof(client));
+  XGetWindowAttributes(dpy, w, &attr);
   if(wm_state == WithdrawnState) {
     wm_state = getstatehint(w);
     set_wm_state(w, wm_state != WithdrawnState ? wm_state : NormalState);
   }
-  clients[cn].width = attr.width;
-  clients[cn].height = attr.height;
-  clients[cn].oldbw = attr.border_width;
-  clients[cn].window = w;
+  new->width = attr.width;
+  new->height = attr.height;
+  new->oldbw = attr.border_width;
+  new->window = w;
   if(have_shape)
-    clients[cn].shaped = XShapeQueryExtents(dpy, clients[cn].window, &bounding_shaped, &di, &di, &di, &di, &di, &di, &di, &di, &di) && bounding_shaped;
-  else clients[cn].shaped = 0;
-  getnormalhints(cn);
-  get_mwm_hints(cn);
-  clients[cn].x = attr.x - gxo(cn, 1);
-  clients[cn].y = attr.y - gyo(cn, 1);
-  clients[cn].iconic = (wm_state == IconicState) ? 1 : 0;
-  clients[cn].maximised = 0;
-  XFetchName(dpy, w, &clients[cn].name);
+    new->shaped = XShapeQueryExtents(dpy, new->window, &bounding_shaped, &di, &di, &di, &di, &di, &di, &di, &di, &di) && bounding_shaped;
+  else new->shaped = 0;
+  getnormalhints(new);
+  get_mwm_hints(new);
+  new->x = attr.x - gxo(new, 1);
+  new->y = attr.y - gyo(new, 1);
+  new->iconic = (wm_state == IconicState) ? 1 : 0;
+  new->maximised = 0;
+  XFetchName(dpy, w, &new->name);
+  if(!new->name)
+    new->name = NO_TITLE;
   XSelectInput(dpy, w, PropertyChangeMask | EnterWindowMask);
   XShapeSelectInput(dpy, w, ShapeNotifyMask);
   XSetWindowBorderWidth(dpy, w, 0);
-  clients[cn].parent = XCreateWindow(dpy, root, clients[cn].x, clients[cn].y, total_width(cn), total_height(cn), 0,
-                                     DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
-                                     CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
-  clients[cn].icon = XCreateWindow(dpy, wlist, 0, 0, 1, 1, 0,
-                                   DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
-                                   CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
+  new->parent = XCreateWindow(dpy, root, new->x, new->y, total_width(new), total_height(new), 0,
+                              DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
+                              CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
+  new->icon = XCreateWindow(dpy, wlist, 0, 0, 1, 1, 0,
+                            DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
+                             CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
   XAddToSaveSet(dpy, w);
-  XReparentWindow(dpy, w, clients[cn].parent, border(cn), border(cn) + title(cn));
-  grab_button(clients[cn].parent, AnyButton, mousemodmask, ButtonPressMask | ButtonReleaseMask);
-  configurenotify(cn);
+  XReparentWindow(dpy, w, new->parent, border(new), border(new) + title(new));
+  grab_button(new->parent, AnyButton, mousemodmask, ButtonPressMask | ButtonReleaseMask);
+  configurenotify(new);
+  if(new->shaped)
+    XShapeCombineShape(dpy, new->parent, ShapeBounding, border(new), border(new) + title(new), new->window, ShapeBounding, ShapeSet);
   cn++;
-  if(!clients[cn - 1].iconic) {
+  alloc_clients();
+  if(!new->iconic) {
     XMapWindow(dpy, w);
-    XMapRaised(dpy, clients[cn - 1].parent);
-  }
-  XMapWindow(dpy, clients[cn - 1].icon);
-  if(current >= cn - 1)
-    focus(cn - 1);
-  if(clients[cn - 1].shaped)
-    XShapeCombineShape(dpy, clients[cn - 1].parent, ShapeBounding, border(cn - 1), border(cn - 1) + title(cn - 1), clients[cn - 1].window, ShapeBounding, ShapeSet);
+    XMapRaised(dpy, new->parent);
+    for(i = cn - 1; i > 0; i--)
+      clients[i] = clients[i - 1];
+    clients[0] = new;
+  } else clients[cn - 1] = new;
+  XMapWindow(dpy, new->icon);
+  if(!current)
+    focus(new);
   if(evh == wlist_handle_event)
     wlist_update();
 }
 
-void remove_client(int n, int fc) {
+void remove_client(client *c, int fc) {
   XEvent ev;
-  int i, iconic = clients[n].iconic;
-  if(fc != 2 && XCheckTypedWindowEvent(dpy, clients[n].parent, DestroyNotify, &ev) == False) {
+  int i;
+  if(fc != 2 && XCheckTypedWindowEvent(dpy, c->parent, DestroyNotify, &ev) == False) {
     if(fc)
-      set_wm_state(clients[n].window, WithdrawnState);
-    XReparentWindow(dpy, clients[n].window, root, clients[n].x + gxo(n, 1), clients[n].y + gyo(n, 1));
-    XSetWindowBorderWidth(dpy, clients[n].window, clients[n].oldbw);
-    XRemoveFromSaveSet(dpy, clients[n].window);
+      set_wm_state(c->window, WithdrawnState);
+    XReparentWindow(dpy, c->window, root, c->x + gxo(c, 1), c->y + gyo(c, 1));
+    XSetWindowBorderWidth(dpy, c->window, c->oldbw);
+    XRemoveFromSaveSet(dpy, c->window);
   }
-  XDestroyWindow(dpy, clients[n].parent);
-  XDestroyWindow(dpy, clients[n].icon);
-  if(clients[n].name)
-    XFree(clients[n].name);
-  cn--;
-  for(i = n; i < cn; i++)
+  XDestroyWindow(dpy, c->parent);
+  XDestroyWindow(dpy, c->icon);
+  if(c->name != NO_TITLE)
+    XFree(c->name);
+  for(i = client_number(c); i < cn; i++)
     clients[i] = clients[i + 1];
+  cn--;
+  if(c == current) {
+    current = NULL;
+    if(cn)
+      focus(clients[0]);
+  }
+  free(c);
   alloc_clients();
   if(evh == wlist_handle_event)
     wlist_update();
 }
 
-void draw_client(int n) {
-  if(clients[n].name && title(n)) {
-    XDrawString(dpy, clients[n].parent, (n == current) ? gc : igc, border_width + font->max_bounds.lbearing, border_width + font->max_bounds.ascent, clients[n].name, strlen(clients[n].name));
-    XClearArea(dpy, clients[n].parent, 2, clients[n].width + border_width - 1, border_width, title_height, False);
+void draw_client(client *c) {
+  if(c->name && title(c)) {
+    XDrawString(dpy, c->parent, (c == current) ? gc : igc, border_width + font->max_bounds.lbearing, border_width + font->max_bounds.ascent, c->name, strlen(c->name));
+    XClearArea(dpy, c->parent, c->width + border_width - 1, border_width, border_width, title_height, False);
   }
-  if(border(n))
-    XDrawRectangle(dpy, clients[n].parent, (n == current) ? gc : igc, 0, 0, clients[n].width + (border_width * 2) - 1, clients[n].height + (border_width * 2) + title(n) - 1);
+  if(border(c))
+    XDrawRectangle(dpy, c->parent, (c == current) ? gc : igc, 0, 0, c->width + (border_width * 2) - 1, c->height + (border_width * 2) + title(c) - 1);
 }
 
-void draw_icon(int n) {
-  XDrawString(dpy, clients[n].icon, (n == current) ? gc : igc, 2 + font->max_bounds.lbearing, 2 + font->max_bounds.ascent, clients[n].name, strlen(clients[n].name));
+void draw_icon(client *c) {
+  if(c->name)
+    XDrawString(dpy, c->icon, (c == current) ? gc : igc, 2 + font->max_bounds.lbearing, 2 + font->max_bounds.ascent, c->name, strlen(c->name));
 }
 
 void alloc_clients(void) {
-  client *newptr = (client *) realloc((client *) clients, (cn + 1) * sizeof(client));
+  client **newptr = (client **) realloc((void *) clients, cn * sizeof(client *));
   if(!newptr)
     error();
   clients = newptr;
 }
 
-void move(int n, int x, int y) {
-  if(x == clients[n].x && y == clients[n].y)
+void move(client *c, int x, int y) {
+  if(x == c->x && y == c->y)
     return;
-  clients[n].maximised = 0;
-  XMoveWindow(dpy, clients[n].parent, x, y);
-  configurenotify(n);
-  clients[n].x = x;
-  clients[n].y = y;
+  c->maximised = 0;
+  XMoveWindow(dpy, c->parent, x, y);
+  configurenotify(c);
+  c->x = x;
+  c->y = y;
 }
 
-void resize(int n, int width, int height) {
-  if(clients[n].normal_hints.flags & PResizeInc) {
-    width -= (width - ((clients[n].normal_hints.flags & PBaseSize) ? clients[n].normal_hints.base_width : 0)) % clients[n].normal_hints.width_inc;
-    height -= (height - ((clients[n].normal_hints.flags & PBaseSize) ? clients[n].normal_hints.base_height : 0)) % clients[n].normal_hints.height_inc;
+void resize(client *c, int width, int height) {
+  if(c->normal_hints.flags & PResizeInc) {
+    width -= (width - ((c->normal_hints.flags & PBaseSize) ? c->normal_hints.base_width : 0)) % c->normal_hints.width_inc;
+    height -= (height - ((c->normal_hints.flags & PBaseSize) ? c->normal_hints.base_height : 0)) % c->normal_hints.height_inc;
   }
-  if(clients[n].normal_hints.flags & PAspect) {
-    if(height < (width *  clients[n].normal_hints.min_aspect.y) / clients[n].normal_hints.min_aspect.x)
-      height = (width * clients[n].normal_hints.min_aspect.y) / clients[n].normal_hints.min_aspect.x;
-    if(height > (width *  clients[n].normal_hints.max_aspect.y) / clients[n].normal_hints.max_aspect.x)
-      height = (width * clients[n].normal_hints.max_aspect.y) / clients[n].normal_hints.max_aspect.x;
+  if(c->normal_hints.flags & PAspect) {
+    if(height < (width *  c->normal_hints.min_aspect.y) / c->normal_hints.min_aspect.x)
+      height = (width * c->normal_hints.min_aspect.y) / c->normal_hints.min_aspect.x;
+    if(height > (width *  c->normal_hints.max_aspect.y) / c->normal_hints.max_aspect.x)
+      height = (width * c->normal_hints.max_aspect.y) / c->normal_hints.max_aspect.x;
   }
-  if(clients[n].normal_hints.flags & PMinSize) {
-    if(width < clients[n].normal_hints.min_width)
-      width = clients[n].normal_hints.min_width;
-    if(height < clients[n].normal_hints.min_height)
-      height = clients[n].normal_hints.min_height;
+  if(c->normal_hints.flags & PMinSize) {
+    if(width < c->normal_hints.min_width)
+      width = c->normal_hints.min_width;
+    if(height < c->normal_hints.min_height)
+      height = c->normal_hints.min_height;
   }
-  if(clients[n].normal_hints.flags & PMaxSize) {
-    if(width > clients[n].normal_hints.max_width)
-      width = clients[n].normal_hints.max_width;
-    if(height > clients[n].normal_hints.max_height)
-      height = clients[n].normal_hints.max_height;
+  if(c->normal_hints.flags & PMaxSize) {
+    if(width > c->normal_hints.max_width)
+      width = c->normal_hints.max_width;
+    if(height > c->normal_hints.max_height)
+      height = c->normal_hints.max_height;
   }
   if(width < MINSIZE)
     width = MINSIZE;
   if(height < MINSIZE)
     height = MINSIZE;
-  if(width == clients[n].width && height == clients[n].height)
+  if(width == c->width && height == c->height)
     return;
-  clients[n].maximised = 0;
-  clients[n].width = width;
-  clients[n].height = height;
-  XResizeWindow(dpy, clients[n].parent, total_width(n), total_height(n));
-  XResizeWindow(dpy, clients[n].window, width, height);
-  draw_client(n);
+  c->maximised = 0;
+  c->width = width;
+  c->height = height;
+  XResizeWindow(dpy, c->parent, total_width(c), total_height(c));
+  XResizeWindow(dpy, c->window, width, height);
+  draw_client(c);
 }
 
-void focus(int n) {
-  int i = current < cn ? current : n;
-  current = n;
-  while(i < cn) {
-    XSetWindowBackground(dpy, clients[i].parent, i == n ? bg.pixel : ibg.pixel);
-    XSetWindowBackground(dpy, clients[i].icon, i == n ? bg.pixel : ibg.pixel);
-    if(!clients[i].iconic)
-      XClearWindow(dpy, clients[i].parent);
-    XClearWindow(dpy, clients[i].icon);
-    draw_client(i);
-    draw_icon(i);
-    i = (i != n) ? n : cn;
+void focus(client *c) {
+  if(current) {
+    XSetWindowBackground(dpy, current->parent, ibg.pixel);
+    XSetWindowBackground(dpy, current->icon, ibg.pixel);
+    if(!current->iconic)
+      XClearWindow(dpy, current->parent);
+    XClearWindow(dpy, current->icon);
+    draw_client(current);
+    draw_icon(current);
   }
-  if(!clients[n].iconic)
-    XSetInputFocus(dpy, clients[n].window, RevertToPointerRoot, CurrentTime);
+  XSetWindowBackground(dpy, c->parent, bg.pixel);
+  XSetWindowBackground(dpy, c->icon, bg.pixel);
+  if(!c->iconic)
+    XClearWindow(dpy, c->parent);
+  XClearWindow(dpy, c->icon);
+  draw_client(c);
+  draw_icon(c);
+  if(!c->iconic)
+    XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
+  current = c;
 }
 
-void restack_client(int n, int top) {
+void raise_client(client *c) {
   int i;
-  top ? XRaiseWindow(dpy, clients[n].parent) : XLowerWindow(dpy, clients[n].parent);
+  XRaiseWindow(dpy, c->parent);
+  for(i = client_number(c); i > 0; i--)
+    clients[i] = clients[i - 1];
+  clients[0] = c;
 }
 
-void maximise(int n) {
-  if(clients[n].maximised) {
-    clients[n].maximised = 0;
-    move(n, clients[n].prev_x, clients[n].prev_y);
-    resize(n, clients[n].prev_width, clients[n].prev_height);
+void lower_client(client *c) {
+  int i;
+  XLowerWindow(dpy, c->parent);
+  for(i = client_number(c); i < cn - 1 && !clients[i + 1]->iconic; i++)
+    clients[i] = clients[i + 1];
+  clients[i] = c;
+}
+
+void maximise(client *c) {
+  if(c->maximised) {
+    c->maximised = 0;
+    move(c, c->prev_x, c->prev_y);
+    resize(c, c->prev_width, c->prev_height);
     return;
   }
-  clients[n].prev_x = clients[n].x;
-  clients[n].prev_y = clients[n].y;
-  clients[n].prev_width = clients[n].width;
-  clients[n].prev_height = clients[n].height;
-  restack_client(current, 1);
-  move(n, 0, 0);
-  resize(n, display_width - (border(n) * 2), display_height - ((border(n) * 2) + title(n)));
-  clients[n].maximised = 1;
+  c->prev_x = c->x;
+  c->prev_y = c->y;
+  c->prev_width = c->width;
+  c->prev_height = c->height;
+  raise_client(current);
+  move(c, 0, 0);
+  resize(c, display_width - (border(c) * 2), display_height - ((border(c) * 2) + title(c)));
+  c->maximised = 1;
 }
 
-void set_shape(int c) {
+void set_shape(client *c) {
   int bounding_shaped, di;
-  if(clients[c].shaped)
-    XShapeCombineShape(dpy, clients[c].parent, ShapeBounding, border(c), border(c) + title(c), clients[c].window, ShapeBounding, ShapeSet);
+  if(c->shaped)
+    XShapeCombineShape(dpy, c->parent, ShapeBounding, border(c), border(c) + title(c), c->window, ShapeBounding, ShapeSet);
+}
+
+int client_number(client *c) {
+  int i;
+  for(i = 0; i < cn; i++)
+    if(clients[i] == c)
+      return i;
+}
+
+client *owner(Window w) {
+  int i;
+  for(i = 0; i < cn; i++)
+    if(clients[i]->parent == w || clients[i]->window == w || clients[i]->icon == w)
+      return clients[i];
+  return NULL;
 }
 

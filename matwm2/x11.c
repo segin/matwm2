@@ -6,11 +6,11 @@ int xerrorhandler(Display *display, XErrorEvent *xerror) {
   char ret[666];
   XGetErrorText(xerror->display, xerror->error_code, ret, 666);
 /*  for(i = 0; i < cn; i++)
-    if(clients[i].window == xerror->resourceid)
-      printf("client window of %s: ", clients[i].name);
+    if(clients[i]->window == xerror->resourceid)
+      printf("client window of %s: ", clients[i]->name);
   for(i = 0; i < cn; i++)
-    if(clients[i].parent == xerror->resourceid)
-      printf("parent window of %s: ", clients[i].name);*/
+    if(clients[i]->parent == xerror->resourceid)
+      printf("parent window of %s: ", clients[i]->name);*/
   printf("x error: %s\n", ret);
 #endif
   if(xerror->error_code == BadAccess && xerror->resourceid == root) {
@@ -20,9 +20,9 @@ int xerrorhandler(Display *display, XErrorEvent *xerror) {
   return 0;
 }
 
-void getnormalhints(int n) {
+void getnormalhints(client *c) {
   long sr;
-  XGetWMNormalHints(dpy, clients[n].window, &clients[n].normal_hints, &sr);
+  XGetWMNormalHints(dpy, c->window, &c->normal_hints, &sr);
 }
 
 int getstatehint(Window w) {
@@ -69,42 +69,42 @@ void set_wm_state(Window w, long state) {
   XChangeProperty(dpy, w, xa_wm_state, xa_wm_state, 32, PropModeReplace, (unsigned char *) data, 2);
 }
 
-void get_mwm_hints(int n) {
+void get_mwm_hints(client *c) {
   Atom rt;
   int rf;
   unsigned long nir, bar;
   MWMHints *mwmhints;
-  clients[n].title = 1;
-  clients[n].border = 1;
-  clients[n].resize = 1;
-  if(XGetWindowProperty(dpy, clients[n].window, xa_motif_wm_hints, 0, 3, False, AnyPropertyType, &rt, &rf, &nir, &bar, (unsigned char **) &mwmhints) == Success && nir > 2) {
+  c->title = 1;
+  c->border = 1;
+  c->resize = 1;
+  if(XGetWindowProperty(dpy, c->window, xa_motif_wm_hints, 0, 3, False, AnyPropertyType, &rt, &rf, &nir, &bar, (unsigned char **) &mwmhints) == Success && nir > 2) {
     if(mwmhints->flags & MWM_HINTS_DECORATIONS) {
       if(mwmhints->decorations & MWM_DECOR_ALL) {
         mwmhints->decorations &= ~MWM_DECOR_ALL;
         mwmhints->decorations = (MWM_DECOR_TITLE | MWM_DECOR_BORDER | MWM_DECOR_RESIZEH) & (~mwmhints->decorations);
       }
-      clients[n].title = mwmhints->decorations & MWM_DECOR_TITLE;
-      clients[n].border = mwmhints->decorations & MWM_DECOR_BORDER;
-      clients[n].resize = mwmhints->decorations & MWM_DECOR_RESIZEH;
+      c->title = mwmhints->decorations & MWM_DECOR_TITLE;
+      c->border = mwmhints->decorations & MWM_DECOR_BORDER;
+      c->resize = mwmhints->decorations & MWM_DECOR_RESIZEH;
     }
     XFree(mwmhints);
   }
 }
 
-void configurenotify(int n)
+void configurenotify(client *c)
 {
   XConfigureEvent ce;
   ce.type = ConfigureNotify;
-  ce.event = clients[n].window;
-  ce.window = clients[n].window;
-  ce.x = clients[n].x + border(n);
-  ce.y = clients[n].y + border(n) + title(n);
-  ce.width = clients[n].width;
-  ce.height = clients[n].height;
+  ce.event = c->window;
+  ce.window = c->window;
+  ce.x = c->x + border(c);
+  ce.y = c->y + border(c) + title(c);
+  ce.width = c->width;
+  ce.height = c->height;
   ce.border_width = 0;
   ce.above = None;
   ce.override_redirect = 0;
-  XSendEvent(dpy, clients[n].window, False, StructureNotifyMask, (XEvent *) &ce);
+  XSendEvent(dpy, c->window, False, StructureNotifyMask, (XEvent *) &ce);
 }
 
 int has_protocol(Window w, Atom protocol) {
@@ -119,49 +119,49 @@ int has_protocol(Window w, Atom protocol) {
   return ret;
 }
 
-void delete_window(int n) {
+void delete_window(client *c) {
   XEvent ev;
-  if(has_protocol(clients[n].window, xa_wm_delete)) {
+  if(has_protocol(c->window, xa_wm_delete)) {
     ev.type = ClientMessage;
-    ev.xclient.window = clients[n].window;
+    ev.xclient.window = c->window;
     ev.xclient.message_type = xa_wm_protocols;
     ev.xclient.format = 32;
     ev.xclient.data.l[0] = xa_wm_delete;
     ev.xclient.data.l[1] = CurrentTime;
-    XSendEvent(dpy, clients[n].window, False, NoEventMask, &ev);
-  } else XKillClient(dpy, clients[n].window);
+    XSendEvent(dpy, c->window, False, NoEventMask, &ev);
+  } else XKillClient(dpy, c->window);
 }
 
-int gxo(int c, int i) {
-  if(clients[c].normal_hints.flags & PWinGravity)
-    switch(clients[c].normal_hints.win_gravity) {
+int gxo(client *c, int i) {
+  if(c->normal_hints.flags & PWinGravity)
+    switch(c->normal_hints.win_gravity) {
       case StaticGravity:
         return border(c);
       case NorthGravity:
       case SouthGravity:
       case CenterGravity:
-        return border(c) + (i ? -clients[c].oldbw : (clients[c].width / 2));
+        return border(c) + (i ? -c->oldbw : (c->width / 2));
       case NorthEastGravity:
       case EastGravity:
       case SouthEastGravity:
-        return (border(c) * 2) + (i ? -clients[c].oldbw * 2 : clients[c].width);
+        return (border(c) * 2) + (i ? -c->oldbw * 2 : c->width);
     }
   return 0;
 }
 
-int gyo(int c, int i) {
-  if(clients[c].normal_hints.flags & PWinGravity)
-    switch(clients[c].normal_hints.win_gravity) {
+int gyo(client *c, int i) {
+  if(c->normal_hints.flags & PWinGravity)
+    switch(c->normal_hints.win_gravity) {
       case StaticGravity:
         return border(c) + title(c);
       case EastGravity:
       case WestGravity:
       case CenterGravity:
-        return border(c) + ((title(c) + (i ? -clients[c].oldbw : clients[c].height)) / 2);
+        return border(c) + ((title(c) + (i ? -c->oldbw : c->height)) / 2);
       case SouthEastGravity:
       case SouthGravity:
       case SouthWestGravity:
-        return (border(c) * 2) + title(c) + (i ? -clients[c].oldbw * 2 : clients[c].height);
+        return (border(c) * 2) + title(c) + (i ? -c->oldbw * 2 : c->height);
     }
   return 0;
 }

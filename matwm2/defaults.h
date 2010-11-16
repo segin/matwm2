@@ -22,4 +22,5 @@
 #define DEF_SNAP                5
 #define MINSIZE                 5
 #define CFGFN                   ".matwmrc"
+#define NO_TITLE                "-"
 
