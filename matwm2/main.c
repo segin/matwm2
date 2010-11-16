@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
   }
   screen = DefaultScreen(dpy);
   root = RootWindow(dpy, screen);
-  atexit(&end);
+  atexit(&quit);
   if(pipe(qsfd) != 0)
     error();
   qsa.sa_handler = qsh;
@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
     }
 }
 
-void end(void) {
+void quit(void) {
   int i, d;
   d = ICONS;
   while(d != 0) {

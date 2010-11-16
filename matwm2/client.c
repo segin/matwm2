@@ -126,12 +126,14 @@ void client_remove(client *c) {
     stacking[i - 1] = stacking[i];
   cn--;
   if(c == current) {
-    client_focus(NULL);
+    current = NULL;
     for(i = 0; i < cn; i++)
       if(stacking[i]->desktop == desktop || stacking[i]->desktop == STICKY) {
         client_focus(stacking[i]);
         break;
       }
+    if(!current)
+      client_focus(NULL);
   }
   free(c);
   clients_alloc();

@@ -32,36 +32,37 @@ void drag_end(void) {
 }
 
 int drag_handle_event(XEvent ev) {
-  switch(ev.type) {
-    case MotionNotify:
-      while(XCheckTypedEvent(dpy, MotionNotify, &ev));
-      if(drag_mode == RESIZE)
-        client_resize(current, snaph(current, ev.xmotion.x, snapv(current, ev.xmotion.x, ev.xmotion.y)) - drag_xo, snapv(current, snaph(current, ev.xmotion.x, ev.xmotion.y), ev.xmotion.y) - drag_yo);
-      else if(ev.xmotion.x == display_width - 1 && desktop < dc - 1) {
-        client_move(current, -(drag_xo + 1), ev.xmotion.y - drag_yo);
-        XWarpPointer(dpy, None, root, 0, 0, 0, 0, 1, ev.xmotion.y);
-        desktop_goto(desktop + 1);
-      } else if(ev.xmotion.x == 0 && desktop > 0) {
-        client_move(current, display_width - (drag_xo + 2), ev.xmotion.y - drag_yo);
-        XWarpPointer(dpy, None, root, 0, 0, 0, 0, display_width - 2, ev.xmotion.y);
-        desktop_goto(desktop - 1);
-      } else client_move(current, snapx(current, ev.xmotion.x - drag_xo, snapy(current, ev.xmotion.x - drag_xo, ev.xmotion.y - drag_yo)), snapy(current, snapx(current, ev.xmotion.x - drag_xo, ev.xmotion.y - drag_yo), ev.xmotion.y - drag_yo));
-      return 1;
-    case ButtonRelease:
-      if(ev.xbutton.button == drag_button || drag_button == AnyButton)
-        drag_end();
-      return 1;
-    case EnterNotify:
-    case ButtonPress:
-      return 1;
-    case UnmapNotify:
-      if(current->window == ev.xunmap.window)
-        evh = drag_release_wait;
-      break;
-    case DestroyNotify:
-      if(current->window == ev.xdestroywindow.window)
-        evh = drag_release_wait;
-  }
+  if(has_child(current->parent, current->window) || ev.type == DestroyNotify || ev.type == ButtonRelease)
+    switch(ev.type) {
+      case MotionNotify:
+        while(XCheckTypedEvent(dpy, MotionNotify, &ev));
+        if(drag_mode == RESIZE)
+          client_resize(current, snaph(current, ev.xmotion.x, snapv(current, ev.xmotion.x, ev.xmotion.y)) - drag_xo, snapv(current, snaph(current, ev.xmotion.x, ev.xmotion.y), ev.xmotion.y) - drag_yo);
+        else if(ev.xmotion.x == display_width - 1 && desktop < dc - 1) {
+          client_move(current, -(drag_xo + 1), ev.xmotion.y - drag_yo);
+          XWarpPointer(dpy, None, root, 0, 0, 0, 0, 1, ev.xmotion.y);
+          desktop_goto(desktop + 1);
+        } else if(ev.xmotion.x == 0 && desktop > 0) {
+          client_move(current, display_width - (drag_xo + 2), ev.xmotion.y - drag_yo);
+          XWarpPointer(dpy, None, root, 0, 0, 0, 0, display_width - 2, ev.xmotion.y);
+          desktop_goto(desktop - 1);
+        } else client_move(current, snapx(current, ev.xmotion.x - drag_xo, snapy(current, ev.xmotion.x - drag_xo, ev.xmotion.y - drag_yo)), snapy(current, snapx(current, ev.xmotion.x - drag_xo, ev.xmotion.y - drag_yo), ev.xmotion.y - drag_yo));
+        return 1;
+      case ButtonRelease:
+        if(ev.xbutton.button == drag_button || drag_button == AnyButton)
+          drag_end();
+        return 1;
+      case EnterNotify:
+      case ButtonPress:
+        return 1;
+      case UnmapNotify:
+        if(current->window == ev.xunmap.window)
+          evh = drag_release_wait;
+        break;
+      case DestroyNotify:
+        if(current->window == ev.xdestroywindow.window)
+          evh = drag_release_wait;
+    }
   return 0;
 }
 

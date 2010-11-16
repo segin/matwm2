@@ -67,7 +67,7 @@ int button_handle_event(XEvent ev) {
   for(i = 0; i < cn; i++)
     if(clients[i]->button_iconify == ev.xany.window || clients[i]->button_expand == ev.xany.window || clients[i]->button_maximise == ev.xany.window || clients[i]->button_close == ev.xany.window)
       c = clients[i];
-  if(!c)
+  if(!c || !has_child(c->parent, c->window))
     return 0;
   switch(ev.type) {
     case Expose:

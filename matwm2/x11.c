@@ -10,7 +10,7 @@ int xerrorhandler(Display *display, XErrorEvent *xerror) {
     char ret[666];
     XGetErrorText(xerror->display, xerror->error_code, ret, 666);
     client *c = owner(xerror->resourceid);
-    if(c) printf("%s: x error: %s\n", c->name, ret);
+    if(c) printf("%i (%s): x error: %s\n", xerror->resourceid, c->name, ret);
     else printf("%i: x error: %s\n", xerror->resourceid, ret);
   }
 #endif

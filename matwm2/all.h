@@ -151,7 +151,7 @@ extern char *dn;
 
 // functions from main.c
 int main(int argc, char *argv[]);
-void end(void);
+void quit(void);
 void error(void);
 void qsh(int sig);
 

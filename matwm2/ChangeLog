@@ -105,3 +105,10 @@
 	on hiding/removing client, focus is restored to topmost window instead of lowest one
 	fixed redrawing of sticky windows when focussed/defocussed
 
+0.0.61:
+	renamed end() to quit(), schould now compile and run on dragonflybsd too
+	set value of _NET_WM_ACTIVE_WINDOW to None if current == NULL, as specified by EWMH
+	also check if window still exists in button_handle_event and drag_handle_event
+	do not try to unfocus removed clients
+	always show window id in debugging messages
+

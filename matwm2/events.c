@@ -6,7 +6,7 @@ void handle_event(XEvent ev) {
   client *c = owner(ev.xany.window);
   int i;
 #ifdef DEBUG_EVENTS
-  if(c) printf("%s: %s\n", c->name, event_name(ev));
+  if(c) printf("%i (%s): %s\n", ev.xany.window, c->name, event_name(ev));
   else printf("%i: %s\n", ev.xany.window, event_name(ev));
 #endif
   if((evh && evh(ev)) || button_handle_event(ev) || ewmh_handle_event(ev))
