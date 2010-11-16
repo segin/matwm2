@@ -2,7 +2,8 @@
 
 XColor bg, ibg, fg, ifg;
 GC gc, igc, bgc, ibgc;
-int border_width, text_height, title_height, button_parent_width, snapat, button1, button2, button3, button4, button5, dc, click_focus, click_raise;
+int border_width, text_height, title_height, button_parent_width, snapat, button1, button2, button3, button4, button5, click_focus, click_raise;
+unsigned int dc;
 XFontStruct *font;
 char *no_title = NO_TITLE;
 
@@ -84,12 +85,16 @@ void cfg_set_opt(char *key, char *value) {
 			exit(1);
 		}
 	}
-	if(strcmp(key, "border_width") == 0)
+	if(strcmp(key, "border_width") == 0) {
 		border_width = strtol(value, NULL, 0);
+		border_width = (border_width > 0) ? border_width : 1;
+	}
 	if(strcmp(key, "snap") == 0)
 		snapat = strtol(value, NULL, 0);
-	if(strcmp(key, "desktops") == 0)
+	if(strcmp(key, "desktops") == 0) {
 		dc = strtol(value, NULL, 0);
+		dc = (dc > 0) ? dc : 1;
+	}
 	if(strcmp(key, "button1") == 0)
 		button1 = str_buttonaction(value);
 	if(strcmp(key, "button2") == 0)

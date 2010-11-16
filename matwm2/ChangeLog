@@ -388,4 +388,6 @@
 	update ewmh desktop of icons restored to another desktop
 	if no windows are hidden for it still exit showing desktop mode
 	get_ewmh_hints() renamed to ewmh_get_hints()
+	added error checking for desktop count and border width in config files
+	dc now is an unsigned integer, so up to 0xFFFFFFFF desktops are now supported
 
