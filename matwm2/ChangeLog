@@ -71,3 +71,7 @@
 	repairered ewmh strutting thing (confused top and right)
 	_NET_DESKTOP_GEOMETRY now updated on root window resize
 
+0.0.56:
+	set wlist_with to initial value from wlist_update() instead of wlist_start (this makes way more sence i think)
+	weird window list behaviour introduced with 0.0.55 fixed
+

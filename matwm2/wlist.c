@@ -6,7 +6,6 @@ int wlist_width;
 void wlist_start(XEvent ev) {
   if(evh || !cn)
     return;
-  wlist_width = 3;
   wlist_update();
   XMapRaised(dpy, wlist);
   XGrabKeyboard(dpy, root, True, GrabModeAsync, GrabModeAsync, CurrentTime);
@@ -76,12 +75,12 @@ int wlist_handle_event(XEvent ev) {
 
 void wlist_update(void) {
   int i, nc = 0, offset = 1, nl = 0;
+  wlist_width = 3;
   for(i = 0; i < cn; i++)
     if(!(stacking[i]->flags & DONT_LIST)) {
       if(stacking[i]->title_width + 6 > wlist_width)
         wlist_width = stacking[i]->title_width + 6;
-      nl++;
-    }
+    } else nl++;
   if(nl == cn)
     wlist_end();
   if(wlist_width > display_width)
