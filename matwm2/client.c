@@ -6,20 +6,12 @@ int cn = 0, current = 0;
 void add_client(Window w) {
   XWindowAttributes attr;
   XGetWindowAttributes(dpy, w, &attr);
-  int i, owner_iconic = 0, di, bounding_shaped, wm_state = get_wm_state(w);
+  int i, di, bounding_shaped, wm_state = get_wm_state(w);
   alloc_clients();
-  clients[cn].transient = get_wm_transient_for(w, &clients[cn].transient_for);
-  if(clients[cn].transient)
-    for(i = 0; i < cn; i++)
-      if(clients[cn].transient_for == clients[i].window)
-        owner_iconic = clients[i].iconic;
-  if(wm_state == WithdrawnState)
-    if(!owner_iconic) {
-      wm_state = getstatehint(w);
-      set_wm_state(w, wm_state != WithdrawnState ? wm_state : NormalState);
-    } else set_wm_state(w, IconicState);
-  if(wm_state == IconicState && clients[cn].transient && !owner_iconic)
-    set_wm_state(w, NormalState);
+  if(wm_state == WithdrawnState) {
+    wm_state = getstatehint(w);
+    set_wm_state(w, wm_state != WithdrawnState ? wm_state : NormalState);
+  }
   clients[cn].width = attr.width;
   clients[cn].height = attr.height;
   clients[cn].oldbw = attr.border_width;
@@ -31,7 +23,7 @@ void add_client(Window w) {
   get_mwm_hints(cn);
   clients[cn].x = attr.x - gxo(cn, 1);
   clients[cn].y = attr.y - gyo(cn, 1);
-  clients[cn].iconic = (wm_state == IconicState) ? 1 : owner_iconic;
+  clients[cn].iconic = (wm_state == IconicState) ? 1 : 0;
   clients[cn].maximised = 0;
   XFetchName(dpy, w, &clients[cn].name);
   XSelectInput(dpy, w, PropertyChangeMask | EnterWindowMask);
@@ -192,9 +184,6 @@ void restack_client(int n, int top) {
   int i;
   top ? XRaiseWindow(dpy, clients[n].parent) : XLowerWindow(dpy, clients[n].parent);
   restack_icons(0);
-  for(i = 0; i < cn; i++)
-    if(clients[i].transient && clients[i].transient_for == clients[n].window)
-      restack_client(i, top);
 }
 
 void maximise(int n) {

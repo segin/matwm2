@@ -37,10 +37,10 @@
 #define warp()          XWarpPointer(dpy, None, clients[current].iconic ? clients[current].icon : clients[current].parent, 0, 0, 0, 0, clients[current].iconic ? icon_width - 1 : clients[current].width + (border(current) ? border_width : -1), clients[current].iconic ? 3 + title_height : ((clients[current].height + (border(current) ? border_width : -1)) + title(current)));
 
 typedef struct {
-  Window        window, parent, icon, transient_for;
+  Window        window, parent, icon;
   int           x, y, width, height, iconic, maximised;
   int           oldbw, prev_x, prev_y, prev_width, prev_height;
-  int           title, border, resize, shaped, transient;
+  int           title, border, resize, shaped;
   XSizeHints    normal_hints;
   char          *name;
 } client;

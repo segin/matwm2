@@ -74,7 +74,7 @@ void handle_event(XEvent ev) {
       for(i = 0; i < cn; i++)
         if(clients[i].window == ev.xclient.window)
           break;
-      if(i < cn && ev.xclient.message_type == xa_wm_change_state && ev.xclient.data.l[0] == IconicState && !clients[i].transient)
+      if(i < cn && ev.xclient.message_type == xa_wm_change_state && ev.xclient.data.l[0] == IconicState)
         iconify(i);
       break;
     case EnterNotify:
@@ -128,7 +128,7 @@ void handle_event(XEvent ev) {
         prev(1);
         restack_icons(1);
       }
-      if(current < cn && iskey(key_iconify) && !clients[current].transient) {
+      if(current < cn && iskey(key_iconify)) {
         icons_ontop = 0;
         clients[current].iconic ? restore(current) : iconify(current);
         if(!clients[current].iconic)

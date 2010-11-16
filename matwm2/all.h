@@ -38,6 +38,7 @@ void handle_event(XEvent ev);
 extern int icons_ontop;
 void sort_icons(void);
 void restack_icons(int top);
+Bool isunmap(Display *display, XEvent *event, XPointer arg);
 void iconify(int n);
 void restore(int n);
 
