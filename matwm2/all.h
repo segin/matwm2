@@ -72,7 +72,7 @@ int key_to_mask(KeyCode key);
 void grab_key(keybind key);
 void ungrab_key(keybind key);
 void grab_button(Window w, unsigned int button, unsigned int modmask, unsigned int event_mask);
-int cmpmask(int m1, int m2);
+int cmpmodmask(int m1, int m2);
 
 // main.c
 extern Display *dpy;

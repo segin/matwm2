@@ -17,6 +17,7 @@ key:                   mod1 Tab                next\n\
 key:                   mod1 shift Tab          prev\n\
 key:                   control mod1 s          iconify\n\
 key:                   control mod1 x          maximise\n\
+key:                   control mod1 e          expand\n\
 key:                   control mod1 q          close\n\
 key:                   control mod1 y          topleft\n\
 key:                   control mod1 u          topright\n\

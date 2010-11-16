@@ -39,7 +39,7 @@ int wlist_handle_event(XEvent ev) {
       if(mask) {
         mask ^= ev.xkey.state & mask;
         for(i = 0; i < keyn; i++)
-          if((keys[i].action == KA_NEXT || keys[i].action == KA_PREV) && cmpmask(keys[i].mask, mask))
+          if((keys[i].action == KA_NEXT || keys[i].action == KA_PREV) && cmpmodmask(keys[i].mask, mask))
             break;
         if(i == keyn)
           wlist_end();
@@ -63,6 +63,8 @@ void wlist_update(void) {
       if(tl > wlist_width)
         wlist_width = tl;
     }
+  if(wlist_width > display_width)
+    wlist_width = display_width;
   for(i = 0; i < cn; i++) {
     if(!(clients[0]->state & ICONIC) && clients[i]->state & ICONIC)
       offset = 2;

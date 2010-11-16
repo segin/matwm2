@@ -1,6 +1,5 @@
 man page
 site, new name
-implement a move-the-window-as-far-to-the-top-and-left-and-resize-it-as-far-as-possible-without-overlapping-any-more-windows-then-it-already-does function
 maybe add key actions for raising and lowering windows
 work @ mwm hints stuff?
 clean up

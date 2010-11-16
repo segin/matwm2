@@ -225,7 +225,7 @@ void expand(client *c) {
     return;
   }
   for(i = 0; i < cn; i++) {
-    if(clients[i]->state & ICONIC || c->y > clients[i]->y + total_height(clients[i]) || c->y + total_height(c) < clients[i]->y)
+    if(clients[i]->state & ICONIC || c->y >= clients[i]->y + total_height(clients[i]) || c->y + total_height(c) <= clients[i]->y)
       continue;
     if(clients[i]->x + total_width(clients[i]) <= c->x && clients[i]->x + total_width(clients[i]) > min_x)
       min_x = clients[i]->x + total_width(clients[i]);
@@ -233,7 +233,7 @@ void expand(client *c) {
       max_x = clients[i]->x;
   }
   for(i = 0; i < cn; i++) {
-    if(clients[i]->state & ICONIC || min_x > clients[i]->x + total_width(clients[i]) || max_x < clients[i]->x)
+    if(clients[i]->state & ICONIC || min_x >= clients[i]->x + total_width(clients[i]) || max_x <= clients[i]->x)
       continue;
     if(clients[i]->y + total_height(clients[i]) <= c->y && clients[i]->y + total_height(clients[i]) > min_y)
       min_y = clients[i]->y + total_height(clients[i]);

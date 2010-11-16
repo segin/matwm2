@@ -68,7 +68,7 @@ int buttonaction(int button) {
 int keyaction(XEvent ev) {
   int i;
   for(i = 0; i < keyn; i++)
-    if(keys[i].code == ev.xkey.keycode && cmpmask(keys[i].mask, ev.xkey.state))
+    if(keys[i].code == ev.xkey.keycode && cmpmodmask(keys[i].mask, ev.xkey.state))
       return keys[i].action;
   return KA_NONE;
 }
@@ -76,7 +76,7 @@ int keyaction(XEvent ev) {
 char *keyarg(XEvent ev) {
   int i;
   for(i = 0; i < keyn; i++)
-    if(keys[i].code == ev.xkey.keycode && cmpmask(keys[i].mask, ev.xkey.state) && keys[i].arg)
+    if(keys[i].code == ev.xkey.keycode && cmpmodmask(keys[i].mask, ev.xkey.state) && keys[i].arg)
       return keys[i].arg;
   return "";
 }
@@ -110,7 +110,7 @@ void grab_button(Window w, unsigned int button, unsigned int modmask, unsigned i
     XGrabButton(dpy, button, modmask | mod_ignore[i], w, False, event_mask, GrabModeAsync, GrabModeSync, None, None);
 }
 
-int cmpmask(int m1, int m2) {
+int cmpmodmask(int m1, int m2) {
   int i;
   for(i = 0; i < nmod_ignore; i++)
     m2 ^= m2 & mod_ignore[i];
