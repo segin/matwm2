@@ -1,5 +1,8 @@
 #include "matwm.h"
 
+#define iskey(modmask, key)\
+  ((ev.xkey.state == modmask || ev.xkey.state == (modmask | numlockmask)) && ev.xkey.keycode == XKeysymToKeycode(dpy, key))
+
 void handle_event(XEvent ev) {
   int c, i;
   for(c = 0; c < cn; c++)
@@ -74,34 +77,42 @@ void handle_event(XEvent ev) {
         clients[c].iconic ? draw_icon(c) : draw_client(c);
       break;
     case ButtonPress:
-      if(c < cn && !clients[c].iconic && (ev.xbutton.button == move_button || ev.xbutton.button == resize_button)) {
+      if(c < cn && !clients[c].iconic) {
+        if(strcmp(buttonaction(c, ev.xbutton.button), "move") == 0) {
           restack_client(c, 1);
-          drag(c, &ev.xbutton);
+          drag(c, &ev.xbutton, 0);
         }
+        if(strcmp(buttonaction(c, ev.xbutton.button), "resize") == 0) {
+          restack_client(c, 1);
+          drag(c, &ev.xbutton, 1);
+        }
+      }
       break;
     case ButtonRelease:
-      if(c < cn && clients[c].iconic && ev.xbutton.button == icon_raise_button) {
-        restack_icons(1);
-      } else if(c < cn && clients[c].iconic && ev.xbutton.button == icon_lower_button) {
-        restack_icons(0);
-      } else if(c < cn)
-        if(clients[c].iconic && ev.xbutton.button == icon_restore_button) {
+      if(c < cn)
+        if(strcmp(buttonaction(c, ev.xbutton.button), "raise") == 0) {
+          clients[c].iconic ? restack_icons(1) : restack_client(c, 1);
+        } else if(strcmp(buttonaction(c, ev.xbutton.button), "lower") == 0) {
+          clients[c].iconic ? restack_icons(0) : restack_client(c, 0);
+        } else if(clients[c].iconic && strcmp(buttonaction(c, ev.xbutton.button), "restore") == 0)
           restore(c);
-        } else if(ev.xbutton.button == raise_button) {
-          restack_client(c, 1);
-        } else if(ev.xbutton.button == lower_button) 
-          restack_client(c, 0);
       break;
     case KeyPress:
-      if(ev.xkey.keycode == XKeysymToKeycode(dpy, XK_q) && current < cn)
+      if(current < cn && iskey(modmask_close, key_close))
         delete_window(current);
-      if(ev.xkey.keycode == XKeysymToKeycode(dpy, XK_Tab))
+      if(iskey(modmask_next, key_next))
         next(0, 1);
-      if(ev.xkey.keycode == XKeysymToKeycode(dpy, XK_a)) {
+      if(iskey(modmask_prev, key_prev))
+        prev(0, 1);
+      if(iskey(modmask_next_icon, key_next_icon)) {
         next(1, 1);
         restack_icons(1);
       }
-      if(ev.xkey.keycode == XKeysymToKeycode(dpy, XK_s) && current < cn) {
+      if(iskey(modmask_prev_icon, key_prev_icon)) {
+        prev(1, 1);
+        restack_icons(1);
+      }
+      if(current < cn && iskey(modmask_iconify, key_iconify)) {
         icons_ontop = 0;
         clients[current].iconic ? restore(current) : iconify(current);
         if(!clients[current].iconic)

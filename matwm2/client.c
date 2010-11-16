@@ -153,7 +153,7 @@ void next(int iconic, int warp) {
 }
 
 void prev(int iconic, int warp) {
-  int i = current - 1 < cn ? current - 1 : cn -1;
+  int i = current - 1 >= 0 ? current - 1 : cn - 1;
   while(i >= 0 && i != current) {
     if(iconic ? clients[i].iconic : !clients[i].iconic) {
       focus(i);

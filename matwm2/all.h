@@ -1,3 +1,5 @@
+// .matwmrc
+
 // client.c
 extern client *clients;
 extern int cn, current;
@@ -15,9 +17,17 @@ void restack_client(int c, int top);
 // config.c
 extern XColor bg, ibg, fg, ifg;
 extern int border_width, title_height, hmaxicons, icon_width;
-extern unsigned int mousemodmask, move_button, resize_button, raise_button, lower_button, icon_raise_button, icon_lower_button, icon_restore_button;
+extern unsigned int mousemodmask;
+extern char *cbutton1, *cbutton2, *cbutton3, *cbutton4, *cbutton5, *ibutton1, *ibutton2, *ibutton3, *ibutton4, *ibutton5;
+extern KeySym key_next, key_prev, key_next_icon, key_prev_icon, key_iconify, key_maximise, key_close;
+extern int modmask_next, modmask_prev, modmask_next_icon, modmask_prev_icon, modmask_iconify, modmask_maximise, modmask_close;
 extern XFontStruct *font;
 extern GC gc, igc;
+char *xrm_getstr(XrmDatabase db, char *opt_name, char *def);
+int xrm_getint(XrmDatabase db, char *opt_name, int def);
+char *buttonaction(int n, int button);
+int keycode_to_modmask(KeyCode key);
+KeySym string_to_key(char *str, int *mask);
 void config_read(void);
 
 // events.c
@@ -34,7 +44,7 @@ void restore(int n);
 // input.c
 void grab_keysym(Window w, int modmask, KeySym key);
 void grab_button(Window w, unsigned int button, unsigned int modmask, unsigned int event_mask);
-void drag(int n, XButtonEvent *be);
+void drag(int n, XButtonEvent *be, int res);
 
 // main.c
 extern Display *dpy;
@@ -43,6 +53,7 @@ extern Window root;
 extern unsigned int numlockmask;
 extern Atom xa_wm_protocols, xa_wm_delete, xa_wm_state, xa_wm_change_state;
 extern XSetWindowAttributes p_attr;
+extern XModifierKeymap *modmap;
 void open_display(char *display);
 void end(void);
 void quit(int sig);

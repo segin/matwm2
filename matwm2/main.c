@@ -6,6 +6,7 @@ Window root;
 unsigned int numlockmask = 0;
 Atom xa_wm_protocols, xa_wm_delete, xa_wm_state, xa_wm_change_state;
 XSetWindowAttributes p_attr;
+XModifierKeymap *modmap;
 
 void open_display(char *display) {
   struct sigaction qsa;
@@ -26,8 +27,8 @@ void open_display(char *display) {
 
 void end(void) {
   while(cn) {
-    if(clients[cn].iconic)
-      restore(cn);
+    if(clients[0].iconic)
+      XMapWindow(dpy, clients[0].window);
     remove_client(0, 0);
   }
   free(clients);
@@ -41,7 +42,6 @@ void quit(int sig) {
 
 int main(int argc, char *argv[]) {
   XEvent ev;
-  XModifierKeymap *modmap;
   unsigned int i, nwins;
   Window dw1, dw2, *wins;
   XWindowAttributes attr;

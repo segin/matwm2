@@ -18,10 +18,10 @@ void grab_button(Window w, unsigned int button, unsigned int modmask, unsigned i
   }
 }
 
-void drag(int n, XButtonEvent *be) {
+void drag(int n, XButtonEvent *be, int res) {
   int xo, yo;
   XEvent ev;
-  if(be->button == resize_button) {
+  if(res) {
     XWarpPointer(dpy, None, clients[n].parent, 0, 0, 0, 0, clients[n].width + border_width, clients[n].height + border_width + title_height);
     xo = clients[n].x + border_width;
     yo = clients[n].y + border_width + title_height;
@@ -31,7 +31,7 @@ void drag(int n, XButtonEvent *be) {
     XMaskEvent(dpy, PropertyChangeMask | SubstructureNotifyMask | SubstructureRedirectMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | ExposureMask | EnterWindowMask, &ev);
     if(ev.type == MotionNotify) {
       while(XCheckTypedEvent(dpy, MotionNotify, &ev));
-      if(be->button == resize_button) {
+      if(res) {
         resize(n, ev.xmotion.x - xo,  ev.xmotion.y - yo);
       } else move(n, ev.xmotion.x - be->x, ev.xmotion.y - be->y);
     } else if(ev.type == ButtonRelease && ev.xbutton.button == be->button) {
