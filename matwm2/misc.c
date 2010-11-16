@@ -1,10 +1,9 @@
 #include "matwm.h"
 #include <fcntl.h> /* for open() */
-/* for fstat */
-#include <sys/types.h>
+#include <sys/types.h> /* for read() and fstat() */
+/* for fstat() */
 #include <sys/stat.h>
 /* for read() */
-#include <sys/types.h>
 #include <sys/uio.h>
 #include <unistd.h>
 

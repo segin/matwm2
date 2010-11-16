@@ -2,7 +2,7 @@
 extern Display *dpy;
 extern int screen, depth, have_shape, shape_event;
 extern Window root;
-extern Atom xa_wm_protocols, xa_wm_delete, xa_wm_take_focus, xa_wm_state, xa_wm_change_state, xa_motif_wm_hints, xa_internal_message, xa_quit, xa_reinit;
+extern Atom xa_wm_protocols, xa_wm_delete, xa_wm_take_focus, xa_wm_state, xa_wm_change_state, xa_motif_wm_hints, xa_internal_message, xa_quit, xa_reinit, xa_utf8_string;
 extern XSetWindowAttributes p_attr;
 extern char *dn, *perror_str;
 extern Colormap colormap;

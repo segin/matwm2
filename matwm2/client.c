@@ -227,9 +227,11 @@ void client_grab_buttons(client *c) {
 void client_draw_title(client *c) { /* draw the title pixmap for a client */
 	XFillRectangle(dpy, c->title_pixmap, (c == current) ? bgc : ibgc, 0, 0, c->title_width, text_height);
 	#ifdef USE_XFT
-	if(xftfont)
-	  XftDrawString8(c->title_draw, (c == current) ? &xftfg : &xftifg, xftfont, 0, xftfont->ascent, (unsigned char *) c->name, strlen(c->name));
-	else
+	if(xftfont) {
+		if(c->ewmh_name)
+			XftDrawStringUtf8(c->title_draw, (c == current) ? &xftfg : &xftifg, xftfont, 0, xftfont->ascent, (unsigned char *) c->ewmh_name, strlen(c->ewmh_name));
+	  else XftDrawString8(c->title_draw, (c == current) ? &xftfg : &xftifg, xftfont, 0, xftfont->ascent, (unsigned char *) c->name, strlen(c->name));
+	} else
 	#endif
 	XDrawString(dpy, c->title_pixmap, (c == current) ? gc : igc, 0, font->max_bounds.ascent, c->name, strlen(c->name));
 }
@@ -244,7 +246,9 @@ void client_update_name(client *c) { /* apply changes in the name of a client */
 		c->name = no_title;
 	#ifdef USE_XFT
 	if(xftfont) {
-		XftTextExtents8(dpy, xftfont, (FcChar8 *) c->name, strlen(c->name), &extents);
+		if(c->ewmh_name)
+			XftTextExtentsUtf8(dpy, xftfont, (FcChar8 *) c->ewmh_name, strlen(c->ewmh_name), &extents);
+		else XftTextExtents8(dpy, xftfont, (FcChar8 *) c->name, strlen(c->name), &extents);
 		c->title_width = extents.xOff;
 	} else
 	#endif

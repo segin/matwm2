@@ -10,7 +10,7 @@ void ewmh_initialize(void) {
 	long d;
 	ewmh_atoms[NET_SUPPORTED] = XInternAtom(dpy, "_NET_SUPPORTED", False);
 	ewmh_atoms[NET_SUPPORTING_WM_CHECK] = XInternAtom(dpy, "_NET_SUPPORTING_WM_CHECK", False);
-	ewmh_atoms[NET_WM_NAME] =	XInternAtom(dpy, "_NET_WM_NAME", False);
+	ewmh_atoms[NET_WM_NAME] =	279;//XInternAtom(dpy, "_NET_WM_NAME", False);
 	ewmh_atoms[NET_NUMBER_OF_DESKTOPS] = XInternAtom(dpy, "_NET_NUMBER_OF_DESKTOPS", False);
 	ewmh_atoms[NET_DESKTOP_GEOMETRY] = XInternAtom(dpy, "_NET_DESKTOP_GEOMETRY", False);
 	ewmh_atoms[NET_DESKTOP_VIEWPORT] = XInternAtom(dpy, "_NET_DESKTOP_VIEWPORT", False);
@@ -24,9 +24,6 @@ void ewmh_initialize(void) {
 	ewmh_atoms[NET_CLIENT_LIST_STACKING] = XInternAtom(dpy, "_NET_CLIENT_LIST_STACKING", False);
 	ewmh_atoms[NET_ACTIVE_WINDOW] = XInternAtom(dpy, "_NET_ACTIVE_WINDOW", False);
 	ewmh_atoms[NET_WM_STATE] = XInternAtom(dpy, "_NET_WM_STATE", False);
-	ewmh_atoms[NET_WM_STATE_ADD] = XInternAtom(dpy, "_NET_WM_STATE_ADD", False);
-	ewmh_atoms[NET_WM_STATE_REMOVE] = XInternAtom(dpy, "_NET_WM_STATE_REMOVE", False);
-	ewmh_atoms[NET_WM_STATE_TOGGLE] = XInternAtom(dpy, "_NET_WM_STATE_TOGGLE", False);
 	ewmh_atoms[NET_WM_STATE_FULLSCREEN] = XInternAtom(dpy, "_NET_WM_STATE_FULLSCREEN", False);
 	ewmh_atoms[NET_WM_STATE_MAXIMIZED_HORZ] = XInternAtom(dpy, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
 	ewmh_atoms[NET_WM_STATE_MAXIMIZED_VERT] = XInternAtom(dpy, "_NET_WM_STATE_MAXIMIZED_VERT", False);
@@ -84,6 +81,9 @@ bool ewmh_handle_event(XEvent *ev) {
 	client *c;
 	int i, j, xo, yo;
 	long extents[4];
+	Atom rt;
+	int rf;
+	unsigned long nir, bar;
 	switch(ev->type) {
 		case ClientMessage:
 			c = owner(ev->xclient.window);
@@ -221,6 +221,13 @@ bool ewmh_handle_event(XEvent *ev) {
 				ewmh_update_strut();
 				return true;
 			}
+			c = owner(ev->xproperty.window);
+			if(c && ev->xproperty.atom == ewmh_atoms[NET_WM_NAME]) {
+				if(XGetWindowProperty(dpy, c->window, ewmh_atoms[NET_WM_NAME], 0, 1024, False, xa_utf8_string, &rt, &rf, &nir, &bar, (unsigned char **) &c->ewmh_name) != Success)
+					c->ewmh_name = NULL;
+				else client_update_name(c);
+				return true;
+			}
 			break;
 		}
 	return false;
@@ -280,6 +287,8 @@ void ewmh_get_hints(client *c) {
 		}
 		XFree((void *) p);
 	}
+	if(XGetWindowProperty(dpy, c->window, ewmh_atoms[NET_WM_NAME], 0, 1024, False, xa_utf8_string, &rt, &rf, &nir, &bar, (unsigned char **) &c->ewmh_name) != Success)
+		c->ewmh_name = NULL;
 }
 
 void ewmh_update_extents(client *c) {

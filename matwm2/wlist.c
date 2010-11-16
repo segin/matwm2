@@ -145,7 +145,9 @@ void wlist_item_draw(client *c) {
 	#ifdef USE_XFT
 	if(xftfont) {
 		XClearWindow(dpy, c->wlist_item);
-	  XftDrawString8(c->wlist_draw, (c == current) ? &xftfg : &xftifg, xftfont, wlist_margin + (center_wlist_items ? center : 0), wlist_margin + xftfont->ascent, (unsigned char *) c->name, strlen(c->name));
+		if(c->ewmh_name)
+		  XftDrawStringUtf8(c->wlist_draw, (c == current) ? &xftfg : &xftifg, xftfont, wlist_margin + (center_wlist_items ? center : 0), wlist_margin + xftfont->ascent, (unsigned char *) c->ewmh_name, strlen(c->ewmh_name));
+		else XftDrawString8(c->wlist_draw, (c == current) ? &xftfg : &xftifg, xftfont, wlist_margin + (center_wlist_items ? center : 0), wlist_margin + xftfont->ascent, (unsigned char *) c->name, strlen(c->name));
 	} else
 	#endif
 	XDrawString(dpy, c->wlist_item, (c == current) ? gc : igc, wlist_margin + (center_wlist_items ? center : 0), wlist_margin + font->max_bounds.ascent, c->name, strlen(c->name));

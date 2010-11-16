@@ -25,6 +25,10 @@
 	added dot after last sentence of README
 	configure script now tries to choose compiler and linker flags itself if pkg-config can't, and has --disable-pkg-conf option now
 	added quit key action
+	**pre2 release
+	fixed client_save for windows above current screen
+	added segin's fullscreen and maximize button patches
+	NET_WM_STATE_ADD -REMOVE and -TOGGLE no longer defined twice (had then in atoms list while they're not atoms)
 
 0.1.1:
 	fixed expanding while window maximised/fullscreen

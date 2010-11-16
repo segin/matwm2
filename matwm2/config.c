@@ -515,6 +515,8 @@ int str_wbutton(char *button) {
 		return B_ONTOP;
 	if(strcmp(button, "below") == 0)
 		return B_BELOW;
+	if(strcmp(button, "fullscreen") == 0)
+		return B_FULLSCREEN;
 	return B_NONE;
 }
 

@@ -41,7 +41,7 @@ typedef struct {
 	XftDraw     *title_draw, *wlist_draw;
 #endif
 	XSizeHints  normal_hints;
-	char        *name;
+	char        *name, *ewmh_name;
 	button      *buttons;
 	bool        want_input_focus;
 } client;
@@ -126,7 +126,8 @@ enum { /* for frame buttons */
 	B_ICONIFY,
 	B_STICKY,
 	B_ONTOP,
-	B_BELOW
+	B_BELOW,
+	B_FULLSCREEN
 };
 
 enum { /* fullscreen_stacking modes */

@@ -3,7 +3,7 @@ MANDIR     = %MANDIR%
 CC         = %CC%
 RM         = %RM%
 
-CFLAGS    = -DVERSION="\"0.1.2pre2\"" %DEFINES% %CFLAGS%
+CFLAGS    = -DVERSION="\"0.1.2pre3\"" %DEFINES% %CFLAGS%
 LDFLAGS   = %LDFLAGS%
 LIBS      = %LIBS%
 

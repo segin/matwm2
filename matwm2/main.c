@@ -9,7 +9,7 @@
 Display *dpy = NULL;
 int screen, depth, have_shape, shape_event;
 Window root;
-Atom xa_wm_protocols, xa_wm_delete, xa_wm_take_focus, xa_wm_state, xa_wm_change_state, xa_motif_wm_hints, xa_internal_message, xa_quit, xa_reinit;
+Atom xa_wm_protocols, xa_wm_delete, xa_wm_take_focus, xa_wm_state, xa_wm_change_state, xa_motif_wm_hints, xa_internal_message, xa_quit, xa_reinit, xa_utf8_string;
 XSetWindowAttributes p_attr;
 char *dn = NULL, *perror_str = NAME ": error";
 Colormap colormap;
@@ -108,6 +108,8 @@ int main(int argc, char *argv[]) {
 	xa_internal_message = XInternAtom(dpy, XA_INTERNAL_MESSAGE, False);
 	xa_quit = XInternAtom(dpy, XA_QUIT, False);
 	xa_reinit = XInternAtom(dpy, XA_REINIT, False);
+	xa_motif_wm_hints = XInternAtom(dpy, "_MOTIF_WM_HINTS", False);
+	xa_utf8_string = XInternAtom(dpy, "UTF8_STRING", False);
 	/* load configuration etc */
 	ewmh_initialize();
 	screens_get(); /* we need atoms from above XInternAtom() and ewmh_initialize() calls for this */

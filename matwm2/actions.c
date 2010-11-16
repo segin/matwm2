@@ -254,7 +254,7 @@ void client_restore(client *c) { /* restores iconic client */
 void client_save(client *c) { /* bring a moved off-screen window back to the screen */
 	bool lost = true;
 	int i, x = client_x(c), y = client_y(c);
-	int right = x + client_width_total(c), bottom = client_height_total(c);
+	int right = x + client_width_total(c), bottom = y + client_height_total(c);
 	for(i = 0; i < nscreens; i++)
 		if(x < screens[i].x + screens[i].width && y < screens[i].y + screens[i].height && right > screens[i].x && bottom > screens[i].y)
 			lost = false;

@@ -64,8 +64,17 @@ void button_draw(client *c, button *b) {
 		XDrawLine(dpy, b->w, (c == current) ? gc : igc, button_size / 2, 3, button_size / 2, button_size - 3);
 		XDrawLine(dpy, b->w, (c == current) ? gc : igc, 3, button_size / 2, button_size - 3, button_size / 2);
 	}
-	if(b->action == B_MAXIMIZE)
-		XDrawRectangle(dpy, b->w, (c == current) ? gc : igc, 2, 2, button_size - 5, button_size - 5);
+	if(b->action == B_MAXIMIZE) {
+		if((c->flags & (MAXIMIZED_L | MAXIMIZED_R | MAXIMIZED_T | MAXIMIZED_B)) != (MAXIMIZED_L | MAXIMIZED_R | MAXIMIZED_T | MAXIMIZED_B))
+			XDrawRectangle(dpy, b->w, (c == current) ? gc : igc, 2, 2, button_size - 5, button_size - 5);
+		else {
+			XDrawRectangle(dpy, b->w, (c == current) ? gc : igc, 2, 4, button_size - 7, button_size - 7);
+			XDrawLine(dpy, b->w, (c == current) ? gc : igc, 4, 4, 4, 2);
+			XDrawLine(dpy, b->w, (c == current) ? gc : igc, 4, 2, button_size - 3, 2);
+			XDrawLine(dpy, b->w, (c == current) ? gc : igc, button_size - 3, 2, button_size - 3, button_size - 5);
+			XDrawLine(dpy, b->w, (c == current) ? gc : igc, button_size - 2, button_size - 5, button_size - 5, button_size - 5);
+		}
+	}
 	if(b->action == B_CLOSE) {
 		XDrawLine(dpy, b->w, (c == current) ? gc : igc, 2, 2, button_size - 2, button_size - 2);
 		XDrawLine(dpy, b->w, (c == current) ? gc : igc, 2, button_size - 3, button_size - 2, 1);
@@ -90,6 +99,22 @@ void button_draw(client *c, button *b) {
 			XDrawLine(dpy, b->w, (c == current) ? gc : igc, 2, 2, (button_size / 2) + 1, (button_size / 2) + 1);
 			XDrawLine(dpy, b->w, (c == current) ? gc : igc, button_size - 2, 1, button_size / 2, button_size / 2);
 		}
+	}
+	if(b->action == B_FULLSCREEN) {
+		XDrawLine(dpy, b->w, (c == current) ? gc : igc, 2, 2, button_size - 2, button_size - 2);
+		XDrawLine(dpy, b->w, (c == current) ? gc : igc, 2, button_size - 3, button_size - 2, 1);
+
+		XDrawLine(dpy, b->w, (c == current) ? gc : igc, 2, 2, 2 + (button_size / 4), 2);
+		XDrawLine(dpy, b->w, (c == current) ? gc : igc, 2, 2, 2, 2 + (button_size / 4));
+
+		XDrawLine(dpy, b->w, (c == current) ? gc : igc, 2, button_size - 3, 2, (button_size - 3) - ((button_size / 4) - 1));
+		XDrawLine(dpy, b->w, (c == current) ? gc : igc, 2, button_size - 3, 2 + (button_size / 4), button_size - 3);
+
+		XDrawLine(dpy, b->w, (c == current) ? gc : igc, button_size - 3, button_size - 3, (button_size - 3) - ((button_size / 4) - 1), button_size - 3);
+		XDrawLine(dpy, b->w, (c == current) ? gc : igc, button_size - 3, button_size - 3, button_size - 3, (button_size - 3) - ((button_size / 4) - 1));
+
+		XDrawLine(dpy, b->w, (c == current) ? gc : igc, button_size - 3, 2, button_size - 3, 2 + (button_size / 4));
+		XDrawLine(dpy, b->w, (c == current) ? gc : igc, button_size - 3, 2, (button_size - 3) - ((button_size / 4) - 1), 2);
 	}
 }
 
@@ -174,6 +199,8 @@ bool button_handle_event(XEvent *ev) {
 						client_set_layer(c, (c->layer == TOP) ? NORMAL : TOP);
 					if(b->action == B_BELOW)
 						client_set_layer(c, (c->layer == BOTTOM) ? NORMAL : BOTTOM);
+					if(b->action == B_FULLSCREEN)
+						client_fullscreen(c);
 				}
 				if(button_down == 2) {
 					button_current = b;
