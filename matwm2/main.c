@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
 	cfg_read(1); /* read configuration - see config.c */
 	p_attr.override_redirect = True;
 	p_attr.background_pixel = fg.pixel;
-	p_attr.border_pixel = ifg.pixel;
+	p_attr.border_pixel = ibfg.pixel;
 	p_attr.event_mask = ExposureMask;
 	wlist = XCreateWindow(dpy, root, 0, 0, 1, 1, 0, /* create the window list */
 	                      DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),

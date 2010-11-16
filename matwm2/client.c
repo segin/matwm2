@@ -5,15 +5,15 @@ int cn = 0, nicons = 0; /* cn keeps the number of clients, of wich nicons are ic
 
 void client_add(Window w) {
 	XWindowAttributes attr;
-	int i, di, bounding_shaped, wm_state;
+	int i, di, bounding_shaped, wm_state, state_hint;
 	unsigned int dui;
 	client *new = (client *) _malloc(sizeof(client));
 	new->window = w;
 	/* set client state */
 	wm_state = get_wm_state(w);
 	if(wm_state == WithdrawnState) {
-		wm_state = get_state_hint(w);
-		set_wm_state(w, wm_state != WithdrawnState ? wm_state : NormalState);
+		state_hint = get_state_hint(w);
+		set_wm_state(w, state_hint != WithdrawnState ? state_hint : NormalState);
 	}
 	/* read attributes and fill up client structure with them */
 	XGetWindowAttributes(dpy, w, &attr);
@@ -39,13 +39,17 @@ void client_add(Window w) {
 	new->yo = gyo(new, 1);
 	new->x = attr.x - new->xo;
 	new->y = attr.y - new->yo;
+	if(wm_state == WithdrawnState && map_center && !(new->normal_hints.flags & USPosition) && !(new->normal_hints.flags & PPosition)) {
+		new->x = (display_width / 2) - (new->width / 2);
+		new->y = (display_height / 2) - (new->height / 2);
+	}
 	XFetchName(dpy, w, &new->name);
 	/* create the parent window */
 	XSetWindowBorderWidth(dpy, w, 0);
-	new->parent = XCreateWindow(dpy, root, client_x(new), client_y(new), client_width_total_intern(new), client_height_total_intern(new), (new->flags & HAS_BORDER) ? 1 : 0,
+	new->parent = XCreateWindow(dpy, root, client_x(new), client_y(new), client_width_total_intern(new), client_height_total_intern(new), (new->flags & HAS_BORDER) ? border_width : 0,
 	                            DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
 	                            CWOverrideRedirect | CWBackPixel | CWBorderPixel | CWEventMask, &p_attr);
-	new->title = XCreateWindow(dpy, new->parent, border_width - 1, border_width - 1, 1, 1, 0,
+	new->title = XCreateWindow(dpy, new->parent, border_spacing, border_spacing, 1, 1, 0,
 	                           DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
 	                           CWOverrideRedirect | CWEventMask, &p_attr);
 	new->wlist_item = XCreateWindow(dpy, wlist, 0, 0, 1, 1, 0,
@@ -197,7 +201,7 @@ void client_update_name(client *c) { /* apply changes in the name of a client */
 	c->title_pixmap = XCreatePixmap(dpy, c->title, c->title_width, text_height, DefaultDepth(dpy, screen));
 	client_draw_title(c);
 	XSetWindowBackgroundPixmap(dpy, c->title, c->title_pixmap);
-	XMoveResizeWindow(dpy, c->title, client_title_x(c), border_width - 1, client_title_width(c), text_height);
+	XMoveResizeWindow(dpy, c->title, client_title_x(c), border_spacing, client_title_width(c), text_height);
 }
 
 void client_set_bg(client *c, XColor color, XColor border) { /* set (and apply) the background color of a client's parent window */
@@ -245,7 +249,7 @@ void client_update_pos(client *c) { /* apply changes in the position of a client
 void client_update_size(client *c) { /* apply changes in the size of a client */
 	int width = client_width(c);
 	buttons_update(c);
-	XMoveResizeWindow(dpy, c->title, client_title_x(c), border_width - 1, client_title_width(c), text_height);
+	XMoveResizeWindow(dpy, c->title, client_title_x(c), border_spacing, client_title_width(c), text_height);
 	XResizeWindow(dpy, c->parent, client_width_total_intern(c), client_height_total_intern(c));
 	XResizeWindow(dpy, c->window, width, client_height(c));
 	buttons_draw(c);
@@ -254,7 +258,7 @@ void client_update_size(client *c) { /* apply changes in the size of a client */
 void client_update(client *c) { /* apply changes in position and size of a window */
 	int width = client_width(c);
 	buttons_update(c);
-	XMoveResizeWindow(dpy, c->title, client_title_x(c), border_width - 1, client_title_width(c), text_height);
+	XMoveResizeWindow(dpy, c->title, client_title_x(c), border_spacing, client_title_width(c), text_height);
 	XMoveResizeWindow(dpy, c->parent, client_x(c), client_y(c), client_width_total_intern(c), client_height_total_intern(c));
 	XMoveResizeWindow(dpy, c->window, client_border_intern(c), client_border_intern(c) + client_title(c), width, client_height(c));
 	buttons_draw(c);

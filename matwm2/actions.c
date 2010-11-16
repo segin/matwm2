@@ -60,11 +60,11 @@ void client_focus(client *c) {
 			previous = current;
 	current = c;
 	if(prev)
-		client_set_bg(prev, ibg, ifg);
+		client_set_bg(prev, ibg, ibfg);
 	if(!c) {
 		XSetInputFocus(dpy, PointerRoot, RevertToPointerRoot, CurrentTime);
 	} else {
-		client_set_bg(c, bg, fg);
+		client_set_bg(c, bg, bfg);
 		if((c->desktop == desktop || c->desktop == STICKY) && isviewable(c->window) && evh != wlist_handle_event)
 			XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
 	}

@@ -41,11 +41,11 @@ int client_height(client *c) {  /* returns the height of a client (excluding the
 }
 
 int client_border(client *c) { /* returns the total width of a client's border (including the border placed around the parent window by X) */
-	return (!(c->flags & SHAPED) && c->flags & HAS_BORDER) ? border_width : 0;
+	return (!(c->flags & SHAPED) && c->flags & HAS_BORDER) ? border_spacing + border_width : 0;
 }
 
 int client_border_intern(client *c) { /* returns the width of a client's border (excluding the border placed around the parent window by X) */
-	return (!(c->flags & SHAPED) && c->flags & HAS_BORDER) ? border_width - 1 : 0;
+	return (!(c->flags & SHAPED) && c->flags & HAS_BORDER) ? border_spacing : 0;
 }
 
 int client_title(client *c) { /* returns the height of a client's title bar (border not included) */
@@ -77,10 +77,10 @@ int client_title_x(client *c) { /* returns the horizontal position of the client
 	int center;
 	if(center_title) {
 		center = (client_border_intern(c) + ((c->flags & HAS_BUTTONS) ? c->buttons_left_width : 0) + ((client_width(c) - ((c->flags & HAS_BUTTONS) ? c->buttons_left_width + c->buttons_right_width : 0)) / 2)) - (c->title_width / 2);
-		if(center > border_width + ((c->flags & HAS_BUTTONS) ? c->buttons_left_width : 0) - 1)
+		if(center > border_spacing + ((c->flags & HAS_BUTTONS) ? c->buttons_left_width + button_spacing : 0))
 			return center;
 	}
-	return border_width + ((c->flags & HAS_BUTTONS) ? c->buttons_left_width : 0) - 1;
+	return border_spacing + ((c->flags & HAS_BUTTONS) ? c->buttons_left_width + button_spacing : 0);
 }
 
 int client_visible(client *c) { /* to know if the client is visible on the current desktop */

@@ -1,3 +1,15 @@
+0.0.96:
+	always return 1 if we could use an event in ewmh_handle_event()
+	don't define variable in the middle of ewmh_handle_event()
+	handle some _NET_RESTACK_WINDOW client messages - kicker panel needs this to work propperly
+	added map_center option to make new windows apear in the center of the screen
+	fixed bug that would give windows without titlebar buttons if config was reloaded
+	renamed border_width to border_spacing, border_width now sets the real border width
+	added border_color and inactive_border_color options to set border color separately
+	added button_width option so the user can set the amount of space between buttons
+	border_spacing and title_spacing no longer have to be at least 1 (0 now)
+	edited man page accordingly
+
 0.0.95:
 	initialise dpy as NULL, don't try use it in quit() if it still is NULL
 	set up signal handler first, then open display
@@ -11,7 +23,6 @@
 	modified licence for release in 2010
 	removed -std=89 and -pedantic, still complains on some platforms and it's doubtful if matwm well ever fully comply with the ISO C90 standard
 	set _NET_WORKAREA in a way nautilus listens to (when managing the desktop it would place icons under the top panel)
-	-Wextra instead of -W in Makefile
 
 0.0.94:
 	fixed evil bug that would happen when windows would dissapear while being dragged

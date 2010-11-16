@@ -40,6 +40,10 @@ Sets the background color of window frames when they are not focussed.
 Sets the foreground (text, border) color of window frames when they are focussed.
 .IP "inactive_foreground [X11 color name]"
 Sets the foreground (text, border) color of window frames when they are not focussed.
+.IP "border_color [X11 color name]"
+Sets the color for borders around focussed windows.
+.IP "inactive_border_color [X11 color name]"
+Sets the color for the borders of not focussed windows.
 .IP "font [X11 font name]"
 Sets the font used for drawing text.
 .IP "button[1-5] [button action]"
@@ -49,9 +53,13 @@ Same as the above, but for double clicks.
 .IP "doubleclick_time [integer]"
 With this option you can specify how much time there can be between two clicks at most while still considering it a double click, in miliseconds. 
 .IP "border_width [integer]"
-Sets the width of window borders to [integer] pixels. Has to be 1 or greater.
+Sets the width of window frame borders to [integer] pixels.
+.IP "border_spacing [integer]"
+Sets the space between the window border and the actual client window to [interger] pixels.
 .IP "title_spacing [integer]"
-Sets how much space there is to be between the bottom of the title text and the actual client window. Also has a minimum of 1 pixel.
+Sets how much space there is to be between the bottom of the title text and the actual client window.
+.IP "button_spacing [integer]"
+Sets the amount of space that goes between buttons (and the left buttons and title if center_title is false) to [integer] pixels.
 .IP "snap [integer]"
 Snap windows together or to screen edges when they are [integer] pixels away from eachother, set to 0 to disable snapping.
 .IP "desktops [integer]"
@@ -74,6 +82,8 @@ If set to "true" new windows will be focussed when they appear and accordingly a
 If set to "true" the title of windows will apear in the center of the titlebar, if set to "false" it will be at the left.
 .IP "center_wlist_items [boolean]"
 If set to "true" all titles in the window list are centered, if set to "false" they are aligned at the left.
+.IP "map_center [boolean]"
+If set to "true" new windows will appear centered (unless they have a predefined position set). If set to "false" the windows will not be moved before mapping.
 .IP "buttons_left [button] [...]"
 Set a list of buttons (from left to right) to show at the left of the title of windows. Possible buttons are "iconify", "expand", "maximize", "close", "sticky", "ontop" and "below", they do the same as the key actions with the same names described below. Can be set to "none" if you want no buttons there. Buttons can be clicked with either the first (left) or the third (right) mouse button.
 .IP "buttons_right [button] [...]"

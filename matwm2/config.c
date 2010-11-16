@@ -1,8 +1,8 @@
 #include "matwm.h"
 
-XColor bg, ibg, fg, ifg;
+XColor bg, ibg, fg, ifg, bfg, ibfg;
 GC gc, igc, bgc, ibgc;
-int border_width, text_height, title_height, title_spacing, center_title, center_wlist_items, button_size, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first = 1, *buttons_right = NULL, nbuttons_right, *buttons_left = NULL, nbuttons_left, doubleclick_time, double1, double2, double3, double4, double5, fullscreen_stacking;
+int border_spacing, border_width, button_spacing, text_height, title_height, title_spacing, center_title, center_wlist_items, button_size, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first = 1, *buttons_right = NULL, nbuttons_right, *buttons_left = NULL, nbuttons_left, doubleclick_time, double1, double2, double3, double4, double5, fullscreen_stacking, map_center;
 XFontStruct *font = NULL;
 char *no_title = NO_TITLE;
 
@@ -113,6 +113,10 @@ void cfg_set_opt(char *key, char *value, int initial) {
 		str_color(value, &fg);
 	if(strcmp(key, "inactive_foreground") == 0)
 		str_color(value, &ifg);
+	if(strcmp(key, "border_color") == 0)
+		str_color(value, &bfg);
+	if(strcmp(key, "inactive_border_color") == 0)
+		str_color(value, &ibfg);
 	if(strcmp(key, "font") == 0) {
 		newfont = XLoadQueryFont(dpy, value);
 		if(newfont) {
@@ -123,13 +127,23 @@ void cfg_set_opt(char *key, char *value, int initial) {
 	}
 	if(strcmp(key, "border_width") == 0) {
 		i = strtol(value, NULL, 0);
-		if(i > 0)
+		if(i >= 0)
 		  border_width = i;
+	}
+	if(strcmp(key, "border_spacing") == 0) {
+		i = strtol(value, NULL, 0);
+		if(i >= 0)
+			border_spacing = i;
 	}
 	if(strcmp(key, "title_spacing") == 0) {
 		i = strtol(value, NULL, 0);
-		if(i > 0)
+		if(i >= 0)
 			title_spacing = i;
+	}
+	if(strcmp(key, "button_spacing") == 0) {
+		i = strtol(value, NULL, 0);
+		if(i >= 0)
+			button_spacing = i;
 	}
 	if(strcmp(key, "doubleclick_time") == 0) {
 		i = strtol(value, NULL, 0);
@@ -177,6 +191,8 @@ void cfg_set_opt(char *key, char *value, int initial) {
 		str_bool(value, &center_title);
 	if(strcmp(key, "center_wlist_items") == 0)
 		str_bool(value, &center_wlist_items);
+	if(strcmp(key, "map_center") == 0)
+		str_bool(value, &map_center);
 	if(strcmp(key, "mouse_modifier") == 0)
 		str_key(&value, &mousemodmask);
 	if(strcmp(key, "no_snap_modifier") == 0)
@@ -215,12 +231,16 @@ void cfg_reinitialize(void) {
 	keys_free();
 	/* read config again */
 	cfg_read(0);
+	/* update some things */
+	p_attr.background_pixel = fg.pixel;
+	p_attr.border_pixel = ibfg.pixel;
 	/* update clients */
 	for(i = 0; i < cn; i++) {
 		XDestroyWindow(dpy, clients[i]->button_parent_left);
 		XDestroyWindow(dpy, clients[i]->button_parent_right);
 		free((void *) clients[i]->buttons);
-		buttons_create(clients[i]);
+		buttons_create(clients[i]); /* buttons are now on top of the client window */
+		XRaiseWindow(dpy, clients[i]->window); /* hence this line */
 		client_update(clients[i]);
 		client_update_name(clients[i]);
 		(clients[i] == current) ? client_set_bg(clients[i], bg, fg) : client_set_bg(clients[i], ibg, ifg);
@@ -230,6 +250,8 @@ void cfg_reinitialize(void) {
 		client_grab_buttons(clients[i]);
 		if(clients[i]->flags & FULLSCREEN && clients[i]->layer <= NORMAL && fullscreen_stacking != FS_NORMAL)
 			client_update_layer(clients[i], (fullscreen_stacking == FS_ALWAYS_ONTOP) ? NORMAL : TOP);
+		if(clients[i]->flags & HAS_BORDER)
+			XSetWindowBorderWidth(dpy, clients[i]->parent, border_width);
 		ewmh_update_extents(clients[i]);
 	}
 	ewmh_update_number_of_desktops();

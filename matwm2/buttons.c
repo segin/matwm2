@@ -5,7 +5,7 @@ int button_down = 0;
 
 void buttons_create(client *c) {
 	int i;
-	c->button_parent_left = XCreateWindow(dpy, c->parent, border_width - 1, border_width - 1, 1, 1, 0,
+	c->button_parent_left = XCreateWindow(dpy, c->parent, border_spacing, border_spacing, 1, 1, 0,
 	                                      DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
 	                                      CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
 	c->button_parent_right = XCreateWindow(dpy, c->parent, 0, 0, 1, 1, 0,
@@ -25,7 +25,7 @@ void buttons_create(client *c) {
 		                                          CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
 		XMapWindow(dpy, c->buttons[c->nbuttons].w);
 		c->buttons[c->nbuttons].action = buttons_left[i];
-		c->buttons_left_width += button_size + 2;
+		c->buttons_left_width += button_size + button_spacing;
 		c->nbuttons++;
 	}
 	for(i = 0; i < nbuttons_right; i++) {
@@ -36,9 +36,11 @@ void buttons_create(client *c) {
 																							CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
 		XMapWindow(dpy, c->buttons[c->nbuttons].w);
 		c->buttons[c->nbuttons].action = buttons_right[i];
-		c->buttons_right_width += button_size + 2;
+		c->buttons_right_width += button_size + button_spacing;
 		c->nbuttons++;
 	}
+	c->buttons_right_width -= button_spacing;
+	c->buttons_left_width -= button_spacing;
 	buttons_update(c);
 	if(c->buttons_left_width) {
 		XResizeWindow(dpy, c->button_parent_left, c->buttons_left_width, button_size);
@@ -105,7 +107,7 @@ void buttons_update(client *c) { /* maps the buttons if the window has no button
 		XMapWindow(dpy, c->button_parent_left);
 		XMapWindow(dpy, c->button_parent_right);
 	}
-	XMoveWindow(dpy, c->button_parent_right, client_width(c) + border_width - (c->buttons_right_width - 1), border_width - 1);
+	XMoveWindow(dpy, c->button_parent_right, client_width(c) + border_spacing - c->buttons_right_width, border_spacing);
 }
 
 int button_handle_event(XEvent ev) {

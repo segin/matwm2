@@ -2,9 +2,13 @@ background            darkred
 inactive_background   dimgray
 foreground            lightgray
 inactive_foreground   darkgray
+border_color          lightgray
+inactive_border_color darkgray
 font                  fixed
-border_width          4
+border_spacing        2
+border_width          1
 title_spacing         2
+button_spacing        2
 buttons_left          sticky ontop
 buttons_right         iconify expand maximize close
 center_title          false
@@ -16,6 +20,7 @@ focus_new             false
 fullscreen_stacking   ontop
 click_focus           false
 click_raise           false
+map_center            false
 button1               move
 button2               none
 button3               resize

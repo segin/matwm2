@@ -46,6 +46,7 @@ void ewmh_initialize(void) {
 	ewmh_atoms[NET_WM_ACTION_BELOW] = XInternAtom(dpy, "_NET_WM_ACTION_BELOW", False);
 	ewmh_atoms[NET_WM_ACTION_CHANGE_DESKTOP] = XInternAtom(dpy, "_NET_WM_ACTION_CHANGE_DESKTOP", False);
 	ewmh_atoms[NET_WM_MOVERESIZE] = XInternAtom(dpy, "_NET_WM_MOVERESIZE", False);
+	ewmh_atoms[NET_RESTACK_WINDOW] = XInternAtom(dpy, "_NET_RESTACK_WINDOW", False);
 	ewmh_atoms[NET_FRAME_EXTENTS] = XInternAtom(dpy, "_NET_FRAME_EXTENTS", False);
 	ewmh_atoms[NET_REQUEST_FRAME_EXTENTS] = XInternAtom(dpy, "_NET_REQUEST_FRAME_EXTENTS", False);
 	ewmh_atoms[NET_SHOWING_DESKTOP] = XInternAtom(dpy, "_NET_SHOWING_DESKTOP", False);
@@ -74,23 +75,26 @@ void ewmh_initialize(void) {
 
 int ewmh_handle_event(XEvent ev) {
 	client *c;
-	int i, xo, yo;
+	int i, j, xo, yo;
 	long extents[4];
 	switch(ev.type) {
 		case ClientMessage:
 			c = owner(ev.xclient.window);
-			if(c && ev.xclient.message_type == ewmh_atoms[NET_WM_MOVERESIZE]) {
-				if(ev.xclient.data.l[2] == NET_WM_MOVERESIZE_MOVE || ev.xclient.data.l[2] == NET_WM_MOVERESIZE_MOVE_KEYBOARD) {
-					client_focus(c);
-					xo = client_width_total_intern(c) / 2;
-					yo = client_height_total_intern(c) / 2;
-					XWarpPointer(dpy, None, c->parent, 0, 0, 0, 0, xo, yo);
-					drag_start(MOVE, AnyButton, client_x(c) + xo, client_y(c) + yo);
+			if(ev.xclient.message_type == ewmh_atoms[NET_WM_MOVERESIZE]) {
+				if(c) {
+					if(ev.xclient.data.l[2] == NET_WM_MOVERESIZE_MOVE || ev.xclient.data.l[2] == NET_WM_MOVERESIZE_MOVE_KEYBOARD) {
+						client_focus(c);
+						xo = client_width_total_intern(c) / 2;
+						yo = client_height_total_intern(c) / 2;
+						XWarpPointer(dpy, None, c->parent, 0, 0, 0, 0, xo, yo);
+						drag_start(MOVE, AnyButton, client_x(c) + xo, client_y(c) + yo);
+					}
+					if(ev.xclient.data.l[2] == NET_WM_MOVERESIZE_SIZE_BOTTOMRIGHT || ev.xclient.data.l[2] == NET_WM_MOVERESIZE_SIZE_KEYBOARD) {
+						client_focus(c);
+						drag_start(RESIZE, AnyButton, ev.xclient.data.l[0], ev.xclient.data.l[1]);
+					}
 				}
-				if(ev.xclient.data.l[2] == NET_WM_MOVERESIZE_SIZE_BOTTOMRIGHT || ev.xclient.data.l[2] == NET_WM_MOVERESIZE_SIZE_KEYBOARD) {
-					client_focus(c);
-					drag_start(RESIZE, AnyButton, ev.xclient.data.l[0], ev.xclient.data.l[1]);
-				}
+				return 1;
 			}
 			if(ev.xclient.message_type == ewmh_atoms[NET_CLOSE_WINDOW]) {
 				if(c)
@@ -111,38 +115,54 @@ int ewmh_handle_event(XEvent ev) {
 				}
 				return 1;
 			}
-			if(c && ev.xclient.message_type == ewmh_atoms[NET_WM_STATE]) {
-				int s = 0;
-				for(i = 1; i < 3; i++) {
-					if(((Atom) ev.xclient.data.l[i]) == ewmh_atoms[NET_WM_STATE_MAXIMIZED_HORZ])
-						s |= MAXIMIZED_L | MAXIMIZED_R;
-					if(((Atom) ev.xclient.data.l[i]) == ewmh_atoms[NET_WM_STATE_MAXIMIZED_VERT])
-						s |= MAXIMIZED_T | MAXIMIZED_B;
-				}
-				if(s)
-					client_toggle_state(c, s);
-				if(((Atom) ev.xclient.data.l[1]) == ewmh_atoms[NET_WM_STATE_FULLSCREEN] && (ev.xclient.data.l[0] == NET_WM_STATE_TOGGLE || (ev.xclient.data.l[0] == NET_WM_STATE_ADD && !(c->flags & FULLSCREEN)) || (ev.xclient.data.l[0] == NET_WM_STATE_REMOVE && (c->flags & FULLSCREEN))))
-					client_fullscreen(c);
-				if(((Atom) ev.xclient.data.l[1]) == ewmh_atoms[NET_WM_STATE_ABOVE])
-					client_set_layer(c, (c->layer == TOP) ? NORMAL : TOP);
-				if(((Atom) ev.xclient.data.l[1]) == ewmh_atoms[NET_WM_STATE_BELOW])
-					client_set_layer(c, (c->layer == BOTTOM) ? NORMAL : BOTTOM);
+			if(ev.xclient.message_type == ewmh_atoms[NET_RESTACK_WINDOW]) {
+				if(c && ev.xclient.data.l[1] == None)
+					client_raise(c);
+				/* schould also add code for handling this when a sibling window is passed */
+				/* but we schould find/create a way to test this first */
 				return 1;
 			}
-			if(ev.xclient.message_type == ewmh_atoms[NET_CURRENT_DESKTOP])
+			if(ev.xclient.message_type == ewmh_atoms[NET_WM_STATE]) {
+				if(c) {
+					j = 0;
+					for(i = 1; i < 3; i++) {
+						if(((Atom) ev.xclient.data.l[i]) == ewmh_atoms[NET_WM_STATE_MAXIMIZED_HORZ])
+							j |= MAXIMIZED_L | MAXIMIZED_R;
+						if(((Atom) ev.xclient.data.l[i]) == ewmh_atoms[NET_WM_STATE_MAXIMIZED_VERT])
+							j |= MAXIMIZED_T | MAXIMIZED_B;
+					}
+					if(j)
+						client_toggle_state(c, j);
+					if(((Atom) ev.xclient.data.l[1]) == ewmh_atoms[NET_WM_STATE_FULLSCREEN] && (ev.xclient.data.l[0] == NET_WM_STATE_TOGGLE || (ev.xclient.data.l[0] == NET_WM_STATE_ADD && !(c->flags & FULLSCREEN)) || (ev.xclient.data.l[0] == NET_WM_STATE_REMOVE && (c->flags & FULLSCREEN))))
+						client_fullscreen(c);
+					if(((Atom) ev.xclient.data.l[1]) == ewmh_atoms[NET_WM_STATE_ABOVE])
+						client_set_layer(c, (c->layer == TOP) ? NORMAL : TOP);
+					if(((Atom) ev.xclient.data.l[1]) == ewmh_atoms[NET_WM_STATE_BELOW])
+						client_set_layer(c, (c->layer == BOTTOM) ? NORMAL : BOTTOM);
+					return 1;
+				}
+			}
+			if(ev.xclient.message_type == ewmh_atoms[NET_CURRENT_DESKTOP]) {
 				desktop_goto(ev.xclient.data.l[0]);
-			if(c && ev.xclient.message_type == ewmh_atoms[NET_WM_DESKTOP])
-				if(ev.xclient.data.l[0] >= STICKY)
+				return 1;
+			}
+			if(ev.xclient.message_type == ewmh_atoms[NET_WM_DESKTOP]) {
+				if(c && ev.xclient.data.l[0] >= STICKY)
 					client_to_desktop(c, (ev.xclient.data.l[0] <= dc) ? ev.xclient.data.l[0] : dc - 1);
+				return 1;
+			}
 			if(ev.xclient.message_type == ewmh_atoms[NET_REQUEST_FRAME_EXTENTS]) {
 				extents[0] = border_width;
 				extents[1] = border_width;
 				extents[2] = border_width + title_height;
 				extents[3] = border_width;
 				XChangeProperty(dpy, ev.xclient.window, ewmh_atoms[NET_FRAME_EXTENTS], XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &extents, 4);	
+				return 1;
 			}
-			if(ev.xclient.message_type == ewmh_atoms[NET_SHOWING_DESKTOP])
+			if(ev.xclient.message_type == ewmh_atoms[NET_SHOWING_DESKTOP]) {
 				client_iconify_all();
+				return 1;
+			}
 			break;
 		case PropertyNotify:
 			if(ev.xproperty.atom == ewmh_atoms[NET_WM_STRUT_PARTIAL] || ev.xproperty.atom == ewmh_atoms[NET_WM_STRUT]) {

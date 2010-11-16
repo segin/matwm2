@@ -11,7 +11,7 @@ LDFLAGS   += -lXext # if shape support is disabled, this normally is no longer n
 
 #CFLAGS    += -DDEBUG -ggdb3 # -DDEBUG_EVENTS -DSYNC # for debugging
 CFLAGS    += -Wall -Wextra -Wno-unused-parameter
-CFLAGS    += -DVERSION=\"0.0.95\"
+CFLAGS    += -DVERSION=\"0.0.96\"
 
 OBJFILES  = actions.o buttons.o client.o config.o defcfg.o drag.o events.o evn.o ewmh.o info.o input.o main.o misc.o vdesk.o wlist.o x11.o
 HEADERS   = all.h defcfg.h ewmh.h matwm.h mwm_hints.h
