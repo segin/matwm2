@@ -187,6 +187,13 @@ int gyo(client *c, bool initial) { /* returns offset for vertical window gravity
 	return ((c->flags & NO_STRUT) ? 0 : -screens[c->screen].ewmh_strut[2]);
 }
 
+void window_correct_center(Window w) {
+	XWindowAttributes attr;
+	XGetWindowAttributes(dpy, w, &attr);
+	if(screens_correct_center(&attr.x, &attr.y, &attr.width, &attr.height))
+		XMoveWindow(dpy, w, attr.x, attr.y);
+}
+
 bool has_child(Window parent, Window child) { /* checks if child is a child of parent */
 	unsigned int i, nwins;
 	Window dw, *wins;

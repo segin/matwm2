@@ -254,11 +254,13 @@ void client_save(client *c) { /* bring a moved off-screen window back to the scr
 	int i, x = client_x(c), y = client_y(c);
 	int right = x + client_width_total(c), bottom = client_height_total(c);
 	for(i = 0; i < nscreens; i++)
-		if(x < screens[i].x + screens[i].width && y < screens[i].y + screens[i].width && right > screens[i].x && bottom > screens[i].y)
+		if(x < screens[i].x + screens[i].width && y < screens[i].y + screens[i].height && right > screens[i].x && bottom > screens[i].y)
 			lost = false;
 	if(lost) {
 		screens_update_current();
-		client_move(c, screens[cs].x, screens[cs].y);
+		if(map_center)
+			client_move(c, screens[cs].x + (screens[cs].width / 2) - (client_width(c) / 2), screens[cs].y + (screens[cs].height / 2) - (client_height(c) / 2));
+		else client_move(c, screens[cs].x, screens[cs].y);
 	}
 }
 

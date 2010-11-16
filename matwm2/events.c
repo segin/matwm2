@@ -60,6 +60,8 @@ void handle_event(XEvent *ev) {
 					wlist_item_draw(c);
 				return;
 			case ButtonPress:
+				if(c != current)
+					client_focus(c, true);
 				XAllowEvents(dpy, ReplayPointer, CurrentTime);
 				if(ev->xbutton.window != c->window) {
 					if(lastclick + doubleclick_time > ev->xbutton.time && lastbutton == ev->xbutton.button && lastclick_client == c) {
@@ -75,15 +77,13 @@ void handle_event(XEvent *ev) {
 					client_action(c, buttonaction(ev->xbutton.button, false), ev);
 				} else if(click_raise)
 					client_raise(c);
-				if(c != current)
-					client_focus(c, true);
 				return;
 			case FocusIn:
 				if(allow_focus_stealing && c != current && ev->xfocus.mode != NotifyGrab && ev->xfocus.mode != NotifyUngrab)
 					client_focus(c, false);
 				return;
 			case FocusOut:
-				if(c == current && ev->xfocus.mode != NotifyGrab && ev->xfocus.mode != NotifyUngrab) {
+				if(c == current && ev->xfocus.mode != NotifyGrab && ev->xfocus.mode != NotifyUngrab && ev->xfocus.detail != NotifyInferior) {
 					if(allow_focus_stealing && ev->xfocus.detail != NotifyPointer)
 						client_focus(NULL, false);
 					else
@@ -119,7 +119,8 @@ void handle_event(XEvent *ev) {
 			return;
 		case ConfigureRequest:
 			c = owner(ev->xconfigurerequest.window);
-			screens_correct_center(&ev->xconfigurerequest.x, &ev->xconfigurerequest.y, &ev->xconfigurerequest.width, &ev->xconfigurerequest.height);
+			if(correct_center)
+				screens_correct_center(&ev->xconfigurerequest.x, &ev->xconfigurerequest.y, &ev->xconfigurerequest.width, &ev->xconfigurerequest.height);
 			if(c) {
 				if(!has_child(c->parent, c->window))
 					return;
@@ -132,6 +133,9 @@ void handle_event(XEvent *ev) {
 				if(ev->xconfigurerequest.value_mask & CWHeight)
 					c->height = ev->xconfigurerequest.height;
 				client_update(c);
+				#ifdef DEBUG
+				printf(NAME ": reconfigured client 0x%X (%s) to %ix%i+%i+%i\n", (unsigned int) c->window, c->name, c->width, c->height, c->x, c->y);
+				#endif
 			} else if(has_child(root, ev->xconfigurerequest.window)) {
 				XWindowChanges wc;
 				wc.sibling = ev->xconfigurerequest.above;
@@ -143,6 +147,10 @@ void handle_event(XEvent *ev) {
 				XConfigureWindow(dpy, ev->xconfigurerequest.window, ev->xconfigurerequest.value_mask, &wc);
 			}
 			return;
+		case MapNotify:
+			if(correct_center_unmanaged && ev->xany.window == root && !owner(ev->xmap.window))
+				window_correct_center(ev->xmap.window);
+			break;
 		case MappingNotify:
 			if(ev->xmapping.request != MappingPointer) {
 				keys_ungrab();

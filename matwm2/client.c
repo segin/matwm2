@@ -41,7 +41,7 @@ void client_add(Window w, bool mapped) {
 	new->x = attr.x; /* and client_update_screen() needs these */
 	new->y = attr.y;
 	client_update_screen(new);
-	if(!mapped)
+	if(!mapped && correct_center)
 		screens_correct_center(&new->x, &new->y, &new->width, &new->height);
 	new->xo = gxo(new, true);
 	new->yo = gyo(new, true);
@@ -121,11 +121,15 @@ void client_add(Window w, bool mapped) {
 	if(!(new->flags & ICONIC)) /* client_visible isn't apropriate here (what if the window would be moved to another desktop later) */
 		client_over_fullscreen(new);
 	configurenotify(new); /* gvim compiled with with gtk and perhaps some other applications need this - yes, twice */
+	client_save(new);
 	ewmh_update_desktop(new);
 	ewmh_update_allowed_actions(new);
 	ewmh_update_state(new);
 	ewmh_update_extents(new);
 	ewmh_update_clist();
+	#ifdef DEBUG
+	printf(NAME ": added client %X (%s)\n\tgeometry: %ix%i+%i+%i\n", (unsigned int) new->window, new->name, client_width(new), client_height(new), client_x(new), client_y(new));
+	#endif
 }
 
 void client_show(client *c) {
@@ -152,6 +156,9 @@ void client_deparent(client *c) { /* reparent a client's window to the root wind
 
 void client_remove(client *c) {
 	int i;
+	#ifdef DEBUG
+	printf(NAME ": removing client 0x%X (%s)\n", (unsigned int) c->window, c->name);
+	#endif
 	if(c->flags & ICONIC)
 		nicons--;
 	for(i = 0; i < c->nbuttons; i++)
@@ -300,9 +307,10 @@ void client_update_size(client *c) { /* apply changes in the size of a client */
 	buttons_draw(c);
 }
 
-void client_update(client *c) { /* apply changes in position and size of a window */
+void client_update(client *c) { /* apply changes in position and size of a window (or border width etc) */
 	int width = client_width(c);
 	buttons_update(c);
+	XSetWindowBorderWidth(dpy, c->parent, client_edge(c));
 	XMoveResizeWindow(dpy, c->title, client_title_x(c), border_spacing, client_title_width(c), text_height);
 	XMoveResizeWindow(dpy, c->parent, client_x(c), client_y(c), client_width_total_intern(c), client_height_total_intern(c));
 	XMoveResizeWindow(dpy, c->window, client_border_intern(c), client_border_intern(c) + client_title(c), width, client_height(c));

@@ -106,6 +106,8 @@ If set to "normal" fullscreen windows behave like other windows in terms of stac
 If set to "false" matwm will confine input focus to the window you manually focussed (with exeption windows that use EWMH to focus windows, and newly mapped windows if focus_new is set to "true").
 .IP "correct_center [boolean]"
 If this is set to "true" windows wich are placed in the center of the root window, are placed in the center of the current screen (for xinerama setups). This behaviour is omitted if the window is bigger then the current screen.
+.IP "correct_center_unmanaged [boolean]"
+Same as above but for windows that set override_redirect.
 .IP "click_root [boolean]"
 If this is set to "false" matwm will not choose to receive ButtonPress events from the root window, thus allowing other applications to do so (this breaks root_button[1-5] and root_double[1-5] options).
 .IP "button[1-5] [action]"

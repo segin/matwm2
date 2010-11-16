@@ -68,6 +68,16 @@
 	use exit instead of return in configure script (return doesn't work with linux sh it appears), also removed trailing newline
 	expand now also takes outer edges of screens into account (useful if you have overlapping monitors)
 	rewrote snap to edge stuff, and also made it snap to outer edges of screens
+	**pre3 release
+	don't listen to FocusOut events with detail NotifyInferior, this fixes focussing opera
+	do XSetBorderwidth() in client_update(), fixes fullscreen mode (the border would remain around the window and the window would be misplaced)
+	don't substract border width and title height for fullscreen coördinates anymore (they are zero anyway)
+	focus windows before processing click action on them (fixes trying to drag not-focussed windows)
+	corrected README s/ppc/32-bit PowerPC/
+	added correct_center_all option wich enables correct_center but for override_redirect windows
+	fixed client_save() and made it obey map_center too
+	call client_save() in client_add()
+	added some printf statements for -DDEBUG
 
 0.0.99:
 	using pid_t instead of int for pid in spawn()

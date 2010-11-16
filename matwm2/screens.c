@@ -132,8 +132,6 @@ int screens_bottom(void) { /* returns the lowest bottom coordinate of all screen
 bool screens_correct_center(int *x, int *y, int *width, int *height) { /* for windows that try to place windows centered without knowing there are multiple screens */
 	bool ret = false;
 	int min, max, ref;
-	if(!correct_center)
-		return false;
 	screens_update_current();
 	min = *x + (*width / 2) - 2;
 	max = min + 4;

@@ -2,7 +2,7 @@
 
 int client_x(client *c) { /* returns the horizontal position of a window's frame */
 	if(c->flags & FULLSCREEN)
-		return screens[c->screen].x - client_border(c);
+		return screens[c->screen].x;
 	if(c->flags & MAXIMIZED_L)
 		return screens[c->screen].x + screens[c->screen].ewmh_strut[0];
 	if(c->flags & EXPANDED_L)
@@ -12,7 +12,7 @@ int client_x(client *c) { /* returns the horizontal position of a window's frame
 
 int client_y(client *c) { /* returns the vertical position of a window's frame */
 	if(c->flags & FULLSCREEN)
-		return screens[c->screen].y - (client_border(c) + client_title(c));
+		return screens[c->screen].y;
 	if(c->flags & MAXIMIZED_T)
 		return screens[c->screen].y + screens[c->screen].ewmh_strut[2];
 	if(c->flags & EXPANDED_T)
@@ -100,6 +100,12 @@ int client_layer(client *c) { /* returns the "layer" a client is on ("layers" ar
 	if(fullscreen_stacking == FS_ALWAYS_ONTOP && c->layer <= NORMAL && c->flags & FULLSCREEN)
 		return TOP;
 	return c->layer;
+}
+
+int client_edge(client *c) {
+	if(c->flags & FULLSCREEN)
+		return 0;
+	return (!(c->flags & SHAPED) && c->flags & HAS_BORDER) ? border_width : 0;
 }
 
 int client_number(client **array, client *c) { /* looks wich item in array c is */

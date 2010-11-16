@@ -18,13 +18,13 @@ INTRODUCTION
   system that can run X11.
   It has been reported to work on FreeBSD, Linux, OpenBSD, DragonflyBSD,
   NetBSD, Interix and OpenSolaris (For FreeBSD and Linux it has been tested on
-  both x86 and x86_64 architecture and it has also been reported to work on ppc
-  Linux, all other operating systems were tested on x86. For x86_64 FreeBSD
-  both the clang and gcc compiler have been tested, for x86 Linux both gcc and
-  tcc have been tested, and for other platforms only gcc was tested yet).
-  If you have succesfully compiled and ran matwm2 on another operating system
-  (or with another compiler) or have problems getting matwm2 to work on your
-  system let me know.
+  both x86 and x86_64 architecture and it has also been reported to work on
+	32-bit PowerPC Linux, all other operating systems were tested on x86. For
+	x86_64 FreeBSD both the clang and gcc compiler have been tested, for x86
+	Linux both gcc and  tcc have been tested, and for other platforms only gcc
+	was tested yet). If you have succesfully compiled and ran matwm2 on another
+	operating system (or with another compiler) or have problems getting matwm2	to
+	work on your system let me know.
 	
   The latest version can be found on http://matwm.fbsd.in/.
   Recent versions of matwm2 are distributed under the MIT licence, wich can be
