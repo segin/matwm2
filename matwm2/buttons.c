@@ -35,7 +35,7 @@ void buttons_draw(client *c) {
 
 void button_draw(client *c, Window b) {
   XClearWindow(dpy, b);
-  if(button_current != root)
+  if(button_current != None)
     XDrawRectangle(dpy, button_current, gc, 0, 0, text_height - 1, text_height - 1);
   if(b == c->button_iconify)
     XDrawRectangle(dpy, c->button_iconify, (c == current) ? gc : igc, 5, 5, text_height - 11, text_height - 11);
@@ -61,7 +61,7 @@ void buttons_update(client *c) {
   }
 }
 
-int handle_button_event(XEvent ev) {
+int button_handle_event(XEvent ev) {
   int i;
   client *c = NULL;
   for(i = 0; i < cn; i++)
@@ -84,7 +84,7 @@ int handle_button_event(XEvent ev) {
     case LeaveNotify:
       if(button_down == 2)
         button_down = 1;
-      button_current = root; // make sure its not a button (i chose root because its always there and i assumed any value could be a window)
+      button_current = None; // make sure its not a button (i chose root because its always there and i assumed any value could be a window)
       button_draw(c, ev.xcrossing.window);
       return 1;
     case ButtonPress:

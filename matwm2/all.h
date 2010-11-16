@@ -9,6 +9,7 @@ void client_expand(client *c);
 void client_toggle_title(client *c);
 void client_iconify(client *c);
 void client_restore(client *c);
+void client_save(client *c);
 
 // global variables from buttons.c
 extern Window button_current;
@@ -19,7 +20,7 @@ void buttons_create(client *c);
 void buttons_draw(client *c);
 void button_draw(client *c, Window b);
 void buttons_update(client *c);
-int handle_button_event(XEvent ev);
+int button_handle_event(XEvent ev);
 
 // global variables from client.c
 extern client **clients, *current;
@@ -130,7 +131,6 @@ int xerrorhandler(Display *display, XErrorEvent *xerror);
 void get_normal_hints(client *c);
 int get_state_hint(Window w);
 int get_wm_state(Window w);
-int get_wm_transient_for(Window w, Window *ret);
 void set_wm_state(Window w, long state);
 void get_mwm_hints(client *c);
 void set_shape(client *c);
@@ -139,5 +139,6 @@ void delete_window(client *c);
 int gxo(client *c, int initial);
 int gyo(client *c, int initial);
 int has_child(Window parent, Window child);
+int isviewable(Window w);
 Bool isunmap(Display *display, XEvent *event, XPointer arg);
 

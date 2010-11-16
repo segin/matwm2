@@ -46,19 +46,6 @@ int get_wm_state(Window w) {
   return ret;
 }
 
-int get_wm_transient_for(Window w, Window *ret) {
-  Atom rt;
-  int rf;
-  unsigned long n, bar;
-  unsigned char *data;
-  if(XGetWindowProperty(dpy, w, XA_WM_TRANSIENT_FOR, 0, sizeof(Window), False, AnyPropertyType, &rt, &rf, &n, &bar, &data) == Success && n) {
-    *ret = *(Window *) data;
-    XFree(data);
-    return 1;
-  }
-  return 0;
-}
-
 void set_wm_state(Window w, long state) {
   long data[2];
   data[0] = (long) state;
@@ -70,24 +57,24 @@ void get_mwm_hints(client *c) {
   Atom rt;
   int rf;
   unsigned long nir, bar;
-  unsigned char *prop;
   MWMHints *mwmhints;
-  if(XGetWindowProperty(dpy, c->window, xa_motif_wm_hints, 0, 3, False, AnyPropertyType, &rt, &rf, &nir, &bar, (unsigned char **) &prop) == Success && nir > 2) {
-    mwmhints = (MWMHints *) prop;
-    if(mwmhints->flags & MWM_HINTS_DECORATIONS) {
-      c->flags ^= c->flags & (HAS_TITLE | HAS_BORDER | CAN_RESIZE);
-      if(mwmhints->decorations & MWM_DECOR_ALL) {
-        mwmhints->decorations &= ~MWM_DECOR_ALL;
-        mwmhints->decorations = (MWM_DECOR_TITLE | MWM_DECOR_BORDER | MWM_DECOR_RESIZEH) & (~mwmhints->decorations);
+  if(XGetWindowProperty(dpy, c->window, xa_motif_wm_hints, 0, 3, False, AnyPropertyType, &rt, &rf, &nir, &bar, (unsigned char **) &mwmhints) == Success) {
+    if(nir > 2) {
+      if(mwmhints->flags & MWM_HINTS_DECORATIONS) {
+        c->flags ^= c->flags & (HAS_TITLE | HAS_BORDER | CAN_RESIZE);
+        if(mwmhints->decorations & MWM_DECOR_ALL) {
+          mwmhints->decorations &= ~MWM_DECOR_ALL;
+          mwmhints->decorations = (MWM_DECOR_TITLE | MWM_DECOR_BORDER | MWM_DECOR_RESIZEH) & (~mwmhints->decorations);
+        }
+        if(mwmhints->decorations & MWM_DECOR_TITLE)
+          c->flags |= HAS_TITLE;
+        if(mwmhints->decorations & MWM_DECOR_BORDER)
+          c->flags |= HAS_BORDER;
+        if(mwmhints->decorations & MWM_DECOR_RESIZEH)
+          c->flags |= CAN_RESIZE;
       }
-      if(mwmhints->decorations & MWM_DECOR_TITLE)
-        c->flags |= HAS_TITLE;
-      if(mwmhints->decorations & MWM_DECOR_BORDER)
-        c->flags |= HAS_BORDER;
-      if(mwmhints->decorations & MWM_DECOR_RESIZEH)
-        c->flags |= CAN_RESIZE;
     }
-    XFree((void *) prop);
+    XFree((void *) mwmhints);
   }
 }
 
@@ -178,6 +165,14 @@ int has_child(Window parent, Window child) {
   for(i = 0; i < nwins; i++)
     if(wins[i] == child)
       return 1;
+  return 0;
+}
+
+int isviewable(Window w) {
+  XWindowAttributes attr;
+  XGetWindowAttributes(dpy, w, &attr);
+  if(attr.map_state == IsViewable)
+    return 1;
   return 0;
 }
 

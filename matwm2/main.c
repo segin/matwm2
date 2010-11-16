@@ -95,10 +95,10 @@ int main(int argc, char *argv[]) {
 
 void end(void) {
   while(cn) {
-    if(clients[0]->flags & ICONIC)
-      XMapWindow(dpy, clients[0]->window);
-    client_deparent(clients[0]);
-    client_remove(clients[0]);
+    if(clients[cn - 1]->flags & ICONIC)
+      XMapWindow(dpy, clients[cn - 1]->window);
+    client_deparent(clients[cn - 1]);
+    client_remove(clients[cn - 1]);
   }
   if(clients)
     free((void *) clients);

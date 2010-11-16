@@ -1,0 +1,11 @@
+0.0.49:
+	new windows map under window list or window currently being dragged
+	button_current now uses a value of "None" instead of the root window to define there is no current button
+	client_focus checks if window is really viewable before setting input focus
+	window list puts off screen windows on screen if they are chosen - with new client_save() function
+	renamed handle_button_event() to button_handle_event()
+	fixed bug in get_mwm_hints() that made it possible in weird conditions a call to XFree would be apropriate but not done, and it now passes mwmhints variable directly to XGetWindowProperty()
+	on exit clients are deparented in reverse order, as this has some advantages over the old method
+	removed useless get_wm_transient_for()
+	fixed wlist_end() segfaulting if current == NULL
+

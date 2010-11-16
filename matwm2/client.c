@@ -55,7 +55,13 @@ void client_add(Window w) {
   clients_alloc();
   if(!(new->flags & ICONIC)) {
     XMapRaised(dpy, w);
-    XMapRaised(dpy, new->parent);
+    XRaiseWindow(dpy, new->parent);
+    if(evh == wlist_handle_event)
+      XRaiseWindow(dpy, wlist);
+    else if(evh == drag_handle_event)
+      client_raise(current);
+    else warpto(new);
+    XMapWindow(dpy, new->parent);
     for(i = cn - 1; i > 0; i--)
       clients[i] = clients[i - 1];
     clients[0] = new;
@@ -79,7 +85,7 @@ void client_remove(client *c) {
   XEvent ev;
   int i;
   if(button_current == c->button_iconify || button_current == c->button_expand || button_current == c->button_maximise || button_current == c->button_close)
-    button_current = root;
+    button_current = None;
   XDestroyWindow(dpy, c->parent);
   XDestroyWindow(dpy, c->wlist_item);
   if(c->name != no_title)

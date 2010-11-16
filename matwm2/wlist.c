@@ -17,12 +17,15 @@ void wlist_start(XEvent ev) {
 void wlist_end(void) {
   XUngrabKeyboard(dpy, CurrentTime);
   XUnmapWindow(dpy, wlist);
+  evh = NULL;
+  if(!current)
+    return;
+  client_save(current);
   if(current->flags & ICONIC)
     client_restore(current);
   else
     client_raise(current);
   warpto(current);
-  evh = NULL;
 }
 
 int wlist_handle_event(XEvent ev) {

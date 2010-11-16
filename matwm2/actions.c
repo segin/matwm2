@@ -57,7 +57,7 @@ void client_focus(client *c) {
   if(prev)
     client_set_bg(prev, ibg);
   client_set_bg(c, bg);
-  if(!(c->flags & ICONIC))
+  if(!(c->flags & ICONIC) && isviewable(c->window))
     XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
 }
 
@@ -167,5 +167,18 @@ void client_restore(client *c) {
   clients[0] = c;
   if(c == current)
     XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
+}
+
+void client_save(client *c) {
+  int x = c->x, y = c->y;
+  if(c->x >= display_width)
+    x = display_width - total_width(c);
+  if(c->y >= display_height)
+    y = display_height - total_height(c);
+  if(c->x + total_width(c) <= 0)
+    x = 0;
+  if(c->y + total_height(c) <= 0)
+    y = 0;
+  client_move(c, x, y);
 }
 
