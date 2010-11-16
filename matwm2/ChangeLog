@@ -438,3 +438,7 @@
 	keep taskbar always on top optionally and lots of work to make this not interfere with fullscreen mode
 	layer member of client structure is no longer acessed directly by most functions, new client_layer() function is used instead
 
+0.0.75:
+	allocate the right amount of memory in read_file() (was 1 byte too short)
+	check if not trying to free a NULL pointer in key_bind()
+

@@ -28,7 +28,8 @@ void key_bind(char *str) {
 	else k.arg = NULL;
 	for(i = 0; i < keyn; i++)
 		if(keys[i].sym == k.sym && keys[i].mask == k.mask) {
-			free((void *) keys[i].arg);
+			if(keys[i].arg)
+				free((void *) keys[i].arg);
 			if(k.action == KA_NONE) {
 				keys[i] = keys[keyn - 1];
 				keys_alloc(--keyn);

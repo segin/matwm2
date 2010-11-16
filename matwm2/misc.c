@@ -15,7 +15,7 @@ int read_file(char *path, char **buf) {
 	int r = 0, fd = open(path, O_RDONLY);
 	if(fd > 0) {
 		if(fstat(fd, &sb) == 0) {
-			*buf = (char *) malloc(sb.st_size);
+			*buf = (char *) malloc(sb.st_size + 1);
 			if(buf == NULL)
 				error();
 			r = read(fd, (void *) *buf, sb.st_size);
