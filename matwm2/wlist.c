@@ -17,10 +17,11 @@ void wlist_start(XEvent ev) {
 void wlist_end(void) {
   XUngrabKeyboard(dpy, CurrentTime);
   XUnmapWindow(dpy, wlist);
-  client_restore(current);
-  client_raise(current);
+  if(current->flags & ICONIC)
+    client_restore(current);
+  else
+    client_raise(current);
   warpto(current);
-  XSetInputFocus(dpy, current->window, RevertToPointerRoot, CurrentTime);
   evh = NULL;
 }
 

@@ -34,5 +34,7 @@ void client_restore(client *c) {
   for(i = client_number(c); i > 0; i--)
     clients[i] = clients[i - 1];
   clients[0] = c;
+  if(c == current)
+    XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
 }
 

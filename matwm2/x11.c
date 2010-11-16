@@ -9,7 +9,9 @@ int xerrorhandler(Display *display, XErrorEvent *xerror) {
   else {
     char ret[666];
     XGetErrorText(xerror->display, xerror->error_code, ret, 666);
-    printf("x error: %s\n", ret);
+    client *c = owner(xerror->resourceid);
+    if(c) printf("%s: x error: %s\n", c->name, ret);
+    else printf("%i: x error: %s\n", xerror->resourceid);
   }
 #endif
   return 0;
@@ -73,6 +75,7 @@ void get_mwm_hints(client *c) {
   if(XGetWindowProperty(dpy, c->window, xa_motif_wm_hints, 0, 3, False, AnyPropertyType, &rt, &rf, &nir, &bar, (unsigned char **) &prop) == Success && nir > 2) {
     mwmhints = (MWMHints *) prop;
     if(mwmhints->flags & MWM_HINTS_DECORATIONS) {
+      c->flags ^= c->flags & (HAS_TITLE | HAS_BORDER | CAN_RESIZE);
       if(mwmhints->decorations & MWM_DECOR_ALL) {
         mwmhints->decorations &= ~MWM_DECOR_ALL;
         mwmhints->decorations = (MWM_DECOR_TITLE | MWM_DECOR_BORDER | MWM_DECOR_RESIZEH) & (~mwmhints->decorations);
@@ -84,7 +87,7 @@ void get_mwm_hints(client *c) {
       if(mwmhints->decorations & MWM_DECOR_RESIZEH)
         c->flags |= CAN_RESIZE;
     }
-    XFree(mwmhints);
+    XFree((void *) prop);
   }
 }
 

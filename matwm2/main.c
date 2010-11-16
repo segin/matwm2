@@ -43,6 +43,9 @@ int main(int argc, char *argv[]) {
   sigaction(SIGTERM, &qsa, NULL);
   sigaction(SIGINT, &qsa, NULL);
   sigaction(SIGHUP, &qsa, NULL);
+#ifdef DEBUG_EVENTS
+  XSynchronize(dpy, True);
+#endif
   XSetErrorHandler(&xerrorhandler);
   XSelectInput(dpy, root, StructureNotifyMask | SubstructureRedirectMask | SubstructureNotifyMask);
   xa_wm_protocols = XInternAtom(dpy, "WM_PROTOCOLS", False);

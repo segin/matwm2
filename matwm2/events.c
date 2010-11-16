@@ -11,8 +11,10 @@ Bool isgone(Display *display, XEvent *event, XPointer arg) {
 void handle_event(XEvent ev) {
   client *c = owner(ev.xany.window);
   int i;
-//  if(c) printf("%s: %s\n", c->name, event_name(ev));
-//  else printf("%i: %s\n", ev.xany.window, event_name(ev));
+#ifdef DEBUG_EVENTS
+  if(c) printf("%s: %s\n", c->name, event_name(ev));
+  else printf("%i: %s\n", ev.xany.window, event_name(ev));
+#endif
   if(evh && evh(ev))
     return;
   if(handle_button_event(ev))
@@ -70,15 +72,18 @@ void handle_event(XEvent ev) {
       }
       if(ev.xproperty.atom == XA_WM_NORMAL_HINTS && c)
         get_normal_hints(c);
-      if(ev.xproperty.atom == xa_motif_wm_hints && c)
+      if(ev.xproperty.atom == xa_motif_wm_hints && c) {
         get_mwm_hints(c);
+        XMoveWindow(dpy, c->window, border(c), border(c) + title(c));
+        XResizeWindow(dpy, c->parent, total_width(c), total_height(c));
+      }
       break;
     case ClientMessage:
       if(c && ev.xclient.message_type == xa_wm_change_state && ev.xclient.data.l[0] == IconicState)
         client_iconify(c);
       break;
     case EnterNotify:
-      if(c && c != current && has_window(c))
+      if(c && c != current)
         client_focus(c);
       break;
     case Expose:

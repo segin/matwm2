@@ -27,6 +27,7 @@ void client_raise(client *c);
 void client_lower(client *c);
 void client_maximise(client *c);
 void client_expand(client *c);
+void client_set_bg(client *c, XColor color);
 void client_toggle_title(client *c);
 int has_window(client *c);
 int client_number(client *c);

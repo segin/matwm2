@@ -157,8 +157,8 @@ int client_resize(client *c, int width, int height) {
   c->height = height;
   buttons_update(c);
   XMoveWindow(dpy, c->button_parent, (c->width + border_width) - button_parent_width, border_width);
-  XResizeWindow(dpy, c->parent, total_width(c), total_height(c));
   XResizeWindow(dpy, c->title, c->width - ((c->flags & HAS_BUTTONS) ? button_parent_width + 2 : 0), text_height);
+  XResizeWindow(dpy, c->parent, total_width(c), total_height(c));
   XResizeWindow(dpy, c->window, width, height);
   client_draw_border(c);
   client_draw_title(c);
@@ -168,49 +168,11 @@ int client_resize(client *c, int width, int height) {
 void client_focus(client *c) {
   client *prev = current;
   current = c;
-  if(prev) {
-    XSetWindowBackground(dpy, prev->parent, ibg.pixel);
-    XSetWindowBackground(dpy, prev->title, ibg.pixel);
-    XSetWindowBackground(dpy, prev->button_parent, ibg.pixel);
-    XSetWindowBackground(dpy, prev->button_iconify, ibg.pixel);
-    XSetWindowBackground(dpy, prev->button_expand, ibg.pixel);
-    XSetWindowBackground(dpy, prev->button_maximise, ibg.pixel);
-    XSetWindowBackground(dpy, prev->button_close, ibg.pixel);
-    XSetWindowBackground(dpy, prev->wlist_item, ibg.pixel);
-    if(!(prev->flags & ICONIC)) {
-      XClearWindow(dpy, prev->parent);
-      XClearWindow(dpy, prev->title);
-      XClearWindow(dpy, prev->button_parent);
-      buttons_draw(prev);
-      client_draw_border(prev);
-      client_draw_title(prev);
-    }
-    if(evh == wlist_handle_event) {
-      XClearWindow(dpy, prev->wlist_item);
-      wlist_item_draw(prev);
-    }
-  }
-  XSetWindowBackground(dpy, c->parent, bg.pixel);
-  XSetWindowBackground(dpy, c->title, bg.pixel);
-  XSetWindowBackground(dpy, c->button_parent, bg.pixel);
-  XSetWindowBackground(dpy, c->button_iconify, bg.pixel);
-  XSetWindowBackground(dpy, c->button_expand, bg.pixel);
-  XSetWindowBackground(dpy, c->button_maximise, bg.pixel);
-  XSetWindowBackground(dpy, c->button_close, bg.pixel);
-  XSetWindowBackground(dpy, c->wlist_item, bg.pixel);
-  if(!(c->flags & ICONIC)) {
-    XClearWindow(dpy, c->parent);
-    XClearWindow(dpy, c->title);
-    XClearWindow(dpy, c->button_parent);
-    buttons_draw(c);
-    client_draw_border(c);
-    client_draw_title(c);
+  if(prev)
+    client_set_bg(prev, ibg);
+  client_set_bg(c, bg);
+  if(!(c->flags & ICONIC))
     XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
-  }
-  if(evh == wlist_handle_event) {
-    XClearWindow(dpy, c->wlist_item);
-    wlist_item_draw(c);
-  }
 }
 
 void client_raise(client *c) {
@@ -279,6 +241,28 @@ void client_expand(client *c) {
   client_move(c, min_x, min_y);
   client_resize(c, max_x - (min_x + (border(c) * 2)), max_y - (min_y + (border(c) * 2) + title(c)));
   c->flags |= EXPANDED;
+}
+void client_set_bg(client *c, XColor color) {
+  XSetWindowBackground(dpy, c->parent, color.pixel);
+  XSetWindowBackground(dpy, c->title, color.pixel);
+  XSetWindowBackground(dpy, c->button_parent, color.pixel);
+  XSetWindowBackground(dpy, c->button_iconify, color.pixel);
+  XSetWindowBackground(dpy, c->button_expand, color.pixel);
+  XSetWindowBackground(dpy, c->button_maximise, color.pixel);
+  XSetWindowBackground(dpy, c->button_close, color.pixel);
+  XSetWindowBackground(dpy, c->wlist_item, color.pixel);
+  if(!(c->flags & ICONIC)) {
+    XClearWindow(dpy, c->parent);
+    XClearWindow(dpy, c->title);
+    XClearWindow(dpy, c->button_parent);
+    buttons_draw(c);
+    client_draw_border(c);
+    client_draw_title(c);
+  }
+  if(evh == wlist_handle_event) {
+    XClearWindow(dpy, c->wlist_item);
+    wlist_item_draw(c);
+  }
 }
 
 void client_toggle_title(client *c) {
