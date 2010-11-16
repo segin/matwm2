@@ -32,27 +32,26 @@ void client_add(Window w) {
   if(wm_state == IconicState)
     new->flags |= ICONIC;
   XFetchName(dpy, w, &new->name);
-  if(!new->name)
-    new->name = no_title;
   XSelectInput(dpy, w, PropertyChangeMask | EnterWindowMask);
   XShapeSelectInput(dpy, w, ShapeNotifyMask);
   XSetWindowBorderWidth(dpy, w, 0);
-  new->parent = XCreateWindow(dpy, root, client_x(new), client_y(new), client_width_total(new), client_height_total(new), 0,
+  new->parent = XCreateWindow(dpy, root, client_x(new), client_y(new), client_width_total(new) - 2, client_height_total(new) - 2, (new->flags & HAS_BORDER) ? 1 : 0,
                               DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
-                              CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
-  new->title = XCreateWindow(dpy, new->parent, border_width, border_width, client_width(new) - (button_parent_width + 2), text_height, 0,
+                              CWOverrideRedirect | CWBackPixel | CWBorderPixel | CWEventMask, &p_attr);
+  new->title = XCreateWindow(dpy, new->parent, border_width - 1, border_width - 1, 1, 1, 0,
                              DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
-                             CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
+                             CWOverrideRedirect | CWEventMask, &p_attr);
   new->wlist_item = XCreateWindow(dpy, wlist, 0, 0, 1, 1, 0,
                                   DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
                                   CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
+  client_update_name(new);
   buttons_create(new);
   buttons_update(new);
   client_grab_buttons(new);
   XMapWindow(dpy, new->title);
   XMapWindow(dpy, new->wlist_item);
   XAddToSaveSet(dpy, w);
-  XReparentWindow(dpy, w, new->parent, client_border(new), client_border(new) + client_title(new));
+  XReparentWindow(dpy, w, new->parent, client_border_internal(new), client_border_internal(new) + client_title(new));
   if(new->flags & FULLSCREEN || new->flags & MAXIMISED)
     client_update_size(new);
   else
@@ -74,8 +73,7 @@ void client_add(Window w) {
     nicons++;
   }
   clients[cn - 1] = new;
-  if(!current)
-    client_focus(new);
+  client_focus(new);
   if(evh == wlist_handle_event)
     wlist_update();
   ewmh_set_desktop(new, 0);
@@ -109,7 +107,7 @@ void client_remove(client *c) {
   if(c == current) {
     current = NULL;
     if(cn)
-      client_focus(clients[0]);
+      client_focus(stacking[0]);
   }
   free(c);
   clients_alloc();
@@ -132,18 +130,32 @@ void client_grab_buttons(client *c) {
 }
 
 void client_draw_border(client *c) {
-  if(client_border(c))
-    XDrawRectangle(dpy, c->parent, (c == current) ? gc : igc, 0, 0, client_width_total(c) - 1, client_height_total(c) - 1);
+//  if(client_border(c))
+//    XDrawRectangle(dpy, c->parent, (c == current) ? gc : igc, 0, 0, client_width_total(c) - 1, client_height_total(c) - 1);
 }
 
 void client_draw_title(client *c) {
-  if(c->name && client_title(c))
-    XDrawString(dpy, c->title, (c == current) ? gc : igc, 0, font->max_bounds.ascent, c->name, strlen(c->name));
+  XFillRectangle(dpy, c->title_pixmap, (c == current) ? bgc : ibgc, 0, 0, c->title_width, text_height);
+  XDrawString(dpy, c->title_pixmap, (c == current) ? gc : igc, 0, font->max_bounds.ascent, c->name, strlen(c->name));
 }
 
-void client_set_bg(client *c, XColor color) {
+void client_update_name(client *c) {
+  Pixmap old = c->title_pixmap;
+  if(!c->name)
+    c->name = no_title;
+  c->title_width = XTextWidth(font, c->name, strlen(c->name));
+  c->title_pixmap = XCreatePixmap(dpy, c->title, c->title_width, text_height, DefaultDepth(dpy, screen));
+  client_draw_title(c);
+  XSetWindowBackgroundPixmap(dpy, c->title, c->title_pixmap);
+  if(old)
+    XFreePixmap(dpy, old);
+  XResizeWindow(dpy, c->title, title_width(c), text_height);
+}
+
+void client_set_bg(client *c, XColor color, XColor border) {
   XSetWindowBackground(dpy, c->parent, color.pixel);
-  XSetWindowBackground(dpy, c->title, color.pixel);
+  client_draw_title(c);
+  XSetWindowBorder(dpy, c->parent, border.pixel);
   XSetWindowBackground(dpy, c->button_parent, color.pixel);
   XSetWindowBackground(dpy, c->button_iconify, color.pixel);
   XSetWindowBackground(dpy, c->button_expand, color.pixel);
@@ -173,6 +185,7 @@ void clients_apply_stacking(void) {
   XRestackWindows(dpy, wins, i + 1);
   ewmh_update_stacking();
 }
+
 void client_update_pos(client *c) {
   XMoveWindow(dpy, c->parent, client_x(c), client_y(c));
   configurenotify(c);
@@ -180,30 +193,28 @@ void client_update_pos(client *c) {
 
 void client_update_size(client *c) {
   int width = client_width(c);
-  XMoveWindow(dpy, c->button_parent, (width + border_width) - button_parent_width, border_width);
-  XResizeWindow(dpy, c->title, width - ((c->flags & HAS_BUTTONS) ? button_parent_width + 2 : 0), text_height);
-  XResizeWindow(dpy, c->parent, client_width_total(c), client_height_total(c));
+  XMoveWindow(dpy, c->button_parent, (width + border_width - 1) - button_parent_width, border_width - 1);
+  XResizeWindow(dpy, c->title, title_width(c), text_height);
+  XResizeWindow(dpy, c->parent, client_width_total(c) - 2, client_height_total(c) - 2);
   XResizeWindow(dpy, c->window, width, client_height(c));
   client_draw_border(c);
-  client_draw_title(c);
   buttons_update(c);
   buttons_draw(c);
 }
 
 void client_update(client *c) {
   int width = client_width(c);
-  XMoveWindow(dpy, c->button_parent, (width + border_width) - button_parent_width, border_width);
-  XResizeWindow(dpy, c->title, width - ((c->flags & HAS_BUTTONS) ? button_parent_width + 2 : 0), text_height);
-  XMoveResizeWindow(dpy, c->parent, client_x(c), client_y(c), client_width_total(c), client_height_total(c));
+  XMoveWindow(dpy, c->button_parent, (width + border_width - 1) - button_parent_width, border_width - 1);
+  XResizeWindow(dpy, c->title, title_width(c), text_height);
+  XMoveResizeWindow(dpy, c->parent, client_x(c), client_y(c), client_width_total(c) - 2, client_height_total(c) - 2);
   XResizeWindow(dpy, c->window, width, client_height(c));
   client_draw_border(c);
-  client_draw_title(c);
   buttons_update(c);
   buttons_draw(c);
 }
 
 void client_update_title(client *c) {
-  XMoveWindow(dpy, c->window, client_border(c), client_border(c) + client_title(c));
+  XMoveWindow(dpy, c->window, client_border_internal(c), client_border_internal(c) + client_title(c));
   client_update_size(c);
 }
 

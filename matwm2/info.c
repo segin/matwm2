@@ -44,6 +44,10 @@ int client_border(client *c) {
   return (!(c->flags & SHAPED) && c->flags & HAS_BORDER) ? border_width : 0;
 }
 
+int client_border_internal(client *c) {
+  return (!(c->flags & SHAPED) && c->flags & HAS_BORDER) ? border_width - 1 : 0;
+}
+
 int client_title(client *c) {
   return (!(c->flags & SHAPED) && c->flags & HAS_TITLE && c->flags & HAS_BORDER) ? title_height : 0;
 }
@@ -54,6 +58,11 @@ int client_width_total(client *c) {
 
 int client_height_total(client *c) {
   return client_height(c) + (client_border(c) * 2) + client_title(c);
+}
+
+int title_width(client *c) {
+  int avail = client_width(c) - ((c->flags & HAS_BUTTONS) ? button_parent_width + 2 : 0);
+  return (avail < c->title_width) ? avail : c->title_width;
 }
 
 int client_number(client **array, client *c) {

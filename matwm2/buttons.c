@@ -1,10 +1,10 @@
 #include "matwm.h"
 
-Window button_current;
+Window button_current = None;
 int button_down = 0;
 
 void buttons_create(client *c) {
-  c->button_parent = XCreateWindow(dpy, c->parent, (c->width + border_width) - button_parent_width, border_width, button_parent_width, text_height, 0,
+  c->button_parent = XCreateWindow(dpy, c->parent, (c->width + border_width - 1) - button_parent_width, border_width - 1, button_parent_width, text_height, 0,
                                    DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
                                    CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
   c->button_iconify = XCreateWindow(dpy, c->button_parent, 0, 0, text_height, text_height, 0,

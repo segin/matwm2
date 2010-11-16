@@ -20,7 +20,8 @@
 typedef struct {
   Window        window, parent, title, wlist_item, button_parent, button_iconify, button_maximise, button_expand, button_close;
   int           x, y, width, height, flags, layer, xo, yo, oldbw;
-  int           expand_x, expand_y, expand_width, expand_height;
+  int           expand_x, expand_y, expand_width, expand_height, title_width;
+  Pixmap        title_pixmap;
   XSizeHints    normal_hints;
   char          *name;
 } client;

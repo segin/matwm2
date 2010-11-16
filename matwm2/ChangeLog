@@ -37,3 +37,11 @@
 	changed drag function to work with EWMH stuffs, also made it restore the client if it iconic
 	fixed iconify_all function that broke when stacking and clients variables were separated
 
+0.0.52:
+	button_current initialized as None (how could i forget that)
+	focus new windows on creation - expirimental, maybe schould be done only if none is focussed yet or click to focus is implemented
+	focussing of topmost window after client dissapear fixed - look in stacking, not clients
+	title is drawn to a pixmap that is the background for the title window, as this seems to redrawed way faster
+	let X draw the border now, as this also redraws faster
+	beause of changes makeing motif hints property notify response be broken, it was removed - i doubt any application uses it anyway so it is not worth the effort for now
+

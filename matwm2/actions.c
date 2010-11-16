@@ -54,8 +54,8 @@ void client_focus(client *c) {
   client *prev = current;
   current = c;
   if(prev)
-    client_set_bg(prev, ibg);
-  client_set_bg(c, bg);
+    client_set_bg(prev, ibg, ifg);
+  client_set_bg(c, bg, fg);
   if(!(c->flags & ICONIC) && isviewable(c->window))
     XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
   ewmh_set_active(c);

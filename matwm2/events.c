@@ -59,8 +59,8 @@ void handle_event(XEvent ev) {
         if(c->name != no_title)
           XFree(c->name);
         XFetchName(dpy, c->window, &c->name);
+        client_update_name(c);
         XClearWindow(dpy, c->title);
-        client_draw_title(c);
         if(evh == wlist_handle_event) {
           XClearWindow(dpy, c->wlist_item);
           wlist_item_draw(c);
@@ -68,11 +68,6 @@ void handle_event(XEvent ev) {
       }
       if(ev.xproperty.atom == XA_WM_NORMAL_HINTS && c)
         get_normal_hints(c);
-      if(ev.xproperty.atom == xa_motif_wm_hints && c) {
-        get_mwm_hints(c);
-        XMoveWindow(dpy, c->window, client_border(c), client_border(c) + client_title(c));
-        XResizeWindow(dpy, c->parent, client_width_total(c), client_height_total(c));
-      }
       break;
     case ClientMessage:
       if(c && ev.xclient.message_type == xa_wm_change_state && ev.xclient.data.l[0] == IconicState)
@@ -86,10 +81,6 @@ void handle_event(XEvent ev) {
       if(ev.xexpose.count == 0) {
         if(c && ev.xexpose.window == c->parent)
           client_draw_border(c);
-        if(c && ev.xexpose.window == c->title)
-          client_draw_title(c);
-        if(c && ev.xexpose.window == c->button_parent)
-          XClearWindow(dpy, c->button_parent);
         if(evh == wlist_handle_event && c && ev.xexpose.window == c->wlist_item)
           wlist_item_draw(c);
       }

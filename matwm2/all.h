@@ -35,7 +35,8 @@ void client_grab_button(client *c, int button);
 void client_grab_buttons(client *c);
 void client_draw_border(client *c);
 void client_draw_title(client *c);
-void client_set_bg(client *c, XColor color);
+void client_update_name(client *c);
+void client_set_bg(client *c, XColor color, XColor border);
 void clients_apply_stacking(void);
 void client_update_pos(client *c);
 void client_update_size(client *c);
@@ -46,7 +47,7 @@ void clients_alloc(void);
 
 // global variables from config.c
 extern XColor bg, ibg, fg, ifg;
-extern GC gc, igc;
+extern GC gc, igc, bgc, ibgc;
 extern int border_width, text_height, title_height, button_parent_width, snapat, button1, button2, button3, button4, button5;
 extern XFontStruct *font;
 extern char *no_title;
@@ -104,9 +105,11 @@ int client_y(client *c);
 int client_width(client *c);
 int client_height(client *c);
 int client_border(client *c);
+int client_border_internal(client *c);
 int client_title(client *c);
 int client_width_total(client *c);
 int client_height_total(client *c);
+int title_width(client *c);
 int client_number(client **array, client *c);
 client *owner(Window w);
 
