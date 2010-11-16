@@ -1,8 +1,8 @@
-#include "matwm.h"
+#include "matwm.h" /* we need something here, else compiler might complain about an empty file once the preprocessor is done with this file */
 
 #ifdef DEBUG_EVENTS
-char *event_name(XEvent ev) { /* returns the X event type as a string - used for debugging */
-	switch(ev.type) {
+char *event_name(XEvent *ev) { /* returns the X event type as a string - used for debugging */
+	switch(ev->type) {
 		case KeyPress:
 			return "KeyPress";
 		case KeyRelease:

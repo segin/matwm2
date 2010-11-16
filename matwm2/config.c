@@ -2,8 +2,10 @@
 
 XColor bg, ibg, fg, ifg, bfg, ibfg;
 GC gc, igc, bgc, ibgc;
-int border_spacing, border_width, button_spacing, wlist_margin, wlist_maxwidth, wlist_item_height, text_height, title_height, button_size, title_spacing, snapat, button1, button2, button3, button4, button5, dc, first = 1, *buttons_right = NULL, nbuttons_right = 0, *buttons_left = NULL, nbuttons_left = 0, doubleclick_time, double1, double2, double3, double4, double5, fullscreen_stacking, ewmh_screen;
-bool center_title, center_wlist_items, click_focus, click_raise, focus_new, taskbar_ontop, map_center, drag_warp, allow_focus_stealing;
+int border_spacing, border_width, button_spacing, wlist_margin, wlist_maxwidth, wlist_item_height, text_height, title_height, button_size, title_spacing, snapat, dc, first = 1, *buttons_right = NULL, nbuttons_right = 0, *buttons_left = NULL, nbuttons_left = 0, doubleclick_time, fullscreen_stacking, ewmh_screen;
+bool center_title, center_wlist_items, click_focus, click_raise, focus_new, taskbar_ontop, map_center, drag_warp, allow_focus_stealing, correct_center, click_root;
+action *button1 = NULL, *button2 = NULL, *button3 = NULL, *button4 = NULL, *button5 = NULL, *double1 = NULL, *double2 = NULL, *double3 = NULL, *double4 = NULL, *double5 = NULL;
+action *root_button1 = NULL, *root_button2 = NULL, *root_button3 = NULL, *root_button4 = NULL, *root_button5 = NULL, *root_double1 = NULL, *root_double2 = NULL, *root_double3 = NULL, *root_double4 = NULL, *root_double5 = NULL;
 #ifdef USE_XFT
 XftFont *xftfont = NULL;
 XftColor xftfg, xftbg, xftifg, xftibg;
@@ -222,25 +224,45 @@ void cfg_set_opt(char *key, char *value, int initial) {
 			ewmh_screen = i;
 	}
 	if(strcmp(key, "button1") == 0)
-		button1 = str_buttonaction(value);
+	 	str_action(value, &button1);
 	if(strcmp(key, "button2") == 0)
-		button2 = str_buttonaction(value);
+		str_action(value, &button2);
 	if(strcmp(key, "button3") == 0)
-		button3 = str_buttonaction(value);
+		str_action(value, &button3);
 	if(strcmp(key, "button4") == 0)
-		button4 = str_buttonaction(value);
+		str_action(value, &button4);
 	if(strcmp(key, "button5") == 0)
-		button5 = str_buttonaction(value);
+		str_action(value, &button5);
 	if(strcmp(key, "double1") == 0)
-		double1 = str_buttonaction(value);
+		str_action(value, &double1);
 	if(strcmp(key, "double2") == 0)
-		double2 = str_buttonaction(value);
+		str_action(value, &double2);
 	if(strcmp(key, "double3") == 0)
-		double3 = str_buttonaction(value);
+		str_action(value, &double3);
 	if(strcmp(key, "double4") == 0)
-		double4 = str_buttonaction(value);
-	if(strcmp(key, "double4") == 0)
-		double4 = str_buttonaction(value);
+		str_action(value, &double4);
+	if(strcmp(key, "double5") == 0)
+		str_action(value, &double5);
+	if(strcmp(key, "root_button1") == 0)
+	 	str_action(value, &root_button1);
+	if(strcmp(key, "root_button2") == 0)
+		str_action(value, &root_button2);
+	if(strcmp(key, "root_button3") == 0)
+		str_action(value, &root_button3);
+	if(strcmp(key, "root_button4") == 0)
+		str_action(value, &root_button4);
+	if(strcmp(key, "root_button5") == 0)
+		str_action(value, &root_button5);
+	if(strcmp(key, "root_double1") == 0)
+		str_action(value, &root_double1);
+	if(strcmp(key, "root_double2") == 0)
+		str_action(value, &root_double2);
+	if(strcmp(key, "root_double3") == 0)
+		str_action(value, &root_double3);
+	if(strcmp(key, "root_double4") == 0)
+		str_action(value, &root_double4);
+	if(strcmp(key, "root_double5") == 0)
+		str_action(value, &double5);
 	if(strcmp(key, "click_focus") == 0)
 		str_bool(value, &click_focus);
 	if(strcmp(key, "click_raise") == 0)
@@ -261,6 +283,10 @@ void cfg_set_opt(char *key, char *value, int initial) {
 		str_bool(value, &drag_warp);
 	if(strcmp(key, "allow_focus_stealing") == 0)
 		str_bool(value, &allow_focus_stealing);
+	if(strcmp(key, "correct_center") == 0)
+		str_bool(value, &correct_center);
+	if(strcmp(key, "click_root") == 0)
+		str_bool(value, &click_root);
 	if(strcmp(key, "mouse_modifier") == 0)
 		str_key(&value, &mousemodmask);
 	if(strcmp(key, "no_snap_modifier") == 0)
@@ -406,64 +432,64 @@ unsigned int str_modifier(char *name) {
 	return 0;
 }
 
-int str_buttonaction(char *str) {
-	if(strcmp(str, "move") == 0)
-		return BA_MOVE;
-	if(strcmp(str, "resize") == 0)
-		return BA_RESIZE;
-	if(strcmp(str, "raise") == 0)
-		return BA_RAISE;
-	if(strcmp(str, "lower") == 0)
-		return BA_LOWER;
-	if(strcmp(str, "maximize") == 0)
-		return BA_MAXIMIZE;
-	if(strcmp(str, "expand") == 0)
-		return BA_EXPAND;
-	if(strcmp(str, "iconify") == 0)
-		return BA_ICONIFY;
-	if(strcmp(str, "close") == 0)
-		return BA_CLOSE;
-	return BA_NONE;
-}
-
-int str_keyaction(char *str) {
-	if(strcmp(str, "next") == 0)
-		return KA_NEXT;
-	if(strcmp(str, "prev") == 0)
-		return KA_PREV;
-	if(strcmp(str, "iconify") == 0)
-		return KA_ICONIFY;
-	if(strcmp(str, "iconify_all") == 0)
-		return KA_ICONIFY_ALL;
-	if(strcmp(str, "maximize") == 0)
-		return KA_MAXIMIZE;
-	if(strcmp(str, "fullscreen") == 0)
-		return KA_FULLSCREEN;
-	if(strcmp(str, "expand") == 0)
-		return KA_EXPAND;
-	if(strcmp(str, "sticky") == 0)
-		return KA_STICKY;
-	if(strcmp(str, "title") == 0)
-		return KA_TITLE;
-	if(strcmp(str, "to_border") == 0)
-		return KA_TO_BORDER;
-	if(strcmp(str, "close") == 0)
-		return KA_CLOSE;
-	if(strcmp(str, "exec") == 0)
-		return KA_EXEC;
-	if(strcmp(str, "next_desktop") == 0)
-		return KA_NEXT_DESKTOP;
-	if(strcmp(str, "prev_desktop") == 0)
-		return KA_PREV_DESKTOP;
-	if(strcmp(str, "ontop") == 0)
-		return KA_ONTOP;
-	if(strcmp(str, "below") == 0)
-		return KA_BELOW;
-	if(strcmp(str, "raise") == 0)
-		return KA_RAISE;
-	if(strcmp(str, "lower") == 0)
-		return KA_LOWER;
-	return KA_NONE;
+void str_action(char *str, action **ret) {
+	free(*ret);
+	*ret = _malloc(sizeof(action));
+	char *act = eat(&str, " \t");
+	if(strcmp(act, "next") == 0)
+		(*ret)->code = A_NEXT;
+	else if(strcmp(act, "prev") == 0)
+		(*ret)->code = A_PREV;
+	else if(strcmp(act, "iconify") == 0)
+		(*ret)->code = A_ICONIFY;
+	else if(strcmp(act, "iconify_all") == 0)
+		(*ret)->code = A_ICONIFY_ALL;
+	else if(strcmp(act, "maximize") == 0)
+		(*ret)->code = A_MAXIMIZE;
+	else if(strcmp(act, "fullscreen") == 0)
+		(*ret)->code = A_FULLSCREEN;
+	else if(strcmp(act, "expand") == 0)
+		(*ret)->code = A_EXPAND;
+	else if(strcmp(act, "sticky") == 0)
+		(*ret)->code = A_STICKY;
+	else if(strcmp(act, "title") == 0)
+		(*ret)->code = A_TITLE;
+	else if(strcmp(act, "to_border") == 0)
+		(*ret)->code = A_TO_BORDER;
+	else if(strcmp(act, "close") == 0)
+		(*ret)->code = A_CLOSE;
+	else if(strcmp(act, "exec") == 0)
+		(*ret)->code = A_EXEC;
+	else if(strcmp(act, "next_desktop") == 0)
+		(*ret)->code = A_NEXT_DESKTOP;
+	else if(strcmp(act, "prev_desktop") == 0)
+		(*ret)->code = A_PREV_DESKTOP;
+	else if(strcmp(act, "ontop") == 0)
+		(*ret)->code = A_ONTOP;
+	else if(strcmp(act, "below") == 0)
+		(*ret)->code = A_BELOW;
+	else if(strcmp(act, "raise") == 0)
+		(*ret)->code = A_RAISE;
+	else if(strcmp(act, "lower") == 0)
+		(*ret)->code = A_LOWER;
+	else if(strcmp(act, "move") == 0)
+		(*ret)->code = A_MOVE;
+	else if(strcmp(act, "resize") == 0)
+		(*ret)->code = A_RESIZE;
+	else {
+		free(*ret);
+		*ret = NULL;
+		return;
+	}
+	if(str) {
+		while(*str == ' ' || *str == '\t')
+			str++;
+		(*ret)->arg = (char *) _malloc(strlen(str) + 1);
+		strncpy((*ret)->arg, str, strlen(str) + 1);
+	} else if((*ret)->code == A_EXEC) {
+		free(*ret);
+		*ret = NULL;
+	}	else (*ret)->arg = NULL;
 }
 
 int str_wbutton(char *button) {

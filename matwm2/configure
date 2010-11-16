@@ -9,6 +9,7 @@ shape="yes"
 xinerama="yes"
 xft="yes"
 vfork="yes"
+debug="no"
 
 # make sure a few variables are not set
 unset prefix
@@ -36,6 +37,8 @@ for opt in $*; do
 	                    echo "	Xft support explicitly disabled";;
 	--disable-vfork)    vfork="no"
 	                    echo "	use of vfork system call explicitly disabled";;
+	--enable-debug)     debug="yes"
+	                    echo "	debugging output enabled explicitly";;
 	*)                  echo "Usage: $0 [options]"
 	                    echo
 	                    echo "Options: (defaults between brackets)"
@@ -47,6 +50,7 @@ for opt in $*; do
 	                    echo "	--disable-xinerama       Disable support for xinerama"
 	                    echo "	--disable-xft            Disable support for Xft"
 	                    echo "	--disable-vfork          Disable use of the vfork() system call"
+	                    echo "  --enable-debug           Enable debugging output"
 	                    echo "	-h, --help               Print this message and exit"
 	                    echo
 	                    echo "Influential environment variables:"
@@ -117,7 +121,7 @@ else
 fi
 
 if [ "$shape" = "yes" ]; then
-	echo -n "checking for Xext... "
+	echo -n "checking for Xext (for shaped windows support)... "
 	if pkg-config --exists xext 2> /dev/null; then
 		echo "ok"
 	else
@@ -146,6 +150,16 @@ if [ "$xft" = "yes" ]; then
 	fi
 fi
 
+if [ "$debug" = "yes" ]; then
+	echo -n "checking for X protocol headers (for debugging output)... "
+	if pkg-config --exists xproto 2> /dev/null; then
+		echo "ok"
+	else
+		echo "not found, disabling debugging output"
+		debug="no"
+	fi
+fi
+
 # gather data from pkg-config etc
 echo -n "gathering information... "
 libraries="x11"
@@ -168,6 +182,11 @@ fi
 
 if [ "$vfork" = "yes" ]; then
 	defines="$defines -DHAVE_VFORK"
+fi
+
+if [ "$debug" = "yes" ]; then
+	libraries="$libraries xproto"
+	defines="$defines -DDEBUG"
 fi
 
 defines=`echo $defines` # this serves to strip whitespace
@@ -200,4 +219,5 @@ echo "	shaped windows support: $shape"
 echo "	xinerama support:       $xinerama"
 echo "	Xft support:            $xft"
 echo "	vfork system call:      $vfork"
+echo "	debugging output:       $debug"
 

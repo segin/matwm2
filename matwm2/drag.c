@@ -1,12 +1,13 @@
 #include "matwm.h"
 
-int drag_mode, drag_xo, drag_yo;
+int drag_xo, drag_yo;
 unsigned int drag_button;
+unsigned char drag_mode;
 
-void drag_start(int mode, int button, int x, int y) {
+void drag_start(unsigned char mode, int button, int x, int y) {
 	if(evh)
 		return;
-	if(mode == RESIZE) {
+	if(mode == A_RESIZE) {
 		if(!(current->flags & CAN_RESIZE))
 			return;
 		client_warp(current);
@@ -32,51 +33,51 @@ void drag_end(void) {
 	evh = NULL;
 }
 
-bool drag_handle_event(XEvent ev) {
+bool drag_handle_event(XEvent *ev) {
 	int x, y, left = screens_leftmost(), right = screens_rightmost();
 	if(current)
-		if(has_child(current->parent, current->window) || ev.type == UnmapNotify || ev.type == DestroyNotify || ev.type == ButtonRelease)
-			switch(ev.type) {
+		if(has_child(current->parent, current->window) || ev->type == UnmapNotify || ev->type == DestroyNotify || ev->type == ButtonRelease)
+			switch(ev->type) {
 				case MotionNotify:
-					while(XCheckTypedEvent(dpy, MotionNotify, &ev));
-					if(drag_mode == RESIZE) {
-						x = ev.xmotion.x + 2;
-						y = ev.xmotion.y + 2;
-						if(nosnapmodmask && ev.xmotion.state & nosnapmodmask)
+					while(XCheckTypedEvent(dpy, MotionNotify, ev));
+					if(drag_mode == A_RESIZE) {
+						x = ev->xmotion.x + 2;
+						y = ev->xmotion.y + 2;
+						if(nosnapmodmask && ev->xmotion.state & nosnapmodmask)
 							client_resize(current, x - drag_xo, y - drag_yo);
 						else client_resize(current, snaph(current, x, snapv(current, x, y)) - drag_xo, snapv(current, snaph(current, x, y), y) - drag_yo);
-					} else if(drag_warp && ev.xmotion.x == right - 1 && desktop < dc - 1) {
-						client_move(current, left - (drag_xo + 1), ev.xmotion.y - drag_yo);
-						XWarpPointer(dpy, None, root, 0, 0, 0, 0, 1, ev.xmotion.y);
+					} else if(drag_warp && ev->xmotion.x == right - 1 && desktop < dc - 1) {
+						client_move(current, left - (drag_xo + 1), ev->xmotion.y - drag_yo);
+						XWarpPointer(dpy, None, root, 0, 0, 0, 0, 1, ev->xmotion.y);
 						desktop_goto(desktop + 1);
-					} else if(drag_warp && ev.xmotion.x == left && desktop > 0) {
-						client_move(current, right - (drag_xo + 2), ev.xmotion.y - drag_yo);
-						XWarpPointer(dpy, None, root, 0, 0, 0, 0, right - 2, ev.xmotion.y);
+					} else if(drag_warp && ev->xmotion.x == left && desktop > 0) {
+						client_move(current, right - (drag_xo + 2), ev->xmotion.y - drag_yo);
+						XWarpPointer(dpy, None, root, 0, 0, 0, 0, right - 2, ev->xmotion.y);
 						desktop_goto(desktop - 1);
-					} else if(nosnapmodmask && ev.xmotion.state & nosnapmodmask)
-						client_move(current, ev.xmotion.x - drag_xo, ev.xmotion.y - drag_yo);
-					else client_move(current, snapx(current, ev.xmotion.x - drag_xo, snapy(current, ev.xmotion.x - drag_xo, ev.xmotion.y - drag_yo)), snapy(current, snapx(current, ev.xmotion.x - drag_xo, ev.xmotion.y - drag_yo), ev.xmotion.y - drag_yo));
+					} else if(nosnapmodmask && ev->xmotion.state & nosnapmodmask)
+						client_move(current, ev->xmotion.x - drag_xo, ev->xmotion.y - drag_yo);
+					else client_move(current, snapx(current, ev->xmotion.x - drag_xo, snapy(current, ev->xmotion.x - drag_xo, ev->xmotion.y - drag_yo)), snapy(current, snapx(current, ev->xmotion.x - drag_xo, ev->xmotion.y - drag_yo), ev->xmotion.y - drag_yo));
 					return true;
 				case ButtonRelease:
-					if(ev.xbutton.button == drag_button || drag_button == AnyButton)
+					if(ev->xbutton.button == drag_button || drag_button == AnyButton)
 						drag_end();
 					return true;
 				case EnterNotify:
 				case ButtonPress:
 					return true;
 				case UnmapNotify:
-					if(current->window == ev.xunmap.window)
+					if(current->window == ev->xunmap.window)
 						evh = drag_release_wait;
 					break;
 				case DestroyNotify:
-					if(current->window == ev.xdestroywindow.window)
+					if(current->window == ev->xdestroywindow.window)
 						evh = drag_release_wait;
 			}
 	return false;
 }
 
-bool drag_release_wait(XEvent ev) {
-	if(ev.type == ButtonRelease && (ev.xbutton.button == drag_button || drag_button == AnyButton)) {
+bool drag_release_wait(XEvent *ev) {
+	if(ev->type == ButtonRelease && (ev->xbutton.button == drag_button || drag_button == AnyButton)) {
 		drag_end();
 		return true;
 	}
@@ -166,4 +167,3 @@ int snapv(client *c, int nx, int ny) {
 	}
 	return ny;
 }
-

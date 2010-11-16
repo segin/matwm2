@@ -41,11 +41,14 @@ void client_add(Window w, bool mapped) {
 	new->x = attr.x; /* and client_update_screen() needs these */
 	new->y = attr.y;
 	client_update_screen(new);
+	if(!mapped)
+		screens_correct_center(&new->x, &new->y, &new->width, &new->height);
 	new->xo = gxo(new, true);
 	new->yo = gyo(new, true);
 	new->x -= new->xo;
 	new->y -= new->yo;
 	if(!mapped && map_center && !(new->normal_hints.flags & USPosition) && !(new->normal_hints.flags & PPosition)) {
+		screens_update_current();
 		new->x = screens[cs].x + ((screens[cs].width / 2) - (new->width / 2));
 		new->y = screens[cs].y + ((screens[cs].height / 2) - (new->height / 2));
 	}
@@ -112,7 +115,7 @@ void client_add(Window w, bool mapped) {
 				if(stacking[i]->flags & FULLSCREEN && !(stacking[i]->flags & ICONIC) && (stacking[i]->desktop == desktop || stacking[i]->desktop == STICKY))
 					break;
 		/* if i now is > 0 theres a fullscreen window we cannot go above obstructing the new window so we omit focus_new behaviour */
-		if(((focus_new && !i) || !current) && client_visible(new))
+		if(((focus_new && !i) || (!current && get_focus_window() == PointerRoot)) && client_visible(new))
 			client_focus(new, true);
 	}
 	if(!(new->flags & ICONIC)) /* client_visible isn't apropriate here (what if the window would be moved to another desktop later) */
@@ -186,10 +189,15 @@ void client_remove(client *c) {
 }
 
 void client_grab_button(client *c, int button) {
-	int na = buttonaction(button, 0), da = buttonaction(button, 1);
-	if(!(!(c->flags & CAN_MOVE) && (na == BA_MOVE || na == BA_EXPAND || na == BA_MAXIMIZE || na == BA_NONE) && (da == BA_MOVE || da == BA_EXPAND || da == BA_MAXIMIZE || da == BA_NONE)) && !(!(c->flags & CAN_RESIZE) && (na == BA_RESIZE || na == BA_EXPAND || na == BA_MAXIMIZE || na == BA_NONE) && (da == BA_RESIZE || da == BA_EXPAND || da == BA_MAXIMIZE || da == BA_NONE)) && !(!(c->flags & CAN_MOVE) && !(c->flags & CAN_RESIZE) && (na == BA_MOVE || na == BA_RESIZE || na == BA_EXPAND || na == BA_MAXIMIZE || na == BA_NONE) && (da == BA_MOVE || da == BA_RESIZE || da == BA_EXPAND || da == BA_MAXIMIZE || da == BA_NONE)) && !(c->flags & DONT_FOCUS && (na == BA_MOVE || na == BA_RESIZE || na == BA_NONE) && (da == BA_MOVE || da == BA_RESIZE || da == BA_NONE))) {
+	action *a;
+	unsigned char na, da;
+	a = buttonaction(button, false);
+	na = a ? a->code : A_NONE;
+	a = buttonaction(button, true);
+	da = a ? a->code : A_NONE;
+	if(!(!(c->flags & CAN_MOVE) && (na == A_MOVE || na == A_EXPAND || na == A_MAXIMIZE || na == A_NONE) && (da == A_MOVE || da == A_EXPAND || da == A_MAXIMIZE || da == A_NONE)) && !(!(c->flags & CAN_RESIZE) && (na == A_RESIZE || na == A_EXPAND || na == A_MAXIMIZE || na == A_NONE) && (da == A_RESIZE || da == A_EXPAND || da == A_MAXIMIZE || da == A_NONE)) && !(!(c->flags & CAN_MOVE) && !(c->flags & CAN_RESIZE) && (na == A_MOVE || na == A_RESIZE || na == A_EXPAND || na == A_MAXIMIZE || na == A_NONE) && (da == A_MOVE || da == A_RESIZE || da == A_EXPAND || da == A_MAXIMIZE || da == A_NONE)) && !(c->flags & DONT_FOCUS && (na == A_MOVE || na == A_RESIZE || na == A_NONE) && (da == A_MOVE || da == A_RESIZE || da == A_NONE))) {
 		button_grab(c->parent, button, mousemodmask, ButtonPressMask | ButtonReleaseMask);
-		if(nosnapmodmask && (na == BA_MOVE || na == BA_RESIZE || da == BA_MOVE || da == BA_RESIZE))
+		if(nosnapmodmask && (na == A_MOVE || na == A_RESIZE || da == A_MOVE || da == A_RESIZE))
 			button_grab(c->parent, button, nosnapmodmask | mousemodmask, ButtonPressMask | ButtonReleaseMask);
 	}
 }
@@ -321,25 +329,6 @@ void client_update_layer(client *c, int prev) { /* apply changes in stacking if 
 	ewmh_update_state(c);
 }
 
-void client_warp(client *c) { /* moves the pointer to a client */
-	XWarpPointer(dpy, None, c->parent, 0, 0, 0, 0, client_width_total_intern(c) - 1, client_height_total_intern(c) - 1);
-}
-
-void client_focus_first(void) { /* to be called when focus window is lost */
-	int i;
-	if(previous && (previous->desktop == desktop || previous->desktop == STICKY)) {
-		client_focus(previous, true);
-		return;
-	}
-	for(i = 0; i < cn; i++)
-		if(client_visible(stacking[i]) && !(stacking[i]->flags & DONT_FOCUS)) {
-			client_focus(stacking[i], true);
-			break;
-		}
-	if(i == cn)
-		client_focus(NULL, true);
-}
-
 void client_clear_state(client *c) { /* to revert a client to normal state (as opposed to maximised, expanded or fullscreened) without restoring its previous dimensions */
 	c->x = client_x(c);
 	c->y = client_y(c);
@@ -350,6 +339,21 @@ void client_clear_state(client *c) { /* to revert a client to normal state (as o
 		ewmh_update_state(c);
 	}
 	client_update(c); /* needed for restoring the border and title of ex-fullscreen windows */
+}
+
+void client_over_fullscreen(client *c) { /* help a window getting above fullscreen windows by lowering it until it is under always-on-top windows */
+	int i, j, cc = client_number(stacking, c);
+	client *d;
+	if(fullscreen_stacking != FS_ONTOP)
+		return;
+	for(i = cc; i >= 0; i--)
+		if(stacking[i]->flags & FULLSCREEN) {
+			d = stacking[i];
+			for(j = i; j < cn - 1 && client_layer(stacking[j + 1]) <= client_layer(d) && !(stacking[j + 1]->flags & ICONIC) && j < cc; j++)
+				stacking[j] = stacking[j + 1];
+			stacking[j] = d;
+		}
+	clients_apply_stacking();
 }
 
 int clients_alloc(void) { /* to make sure enough memory is allocated for cn clients */
@@ -367,4 +371,3 @@ int clients_alloc(void) { /* to make sure enough memory is allocated for cn clie
 	stacking = newptr;
 	return 1;
 }
-

@@ -1,26 +1,24 @@
 #include "matwm.h"
 
-bool (*evh)(XEvent) = NULL;
+bool (*evh)(XEvent *) = NULL;
 Time lastclick = 0;
 unsigned int lastbutton = None;
 client *lastclick_client = NULL;
 
-void handle_event(XEvent ev) {
-	client *c = owner(ev.xany.window);
-	int i = 0, j = 0;
-	char *a;
+void handle_event(XEvent *ev) {
+	client *c = owner(ev->xany.window);
 	#ifdef DEBUG_EVENTS
-	if(c) printf("%i (%s): %s\n", ev.xany.window, c->name, event_name(ev));
-	else printf("%i: %s\n", ev.xany.window, event_name(ev));
+	if(c) printf(NAME ": event: %s\n\ton window: 0x%X (%s)\n", event_name(ev), (unsigned int) ev->xany.window, c->name);
+	else printf(NAME ": event: %s\n\ton window: 0x%X\n", event_name(ev), (unsigned int) ev->xany.window);
 	#endif
 	if((evh && evh(ev)) || button_handle_event(ev) || ewmh_handle_event(ev) || screens_handle_event(ev))
 		return;
 	if(c) {
-		if(!has_child(c->parent, c->window) && ev.type != DestroyNotify && ev.type != UnmapNotify)
+		if(!has_child(c->parent, c->window) && ev->type != DestroyNotify && ev->type != UnmapNotify)
 			return;
-		switch(ev.type) {
+		switch(ev->type) {
 			case UnmapNotify:
-				if(c->window == ev.xunmap.window) {
+				if(c->window == ev->xunmap.window) {
 					if(has_child(c->parent, c->window)) {
 						client_deparent(c);
 						set_wm_state(c->window, WithdrawnState);
@@ -30,7 +28,7 @@ void handle_event(XEvent ev) {
 				}
 				return;
 			case PropertyNotify:
-				if(ev.xproperty.atom == XA_WM_NAME) {
+				if(ev->xproperty.atom == XA_WM_NAME) {
 					if(c->name != no_title)
 						XFree(c->name);
 					#ifdef USE_XFT
@@ -46,46 +44,47 @@ void handle_event(XEvent ev) {
 						wlist_item_draw(c);
 					}
 				}
-				if(ev.xproperty.atom == XA_WM_NORMAL_HINTS)
+				if(ev->xproperty.atom == XA_WM_NORMAL_HINTS)
 					get_normal_hints(c);
 				return;
 			case ClientMessage:
-				if(ev.xclient.message_type == xa_wm_change_state && ev.xclient.data.l[0] == IconicState)
+				if(ev->xclient.message_type == xa_wm_change_state && ev->xclient.data.l[0] == IconicState)
 					client_iconify(c);
 				return;
 			case EnterNotify:
-				if(c != current && !(c->flags & CLICK_FOCUS) && !click_focus && ev.xcrossing.detail != NotifyInferior && (ev.xcrossing.window == c->parent || ev.xcrossing.window == c->wlist_item) && ev.xcrossing.send_event == False)
+				if(c != current && !(c->flags & CLICK_FOCUS) && !click_focus && ev->xcrossing.detail != NotifyInferior && (ev->xcrossing.window == c->parent || ev->xcrossing.window == c->wlist_item) && ev->xcrossing.send_event == False)
 					client_focus(c, true);
 				return;
 			case Expose:
-				if(ev.xexpose.count == 0 && evh == wlist_handle_event && c && ev.xexpose.window == c->wlist_item)
+				if(ev->xexpose.count == 0 && evh == wlist_handle_event && c && ev->xexpose.window == c->wlist_item)
 					wlist_item_draw(c);
 				return;
 			case ButtonPress:
 				XAllowEvents(dpy, ReplayPointer, CurrentTime);
-				if(ev.xbutton.window != c->window) {
-					if(lastclick + doubleclick_time > ev.xbutton.time && lastbutton == ev.xbutton.button && lastclick_client == c)
-						client_handle_button(c, ev, true);
-					lastclick = ev.xbutton.time;
+				if(ev->xbutton.window != c->window) {
+					if(lastclick + doubleclick_time > ev->xbutton.time && lastbutton == ev->xbutton.button && lastclick_client == c) {
+						client_action(c, buttonaction(ev->xbutton.button, true), ev);
+						lastclick = 0;
+						lastclick_client = NULL;
+						lastbutton = None;
+						return;
+					}
+					lastclick = ev->xbutton.time;
 					lastclick_client = c;
-					lastbutton = ev.xbutton.button;
-				}
+					lastbutton = ev->xbutton.button;
+					client_action(c, buttonaction(ev->xbutton.button, false), ev);
+				} else if(click_raise)
+					client_raise(c);
 				if(c != current)
 					client_focus(c, true);
-				if(ev.xbutton.window == c->window) {
-					if(click_raise)
-						client_raise(c);
-					return;
-				}
-				client_handle_button(c, ev, false);
 				return;
 			case FocusIn:
-				if(allow_focus_stealing && c != current && ev.xfocus.mode != NotifyGrab && ev.xfocus.mode != NotifyUngrab)
+				if(allow_focus_stealing && c != current && ev->xfocus.mode != NotifyGrab && ev->xfocus.mode != NotifyUngrab)
 					client_focus(c, false);
 				return;
 			case FocusOut:
-				if(c == current && ev.xfocus.mode != NotifyGrab && ev.xfocus.mode != NotifyUngrab) {
-					if(allow_focus_stealing && ev.xfocus.detail != NotifyPointer)
+				if(c == current && ev->xfocus.mode != NotifyGrab && ev->xfocus.mode != NotifyUngrab) {
+					if(allow_focus_stealing && ev->xfocus.detail != NotifyPointer)
 						client_focus(NULL, false);
 					else
 						XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
@@ -93,163 +92,84 @@ void handle_event(XEvent ev) {
 				return;
 			#ifdef USE_SHAPE
 			default:
-				if(ev.type == shape_event) {
+				if(ev->type == shape_event) {
 					set_shape(c);
 					return;
 				}
 			#endif
 		}
 	}
-	if(current && ev.type == KeyPress)
-		switch(keyaction(ev)) {
-			case KA_ICONIFY:
-				client_iconify(current);
-				return;
-			case KA_MAXIMIZE:
-				a = keyarg(ev);
-				while(a && *a) {
-					if(*a == 'h')
-						i |= MAXIMIZED_L | MAXIMIZED_R;
-					if(*a == 'v')
-						i |= MAXIMIZED_T | MAXIMIZED_B;
-					if(*a == 'l')
-						i |= MAXIMIZED_L;
-					if(*a == 'r')
-						i |= MAXIMIZED_R;
-					if(*a == 'u')
-						i |= MAXIMIZED_T;
-					if(*a == 'd')
-						i |= MAXIMIZED_B;
-					a++;
-				}
-				client_toggle_state(current, i ? i : (MAXIMIZED_L | MAXIMIZED_R | MAXIMIZED_T | MAXIMIZED_B));
-				return;
-			case KA_EXPAND:
-				a = keyarg(ev);
-				while(a && *a) {
-					if(*a == 'h')
-						i |= EXPANDED_L | EXPANDED_R;
-					if(*a == 'v')
-						i |= EXPANDED_T | EXPANDED_B;
-					if(*a == 'l')
-						i |= EXPANDED_L;
-					if(*a == 'r')
-						i |= EXPANDED_R;
-					if(*a == 'u')
-						i |= EXPANDED_T;
-					if(*a == 'd')
-						i |= EXPANDED_B;
-					if(*a == 'a')
-						j = true;
-					a++;
-				}
-				client_expand(current, i ? i : (EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B), j);
-				return;
-			case KA_FULLSCREEN:
-				client_fullscreen(current);
-				return;
-			case KA_STICKY:
-				client_to_desktop(current, (current->desktop == STICKY) ? desktop : STICKY);
-				return;
-			case KA_TITLE:
-				client_toggle_title(current);
-				return;
-			case KA_TO_BORDER:
-				client_to_border(current, keyarg(ev));
-				return;
-			case KA_ONTOP:
-				if(!(current->layer == DESKTOP))
-					client_set_layer(current, (current->layer == TOP) ? NORMAL : TOP);
-				return;
-			case KA_BELOW:
-				if(!(current->layer == DESKTOP))
-					client_set_layer(current, (current->layer == BOTTOM) ? NORMAL : BOTTOM);
-				return;
-			case KA_RAISE:
-				client_raise(current);
-				return;
-			case KA_LOWER:
-				client_lower(current);
-				return;
-			case KA_CLOSE:
-				delete_window(current);
-				return;
-		}
-	switch(ev.type) {
+	switch(ev->type) {
 		case MapRequest:
-			c = owner(ev.xmaprequest.window);
+			c = owner(ev->xmaprequest.window);
 			if(c) {
 				if(c->flags & ICONIC && has_child(c->parent, c->window)) {
 					client_restore(c);
 					if(focus_new)
 						client_focus(c, true);
 				}
-			} else if(has_child(root, ev.xmaprequest.window))
-				client_add(ev.xmaprequest.window, false);
+			} else if(has_child(root, ev->xmaprequest.window))
+				client_add(ev->xmaprequest.window, false);
 			return;
 		case DestroyNotify:
-			c = owner(ev.xdestroywindow.window);
+			c = owner(ev->xdestroywindow.window);
 			if(c)
-				if(c->window == ev.xdestroywindow.window)
+				if(c->window == ev->xdestroywindow.window)
 					client_remove(c);
 			return;
 		case ConfigureRequest:
-			c = owner(ev.xconfigurerequest.window);
+			c = owner(ev->xconfigurerequest.window);
+			screens_correct_center(&ev->xconfigurerequest.x, &ev->xconfigurerequest.y, &ev->xconfigurerequest.width, &ev->xconfigurerequest.height);
 			if(c) {
 				if(!has_child(c->parent, c->window))
 					return;
-				if(ev.xconfigurerequest.value_mask & CWX)
-					c->x = ev.xconfigurerequest.x - gxo(c, false);
-				if(ev.xconfigurerequest.value_mask & CWY)
-					c->y = ev.xconfigurerequest.y - gyo(c, false);
-				if(ev.xconfigurerequest.value_mask & CWWidth)
-					c->width = ev.xconfigurerequest.width;
-				if(ev.xconfigurerequest.value_mask & CWHeight)
-					c->height = ev.xconfigurerequest.height;
+				if(ev->xconfigurerequest.value_mask & CWX)
+					c->x = ev->xconfigurerequest.x - gxo(c, false);
+				if(ev->xconfigurerequest.value_mask & CWY)
+					c->y = ev->xconfigurerequest.y - gyo(c, false);
+				if(ev->xconfigurerequest.value_mask & CWWidth)
+					c->width = ev->xconfigurerequest.width;
+				if(ev->xconfigurerequest.value_mask & CWHeight)
+					c->height = ev->xconfigurerequest.height;
 				client_update(c);
-			} else if(has_child(root, ev.xconfigurerequest.window)) {
+			} else if(has_child(root, ev->xconfigurerequest.window)) {
 				XWindowChanges wc;
-				wc.sibling = ev.xconfigurerequest.above;
-				wc.stack_mode = ev.xconfigurerequest.detail;
-				wc.x = ev.xconfigurerequest.x;
-				wc.y = ev.xconfigurerequest.y;
-				wc.width = ev.xconfigurerequest.width;
-				wc.height = ev.xconfigurerequest.height;
-				XConfigureWindow(dpy, ev.xconfigurerequest.window, ev.xconfigurerequest.value_mask, &wc);
+				wc.sibling = ev->xconfigurerequest.above;
+				wc.stack_mode = ev->xconfigurerequest.detail;
+				wc.x = ev->xconfigurerequest.x;
+				wc.y = ev->xconfigurerequest.y;
+				wc.width = ev->xconfigurerequest.width;
+				wc.height = ev->xconfigurerequest.height;
+				XConfigureWindow(dpy, ev->xconfigurerequest.window, ev->xconfigurerequest.value_mask, &wc);
 			}
 			return;
 		case MappingNotify:
-			if(ev.xmapping.request != MappingPointer) {
+			if(ev->xmapping.request != MappingPointer) {
 				keys_ungrab();
-				XRefreshKeyboardMapping(&ev.xmapping);
+				XRefreshKeyboardMapping(&ev->xmapping);
 				keys_update();
 			}
 			return;
 		case KeyPress:
-			switch(keyaction(ev)) {
-			  case KA_NEXT:
-				case KA_PREV:
-					wlist_start(ev);
-					break;
-				case KA_ICONIFY_ALL:
-					if(cn)
-						client_iconify_all();
-					break;
-				case KA_EXEC:
-					spawn(keyarg(ev));
-					break;
-				case KA_NEXT_DESKTOP:
-					if(desktop < dc - 1)
-						desktop_goto(desktop + 1);
-					break;
-				case KA_PREV_DESKTOP:
-					if(desktop > 0)
-						desktop_goto(desktop - 1);
+			client_action(current, keyaction(ev), ev);
+			return;
+		case ButtonPress:
+			if(ev->xbutton.window != root)
+				return;
+			if(lastclick + doubleclick_time > ev->xbutton.time && lastbutton == ev->xbutton.button && lastclick_client == NULL) {
+				client_action(current, root_buttonaction(ev->xbutton.button, true), ev);
+				lastclick = 0;
+				lastclick_client = NULL;
+				lastbutton = None;
+				return;
 			}
+			lastclick = ev->xbutton.time;
+			lastclick_client = NULL;
+			lastbutton = ev->xbutton.button;
+			client_action(current, root_buttonaction(ev->xbutton.button, false), ev);
 			return;
 		case FocusIn:
-			if(current && ev.xfocus.window == root && ev.xfocus.mode != NotifyGrab && ev.xfocus.mode != NotifyUngrab)
+			if(client_visible(current) && ev->xfocus.window == root && ev->xfocus.mode != NotifyGrab && ev->xfocus.mode != NotifyUngrab)
 				XSetInputFocus(dpy, current->window, RevertToPointerRoot, CurrentTime);
 	}
 }
-

@@ -18,8 +18,8 @@ int xerrorhandler(Display *display, XErrorEvent *xerror) { /* we set this as the
 		char ret[666];
 		XGetErrorText(xerror->display, xerror->error_code, ret, sizeof(ret));
 		c = owner(xerror->resourceid);
-		if(c) printf(NAME ": %i (%s): x error: %s\n", (int) xerror->resourceid, c->name, ret);
-		else printf(NAME ": %i: x error: %s\n", (int) xerror->resourceid, ret);
+		if(c) printf(NAME ": x error: %s\n\tresource: 0x%X (%s)\n\topcode: %i (%s)\n", ret, (unsigned int) xerror->resourceid, c->name, xerror->request_code, str_opcode(xerror->request_code));
+		else printf(NAME ": x error: %s\n\tresource: 0x%X\n\topcode %i (%s)\n", ret, (unsigned int) xerror->resourceid, xerror->request_code, str_opcode(xerror->request_code));
 	}
 	#endif
 	return 0;
@@ -178,14 +178,21 @@ int gyo(client *c, bool initial) { /* returns offset for vertical window gravity
 	return ((c->flags & NO_STRUT) ? 0 : -screens[c->screen].ewmh_strut[2]);
 }
 
-int has_child(Window parent, Window child) { /* checks if child is a child of parent */
+bool has_child(Window parent, Window child) { /* checks if child is a child of parent */
 	unsigned int i, nwins;
 	Window dw, *wins;
 	XQueryTree(dpy, parent, &dw, &dw, &wins, &nwins);
 	for(i = 0; i < nwins; i++)
 		if(wins[i] == child)
-			return 1;
-	return 0;
+			return true;
+	return false;
+}
+
+Window get_focus_window(void) {
+	Window ret;
+	int revert_to;
+	XGetInputFocus(dpy, &ret, &revert_to);
+	return ret;
 }
 
 int isviewable(Window w) { /* check if a window is actually viewable */
@@ -201,4 +208,3 @@ Bool isunmap(Display *display, XEvent *event, XPointer arg) { /* predicate proce
 		return True;
 	return False;
 }
-

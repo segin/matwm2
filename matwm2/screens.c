@@ -1,19 +1,20 @@
 #include "matwm.h"
+#ifdef USE_XINERAMA
+#include<X11/extensions/Xinerama.h>
+#endif
 
 screen_dimensions *screens = NULL;
 int nscreens = 0, cs = 0;
 
-bool screens_handle_event(XEvent ev) {
+bool screens_handle_event(XEvent *ev) {
 	int i;
-	if(ev.type == ConfigureNotify) {
-		if(root == ev.xconfigure.window) {
-			screens_get();
-			if(evh == wlist_handle_event)
-				wlist_update();
-			ewmh_update_geometry();
-			for(i = 0; i < cn; i++)
-				client_update_size(clients[i]);
-		}
+	if(ev->type == ConfigureNotify && ev->xconfigure.window == root) {
+		screens_get();
+		if(evh == wlist_handle_event)
+			wlist_update();
+		ewmh_update_geometry();
+		for(i = 0; i < cn; i++)
+			client_update_size(clients[i]);
 		return true;
 	}
 	return false;
@@ -125,3 +126,24 @@ int screens_bottom(void) { /* returns the lowest bottom coordinate of all screen
 	return ret;
 }
 
+bool screens_correct_center(int *x, int *y, int *width, int *height) { /* for windows that try to place windows centered without knowing there are multiple screens */
+	bool ret = false;
+	int min, max, ref;
+	if(!correct_center)
+		return false;
+	min = *x + (*width / 2) - 2;
+	max = min + 4;
+	ref = (screens_rightmost() - screens_leftmost()) / 2;
+	if(*width < screens[cs].width && ref > min && ref < max) {
+		*x = screens[cs].x + ((screens[cs].width / 2) - (*width / 2));
+		ret = true;
+	}
+	min = *y + (*height / 2) - 1;
+	max = min + 2;
+	ref = (screens_bottom() - screens_topmost()) / 2;
+	if(*height < screens[cs].height && ref > min && ref < max) {
+		*y = screens[cs].y + ((screens[cs].height / 2) - (*height / 2));
+		ret = true;
+	}
+	return ret;
+}

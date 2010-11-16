@@ -1,31 +1,17 @@
 #ifndef __MATWM_H__
 #define __MATWM_H__
 #include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xatom.h>
-#include <X11/keysymdef.h>
+#include <X11/Xutil.h> /* for XSizeHints structure and XGetNormalHints() */
+#include <X11/Xatom.h> /* for Atom datatype and XInetnAtom() etc */
 #ifdef USE_SHAPE
 #include <X11/extensions/shape.h>
-#endif
-#ifdef USE_XINERAMA
-#include<X11/extensions/Xinerama.h>
 #endif
 #ifdef USE_XFT
 #include <X11/Xft/Xft.h>
 #endif
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/uio.h>
-#include <sys/wait.h>
-#include <sys/select.h>
-#include <signal.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <limits.h>
+#include <stdlib.h> /* for malloc() and perhaps some other stuff */
+#include <stdio.h> /* for printf(), fprintf(), perror(), etc */
+#include <string.h> /* for strlen(), strcmp(), strncmp() and strcat() */
 
 #ifndef HAVE_VFORK
 #define vfork fork
@@ -40,7 +26,7 @@
 
 typedef struct {
 	Window w;
-	int action;
+	unsigned char action;
 } button;
 
 typedef struct {
@@ -92,49 +78,39 @@ enum layers {
 };
 
 typedef struct {
+	unsigned char code;
+	char *arg;
+} action;
+
+typedef struct {
 	KeySym sym;
 	KeyCode code;
-	unsigned int mask, action;
-	char *arg;
+	unsigned int mask;
+	action *a;
 } keybind;
 
-enum { /* key actions */
-	KA_NONE,
-	KA_NEXT,
-	KA_PREV,
-	KA_ICONIFY,
-	KA_ICONIFY_ALL,
-	KA_MAXIMIZE,
-	KA_FULLSCREEN,
-	KA_EXPAND,
-	KA_CLOSE,
-	KA_TITLE,
-	KA_TO_BORDER,
-	KA_EXEC,
-	KA_NEXT_DESKTOP,
-	KA_PREV_DESKTOP,
-	KA_STICKY,
-	KA_ONTOP,
-	KA_BELOW,
-	KA_RAISE,
-	KA_LOWER
-};
-
-enum { /* button actions */
-	BA_NONE,
-	BA_MOVE,
-	BA_RESIZE,
-	BA_RAISE,
-	BA_LOWER,
-	BA_MAXIMIZE,
-	BA_EXPAND,
-	BA_ICONIFY,
-	BA_CLOSE
-};
-
-enum { /* for drag() */
-	MOVE,
-	RESIZE
+enum { /* action codes */
+	A_NONE,
+	A_NEXT,
+	A_PREV,
+	A_ICONIFY,
+	A_ICONIFY_ALL,
+	A_MAXIMIZE,
+	A_FULLSCREEN,
+	A_EXPAND,
+	A_CLOSE,
+	A_TITLE,
+	A_TO_BORDER,
+	A_EXEC,
+	A_NEXT_DESKTOP,
+	A_PREV_DESKTOP,
+	A_STICKY,
+	A_ONTOP,
+	A_BELOW,
+	A_RAISE,
+	A_LOWER,
+	A_MOVE,
+	A_RESIZE
 };
 
 enum { /* for frame buttons */

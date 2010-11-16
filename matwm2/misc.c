@@ -1,4 +1,12 @@
 #include "matwm.h"
+#include <fcntl.h> /* for open() */
+/* for fstat */
+#include <sys/types.h>
+#include <sys/stat.h>
+/* for read() */
+#include <sys/types.h>
+#include <sys/uio.h>
+#include <unistd.h>
 
 void spawn(char *cmd) { /* run a command with sh -c */
 	if(vfork() == 0) {
@@ -97,4 +105,3 @@ void error(void) { /* for functions that set errno on error */
 	perror(perror_str);
 	exit(1);
 }
-

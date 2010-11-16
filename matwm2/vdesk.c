@@ -50,4 +50,3 @@ void client_to_desktop(client *c, int d) {
 		if(c->buttons[i].action == B_STICKY)
 			button_draw(c, &c->buttons[i]);
 }
-

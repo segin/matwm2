@@ -1,4 +1,4 @@
-0.0.100:
+0.1.0:
 	wrapped all screen dimensions stuff, so multiple screens can be used
 	initial xinerama support
 	don't calculate workarea dimensions 4 times to set them 4 times in ewmh.c
@@ -21,6 +21,41 @@
 	added comment about _NET_WM_STRUT_PARTIAL not being fully supported to BUGS
 	ewmh_screen option to set where the desktop windows and such go on xinerama setups
 	updated README and manual page about new features
+	**pre1 release
+	more generic explanation about the compile time options being printed at -defaults in the manual
+	type casting in DEBUG_EVENTS printf statements
+	client_visible() is now bool and returns false if called with NULL argument
+	moved a few includes that are only needed by one or two files from matwm.h to the files that need them, and added comments on why they are necessary
+	removed a few includes that are no longer necessary
+	added comment about why there is an include in evn.c and one about why we set input focus to the root window in quit()
+	corrected version number of this changelog entry
+	raise override_redirect windows on startup
+	check if any window we don't manage is focussed before focussing a new window because no other current window is there (when focus_new is disabled)
+	corrected intendation of Makefile a little
+	added --enable-debug flag for configure script
+	configure scripts says what libraries are needed for
+	action codes are typed unsigned char now
+	use action codes for drag modes
+	use pointers for events
+	call wlist_handle_event() and not handle_event() in wlist_start
+	don't allocate memory to grab a key without valid key action
+	key actions and mouse button actions are now the same thing (and this fixes double5 setting not working)
+	added options to assign button actions for the root window
+	reworked potentionally disfunctional code for handling (double) clicks
+	don't return true on every configurenotify event in screens_handle_event
+	corrected intendation in button_handle_event
+	make sure client_visbile() returns either true or false
+	preserve stacking with client_iconify_all()
+	keep override_redirect windows on top
+	check if next and prev keys have at least one modifier
+	added correct_center option, wich places windows that go in the center of the root window to the center of the current screen
+	added click_root option to enable/disable selecting ButtonPressMask on the root window
+	changed default configuration (set focus_new and map_center to true, and double2 to expand)
+	update the manual page above all(i hope) above changes, and made a small correction
+	nicer printing of X errors and -DDEBUG_EVENTS stuff
+	moved client_warp() and client_focus_first() to actions.c and client_over_fullscreen() to client.c
+	removed trailing new lines from a lot of files
+	**pre2 release
 
 0.0.99:
 	using pid_t instead of int for pid in spawn()
@@ -736,4 +771,3 @@
 0.0.5: changelog was part of e-mail i sent to myself at each release from this one on to 0.0.49 when real changelog was introduced, recovered changelog from all those mails at version 0.0.66
 	done some bugfixes and cleaned code up a little
 	made draw_client() (formerly client_draw()) draw border to window frames
-

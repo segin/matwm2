@@ -4,7 +4,7 @@ Window wlist;
 int wlist_width, wlist_screen;
 client *client_before_wlist;
 
-void wlist_start(XEvent ev) {
+void wlist_start(XEvent *ev) {
 	if(evh || !cn)
 		return;
 	if(!wlist_update())
@@ -16,8 +16,8 @@ void wlist_start(XEvent ev) {
 	evh = wlist_handle_event;
 	client_before_wlist = current;
 	wlist_update();
-	XMapRaised(dpy, wlist);
-	handle_event(ev);
+	XMapWindow(dpy, wlist);
+	wlist_handle_event(ev);
 }
 
 void wlist_end(int err) {
@@ -53,25 +53,28 @@ client *wlist_prev(void) {
 	return stacking[i];
 }
 
-bool wlist_handle_event(XEvent ev) {
+bool wlist_handle_event(XEvent *ev) {
 	int mask, i;
 	client *c;
-	switch(ev.type) {
+	action *a;
+	switch(ev->type) {
 		case KeyPress:
-			i = keyaction(ev);
-			if(i == KA_NEXT) {
+			a = keyaction(ev);
+			if(!a)
+				break;
+			if(a->code == A_NEXT) {
 				client_focus(wlist_next(), false);
-			} else if(i == KA_PREV) {
+			} else if(a->code == A_PREV) {
 				client_focus(wlist_prev(), false);
 			} else break;
 			XWarpPointer(dpy, None, current->wlist_item, 0, 0, 0, 0, wlist_width - 2, wlist_item_height - 1);
 			break;
 		case KeyRelease:
-			mask = ev.xkey.state;
+			mask = ev->xkey.state;
 			if(mask) {
-				mask ^= ev.xkey.state & key_to_mask(ev.xkey.keycode);
+				mask ^= ev->xkey.state & key_to_mask(ev->xkey.keycode);
 				for(i = 0; i < keyn; i++)
-					if((keys[i].action == KA_NEXT || keys[i].action == KA_PREV) && cmpmodmask(keys[i].mask, mask))
+					if((keys[i].a->code == A_NEXT || keys[i].a->code == A_PREV) && (keys[i].mask & mask) == keys[i].mask)
 						break;
 				if(i == keyn)
 					wlist_end(0);
@@ -79,7 +82,7 @@ bool wlist_handle_event(XEvent ev) {
 			break;
 		case ButtonPress:
 			if(click_focus) {
-				c = owner(ev.xbutton.window);
+				c = owner(ev->xbutton.window);
 				if(c)
 					client_focus(c, false);
 			}
@@ -132,4 +135,3 @@ void wlist_item_draw(client *c) {
 	#endif
 	XDrawString(dpy, c->wlist_item, (c == current) ? gc : igc, wlist_margin + (center_wlist_items ? center : 0), wlist_margin + font->max_bounds.ascent, c->name, strlen(c->name));
 }
-

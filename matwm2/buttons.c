@@ -108,19 +108,19 @@ void buttons_update(client *c) { /* maps the buttons if the window has no button
 	XMoveWindow(dpy, c->button_parent_right, client_width(c) + border_spacing - c->buttons_right_width, border_spacing);
 }
 
-bool button_handle_event(XEvent ev) {
+bool button_handle_event(XEvent *ev) {
 	int i, j;
 	client *c = NULL;
 	button *b = NULL;
 	for(i = 0; i < cn; i++)
 		for(j = 0; j < clients[i]->nbuttons; j++)
-		if(clients[i]->buttons[j].w == ev.xany.window) {
-			c = clients[i];
-			b = &clients[i]->buttons[j];
-		}
+			if(clients[i]->buttons[j].w == ev->xany.window) {
+				c = clients[i];
+				b = &clients[i]->buttons[j];
+			}
 	if(!c || !has_child(c->parent, c->window))
 		return false;
-	switch(ev.type) {
+	switch(ev->type) {
 		case Expose:
 			button_draw(c, b);
 			return true;
@@ -139,11 +139,11 @@ bool button_handle_event(XEvent ev) {
 			button_draw(c, b);
 			return true;
 		case ButtonPress:
-			if(ev.xbutton.button == Button1 || ev.xbutton.button == Button3)
+			if(ev->xbutton.button == Button1 || ev->xbutton.button == Button3)
 				button_down = 1;
 			return true;
 		case ButtonRelease:
-			if(ev.xbutton.button == Button1 || ev.xbutton.button == Button3) {
+			if(ev->xbutton.button == Button1 || ev->xbutton.button == Button3) {
 				if(button_current == b) {
 					if(b->action == B_ICONIFY)
 						client_iconify(c);
@@ -170,4 +170,3 @@ bool button_handle_event(XEvent ev) {
 	}
 	return false;
 }
-

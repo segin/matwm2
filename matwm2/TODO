@@ -1,3 +1,6 @@
-xinerama support
--- if above done and stable, release 0.1.0
-
+option to change settings for windows that match a given regex
+remote thingy to send commands to matwm
+themes support
+write a small toolkit that can do menus and dialogs and use it to give a menu for windows etc
+taskbar thingy, or just scripting support to the extend creating a taskbar as a script is possible - lua?
+--release 0.2.0

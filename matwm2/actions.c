@@ -87,21 +87,6 @@ void client_lower(client *c) {
 	clients_apply_stacking();
 }
 
-void client_over_fullscreen(client *c) { /* help a window getting above fullscreen windows by lowering it until it is under always-on-top windows */
-	int i, j, cc = client_number(stacking, c);
-	client *d;
-	if(fullscreen_stacking != FS_ONTOP)
-		return;
-	for(i = cc; i >= 0; i--)
-		if(stacking[i]->flags & FULLSCREEN) {
-			d = stacking[i];
-			for(j = i; j < cn - 1 && client_layer(stacking[j + 1]) <= client_layer(d) && !(stacking[j + 1]->flags & ICONIC) && j < cc; j++)
-				stacking[j] = stacking[j + 1];
-			stacking[j] = d;
-		}
-	clients_apply_stacking();
-}
-
 void client_fullscreen(client *c) {
 	int prev = client_layer(current);
 	client_toggle_state(c, FULLSCREEN);
@@ -287,18 +272,22 @@ void client_to_border(client *c, char *a) {
 void client_iconify_all(void) { /* iconify all windows, to be eventually restored afterwards by calling this function again */
 	int i;
 	if(all_iconic) {
-		for(i = 0; i < cn; i++)
-			if(clients[i]->flags & RESTORE) {
-				client_restore(clients[i]);
-				clients[i]->flags ^= RESTORE;
+		for(i = cn - 1; i >= 0; i--)
+			if(stacking[i]->flags & RESTORE) {
+				stacking[i]->flags ^= RESTORE;
+				client_restore(stacking[i]);
+				i++;
 			}
 		all_iconic = 0;
 	} else {
 		for(i = 0; i < cn; i++)
-			if(client_visible(clients[i]) && !(clients[i]->flags & DONT_LIST)) {
-				client_iconify(clients[i]);
-				clients[i]->flags |= RESTORE;
-			} else clients[i]->flags ^= clients[i]->flags & RESTORE;
+			stacking[i]->flags ^= stacking[i]->flags & RESTORE;
+		for(i = 0; i < cn; i++)
+			if(client_visible(stacking[i]) && !(stacking[i]->flags & DONT_LIST)) {
+				stacking[i]->flags |= RESTORE;
+				client_iconify(stacking[i]);
+				i--;
+			}
 		all_iconic = 1;
 	}
 	ewmh_update_showing_desktop();
@@ -311,25 +300,129 @@ void client_end_all_iconic(void) { /* to exit state induced by above function wi
 	}
 }
 
-void client_handle_button(client *c, XEvent ev, bool is_double) { /* for when a mouse button is clicked or doubleclicked on a window */
-	int action = buttonaction(ev.xbutton.button, is_double);
-	if(!(c->flags & DONT_FOCUS)) {
-		if(action == BA_MOVE)
-			drag_start(MOVE, ev.xbutton.button, ev.xbutton.x_root, ev.xbutton.y_root);
-		if(action == BA_RESIZE)
-			drag_start(RESIZE, ev.xbutton.button, ev.xbutton.x_root, ev.xbutton.y_root);
-	}
-	if(action == BA_MAXIMIZE)
-		client_toggle_state(c, MAXIMIZED_L | MAXIMIZED_R | MAXIMIZED_T | MAXIMIZED_B);
-	if(action == BA_EXPAND)
-		client_expand(c, EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B, false);
-	if(action == BA_ICONIFY)
-		client_iconify(c);
-	if(action == BA_CLOSE)
-		delete_window(c);
-	if(action == BA_RAISE)
-		client_raise(c);
-	if(action == BA_LOWER)
-		client_lower(c);
+void client_warp(client *c) { /* moves the pointer to a client */
+	XWarpPointer(dpy, None, c->parent, 0, 0, 0, 0, client_width_total_intern(c) - 1, client_height_total_intern(c) - 1);
 }
 
+void client_focus_first(void) { /* to be called when focus window is lost */
+	int i;
+	if(previous && (previous->desktop == desktop || previous->desktop == STICKY)) {
+		client_focus(previous, true);
+		return;
+	}
+	for(i = 0; i < cn; i++)
+		if(client_visible(stacking[i]) && !(stacking[i]->flags & DONT_FOCUS)) {
+			client_focus(stacking[i], true);
+			break;
+		}
+	if(i == cn)
+		client_focus(NULL, true);
+}
+
+void client_action(client *c, action *act, XEvent *ev) {
+	char *a;
+	int i = 0, j = 0;
+	if(!act) /* this happens */
+		return;
+	a = act->arg;
+	if(current)
+		switch(act->code) {
+			case A_ICONIFY:
+				client_iconify(c);
+				return;
+			case A_MAXIMIZE:
+				while(a && *a) {
+					if(*a == 'h')
+						i |= MAXIMIZED_L | MAXIMIZED_R;
+					if(*a == 'v')
+						i |= MAXIMIZED_T | MAXIMIZED_B;
+					if(*a == 'l')
+						i |= MAXIMIZED_L;
+					if(*a == 'r')
+						i |= MAXIMIZED_R;
+					if(*a == 'u')
+						i |= MAXIMIZED_T;
+					if(*a == 'd')
+						i |= MAXIMIZED_B;
+					a++;
+				}
+				client_toggle_state(c, i ? i : (MAXIMIZED_L | MAXIMIZED_R | MAXIMIZED_T | MAXIMIZED_B));
+				return;
+			case A_EXPAND:
+				while(a && *a) {
+					if(*a == 'h')
+						i |= EXPANDED_L | EXPANDED_R;
+					if(*a == 'v')
+						i |= EXPANDED_T | EXPANDED_B;
+					if(*a == 'l')
+						i |= EXPANDED_L;
+					if(*a == 'r')
+						i |= EXPANDED_R;
+					if(*a == 'u')
+						i |= EXPANDED_T;
+					if(*a == 'd')
+						i |= EXPANDED_B;
+					if(*a == 'a')
+						j = true;
+					a++;
+				}
+				client_expand(c, i ? i : (EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B), j);
+				return;
+			case A_FULLSCREEN:
+				client_fullscreen(c);
+				return;
+			case A_STICKY:
+				client_to_desktop(c, (c->desktop == STICKY) ? desktop : STICKY);
+				return;
+			case A_TITLE:
+				client_toggle_title(c);
+				return;
+			case A_TO_BORDER:
+				client_to_border(c, a);
+				return;
+			case A_ONTOP:
+				if(!(c->layer == DESKTOP))
+					client_set_layer(c, (c->layer == TOP) ? NORMAL : TOP);
+				return;
+			case A_BELOW:
+				if(!(c->layer == DESKTOP))
+					client_set_layer(c, (c->layer == BOTTOM) ? NORMAL : BOTTOM);
+				return;
+			case A_RAISE:
+				client_raise(c);
+				return;
+			case A_LOWER:
+				client_lower(c);
+				return;
+			case A_CLOSE:
+				delete_window(c);
+				return;
+			case A_MOVE:
+			case A_RESIZE:
+				if(ev)
+					if(ev->type == ButtonPress)
+						drag_start(act->code, ev->xbutton.button, ev->xbutton.x_root, ev->xbutton.y_root);
+				return;
+	}
+	switch(act->code) {
+	  case A_NEXT:
+		case A_PREV:
+			wlist_start(ev);
+			return;
+		case A_ICONIFY_ALL:
+			if(cn)
+				client_iconify_all();
+			return;
+		case A_EXEC:
+			spawn(a);
+			return;
+		case A_NEXT_DESKTOP:
+			if(desktop < dc - 1)
+				desktop_goto(desktop + 1);
+			return;
+		case A_PREV_DESKTOP:
+			if(desktop > 0)
+				desktop_goto(desktop - 1);
+			return;
+	}
+}

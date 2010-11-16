@@ -1,4 +1,15 @@
 #include "matwm.h"
+#include <signal.h> /* for signal() */
+#include <sys/select.h> /* for select() */
+#include <errno.h> /* for checking select() errors */
+/* for read() and write() */
+#include <sys/uio.h>
+#include <unistd.h>
+#include <sys/types.h> /* for waitpid(), read() and write() */
+/* for waitpid */
+#include <sys/wait.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 
 Display *dpy = NULL;
 int screen, depth, have_shape, shape_event, qsfd[2];
@@ -106,7 +117,7 @@ int main(int argc, char *argv[]) {
 	depth = DefaultDepth(dpy, screen);
 	visual = DefaultVisual(dpy, screen);
 	XSetErrorHandler(&xerrorhandler); /* set up error handler - to be found in x11.c */
-	XSelectInput(dpy, root, StructureNotifyMask | SubstructureRedirectMask | SubstructureNotifyMask | FocusChangeMask); /* some of this events can only be selected by one application, this will error if another window manager is running */
+	XSelectInput(dpy, root, StructureNotifyMask | SubstructureRedirectMask | SubstructureNotifyMask | FocusChangeMask | (!click_root ? ButtonPressMask : 0)); /* some of this events can only be selected by one application, this will error if another window manager is running */
 	xa_wm_protocols = XInternAtom(dpy, "WM_PROTOCOLS", False);
 	xa_wm_delete = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
 	xa_wm_state = XInternAtom(dpy, "WM_STATE", False);
@@ -130,11 +141,12 @@ int main(int argc, char *argv[]) {
 	ewmh_update();
 	XSetInputFocus(dpy, PointerRoot, RevertToPointerRoot, CurrentTime); /* set input focus to the root window */
 	XQueryTree(dpy, root, &dw, &dw, &wins, &nwins); /* look for windows already present */
-	for(ui = 0; ui < nwins; ui++) {
-		if(XGetWindowAttributes(dpy, wins[ui], &attr))
+	for(ui = 0; ui < nwins; ui++)
+		if(XGetWindowAttributes(dpy, wins[ui], &attr)) {
 			if(!attr.override_redirect && attr.map_state == IsViewable)
 				client_add(wins[ui], true);
-	}
+			else if(wins[ui] != wlist) XRaiseWindow(dpy, wins[ui]);
+		}
 	if(wins != NULL)
 		XFree(wins);
 	ewmh_update_clist();
@@ -145,7 +157,7 @@ int main(int argc, char *argv[]) {
 	while(1)
 		if(XPending(dpy)) { /* check if there are X events pending */
 			XNextEvent(dpy, &ev);
-			handle_event(ev);
+			handle_event(&ev);
 		} else { /* no X events are pending do select() on X file descriptor and our pipe */
 			fdsr = fds; /* reset fdsr */
 			sr = select(((qsfd[0] < dfd) ? dfd : qsfd[0]) + 1, &fdsr, (fd_set *) NULL, (fd_set *) NULL, (struct timeval *) NULL);
@@ -163,7 +175,7 @@ int main(int argc, char *argv[]) {
 }
 
 void quit(void) {
-	int i, d;
+	int d, i;
 	d = dc;
 	/* put windows back on the root window */
 	while(d != -1) {
@@ -179,8 +191,8 @@ void quit(void) {
 	for(i = cn - 1; i >= 0; i--) /* on top of that go the currently visible ones */
 		if(stacking[i]->desktop == desktop || stacking[i]->desktop == STICKY)
 			client_deparent(stacking[i]);
-	if(dpy) { /* if we have a connection with X, close it */
-		XSetInputFocus(dpy, PointerRoot, RevertToPointerRoot, CurrentTime);
+ if(dpy) { /* if we have a connection with X, close it */
+		XSetInputFocus(dpy, PointerRoot, RevertToPointerRoot, CurrentTime); /* this prevents focus being stuck with no WM running */
 		XCloseDisplay(dpy);
 	}
 }
@@ -200,4 +212,3 @@ void sighandler(int sig) {
 		act = REINIT;
 	qsfd_send(act);
 }
-

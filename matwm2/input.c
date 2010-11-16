@@ -13,32 +13,23 @@ void key_bind(char *str) {
 	keybind k;
 	int i;
 	k.sym = str_key(&str, &k.mask);
-	if(!str || k.sym == NoSymbol)
+	k.a = NULL;
+	str_action(str, &k.a);
+	if(!k.a)
 		return;
-	k.action = str_keyaction(eat(&str, " \t"));
-	if(str) {
-		while(*str == ' ' || *str == '\t')
-			str++;
-		k.arg = (char *) _malloc(strlen(str) + 1);
-		strncpy(k.arg, str, strlen(str) + 1);
-	} else if(k.action == KA_EXEC)
+	if((k.a->code == A_NEXT || k.a->code == A_PREV) && !k.mask) {
+		key_free(&k);
 		return;
-	else k.arg = NULL;
+	}
 	for(i = 0; i < keyn; i++)
 		if(keys[i].sym == k.sym && keys[i].mask == k.mask) {
-			if(keys[i].arg)
-				free((void *) keys[i].arg);
-			if(k.action == KA_NONE) {
-				keys[i] = keys[keyn - 1];
-				keys_alloc(--keyn);
-			} else keys[i] = k;
+			key_free(&keys[i]);
+			keys[i] = k;
 			return;
 		}
-	if(k.action != KA_NONE) {
-		keys_alloc(keyn + 1);
-		keys[keyn] = k;
-		keyn++;
-	}
+	keys_alloc(keyn + 1);
+	keys[keyn] = k;
+	keyn++;
 }
 
 void keys_update(void) {
@@ -56,11 +47,15 @@ void keys_ungrab(void) {
 		key_ungrab(keys[i]);
 }
 
+void key_free(keybind *k) {
+	free((void *) k->a->arg);
+	free((void *) k->a);
+}
+
 void keys_free(void) {
 	int i;
 	for(i = 0; i < keyn; i++)
-		if(keys[i].arg)
-			free((void *) keys[i].arg);
+		key_free(&keys[i]);
 	free((void *) keys);
 	keys = NULL;
 	keyn = 0;
@@ -80,7 +75,7 @@ void key_ungrab(keybind key) {
 		XUngrabKey(dpy, key.code, key.mask | mod_ignore[i], root);
 }
 
-int buttonaction(int button, int is_double) {
+action *buttonaction(int button, int is_double) {
 	if(is_double)
 		switch(button) {
 			case Button1:
@@ -107,22 +102,44 @@ int buttonaction(int button, int is_double) {
 			case Button5:
 				return button5;
 		}
-	return BA_NONE;
+	return A_NONE;
 }
 
-int keyaction(XEvent ev) {
-	int i;
-	for(i = 0; i < keyn; i++)
-		if(keys[i].code == ev.xkey.keycode && cmpmodmask(keys[i].mask, ev.xkey.state))
-			return keys[i].action;
-	return KA_NONE;
+action *root_buttonaction(int root_button, int is_double) {
+	if(is_double)
+		switch(root_button) {
+			case Button1:
+				return root_double1;
+			case Button2:
+				return root_double2;
+			case Button3:
+				return root_double3;
+			case Button4:
+				return root_double4;
+			case Button5:
+				return root_double5;
+		}
+	else
+		switch(root_button) {
+			case Button1:
+				return root_button1;
+			case Button2:
+				return root_button2;
+			case Button3:
+				return root_button3;
+			case Button4:
+				return root_button4;
+			case Button5:
+				return root_button5;
+		}
+	return A_NONE;
 }
 
-char *keyarg(XEvent ev) {
+action *keyaction(XEvent *ev) {
 	int i;
 	for(i = 0; i < keyn; i++)
-		if(keys[i].code == ev.xkey.keycode && cmpmodmask(keys[i].mask, ev.xkey.state) && keys[i].arg)
-			return keys[i].arg;
+		if(keys[i].code == ev->xkey.keycode && cmpmodmask(keys[i].mask, ev->xkey.state))
+			return keys[i].a;
 	return NULL;
 }
 
@@ -154,4 +171,3 @@ int cmpmodmask(int m1, int m2) {
 		m2 ^= m2 & mod_ignore[i];
 	return m1 == m2;
 }
-

@@ -89,8 +89,11 @@ int client_title_x(client *c) { /* returns the horizontal position of the client
 	return border_spacing + ((c->flags & HAS_BUTTONS) ? c->buttons_left_width + button_spacing : 0);
 }
 
-int client_visible(client *c) { /* to know if the client is visible on the current desktop */
-	return (c->desktop == desktop || c->desktop == STICKY) && !(c->flags & ICONIC);
+bool client_visible(client *c) { /* to know if the client is visible on the current desktop */
+	if(c) /* so we could call this without first checking if the client exist (we do) */
+		if((c->desktop == desktop || c->desktop == STICKY) && !(c->flags & ICONIC))
+			return true;
+	return false;
 }
 
 int client_layer(client *c) { /* returns the "layer" a client is on ("layers" are used for always-on-top and always-below) */
@@ -114,4 +117,3 @@ client *owner(Window w) { /* to know wich client owns the window, if one does */
 			return clients[i];
 	return NULL;
 }
-
