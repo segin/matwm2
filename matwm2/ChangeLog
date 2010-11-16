@@ -53,3 +53,10 @@
 	maximise, expand and fullscreen only work if CAN_MOVE and CAN_RESIZE are set for the client, like they schould (used to work as long as one of them was set)
 	CAN_RESIZE will be removed from flags if maximum size and minimum size are equal
 
+0.0.54:
+	handling configurerequests no longer uses client_move() and client_resize(), but sets the coördinates and calls client_update() - so it does not reset state etc, the first 2 functions named are to be called if the user initiated the movement
+	removed iconify on _NET_WM_SET_ACTIVE for current window - it is stupid and taskbar knows better apearantly
+	removed focus on map, turns out to be annoying
+	client_deparents puts windows where the new client_x() and client_y() functions say it is
+	free title pixmap on client_remove() - how could i forget that
+

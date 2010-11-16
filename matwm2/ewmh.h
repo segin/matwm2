@@ -34,8 +34,12 @@ enum {
   EWMH_ATOM_COUNT
 };
 
-#define NET_WM_MOVERESIZE_SIZE_BOTTOMRIGHT  4
-#define NET_WM_MOVERESIZE_MOVE              8 
-#define NET_WM_MOVERESIZE_SIZE_KEYBOARD    9
-#define NET_WM_MOVERESIZE_MOVE_KEYBOARD    10
+#define NET_WM_MOVERESIZE_SIZE_BOTTOMRIGHT      4
+#define NET_WM_MOVERESIZE_MOVE                  8
+#define NET_WM_MOVERESIZE_SIZE_KEYBOARD         9
+#define NET_WM_MOVERESIZE_MOVE_KEYBOARD         10
+
+#define NET_WM_STATE_REMOVE                     0
+#define NET_WM_STATE_ADD                        1
+#define NET_WM_STATE_TOGGLE                     2
 

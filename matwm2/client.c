@@ -73,7 +73,8 @@ void client_add(Window w) {
     nicons++;
   }
   clients[cn - 1] = new;
-  client_focus(new);
+  if(!current)
+    client_focus(new);
   if(evh == wlist_handle_event)
     wlist_update();
   ewmh_set_desktop(new, 0);
@@ -83,7 +84,7 @@ void client_add(Window w) {
 }
 
 void client_deparent(client *c) {
-  XReparentWindow(dpy, c->window, root, c->x + c->xo, c->y + c->yo);
+  XReparentWindow(dpy, c->window, root, client_x(c) + c->xo, client_y(c) + c->yo);
   XSetWindowBorderWidth(dpy, c->window, c->oldbw);
   XRemoveFromSaveSet(dpy, c->window);
 }
@@ -109,6 +110,7 @@ void client_remove(client *c) {
     if(cn)
       client_focus(stacking[0]);
   }
+  XFreePixmap(dpy, c->title_pixmap);
   free(c);
   clients_alloc();
   if(evh == wlist_handle_event)

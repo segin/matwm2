@@ -41,8 +41,15 @@ void handle_event(XEvent ev) {
       if(c) {
         if(!has_child(c->parent, c->window))
           break;
-        client_resize(c, (ev.xconfigurerequest.value_mask & CWWidth) ? ev.xconfigurerequest.width : c->width, (ev.xconfigurerequest.value_mask & CWHeight) ? ev.xconfigurerequest.height : c->height);
-        client_move(c, (ev.xconfigurerequest.value_mask & CWX) ? ev.xconfigurerequest.x - gxo(c, 0) : c->x, (ev.xconfigurerequest.value_mask & CWY) ? ev.xconfigurerequest.y - gyo(c, 0) : c->y);
+        if(ev.xconfigurerequest.value_mask & CWX)
+          c->x = ev.xconfigurerequest.x - gxo(c, 0);
+        if(ev.xconfigurerequest.value_mask & CWY)
+          c->y = ev.xconfigurerequest.y - gyo(c, 0);
+        if(ev.xconfigurerequest.value_mask & CWWidth)
+          c->width = ev.xconfigurerequest.width;
+        if(ev.xconfigurerequest.value_mask & CWHeight)
+          c->height = ev.xconfigurerequest.height;
+        client_update(c);
       } else if(has_child(root, ev.xconfigurerequest.window)) {
         XWindowChanges wc;
         wc.sibling = ev.xconfigurerequest.above;
@@ -79,7 +86,7 @@ void handle_event(XEvent ev) {
       break;
     case Expose:
       if(ev.xexpose.count == 0 && evh == wlist_handle_event && c && ev.xexpose.window == c->wlist_item)
-          wlist_item_draw(c);
+        wlist_item_draw(c);
       break;
     case ButtonPress:
       if(c && buttonaction(ev.xbutton.button) == BA_MOVE)

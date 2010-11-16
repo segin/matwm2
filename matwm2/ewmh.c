@@ -80,9 +80,7 @@ int ewmh_handle_event(XEvent ev) {
           if(c->flags & ICONIC) {
             client_restore(c);
             client_focus(c);
-          } else if(current == c)
-            client_iconify(c);
-          else {
+          } else {
             client_raise(c);
             client_focus(c);
           }
@@ -92,7 +90,7 @@ int ewmh_handle_event(XEvent ev) {
       if(ev.xclient.message_type == ewmh_atoms[NET_WM_STATE]) {
         if(c && ev.xclient.data.l[1] == ewmh_atoms[NET_WM_STATE_MAXIMIZED_HORZ] || ev.xclient.data.l[1] == ewmh_atoms[NET_WM_STATE_MAXIMIZED_VERT])
           client_maximise(c);
-        if(c && ev.xclient.data.l[1] == ewmh_atoms[NET_WM_STATE_FULLSCREEN])
+        if(c && ev.xclient.data.l[1] == ewmh_atoms[NET_WM_STATE_FULLSCREEN] && (ev.xclient.data.l[0] == NET_WM_STATE_TOGGLE || (ev.xclient.data.l[0] == NET_WM_STATE_ADD && !(c->flags & FULLSCREEN)) || (ev.xclient.data.l[0] == NET_WM_STATE_REMOVE && (c->flags & FULLSCREEN))))
           client_fullscreen(c);
         return 1;
       }

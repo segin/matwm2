@@ -6,6 +6,7 @@ int client_move(client *c, int x, int y) {
   c->width = client_width(c);
   c->height = client_height(c);
   c->flags ^= current->flags & (MAXIMISED | FULLSCREEN | EXPANDED);
+  ewmh_update_state(c); // schould actualy do this only when state really changes
   c->x = x;
   c->y = y;
   client_update_pos(c);
@@ -16,6 +17,7 @@ int client_resize(client *c, int width, int height) {
   c->x = client_x(c);
   c->y = client_y(c);
   c->flags ^= c->flags & (MAXIMISED | FULLSCREEN | EXPANDED);
+  ewmh_update_state(c); // same here
   if(c->normal_hints.flags & PResizeInc) {
     width -= (width - ((c->normal_hints.flags & PBaseSize) ? c->normal_hints.base_width : 0)) % c->normal_hints.width_inc;
     height -= (height - ((c->normal_hints.flags & PBaseSize) ? c->normal_hints.base_height : 0)) % c->normal_hints.height_inc;
