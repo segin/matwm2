@@ -27,6 +27,6 @@
 #define DEF_KEY_BOTTOMRIGHT     "Alt_L n"
 #define DEF_BW                  4
 #define DEF_H_ICON_COUNT        6
-#define MINSIZE                 15
+#define MINSIZE                 5
 #define CFGFN                   ".matwmrc"
 

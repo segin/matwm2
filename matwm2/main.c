@@ -1,10 +1,10 @@
 #include "matwm.h"
 
 Display *dpy;
-int screen, display_width, display_height;
+int screen, display_width, display_height, have_shape, shape_event;
 Window root;
 
-Atom xa_wm_protocols, xa_wm_delete, xa_wm_state, xa_wm_change_state;
+Atom xa_wm_protocols, xa_wm_delete, xa_wm_state, xa_wm_change_state, xa_motif_wm_hints;
 XSetWindowAttributes p_attr;
 
 void open_display(char *display) {
@@ -41,8 +41,8 @@ void quit(int sig) {
 
 int main(int argc, char *argv[]) {
   XEvent ev;
-  unsigned int i, nwins;
-  Window dw1, dw2, *wins;
+  unsigned int di, i, nwins;
+  Window dw, *wins;
   XWindowAttributes attr;
   open_display(0);
   XSetErrorHandler(&xerrorhandler);
@@ -51,13 +51,15 @@ int main(int argc, char *argv[]) {
   xa_wm_delete = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
   xa_wm_state = XInternAtom(dpy, "WM_STATE", False);
   xa_wm_change_state = XInternAtom(dpy, "WM_CHANGE_STATE", False);
+  xa_motif_wm_hints = XInternAtom(dpy, "_MOTIF_WM_HINTS", False);
   display_width = XDisplayWidth(dpy, screen);
   display_height = XDisplayHeight(dpy, screen);
   config_read();
   p_attr.override_redirect = True;
   p_attr.background_pixel = ibg.pixel;
   p_attr.event_mask = SubstructureRedirectMask | SubstructureNotifyMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask | ExposureMask;
-  XQueryTree(dpy, root, &dw1, &dw2, &wins, &nwins);
+  have_shape = XShapeQueryExtension(dpy, &shape_event, &di);
+  XQueryTree(dpy, root, &dw, &dw, &wins, &nwins);
   for(i = 0; i < nwins; i++) {
     XGetWindowAttributes(dpy, wins[i], &attr);
     if(!attr.override_redirect && attr.map_state == IsViewable)

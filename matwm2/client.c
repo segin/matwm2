@@ -1,4 +1,5 @@
 #include "matwm.h"
+#include <X11/extensions/shape.h>
 
 client *clients;
 int cn = 0, current = 0;
@@ -17,28 +18,31 @@ void add_client(Window w) {
   clients[cn].oldbw = attr.border_width;
   clients[cn].window = w;
   getnormalhints(cn);
+  get_mwm_hints(cn);
   clients[cn].x = attr.x - gxo(cn, 1);
   clients[cn].y = attr.y - gyo(cn, 1);
   clients[cn].iconic = (wm_state == IconicState) ? 1 : 0;
   clients[cn].maximised = 0;
   XFetchName(dpy, w, &clients[cn].name);
-  XSelectInput(dpy, w, PropertyChangeMask);
+  XSelectInput(dpy, w, PropertyChangeMask | EnterWindowMask);
   XSetWindowBorderWidth(dpy, w, 0);
-  clients[cn].parent = XCreateWindow(dpy, root, clients[cn].x, clients[cn].y, (wm_state == IconicState) ? icon_width : (clients[cn].width + (border_width * 2)), title_height + ((wm_state == IconicState) ? 4 : (clients[cn].height + (border_width * 2))), 0,
+  clients[cn].parent = XCreateWindow(dpy, root, clients[cn].x, clients[cn].y, (wm_state == IconicState) ? icon_width : (clients[cn].width + (border(cn) * 2)), ((wm_state == IconicState) ? title_height + 4 : (clients[cn].height + (border(cn) * 2) + title(cn))), 0,
                                      DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
                                      CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
   XAddToSaveSet(dpy, w);
-  XReparentWindow(dpy, w, clients[cn].parent, border_width, border_width + title_height);
+  XReparentWindow(dpy, w, clients[cn].parent, border(cn), border(cn) + title(cn));
   grab_button(clients[cn].parent, AnyButton, mousemodmask, ButtonPressMask | ButtonReleaseMask);
   configurenotify(cn);
   cn++;
   if(wm_state != IconicState) {
     XMapWindow(dpy, w);
-    XRaiseWindow(dpy, clients[cn - 1].parent);
+    restack_client(cn - 1, 1);
   } else sort_icons();
   XMapWindow(dpy, clients[cn - 1].parent);
   if(current >= cn - 1)
     focus(cn - 1);
+  if(have_shape)
+    set_shape(cn - 1);
 }
 
 void remove_client(int n, int fc) {
@@ -62,10 +66,12 @@ void remove_client(int n, int fc) {
 }
 
 void draw_client(int n) {
-  if(clients[n].name)
+  if(clients[n].name && (title(n) || clients[n].iconic))
     XDrawString(dpy, clients[n].parent, (n == current) ? gc : igc, (clients[n].iconic ? 2 : border_width) + font->max_bounds.lbearing, (clients[n].iconic ? 2 : border_width) + font->max_bounds.ascent, clients[n].name, strlen(clients[n].name));
-  XDrawRectangle(dpy, clients[n].parent, (n == current) ? gc : igc, 0, 0, (clients[n].iconic ? icon_width : (clients[n].width + (border_width * 2))) - 1, (clients[n].iconic ? 4 : (clients[n].height + (border_width * 2))) + title_height - 1);
-  XClearArea(dpy, clients[n].parent, clients[n].iconic ? icon_width - 3 : (clients[n].width + border_width - 1), (clients[n].iconic ? 2 : border_width), clients[n].iconic ? 2 : border_width, title_height, False);
+  if(clients[n].border || clients[n].iconic) {
+    XDrawRectangle(dpy, clients[n].parent, (n == current) ? gc : igc, 0, 0, (clients[n].iconic ? icon_width : (clients[n].width + (border_width * 2))) - 1, (clients[n].iconic ? title_height + 4 : (clients[n].height + (border_width * 2) + title(n))) - 1);
+    XClearArea(dpy, clients[n].parent, clients[n].iconic ? icon_width - 3 : (clients[n].width + border_width - 1), (clients[n].iconic ? 2 : border_width), clients[n].iconic ? 2 : border_width, title_height, False);
+  }
 }
 
 void alloc_clients(void) {
@@ -119,7 +125,7 @@ void resize(int n, int width, int height) {
     return;
   clients[n].maximised = 0;
   if(!clients[n].iconic)
-    XResizeWindow(dpy, clients[n].parent, width + (border_width * 2), height + (border_width * 2) + title_height);
+    XResizeWindow(dpy, clients[n].parent, width + (border(n) * 2), height + (border(n) * 2) + title(n));
   XResizeWindow(dpy, clients[n].window, width, height);
   clients[n].width = width;
   clients[n].height = height;
@@ -139,14 +145,13 @@ void focus(int n) {
     XSetInputFocus(dpy, clients[n].window, RevertToPointerRoot, CurrentTime);
 }
 
-void next(int iconic, int warp) {
+void next(int iconic) {
   int i = current + 1 < cn ? current + 1 : 0;
   while(i < cn && i != current) {
     if(iconic ? clients[i].iconic : !clients[i].iconic) {
       focus(i);
       restack_client(current, 1);
-      if(warp)
-        XWarpPointer(dpy, None, clients[current].parent, 0, 0, 0, 0, iconic ? icon_width - 1 : clients[current].width + border_width,  (iconic ? 3 : (clients[current].height + border_width)) + title_height);
+      warp();
       return;
     }
     i++;
@@ -155,14 +160,13 @@ void next(int iconic, int warp) {
   }
 }
 
-void prev(int iconic, int warp) {
+void prev(int iconic) {
   int i = current - 1 >= 0 ? current - 1 : cn - 1;
   while(i >= 0 && i != current) {
     if(iconic ? clients[i].iconic : !clients[i].iconic) {
       focus(i);
       restack_client(current, 1);
-      if(warp)
-        XWarpPointer(dpy, None, clients[current].parent, 0, 0, 0, 0, iconic ? icon_width - 1 : clients[current].width + border_width,  (iconic ? 3 : (clients[current].height + border_width)) + title_height);
+      warp();
       return;
     }
     if(current < cn && !i)
@@ -190,7 +194,13 @@ void maximise(int n) {
   clients[n].prev_height = clients[n].height;
   restack_client(current, 1);
   move(n, 0, 0);
-  resize(n, display_width - (border_width * 2), display_height - ((border_width * 2) + title_height));
+  resize(n, display_width - (border(n) * 2), display_height - ((border(n) * 2) + title_height));
   clients[n].maximised = 1;
+}
+
+void set_shape(int c) {
+  int bounding_shaped, di;
+  if(XShapeQueryExtents(dpy, clients[cn - 1].window, &bounding_shaped, &di, &di, &di, &di, &di, &di, &di, &di, &di) && bounding_shaped)
+    XShapeCombineShape(dpy, clients[cn - 1].parent, ShapeBounding, border(cn - 1), border(cn - 1) + title(cn - 1), clients[cn - 1].window, ShapeBounding, ShapeSet);
 }
 

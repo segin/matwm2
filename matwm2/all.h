@@ -10,10 +10,11 @@ void alloc_clients(void);
 void move(int n, int x, int y);
 void resize(int n, int width, int height);
 void focus(int n);
-void next(int iconic, int warp);
-void prev(int iconic, int warp);
+void next(int iconic);
+void prev(int iconic);
 void restack_client(int n, int top);
 void maximise(int n);
+void set_shape(int c);
 
 // config.c
 extern XColor bg, ibg, fg, ifg;
@@ -51,9 +52,9 @@ void mapkeys(void);
 
 // main.c
 extern Display *dpy;
-extern int screen, display_width, display_height;
+extern int screen, display_width, display_height, have_shape, shape_event;
 extern Window root;
-extern Atom xa_wm_protocols, xa_wm_delete, xa_wm_state, xa_wm_change_state;
+extern Atom xa_wm_protocols, xa_wm_delete, xa_wm_state, xa_wm_change_state, xa_motif_wm_hints;
 extern XSetWindowAttributes p_attr;
 void open_display(char *display);
 void end(void);
@@ -66,6 +67,7 @@ void getnormalhints(int n);
 int getstatehint(Window w);
 int get_wm_state(Window w);
 void set_wm_state(Window w, long state);
+void get_mwm_hints(int n);
 void configurenotify(int n);
 int has_protocol(Window w, Atom protocol);
 void delete_window(int n);

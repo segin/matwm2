@@ -68,6 +68,10 @@ void handle_event(XEvent ev) {
         restore(i);
       break;
     case EnterNotify:
+      if(c == cn)
+        for(c = 0; c < cn; c++)
+          if(clients[c].window == ev.xcrossing.window)
+            break;
       if(c < cn)
         focus(c);
       break;
@@ -107,22 +111,22 @@ void handle_event(XEvent ev) {
       if(current < cn && iskey(key_close))
         delete_window(current);
       if(iskey(key_next))
-        next(0, 1);
+        next(0);
       if(iskey(key_prev))
-        prev(0, 1);
+        prev(0);
       if(iskey(key_next_icon)) {
-        next(1, 1);
+        next(1);
         restack_icons(1);
       }
       if(iskey(key_prev_icon)) {
-        prev(1, 1);
+        prev(1);
         restack_icons(1);
       }
       if(current < cn && iskey(key_iconify)) {
         icons_ontop = 0;
         clients[current].iconic ? restore(current) : iconify(current);
         if(!clients[current].iconic)
-          XWarpPointer(dpy, None, clients[current].parent, 0, 0, 0, 0, clients[current].width + border_width,  clients[current].height + border_width + title_height);
+          warp();
       }
       if(current < cn && iskey(key_maximise)) {
         if(clients[current].iconic)
@@ -130,13 +134,17 @@ void handle_event(XEvent ev) {
         maximise(current);
       }
       if(current < cn && iskey(key_bottomleft))
-        move(current, 0, display_height - (clients[current].height + (border_width * 2) + title_height));
+        move(current, 0, display_height - (clients[current].height + (border_width * 2) + title(current)));
       if(current < cn && iskey(key_bottomright))
-        move(current, display_width - (clients[current].width + (border_width * 2)), display_height - (clients[current].height + (border_width * 2) + title_height));
+        move(current, display_width - (clients[current].width + (border_width * 2)), display_height - (clients[current].height + (border_width * 2) + title(current)));
       if(current < cn && iskey(key_topright))
         move(current, display_width - (clients[current].width + (border_width * 2)), 0);
       if(current < cn && iskey(key_topleft))
         move(current, 0, 0);
+      break;
+    default:
+      if(c < cn && have_shape && ev.type == shape_event)
+        set_shape(c);
       break;
   }
 }

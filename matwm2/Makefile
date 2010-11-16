@@ -1,6 +1,6 @@
 CC = cc
 XROOT = /usr/X11R6
-CFLAGS = -lX11 -I$(XROOT)/include -L$(XROOT)/lib
+CFLAGS = -lXext -lX11 -I$(XROOT)/include -L$(XROOT)/lib
 CFLAGS += -DDEBUG
 
 all:

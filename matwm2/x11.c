@@ -42,7 +42,7 @@ int get_wm_state(Window w) {
   unsigned long n, bar;
   unsigned char *data;
   long ret = WithdrawnState;
-  if(XGetWindowProperty(dpy, w, xa_wm_state, 0L, 2L, False, AnyPropertyType, &rt, &rf, &n, &bar, &data) == Success && n) {
+  if(XGetWindowProperty(dpy, w, xa_wm_state, 0, 1, False, AnyPropertyType, &rt, &rf, &n, &bar, &data) == Success && n) {
     ret = *(long *) data;
     XFree(data);
   }
@@ -56,14 +56,30 @@ void set_wm_state(Window w, long state) {
   XChangeProperty(dpy, w, xa_wm_state, xa_wm_state, 32, PropModeReplace, (unsigned char *) data, 2);
 }
 
+void get_mwm_hints(int n) {
+  Atom rt;
+  int rf;
+  unsigned long nir, bar;
+  MWMHints *mwmhints;
+  clients[n].title = 1;
+  clients[n].border = 1;
+  if(XGetWindowProperty(dpy, clients[n].window, xa_motif_wm_hints, 0, sizeof(MWMHints), False, AnyPropertyType, &rt, &rf, &nir, &bar, (unsigned char **) &mwmhints) == Success && nir == 5) {
+    if(mwmhints->flags = MWM_HINTS_DECORATIONS) {
+      clients[n].title = mwmhints->decorations & MWM_DECOR_BORDER;
+      clients[n].border = mwmhints->decorations & MWM_DECOR_TITLE;
+    }
+    XFree(mwmhints);
+  }
+}
+
 void configurenotify(int n)
 {
   XConfigureEvent ce;
   ce.type = ConfigureNotify;
   ce.event = clients[n].window;
   ce.window = clients[n].window;
-  ce.x = clients[n].x + border_width;
-  ce.y = clients[n].y + border_width + title_height;
+  ce.x = clients[n].x + border(n);
+  ce.y = clients[n].y + border(n) + title(n);
   ce.width = clients[n].width;
   ce.height = clients[n].height;
   ce.border_width = 0;
@@ -101,15 +117,15 @@ int gxo(int c, int i) {
   if(clients[c].normal_hints.flags & PWinGravity)
     switch(clients[c].normal_hints.win_gravity) {
       case StaticGravity:
-        return border_width;
+        return border(c);
       case NorthGravity:
       case SouthGravity:
       case CenterGravity:
-        return border_width + (i ? -clients[c].oldbw : (clients[c].width / 2));
+        return border(c) + (i ? -clients[c].oldbw : (clients[c].width / 2));
       case NorthEastGravity:
       case EastGravity:
       case SouthEastGravity:
-        return (border_width * 2) + (i ? -clients[c].oldbw * 2 : clients[c].width);
+        return (border(c) * 2) + (i ? -clients[c].oldbw * 2 : clients[c].width);
     }
   return 0;
 }
@@ -118,15 +134,15 @@ int gyo(int c, int i) {
   if(clients[c].normal_hints.flags & PWinGravity)
     switch(clients[c].normal_hints.win_gravity) {
       case StaticGravity:
-        return border_width + title_height;
+        return border(c) + title(c);
       case EastGravity:
       case WestGravity:
       case CenterGravity:
-        return border_width + ((title_height + (i ? -clients[c].oldbw : clients[c].height)) / 2);
+        return border(c) + ((title(c) + (i ? -clients[c].oldbw : clients[c].height)) / 2);
       case SouthEastGravity:
       case SouthGravity:
       case SouthWestGravity:
-        return (border_width * 2) + title_height + (i ? -clients[c].oldbw * 2 : clients[c].height);
+        return (border(c) * 2) + title(c) + (i ? -clients[c].oldbw * 2 : clients[c].height);
     }
   return 0;
 }
