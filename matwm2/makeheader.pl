@@ -1,4 +1,7 @@
 #!/usr/bin/env perl
+####################################################################
+# generates all.h wich defines most global variables and functions #
+####################################################################
 open H, ">", "all.h";
 opendir DIR, ".";
 foreach(readdir DIR) {

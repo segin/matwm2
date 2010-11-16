@@ -301,7 +301,7 @@ void ewmh_update_strut(void) {
 	Atom rt;
 	int i, rf;
 	unsigned long nir, bar;
-	long workarea[4], *data;
+	long workarea[16], *data;
 	unsigned char *p;
 	for(i = 0; i < 4; i++)
 		ewmh_strut[i] = 0;
@@ -320,7 +320,19 @@ void ewmh_update_strut(void) {
 	workarea[1] = ewmh_strut[2];
 	workarea[2] = display_width - (ewmh_strut[0] + ewmh_strut[1]);
 	workarea[3] = display_height - (ewmh_strut[2] + ewmh_strut[3]);
-	XChangeProperty(dpy, root, ewmh_atoms[NET_WORKAREA], XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &workarea, 4);
+	workarea[4] = ewmh_strut[0]; /* why 4 times? ask gnome developpers, this is the only way nautilus will listen to it */
+	workarea[5] = ewmh_strut[2];
+	workarea[6] = display_width - (ewmh_strut[0] + ewmh_strut[1]);
+	workarea[7] = display_height - (ewmh_strut[2] + ewmh_strut[3]);
+	workarea[8] = ewmh_strut[0];
+	workarea[9] = ewmh_strut[2];
+	workarea[10] = display_width - (ewmh_strut[0] + ewmh_strut[1]);
+	workarea[11] = display_height - (ewmh_strut[2] + ewmh_strut[3]);
+	workarea[12] = ewmh_strut[0];
+	workarea[13] = ewmh_strut[2];
+	workarea[14] = display_width - (ewmh_strut[0] + ewmh_strut[1]);
+	workarea[15] = display_height - (ewmh_strut[2] + ewmh_strut[3]);
+	XChangeProperty(dpy, root, ewmh_atoms[NET_WORKAREA], XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &workarea, sizeof(workarea) / sizeof(long));
 }
 
 void ewmh_update_showing_desktop(void) {

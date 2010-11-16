@@ -10,30 +10,33 @@ void cfg_read(int initial) {
 	char *home = getenv("HOME");
 	char *cfg, *cfgfn;
 	XGCValues gv;
+	/* read compiled-in default config */
 	cfg_parse_defaults(initial);
+	/* read global configuration file */
 	if(read_file(GCFGFN, &cfg) > 0) {
 		cfg_parse(cfg, initial);
 		free((void *) cfg);
 	}
+	/* read per-user configuration file */
 	if(home) {
 		cfgfn = (char *) malloc(strlen(home) + strlen(CFGFN) + 2);
-		strncpy(cfgfn, home, strlen(home) + 1);
-		strncat(cfgfn, "/", 1);
-		strncat(cfgfn, CFGFN, strlen(CFGFN));
+		sprintf(cfgfn, "%s/%s", home, CFGFN);
 		if(read_file(cfgfn, &cfg) > 0) {
 			cfg_parse(cfg, initial);
 			free((void *) cfg);
 		}
 		free((void *) cfgfn);
 	}
+	/* check if a valid font was set */
 	if(!font) {
 		fprintf(stderr, "error: font not found\n");
 		qsfd_send(ERROR);
 	}
-	keys_update();
+	/* set variables that depend on font dimensions */
 	text_height = font->max_bounds.ascent + font->max_bounds.descent;
 	title_height = text_height + title_spacing;
 	button_size = text_height - ((text_height % 2) ? 0 : 1);
+	/* create graphics contexts */
 	gv.line_width = 1;
 	gv.font = font->fid;
 	gv.foreground = fg.pixel;
@@ -44,6 +47,8 @@ void cfg_read(int initial) {
 	bgc = XCreateGC(dpy, root, GCLineWidth | GCForeground | GCFont, &gv);
 	gv.foreground = ibg.pixel;
 	ibgc = XCreateGC(dpy, root, GCLineWidth | GCForeground | GCFont, &gv);
+	/* grab keys etc */
+	keys_update();
 }
 
 void cfg_parse_defaults(int initial) {
@@ -202,12 +207,15 @@ void cfg_set_opt(char *key, char *value, int initial) {
 
 void cfg_reinitialize(void) {
 	int i;
+	/* free things from old configuration */
 	XFreeGC(dpy, gc);
 	XFreeGC(dpy, igc);
 	XFreeGC(dpy, bgc);
 	XFreeGC(dpy, ibgc);
 	keys_free();
+	/* read config again */
 	cfg_read(0);
+	/* update clients */
 	for(i = 0; i < cn; i++) {
 		XDestroyWindow(dpy, clients[i]->button_parent_left);
 		XDestroyWindow(dpy, clients[i]->button_parent_right);

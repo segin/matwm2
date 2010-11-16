@@ -10,8 +10,8 @@ CFLAGS    += -DSHAPE # comment out this line to disable shape support
 LDFLAGS   += -lXext # if shape support is disabled, this normally is no longer necessary and schould probally be commented out too
 
 #CFLAGS    += -DDEBUG -ggdb3 # -DDEBUG_EVENTS -DSYNC # for debugging
-CFLAGS    += -pedantic -std=c89 -W -Wall -Wno-unused-parameter
-CFLAGS    += -DVERSION=\"0.0.94\"
+CFLAGS    += -Wall -Wextra -Wno-unused-parameter
+CFLAGS    += -DVERSION=\"0.0.95\"
 
 OBJFILES  = actions.o buttons.o client.o config.o defcfg.o drag.o events.o evn.o ewmh.o info.o input.o main.o misc.o vdesk.o wlist.o x11.o
 HEADERS   = all.h defcfg.h ewmh.h matwm.h mwm_hints.h
@@ -24,9 +24,11 @@ matwm2: $(OBJFILES) $(HEADERS)
 clean:
 	$(RM) matwm2 *.o
 
+# converts default_matwmrc into C code that can be compiled into the binary
 defcfg:
 	perl makedefcfg.pl
 
+# generates all.h wich defines most global variables and functions
 header:
 	perl makeheader.pl
 
