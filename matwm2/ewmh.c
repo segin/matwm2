@@ -231,19 +231,21 @@ void ewmh_update_state(client *c) {
 }
 
 void ewmh_update_stacking(void) {
-	int i;
+	int i, n = 0;
 	Window data[cn];
-	for(i = 0; i < cn; i++)
-		data[cn - (i + 1)] = stacking[i]->window;
-	XChangeProperty(dpy, root, ewmh_atoms[NET_CLIENT_LIST_STACKING], XA_WINDOW, 32, PropModeReplace, (unsigned char *) data, cn);
+	for(i = cn - 1; i >= 0; i--)
+		if(!(stacking[i]->flags & DONT_LIST))
+			data[n++] = stacking[i]->window;
+	XChangeProperty(dpy, root, ewmh_atoms[NET_CLIENT_LIST_STACKING], XA_WINDOW, 32, PropModeReplace, (unsigned char *) data, n);
 }
 
 void ewmh_update_clist(void) {
-	int i;
+	int i, n = 0;
 	Window data[cn];
-	for(i = 0; i < cn; i++)
-		data[cn - (i + 1)] = clients[i]->window;
-	XChangeProperty(dpy, root, ewmh_atoms[NET_CLIENT_LIST], XA_WINDOW, 32, PropModeReplace, (unsigned char *) data, cn);
+	for(i = cn - 1; i >= 0; i--)
+		if(!(clients[i]->flags & DONT_LIST))
+			data[n++] = clients[i]->window;
+	XChangeProperty(dpy, root, ewmh_atoms[NET_CLIENT_LIST], XA_WINDOW, 32, PropModeReplace, (unsigned char *) data, n);
 	ewmh_update_stacking();
 	ewmh_update_strut();
 }
@@ -256,15 +258,13 @@ void ewmh_update_strut(void) {
 	for(i = 0; i < 4; i++)
 		ewmh_strut[i] = 0;
 	for(i = 0; i < cn; i++) {
-		if(XGetWindowProperty(dpy, clients[i]->window, ewmh_atoms[NET_WM_STRUT_PARTIAL], 0, 4, False, XA_CARDINAL, &rt, &rf, &nir, &bar, (unsigned char **) &data) != Success)
-			if(XGetWindowProperty(dpy, clients[i]->window, ewmh_atoms[NET_WM_STRUT], 0, 4, False, XA_CARDINAL, &rt, &rf, &nir, &bar, (unsigned char **) &data) != Success)
+		if(XGetWindowProperty(dpy, clients[i]->window, ewmh_atoms[NET_WM_STRUT_PARTIAL], 0, 4, False, XA_CARDINAL, &rt, &rf, &nir, &bar, (unsigned char **) &data) != Success || nir < 4)
+			if(XGetWindowProperty(dpy, clients[i]->window, ewmh_atoms[NET_WM_STRUT], 0, 4, False, XA_CARDINAL, &rt, &rf, &nir, &bar, (unsigned char **) &data) != Success || nir < 4)
 				continue;
-		if(nir == 4) {
-				ewmh_strut[0] += data[0];
-				ewmh_strut[1] += data[1];
-				ewmh_strut[2] += data[2];
-				ewmh_strut[3] += data[3];
-		}
+		ewmh_strut[0] += data[0];
+		ewmh_strut[1] += data[1];
+		ewmh_strut[2] += data[2];
+		ewmh_strut[3] += data[3];
 		XFree((void *) data);
 	}
 	workarea[0] = ewmh_strut[0];

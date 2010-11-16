@@ -23,5 +23,5 @@ install:	matwm2
 		install matwm2.1 $(manprefix)/man/man1
 
 deinstall:
-		rm -f $(prefix)/bin/matwm2 $(manprefix)/man/man1/matwm2.1
+		rm -f $(prefix)/bin/matwm2 $(manprefix)/man/man1/matwm2.1* $(manprefix)/man/cat1/matwm2.1*
 

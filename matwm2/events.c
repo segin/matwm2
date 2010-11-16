@@ -134,6 +134,12 @@ void handle_event(XEvent ev) {
 				if(!(current->layer == DESKTOP))
 					client_set_layer(current, (current->layer == BOTTOM) ? NORMAL : BOTTOM);
 				return;
+			case KA_RAISE:
+				client_raise(current);
+				return;
+			case KA_LOWER:
+				client_lower(current);
+				return;
 			case KA_CLOSE:
 				delete_window(current);
 				return;
@@ -148,19 +154,19 @@ void handle_event(XEvent ev) {
 				client_add(ev.xmaprequest.window);
 				ewmh_update_clist();
 			}
-			break;
+			return;
 		case DestroyNotify:
 			c = owner(ev.xdestroywindow.window);
 			if(c && c->window == ev.xdestroywindow.window) {
 				client_remove(c);
 				ewmh_update_clist();
 			}
-			break;
+			return;
 		case ConfigureRequest:
 			c = owner(ev.xconfigurerequest.window);
 			if(c) {
 				if(!has_child(c->parent, c->window))
-					break;
+					return;
 				if(ev.xconfigurerequest.value_mask & CWX)
 					c->x = ev.xconfigurerequest.x - gxo(c, 0);
 				if(ev.xconfigurerequest.value_mask & CWY)
@@ -180,14 +186,14 @@ void handle_event(XEvent ev) {
 				wc.height = ev.xconfigurerequest.height;
 				XConfigureWindow(dpy, ev.xconfigurerequest.window, ev.xconfigurerequest.value_mask, &wc);
 			}
-			break;
+			return;
 		case MappingNotify:
 			if(ev.xmapping.request != MappingPointer) {
 				keys_ungrab();
 				XRefreshKeyboardMapping(&ev.xmapping);
 				keys_update();
 			}
-			break;
+			return;
 		case KeyPress:
 			if(keyaction(ev) == KA_NEXT || keyaction(ev) == KA_PREV)
 				wlist_start(ev);
@@ -200,7 +206,7 @@ void handle_event(XEvent ev) {
 				desktop_goto(desktop + 1);
 			if(keyaction(ev) == KA_PREV_DESKTOP && desktop > 0)
 				desktop_goto(desktop - 1);
-			break;
+			return;
 		case ConfigureNotify:
 			if(root == ev.xconfigure.window) {
 				display_width = ev.xconfigure.width;
@@ -211,7 +217,7 @@ void handle_event(XEvent ev) {
 				for(i = 0; i < cn; i++)
 					client_update_size(clients[i]);
 			}
-			break;
+			return;
 	}
 }
 

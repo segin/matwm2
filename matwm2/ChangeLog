@@ -131,3 +131,18 @@
 	wrote a man page
 	topleft, topright, bottomleft and bottomright key actions were replaced by new to_corner
 
+0.0.65:
+	updated TODO and BUGS concerning the introduction of the man page etc
+	fixed deinstall target of Makefile a bit (man page schould be propperly deleted now)
+	client_to_corner() also warps the mouse
+	added a bit of info about virtual desktops in the manual page
+	added raise and lower key action, added info about button and key actions for raising and lowering in man
+	added information about the window list shown when next or prev key action is invoked in man
+	resize drag tries to keep window corner under mouse cursor
+	added checking for CAN_MOVE bit in client_to_border
+	~ in man page replaced by $HOME
+	more detailed description of window list behaviour in man page
+	replaced break statements in hande_event() with return
+	DONT_LIST flag will also be respected for EWMH client list
+	listen to NET_WM_STRUT if no NET_WM_STRUT_PARTIAL is there
+

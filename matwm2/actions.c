@@ -198,8 +198,10 @@ void client_save(client *c) {
 
 void client_to_border(client *c, char *a) {
 	int x = client_x(c), y = client_y(c);
+	if(!(c->flags & CAN_MOVE))
+		return;
 	while(a && *a) {
-			if(*a == 'l')
+		if(*a == 'l')
 			x = ewmh_strut[0];
 		if(*a == 'r')
 			x = display_width - (client_width_total(c) + ewmh_strut[1]);
@@ -210,5 +212,6 @@ void client_to_border(client *c, char *a) {
 		a++;
 	}
 	client_move(c, x, y);
+	client_warp(c);
 }
 

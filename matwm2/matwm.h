@@ -80,7 +80,9 @@ enum {
 	KA_PREV_DESKTOP,
 	KA_STICKY,
 	KA_ONTOP,
-	KA_BELOW
+	KA_BELOW,
+	KA_RAISE,
+	KA_LOWER,
 };
 
 enum {

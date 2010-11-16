@@ -1,4 +1,4 @@
-.TH matwm2 1 "September 20, 2009" "" ""
+.TH matwm2 1 "September 24, 2009" "" ""
 .SH NAME
 matwm2 \- Window manager for X11
 .SH SYNOPSIS
@@ -7,7 +7,7 @@ matwm2 \- Window manager for X11
 .B ] [ \-defaults ]
 .SH DESCRIPTION
 .B matwm2
-is a simple window manager for X11. It features window frames with titlebar and buttons, configurable key bindings and mouse buttons, support for EWMH and motif hints.
+is a simple window manager for X11. It features window frames with titlebar and buttons, configurable key bindings and mouse buttons, support for EWMH and motif hints and virtual desktops.
 .PP
 Explanition of the various options in the configuration file(s) below combined with the default configuration, schould give you an idea of how to use matwm2. Further just keep in mind there is no default built-in way of launching applications exept the ctrl-mod1-return key binding, wich spawns an xterm. Window borders have 4 buttons, wich do the same as the following key actions explained below (from left to right): "iconify", "expand", "maximise" and "close". Windows can be focussed by moving the mouse cursor over them.
 .SH OPTIONS
@@ -18,7 +18,7 @@ Print built-in default configuration to stdout.
 .SH FILES
 .IP /etc/matwmrc
 System wide configuration file.
-.IP ~/.matwmrc
+.IP $HOME/.matwmrc
 Per user configuration file.
 .PP
 Both of these config files share the same format, and can be considered a list of "commands" that may or may not have arguments, separated by spaces. The commands themselves are separated by newlines.
@@ -35,7 +35,7 @@ Sets the foreground (text, border) color of window frames when they are not focu
 .IP "font [X11 font name]"
 Sets the font used for drawing text.
 .IP "button[1-5] [button action]"
-Sets the function mouse buttons have on window borders. Possible button actions are "move", "resize", "raise", "lower" and "none". "move" and "resize" raise the window and let the user drag it to resize or move it while the mouse button is held down.
+Sets the function mouse buttons have on window borders. Possible button actions are "move", "resize", "raise", "lower" and "none". "move" and "resize" raise the window and let the user drag it to resize or move it while the mouse button is held down. Moving windows over the right or left screen edge can be used to move them to the next- (at the right) or previous desktop (at the left). The "raise" and "lower" action send the window to the top or bottom of the stack respectively.
 .IP "border_width [integer]"
 Sets the width of window borders to [integer] pixels.
 .IP "snap [integer]"
@@ -57,9 +57,9 @@ Following is a list of possible key actions and their explanation.
 .IP "exec [command]"
 Invokes "sh -c [command]".
 .IP "next"
-Focus and raise the next window in the stacking.
+Focus the next window in the stacking. Pressing a key bound to this or the "prev" action will show you a list with all currently visible and all iconic windows, wich will dissapear when all modifiers of either key action are released, afterwards the window selected will be raised. If it is off screen it will be brought back on screen, also the mouse will be warped to the bottom right corner of the window.
 .IP "prev"
-Focus and raise the previous window in the stacking.
+Focus the previous window in the stacking.
 .IP "iconify"
 Iconify the current window (window will dissapear, but can be found in either a taskbar that complies with the EWMH specification or the window list that apears if one of the two functions above is called).
 .IP "maximise [direction][...]"
@@ -85,7 +85,11 @@ Go to the next virtual desktop.
 .IP "prev_desktop"
 Go to the previous virtual desktop.
 .IP "to_border [border][...]"
-Moves the current window to a border or corner of the screen, argument is one or more of l, r, t and b (left, right, top and bottom respectively).
+Move the current window to a border or corner of the screen, argument is one or more of l, r, t and b (left, right, top and bottom respectively).
+.IP "raise"
+Raise the current window to the top of the stack.
+.IP "lower"
+Lower the current window to the bottom of the stack.
 .SH AUTHOR
 Mattis Michel <sic_zer0@hotmail.com>
 .SH SEE ALSO

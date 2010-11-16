@@ -193,6 +193,10 @@ int str_keyaction(char *str) {
 		return KA_ONTOP;
 	if(strcmp(str, "below") == 0)
 		return KA_BELOW;
+	if(strcmp(str, "raise") == 0)
+		return KA_RAISE;
+	if(strcmp(str, "lower") == 0)
+		return KA_LOWER;
 	return KA_NONE;
 }
 

@@ -32,13 +32,16 @@ void drag_end(void) {
 }
 
 int drag_handle_event(XEvent ev) {
+	int x, y;
 	if(has_child(current->parent, current->window) || ev.type == DestroyNotify || ev.type == ButtonRelease)
 		switch(ev.type) {
 			case MotionNotify:
 				while(XCheckTypedEvent(dpy, MotionNotify, &ev));
-				if(drag_mode == RESIZE)
-					client_resize(current, snaph(current, ev.xmotion.x, snapv(current, ev.xmotion.x, ev.xmotion.y)) - drag_xo, snapv(current, snaph(current, ev.xmotion.x, ev.xmotion.y), ev.xmotion.y) - drag_yo);
-				else if(ev.xmotion.x == display_width - 1 && desktop < dc - 1) {
+				if(drag_mode == RESIZE) {
+					x = ev.xmotion.x + 2;
+					y = ev.xmotion.y + 2;
+					client_resize(current, snaph(current, x, snapv(current, x, y)) - drag_xo, snapv(current, snaph(current, x, y), y) - drag_yo);
+				} else if(ev.xmotion.x == display_width - 1 && desktop < dc - 1) {
 					client_move(current, -(drag_xo + 1), ev.xmotion.y - drag_yo);
 					XWarpPointer(dpy, None, root, 0, 0, 0, 0, 1, ev.xmotion.y);
 					desktop_goto(desktop + 1);
