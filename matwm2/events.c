@@ -128,22 +128,24 @@ void handle_event(XEvent ev) {
         client_fullscreen(current);
       if(current && keyaction(ev) == KA_EXPAND)
         client_expand(current);
+      if(current && keyaction(ev) == KA_STICKY)
+        client_to_desktop(current, (current->desktop == STICKY) ? desktop : STICKY);
       if(current && keyaction(ev) == KA_TITLE)
         client_toggle_title(current);
       if(current && keyaction(ev) == KA_BOTTOMLEFT) {
-        client_move(current, 0, display_height - client_height_total(current));
+        client_move(current, ewmh_strut[0], display_height - (client_height_total(current) + ewmh_strut[3]));
         client_warp(current);
       }
       if(current && keyaction(ev) == KA_BOTTOMRIGHT) {
-        client_move(current, display_width - client_width_total(current), display_height - client_height_total(current));
+        client_move(current, display_width - (client_width_total(current) + ewmh_strut[1]), display_height - (client_height_total(current) + ewmh_strut[3]));
         client_warp(current);
       }
       if(current && keyaction(ev) == KA_TOPRIGHT) {
-        client_move(current, display_width - client_width_total(current), 0);
+        client_move(current, display_width - (client_width_total(current) - ewmh_strut[1]), ewmh_strut[2]);
         client_warp(current);
       }
       if(current && keyaction(ev) == KA_TOPLEFT) {
-        client_move(current, 0, 0);
+        client_move(current, ewmh_strut[0], ewmh_strut[2]);
         client_warp(current);
       }
       if(cn && keyaction(ev) == KA_ICONIFY_ALL)

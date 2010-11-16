@@ -79,3 +79,14 @@
 	virtual desktops
 	_NET_REQUEST_FRAME_EXTENTS and _NET_FRAME_EXTENTS, hopefully handled and set in the right way
 
+0.0.58:
+	topleft, topright, bottomleft and bottomright key bindings now also contrain to the ewmh workspace
+	removed things from todo list that were already done in previous releases
+	introduced key action to make windows sticky
+	_NET_WM_DESKTOP messages to root window understood, so pager can move windows to other desktops etc
+	removed more dumb things from TODO
+	XFreePixmap() in client_remove() now right under freeing name, for clarity
+	clients_alloc() no longer fails on linusk if there are no clients left
+	on exit clients are now reparented in better order (current desktop and sticky windows on top, under it all desktops from left to right order, then iconic windows)
+	set input focus to root window on exit - this prevents some problems with clients that steal focus i hope
+

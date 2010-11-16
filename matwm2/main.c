@@ -96,17 +96,30 @@ int main(int argc, char *argv[]) {
 }
 
 void end(void) {
-  while(cn) {
-    if(stacking[cn - 1]->desktop != desktop)
-      XMapWindow(dpy, stacking[cn - 1]->window);
-    client_deparent(stacking[cn - 1]);
-    client_remove(stacking[cn - 1]);
+  int i, d;
+  d = ICONS;
+  while(d != 0) {
+    if(d != desktop)
+      for(i = cn - 1; i >= 0; i--)
+        if(stacking[i]->desktop == d) {
+          client_deparent(stacking[i]);
+          XMapWindow(dpy, stacking[i]->window);
+        }
+    if(d == ICONS)
+      d = dc;
+    else d--;
   }
+  for(i = cn - 1; i >= 0; i--)
+    if(stacking[i]->desktop == desktop || stacking[i]->desktop == STICKY)
+      client_deparent(stacking[i]);
+  while(cn)
+    client_remove(stacking[cn - 1]);
   if(stacking)
     free((void *) stacking);
   if(clients)
     free((void *) clients);
   keys_free();
+  XSetInputFocus(dpy, root, RevertToPointerRoot, CurrentTime);
   XCloseDisplay(dpy);
 }
 

@@ -36,6 +36,7 @@ void ewmh_initialize(void) {
   ewmh_atoms[NET_WM_ACTION_FULLSCREEN] = XInternAtom(dpy, "_NET_WM_ACTION_FULLSCREEN", False);
   ewmh_atoms[NET_WM_ACTION_MOVE] = XInternAtom(dpy, "_NET_WM_ACTION_MOVE", False);
   ewmh_atoms[NET_WM_ACTION_RESIZE] = XInternAtom(dpy, "_NET_WM_ACTION_RESIZE", False);
+  ewmh_atoms[NET_WM_ACTION_CHANGE_DESKTOP] = XInternAtom(dpy, "_NET_WM_ACTION_CHANGE_DESKTOP", False);
   ewmh_atoms[NET_WM_MOVERESIZE] = XInternAtom(dpy, "_NET_WM_MOVERESIZE", False);
   ewmh_atoms[NET_FRAME_EXTENTS] = XInternAtom(dpy, "_NET_FRAME_EXTENTS", False);
   ewmh_atoms[NET_REQUEST_FRAME_EXTENTS] = XInternAtom(dpy, "_NET_REQUEST_FRAME_EXTENTS", False);
@@ -96,6 +97,12 @@ int ewmh_handle_event(XEvent ev) {
       }
       if(ev.xclient.message_type == ewmh_atoms[NET_CURRENT_DESKTOP])
         desktop_goto(ev.xclient.data.l[0]);
+      if(c && ev.xclient.message_type == ewmh_atoms[NET_WM_DESKTOP]) {
+        if(ev.xclient.data.l[0] == 0xffffffff)
+          client_to_desktop(c, STICKY);
+        else if(ev.xclient.data.l[0] >= 0 && ev.xclient.data.l[0] < dc)
+          client_to_desktop(c, ev.xclient.data.l[0]);
+      }
       if(ev.xclient.message_type == ewmh_atoms[NET_REQUEST_FRAME_EXTENTS]) {
         long e[] = {border_width, border_width, border_width + title_height, border_width};
         XChangeProperty(dpy, ev.xclient.window, ewmh_atoms[NET_FRAME_EXTENTS], XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &e, 4);  
@@ -165,8 +172,8 @@ void ewmh_set_active(client *c) {
 }
 
 void ewmh_update_allowed_actions(client *c) {
-  int nactions = 2;
-  Atom actions[12] = {ewmh_atoms[NET_WM_ACTION_MINIMIZE], ewmh_atoms[NET_WM_ACTION_CLOSE]};
+  int nactions = 3;
+  Atom actions[12] = {ewmh_atoms[NET_WM_ACTION_MINIMIZE], ewmh_atoms[NET_WM_ACTION_CLOSE], ewmh_atoms[NET_WM_ACTION_CHANGE_DESKTOP]};
   if(c->flags & CAN_MOVE && c->flags & CAN_RESIZE) {
     actions[nactions++] = ewmh_atoms[NET_WM_ACTION_MAXIMIZE_HORZ];
     actions[nactions++] = ewmh_atoms[NET_WM_ACTION_MAXIMIZE_VERT];

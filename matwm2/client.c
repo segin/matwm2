@@ -115,6 +115,7 @@ void client_remove(client *c) {
   XDestroyWindow(dpy, c->wlist_item);
   if(c->name != no_title)
     XFree(c->name);
+  XFreePixmap(dpy, c->title_pixmap);
   for(i = client_number(clients, c) + 1; i < cn; i++)
     clients[i - 1] = clients[i];
   for(i = client_number(stacking, c) + 1; i < cn; i++)
@@ -126,7 +127,6 @@ void client_remove(client *c) {
       if(stacking[i]->desktop == desktop || stacking[i]->desktop == STICKY)
         client_focus(stacking[i]);
   }
-  XFreePixmap(dpy, c->title_pixmap);
   free(c);
   clients_alloc();
   if(evh == wlist_handle_event)
@@ -230,6 +230,13 @@ void client_warp(client *c) {
 }
 
 void clients_alloc(void) {
+  if(!cn) {
+    free(clients);
+    free(stacking);
+    clients = NULL;
+    stacking = NULL;
+    return;
+  }
   client **newptr = (client **) realloc((void *) clients, cn * sizeof(client *));
   if(!newptr)
     error();

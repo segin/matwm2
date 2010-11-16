@@ -21,6 +21,7 @@ key                   control mod1 x          maximise\n\
 key                   control mod1 f          fullscreen\n\
 key                   control mod1 e          expand\n\
 key                   control mod1 q          close\n\
+key                   control mod1 d          sticky\n\
 key                   control mod1 t          title\n\
 key                   control mod1 y          topleft\n\
 key                   control mod1 u          topright\n\
@@ -30,11 +31,12 @@ key                   control mod1 a          iconify_all\n\
 key                   control mod1 Right      next_desktop\n\
 key                   control mod1 Left       prev_desktop\n\
 key                   control mod1 Return     exec xterm\n\
-key                   mod4 q                  close\n\
 key                   mod4 s                  iconify\n\
 key                   mod4 x                  maximise\n\
 key                   mod4 f                  fullscreen\n\
 key                   mod4 e                  expand\n\
+key                   mod4 q                  close\n\
+key                   mod4 d                  sticky\n\
 key                   mod4 t                  title\n\
 key                   mod4 y                  topleft\n\
 key                   mod4 u                  topright\n\

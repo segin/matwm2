@@ -1,17 +1,14 @@
 man page
 site, new name
-maybe add key actions for raising and lowering windows
+maybe add key actions for raising and lowering windows etc
 also for moving them i gues
 watch config file for changes in thread (fstat, time) - and adapt select loop so it can also receive something to know it schould reload config instead of makeing mess of it
 also new config thing perhaps
-implement more EWMH stuffs, (allowed actions, and responding to state change requests)
+implement more EWMH stuffs
 click to focus option
-virtual desktops
 interface the layers
 more structure in events.c
 make window buttons configureable
-ewhm stuff eventually - so people could use a taskbar
-work @ mwm hints stuff?
 clean up (better naming of stuff!)
 bugfixes
 

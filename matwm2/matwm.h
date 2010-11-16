@@ -38,8 +38,8 @@ typedef struct {
 #define NO_STRUT        (1 << 10)
 #define DONT_LIST       (1 << 11)
 
-#define ICONS           -1
-#define STICKY          -2
+#define STICKY          -1
+#define ICONS           -2
 
 enum layers {
   TOPMOST,
@@ -74,7 +74,8 @@ enum {
   KA_BOTTOMLEFT,
   KA_EXEC,
   KA_NEXT_DESKTOP,
-  KA_PREV_DESKTOP
+  KA_PREV_DESKTOP,
+  KA_STICKY
 };
 
 enum {
