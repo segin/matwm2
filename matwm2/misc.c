@@ -80,3 +80,10 @@ void unescape(char *str) { /* to remove escape characters when we are no longer 
 	str[j] = 0;
 }
 
+void *_malloc(size_t size) { /* malloc with error checking */
+	void *r = malloc(size);
+	if(!r)
+		error();
+	return r;
+}
+

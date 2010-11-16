@@ -6,8 +6,9 @@ long ewmh_strut[4];
 void ewmh_initialize(void) {
 	Atom rt;
 	int rf;
-	long nir, bar, *d;
-	long vp[] = {0, 0};
+	unsigned long nir, bar;
+	unsigned char *p;
+	long vp[] = {0, 0}, d;
 	ewmh_atoms[NET_SUPPORTED] = XInternAtom(dpy, "_NET_SUPPORTED", False);
 	ewmh_atoms[NET_SUPPORTING_WM_CHECK] = XInternAtom(dpy, "_NET_SUPPORTING_WM_CHECK", False);
 	ewmh_atoms[NET_WM_NAME] =	XInternAtom(dpy, "_NET_WM_NAME", False);
@@ -54,15 +55,16 @@ void ewmh_initialize(void) {
 	XChangeProperty(dpy, wlist, ewmh_atoms[NET_WM_NAME], XA_STRING, 8, PropModeReplace, (unsigned char *) NAME, strlen(NAME));
 	XChangeProperty(dpy, root, ewmh_atoms[NET_DESKTOP_VIEWPORT], XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &vp, 2);
 	XDeleteProperty(dpy, root, ewmh_atoms[NET_DESKTOP_NAMES]);
-	if(XGetWindowProperty(dpy, root, ewmh_atoms[NET_CURRENT_DESKTOP], 0, 1, False, XA_CARDINAL, &rt, &rf, &nir, &bar, (unsigned char **) &d) == Success) {
+	if(XGetWindowProperty(dpy, root, ewmh_atoms[NET_CURRENT_DESKTOP], 0, 1, False, XA_CARDINAL, &rt, &rf, &nir, &bar, (unsigned char **) &p) == Success) {
 		if(nir) {
-			if(*d >= dc)
-				*d = dc - 1;
-			if(*d < 0)
-				*d = 0;
-			desktop_goto(*d);
+			d = *(long *) p; /* if we would just pass &d to XGetWindowProperty we break strict aliasing rules */
+			if(d >= dc)
+				d = dc - 1;
+			if(d < 0)
+				d = 0;
+			desktop_goto(d);
 		}
-		XFree((void *) d);
+		XFree((void *) p);
 	}
 	ewmh_update_number_of_desktops();
 	ewmh_set_desktop(desktop);
@@ -72,14 +74,16 @@ void ewmh_initialize(void) {
 
 int ewmh_handle_event(XEvent ev) {
 	client *c;
-	int i;
+	int i, xo, yo;
+	long extents[4];
 	switch(ev.type) {
 		case ClientMessage:
 			c = owner(ev.xclient.window);
 			if(c && ev.xclient.message_type == ewmh_atoms[NET_WM_MOVERESIZE]) {
 				if(ev.xclient.data.l[2] == NET_WM_MOVERESIZE_MOVE || ev.xclient.data.l[2] == NET_WM_MOVERESIZE_MOVE_KEYBOARD) {
 					client_focus(c);
-					int xo = client_width_total_intern(c) / 2, yo = client_height_total_intern(c) / 2;
+					xo = client_width_total_intern(c) / 2;
+					yo = client_height_total_intern(c) / 2;
 					XWarpPointer(dpy, None, c->parent, 0, 0, 0, 0, xo, yo);
 					drag_start(MOVE, AnyButton, client_x(c) + xo, client_y(c) + yo);
 				}
@@ -110,18 +114,18 @@ int ewmh_handle_event(XEvent ev) {
 			if(c && ev.xclient.message_type == ewmh_atoms[NET_WM_STATE]) {
 				int s = 0;
 				for(i = 1; i < 3; i++) {
-					if(ev.xclient.data.l[i] == ewmh_atoms[NET_WM_STATE_MAXIMIZED_HORZ])
+					if(((Atom) ev.xclient.data.l[i]) == ewmh_atoms[NET_WM_STATE_MAXIMIZED_HORZ])
 						s |= MAXIMIZED_L | MAXIMIZED_R;
-					if(ev.xclient.data.l[i] == ewmh_atoms[NET_WM_STATE_MAXIMIZED_VERT])
+					if(((Atom) ev.xclient.data.l[i]) == ewmh_atoms[NET_WM_STATE_MAXIMIZED_VERT])
 						s |= MAXIMIZED_T | MAXIMIZED_B;
 				}
 				if(s)
 					client_toggle_state(c, s);
-				if(ev.xclient.data.l[1] == ewmh_atoms[NET_WM_STATE_FULLSCREEN] && (ev.xclient.data.l[0] == NET_WM_STATE_TOGGLE || (ev.xclient.data.l[0] == NET_WM_STATE_ADD && !(c->flags & FULLSCREEN)) || (ev.xclient.data.l[0] == NET_WM_STATE_REMOVE && (c->flags & FULLSCREEN))))
+				if(((Atom) ev.xclient.data.l[1]) == ewmh_atoms[NET_WM_STATE_FULLSCREEN] && (ev.xclient.data.l[0] == NET_WM_STATE_TOGGLE || (ev.xclient.data.l[0] == NET_WM_STATE_ADD && !(c->flags & FULLSCREEN)) || (ev.xclient.data.l[0] == NET_WM_STATE_REMOVE && (c->flags & FULLSCREEN))))
 					client_fullscreen(c);
-				if(ev.xclient.data.l[1] == ewmh_atoms[NET_WM_STATE_ABOVE])
+				if(((Atom) ev.xclient.data.l[1]) == ewmh_atoms[NET_WM_STATE_ABOVE])
 					client_set_layer(c, (c->layer == TOP) ? NORMAL : TOP);
-				if(ev.xclient.data.l[1] == ewmh_atoms[NET_WM_STATE_BELOW])
+				if(((Atom) ev.xclient.data.l[1]) == ewmh_atoms[NET_WM_STATE_BELOW])
 					client_set_layer(c, (c->layer == BOTTOM) ? NORMAL : BOTTOM);
 				return 1;
 			}
@@ -131,8 +135,11 @@ int ewmh_handle_event(XEvent ev) {
 				if(ev.xclient.data.l[0] >= STICKY)
 					client_to_desktop(c, (ev.xclient.data.l[0] <= dc) ? ev.xclient.data.l[0] : dc - 1);
 			if(ev.xclient.message_type == ewmh_atoms[NET_REQUEST_FRAME_EXTENTS]) {
-				long e[] = {border_width, border_width, border_width + title_height, border_width};
-				XChangeProperty(dpy, ev.xclient.window, ewmh_atoms[NET_FRAME_EXTENTS], XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &e, 4);	
+				extents[0] = border_width;
+				extents[1] = border_width;
+				extents[2] = border_width + title_height;
+				extents[3] = border_width;
+				XChangeProperty(dpy, ev.xclient.window, ewmh_atoms[NET_FRAME_EXTENTS], XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &extents, 4);	
 			}
 			if(ev.xclient.message_type == ewmh_atoms[NET_SHOWING_DESKTOP])
 				client_iconify_all();
@@ -147,40 +154,45 @@ int ewmh_handle_event(XEvent ev) {
 	return 0;
 }
 
-int ewmh_get_hints(client *c) {
-	Atom rt, *data;
+void ewmh_get_hints(client *c) {
+	Atom rt, data;
 	int rf;
-	long nir, bar, *d;
-	if(XGetWindowProperty(dpy, c->window, ewmh_atoms[NET_WM_DESKTOP], 0, 1, False, XA_CARDINAL, &rt, &rf, &nir, &bar, (unsigned char **) &d) == Success) {
+	unsigned long nir, bar;
+	unsigned char *p;
+	long d;
+	if(XGetWindowProperty(dpy, c->window, ewmh_atoms[NET_WM_DESKTOP], 0, 1, False, XA_CARDINAL, &rt, &rf, &nir, &bar, (unsigned char **) &p) == Success) {
 		if(nir) {
-			if(*d < STICKY)
+			d = *(long *) p; /* if we would just pass &d to XGetWindowProperty we break strict aliasing rules */
+			if(d < STICKY)
 				c->desktop = 0;
-			else if(*d >= dc)
+			else if(d >= dc)
 				c->desktop = dc - 1;
-			else c->desktop = *d;
+			else c->desktop = d;
 		}
-		XFree((void *) d);
+		XFree((void *) p);
 	}
-	if(XGetWindowProperty(dpy, c->window, ewmh_atoms[NET_WM_STATE], 0, 1, False, XA_ATOM, &rt, &rf, &nir, &bar, (unsigned char **) &data) == Success) {
+	if(XGetWindowProperty(dpy, c->window, ewmh_atoms[NET_WM_STATE], 0, 1, False, XA_ATOM, &rt, &rf, &nir, &bar, (unsigned char **) &p) == Success) {
 		if(nir) {
-			if(*data == ewmh_atoms[NET_WM_STATE_FULLSCREEN])
+			data = *(Atom *) p; /* if we would just pass &data to XGetWindowProperty we break strict aliasing rules */
+			if(data == ewmh_atoms[NET_WM_STATE_FULLSCREEN])
 				c->flags |= FULLSCREEN;
-			if(*data == ewmh_atoms[NET_WM_STATE_ABOVE])
+			if(data == ewmh_atoms[NET_WM_STATE_ABOVE])
 				c->layer = TOP;
-			if(*data == ewmh_atoms[NET_WM_STATE_BELOW])
+			if(data == ewmh_atoms[NET_WM_STATE_BELOW])
 				c->layer = BOTTOM;
 		}
-		XFree((void *) data);
+		XFree((void *) p);
 	}
-	if(XGetWindowProperty(dpy, c->window, ewmh_atoms[NET_WM_WINDOW_TYPE], 0, 1, False, XA_ATOM, &rt, &rf, &nir, &bar, (unsigned char **) &data) == Success) {
+	if(XGetWindowProperty(dpy, c->window, ewmh_atoms[NET_WM_WINDOW_TYPE], 0, 1, False, XA_ATOM, &rt, &rf, &nir, &bar, (unsigned char **) &p) == Success) {
 		if(nir) {
-			if(*data == ewmh_atoms[NET_WM_WINDOW_TYPE_DESKTOP]) {
+			data = *(Atom *) p; /* if we would just pass &data to XGetWindowProperty we break strict aliasing rules */
+			if(data == ewmh_atoms[NET_WM_WINDOW_TYPE_DESKTOP]) {
 				c->flags ^= c->flags & (CAN_MOVE | CAN_RESIZE | HAS_BORDER | HAS_TITLE);
 				c->flags |= NO_STRUT | DONT_LIST | FULLSCREEN | CLICK_FOCUS | DESKTOP_LOCKED;
 				c->layer = DESKTOP;
 				c->desktop = STICKY;
 			}
-			if(*data == ewmh_atoms[NET_WM_WINDOW_TYPE_DOCK]) {
+			if(data == ewmh_atoms[NET_WM_WINDOW_TYPE_DOCK]) {
 				c->flags ^= c->flags & (CAN_MOVE | CAN_RESIZE | HAS_BORDER | HAS_TITLE);
 				c->flags |= NO_STRUT | DONT_LIST | DONT_FOCUS | DESKTOP_LOCKED | IS_TASKBAR;
 				c->desktop = STICKY;
@@ -188,17 +200,23 @@ int ewmh_get_hints(client *c) {
 					c->layer = TOP;
 			}
 		}
-		XFree((void *) data);
+		XFree((void *) p);
 	}
 }
 
 void ewmh_update_extents(client *c) {
-	long e[] = {client_border(c), client_border(c), client_border(c) + client_title(c), client_border(c)};
-	XChangeProperty(dpy, c->window, ewmh_atoms[NET_FRAME_EXTENTS], XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &e, 4);
+	long extents[4];
+	extents[0] = client_border(c);
+	extents[1] = client_border(c);
+	extents[2] = client_border(c) + client_title(c);
+	extents[3] = client_border(c);
+	XChangeProperty(dpy, c->window, ewmh_atoms[NET_FRAME_EXTENTS], XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &extents, 4);
 }
 
 void ewmh_update_geometry(void) {
-	long ds[] = {display_width, display_height};
+	long ds[2];
+	ds[0] = display_width;
+	ds[1] = display_height;
 	XChangeProperty(dpy, root, ewmh_atoms[NET_DESKTOP_GEOMETRY], XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &ds, 2);
 }
 
@@ -221,7 +239,10 @@ void ewmh_set_active(client *c) {
 
 void ewmh_update_allowed_actions(client *c) {
 	int nactions = 3;
-	Atom actions[12] = {ewmh_atoms[NET_WM_ACTION_CLOSE],  ewmh_atoms[NET_WM_ACTION_ABOVE], ewmh_atoms[NET_WM_ACTION_BELOW]};
+	Atom actions[12];
+	actions[0] = ewmh_atoms[NET_WM_ACTION_CLOSE];
+	actions[1] = ewmh_atoms[NET_WM_ACTION_ABOVE];
+	actions[2] = ewmh_atoms[NET_WM_ACTION_BELOW];
 	if(c->flags & CAN_MOVE && c->flags & CAN_RESIZE) {
 		actions[nactions++] = ewmh_atoms[NET_WM_ACTION_MAXIMIZE_HORZ];
 		actions[nactions++] = ewmh_atoms[NET_WM_ACTION_MAXIMIZE_VERT];
@@ -256,20 +277,22 @@ void ewmh_update_state(client *c) {
 
 void ewmh_update_stacking(void) {
 	int i, n = 0;
-	Window data[cn];
+	Window *data = _malloc(cn * sizeof(Window));
 	for(i = cn - 1; i >= 0; i--)
 		if(!(stacking[i]->flags & DONT_LIST))
 			data[n++] = stacking[i]->window;
 	XChangeProperty(dpy, root, ewmh_atoms[NET_CLIENT_LIST_STACKING], XA_WINDOW, 32, PropModeReplace, (unsigned char *) data, n);
+	free(data);
 }
 
 void ewmh_update_clist(void) {
 	int i, n = 0;
-	Window data[cn];
+	Window *data = _malloc(cn * sizeof(Window));
 	for(i = cn - 1; i >= 0; i--)
 		if(!(clients[i]->flags & DONT_LIST))
 			data[n++] = clients[i]->window;
 	XChangeProperty(dpy, root, ewmh_atoms[NET_CLIENT_LIST], XA_WINDOW, 32, PropModeReplace, (unsigned char *) data, n);
+	free(data);
 	ewmh_update_stacking();
 	ewmh_update_strut();
 }
@@ -279,17 +302,19 @@ void ewmh_update_strut(void) {
 	int i, rf;
 	unsigned long nir, bar;
 	long workarea[4], *data;
+	unsigned char *p;
 	for(i = 0; i < 4; i++)
 		ewmh_strut[i] = 0;
 	for(i = 0; i < cn; i++) {
-		if(XGetWindowProperty(dpy, clients[i]->window, ewmh_atoms[NET_WM_STRUT_PARTIAL], 0, 4, False, XA_CARDINAL, &rt, &rf, &nir, &bar, (unsigned char **) &data) != Success || nir < 4)
-			if(XGetWindowProperty(dpy, clients[i]->window, ewmh_atoms[NET_WM_STRUT], 0, 4, False, XA_CARDINAL, &rt, &rf, &nir, &bar, (unsigned char **) &data) != Success || nir < 4)
+		if(XGetWindowProperty(dpy, clients[i]->window, ewmh_atoms[NET_WM_STRUT_PARTIAL], 0, 4, False, XA_CARDINAL, &rt, &rf, &nir, &bar, (unsigned char **) &p) != Success || nir < 4)
+			if(XGetWindowProperty(dpy, clients[i]->window, ewmh_atoms[NET_WM_STRUT], 0, 4, False, XA_CARDINAL, &rt, &rf, &nir, &bar, (unsigned char **) &p) != Success || nir < 4)
 				continue;
+		data = (long *) p;
 		ewmh_strut[0] += data[0];
 		ewmh_strut[1] += data[1];
 		ewmh_strut[2] += data[2];
 		ewmh_strut[3] += data[3];
-		XFree((void *) data);
+		XFree((void *) p);
 	}
 	workarea[0] = ewmh_strut[0];
 	workarea[1] = ewmh_strut[2];

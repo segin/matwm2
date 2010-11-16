@@ -7,7 +7,7 @@ void client_add(Window w) {
 	XWindowAttributes attr;
 	int i, di, bounding_shaped, wm_state;
 	unsigned int dui;
-	client *new = (client *) malloc(sizeof(client));
+	client *new = (client *) _malloc(sizeof(client));
 	new->window = w;
 	/* set client state */
 	wm_state = get_wm_state(w);
@@ -15,7 +15,6 @@ void client_add(Window w) {
 		wm_state = get_state_hint(w);
 		set_wm_state(w, wm_state != WithdrawnState ? wm_state : NormalState);
 	}
-
 	/* read attributes and fill up client structure with them */
 	XGetWindowAttributes(dpy, w, &attr);
 	new->width = attr.width;
@@ -133,7 +132,6 @@ void client_deparent(client *c) { /* reparent a client's window to the root wind
 }
 
 void client_remove(client *c) {
-	XEvent ev;
 	int i;
 	if(c->flags & ICONIC)
 		nicons--;
@@ -166,7 +164,7 @@ void client_remove(client *c) {
 
 void client_grab_button(client *c, int button) {
 	int na = buttonaction(button, 0), da = buttonaction(button, 1);
-	if(!(!(c->flags & CAN_MOVE) && (na == BA_MOVE || na == BA_EXPAND || na == BA_MAXIMIZE || na == BA_NONE) && (da == BA_MOVE || da == BA_EXPAND || da == BA_MAXIMIZE || da == BA_NONE)) && !(!(c->flags & CAN_RESIZE) && (na == BA_RESIZE || na == BA_EXPAND || na == BA_MAXIMIZE || na == BA_NONE) && (da == BA_RESIZE || da == BA_EXPAND || da == BA_MAXIMIZE || da == BA_NONE)) && !(!(c->flags & CAN_MOVE) && !(c->flags & CAN_RESIZE) && (na == BA_MOVE && na == BA_RESIZE || na == BA_EXPAND || na == BA_MAXIMIZE || na == BA_NONE) && (da == BA_MOVE || da == BA_RESIZE || da == BA_EXPAND || da == BA_MAXIMIZE || da == BA_NONE)) && !(c->flags & DONT_FOCUS && (na == BA_MOVE || na == BA_RESIZE || na == BA_NONE) && (da == BA_MOVE || da == BA_RESIZE || da == BA_NONE))) {
+	if(!(!(c->flags & CAN_MOVE) && (na == BA_MOVE || na == BA_EXPAND || na == BA_MAXIMIZE || na == BA_NONE) && (da == BA_MOVE || da == BA_EXPAND || da == BA_MAXIMIZE || da == BA_NONE)) && !(!(c->flags & CAN_RESIZE) && (na == BA_RESIZE || na == BA_EXPAND || na == BA_MAXIMIZE || na == BA_NONE) && (da == BA_RESIZE || da == BA_EXPAND || da == BA_MAXIMIZE || da == BA_NONE)) && !(!(c->flags & CAN_MOVE) && !(c->flags & CAN_RESIZE) && (na == BA_MOVE || na == BA_RESIZE || na == BA_EXPAND || na == BA_MAXIMIZE || na == BA_NONE) && (da == BA_MOVE || da == BA_RESIZE || da == BA_EXPAND || da == BA_MAXIMIZE || da == BA_NONE)) && !(c->flags & DONT_FOCUS && (na == BA_MOVE || na == BA_RESIZE || na == BA_NONE) && (da == BA_MOVE || da == BA_RESIZE || da == BA_NONE))) {
 		button_grab(c->parent, button, mousemodmask, ButtonPressMask | ButtonReleaseMask);
 		if(nosnapmodmask && (na == BA_MOVE || na == BA_RESIZE || da == BA_MOVE || da == BA_RESIZE))
 			button_grab(c->parent, button, nosnapmodmask | mousemodmask, ButtonPressMask | ButtonReleaseMask);
@@ -224,12 +222,13 @@ void client_set_bg(client *c, XColor color, XColor border) { /* set (and apply) 
 }
 
 void clients_apply_stacking(void) { /* apply changes in the stacking */
-	int i = 0;
-	Window wins[cn + 1];
+	int i;
+	Window *wins = (Window *) _malloc((cn + 1) * sizeof(Window));
 	wins[0] = wlist;
 	for(i = 0; i < cn && !(stacking[i]->flags & ICONIC); i++)
 		wins[i + 1] = stacking[i]->parent;
 	XRestackWindows(dpy, wins, i + 1);
+	free(wins);
 	ewmh_update_stacking();
 	if(evh == wlist_handle_event)
 		wlist_update();
@@ -308,6 +307,7 @@ void client_clear_state(client *c) { /* to revert a client to normal state (as o
 }
 
 void clients_alloc(void) { /* to make sure enough memory is allocated for cn clients */
+	client **newptr;
 	if(!cn) {
 		free(clients);
 		free(stacking);
@@ -315,7 +315,7 @@ void clients_alloc(void) { /* to make sure enough memory is allocated for cn cli
 		stacking = NULL;
 		return;
 	}
-	client **newptr = (client **) realloc((void *) clients, cn * sizeof(client *));
+	newptr = (client **) realloc((void *) clients, cn * sizeof(client *));
 	if(!newptr)
 		error();
 	clients = newptr;

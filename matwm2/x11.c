@@ -1,17 +1,25 @@
 #include "matwm.h"
 
+int error_status = 0;
+
 int xerrorhandler(Display *display, XErrorEvent *xerror) { /* we set this as the X error handler in main() */
+#ifdef DEBUG
+	client *c;
+#endif
 	if(xerror->error_code == BadAccess && xerror->resourceid == root) {
-		fprintf(stderr,"error: root window at display %s is not available\n", XDisplayName(dn));
-		exit(1);
+		if(!error_status) { /* if we are still doing X stuff before handling the data in qsfd the error might occur again */
+			fprintf(stderr,"error: root window at display %s is not available\n", XDisplayName(dn));
+			qsfd_send(ERROR);
+			error_status++;
+		}
 	}
 #ifdef DEBUG
 	else {
 		char ret[666];
-		XGetErrorText(xerror->display, xerror->error_code, ret, 666);
-		client *c = owner(xerror->resourceid);
-		if(c) printf("%i (%s): x error: %s\n", xerror->resourceid, c->name, ret);
-		else printf("%i: x error: %s\n", xerror->resourceid, ret);
+		XGetErrorText(xerror->display, xerror->error_code, ret, sizeof(ret));
+		c = owner(xerror->resourceid);
+		if(c) printf("%i (%s): x error: %s\n", (int) xerror->resourceid, c->name, ret);
+		else printf("%i: x error: %s\n", (int) xerror->resourceid, ret);
 	}
 #endif
 	return 0;
@@ -59,32 +67,30 @@ void get_mwm_hints(client *c) { /* read motif hints */
 	Atom rt;
 	int rf;
 	unsigned long nir, bar;
+	unsigned char *p;
 	MWMHints *mwmhints;
-	if(XGetWindowProperty(dpy, c->window, xa_motif_wm_hints, 0, 3, False, AnyPropertyType, &rt, &rf, &nir, &bar, (unsigned char **) &mwmhints) == Success) {
+	if(XGetWindowProperty(dpy, c->window, xa_motif_wm_hints, 0, 3, False, AnyPropertyType, &rt, &rf, &nir, &bar, (unsigned char **) &p) == Success) {
 		if(nir > 2) {
+			mwmhints = (MWMHints *) p; /* schould we pass &mwmhints directly to XGetWindowProperty, we break strict aliasing rules */
 			if(mwmhints->flags & MWM_HINTS_FUNCTIONS) {
 				c->flags ^= c->flags & (HAS_TITLE | HAS_BORDER | CAN_MOVE | CAN_RESIZE);
-				if(mwmhints->functions & MWM_FUNC_ALL) {
-					mwmhints->functions &= ~MWM_FUNC_ALL;
-					mwmhints->functions = (MWM_FUNC_RESIZE | MWM_FUNC_MOVE) & (~mwmhints->functions);
-				}
+				if(mwmhints->functions & MWM_FUNC_ALL) /* this means reverse all bits */
+					mwmhints->functions = (MWM_FUNC_MOVE | MWM_FUNC_RESIZE) & (~mwmhints->functions);
 				if(mwmhints->functions & MWM_FUNC_MOVE)
 					c->flags |= CAN_MOVE;
 				if(mwmhints->functions & MWM_FUNC_RESIZE)
 					c->flags |= CAN_RESIZE;
 			}
 			if(mwmhints->flags & MWM_HINTS_DECORATIONS) {
-				if(mwmhints->decorations & MWM_DECOR_ALL) {
-					mwmhints->decorations &= ~MWM_DECOR_ALL;
-					mwmhints->decorations = (MWM_DECOR_TITLE | MWM_DECOR_BORDER | MWM_DECOR_RESIZEH) & (~mwmhints->decorations);
-				}
+				if(mwmhints->decorations & MWM_DECOR_ALL) /* equivalent of MWM_FUNC_ALL */
+					mwmhints->decorations = (MWM_DECOR_TITLE | MWM_DECOR_BORDER) & (~mwmhints->decorations);
 				if(mwmhints->decorations & MWM_DECOR_TITLE)
 					c->flags |= HAS_TITLE;
 				if(mwmhints->decorations & MWM_DECOR_BORDER)
 					c->flags |= HAS_BORDER;
 			}
 		}
-		XFree((void *) mwmhints);
+		XFree((void *) p);
 	}
 }
 
@@ -95,8 +101,7 @@ void set_shape(client *c) { /* make the parent window of c have the same shape a
 }
 #endif
 
-void configurenotify(client *c) /* informs a client about its geometry */
-{
+void configurenotify(client *c) { /* informs a client about its geometry */
 	XConfigureEvent ce;
 	ce.type = ConfigureNotify;
 	ce.event = c->window;
@@ -182,9 +187,9 @@ int has_child(Window parent, Window child) { /* checks if child is a child of pa
 
 int isviewable(Window w) { /* check if a window is actually viewable */
 	XWindowAttributes attr;
-	XGetWindowAttributes(dpy, w, &attr);
-	if(attr.map_state == IsViewable)
-		return 1;
+	if(XGetWindowAttributes(dpy, w, &attr) != 0)
+		if(attr.map_state == IsViewable)
+			return 1;
 	return 0;
 }
 

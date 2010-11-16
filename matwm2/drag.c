@@ -1,6 +1,7 @@
 #include "matwm.h"
 
-int drag_mode, drag_button, drag_xo, drag_yo;
+int drag_mode, drag_xo, drag_yo;
+unsigned int drag_button;
 
 void drag_start(int mode, int button, int x, int y) {
 	if(evh)

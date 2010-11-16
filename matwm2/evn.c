@@ -1,6 +1,6 @@
-#ifdef DEBUG_EVENTS
 #include "matwm.h"
 
+#ifdef DEBUG_EVENTS
 char *event_name(XEvent ev) { /* returns the X event type as a string - used for debugging */
 	switch(ev.type) {
 		case KeyPress:
@@ -73,5 +73,4 @@ char *event_name(XEvent ev) { /* returns the X event type as a string - used for
 			return "Unknown event type";
 	}
 }
-#endif
-
+#endif /* DEBUG_EVENTS */

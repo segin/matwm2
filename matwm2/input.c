@@ -21,7 +21,7 @@ void key_bind(char *str) {
 	if(str) {
 		while(*str == ' ' || *str == '\t')
 			str++;
-		k.arg = (char *) malloc(strlen(str) + 1);
+		k.arg = (char *) _malloc(strlen(str) + 1);
 		strncpy(k.arg, str, strlen(str) + 1);
 	} else if(k.action == KA_EXEC)
 		return;

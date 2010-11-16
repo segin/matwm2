@@ -1,3 +1,5 @@
+#ifndef __MWM_HINTS_H__
+#define __MWM_HINTS_H__
 typedef struct {
 	unsigned long	flags;
 	unsigned long	functions;
@@ -23,4 +25,4 @@ typedef struct {
 #define MWM_DECOR_MENU					(1L << 4)
 #define MWM_DECOR_MINIMIZE			(1L << 5)
 #define MWM_DECOR_MAXIMIZE			(1L << 6)
-
+#endif /* __MWM_HINTS_H__ */

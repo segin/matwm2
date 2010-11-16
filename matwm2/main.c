@@ -10,15 +10,17 @@ Colormap colormap;
 
 int main(int argc, char *argv[]) {
 	XEvent ev;
-	unsigned int i, nwins;
+	int i;
+	unsigned int ui, nwins;
 	Window dw, *wins;
 	XWindowAttributes attr;
 	struct sigaction qsa;
-	int dfd, di, sr, sig;
+	int dfd, di, sr, act;
 	fd_set fds, fdsr;
 	for(i = 1; i < argc; i++) {
 		if(strcmp(argv[i], "-defaults") == 0) {
-			printf(DEF_CFG);
+			for(ui = 0; ui < DEF_CFG_LINES; ui++)
+				printf("%s\n", def_cfg[ui]);
 			return 0;
 		}
 		if(strcmp(argv[i], "-version") == 0) {
@@ -79,10 +81,10 @@ int main(int argc, char *argv[]) {
 	ewmh_initialize();
 	XSetInputFocus(dpy, PointerRoot, RevertToPointerRoot, CurrentTime);
 	XQueryTree(dpy, root, &dw, &dw, &wins, &nwins);
-	for(i = 0; i < nwins; i++) {
-		XGetWindowAttributes(dpy, wins[i], &attr);
-		if(!attr.override_redirect && attr.map_state == IsViewable)
-			client_add(wins[i]);
+	for(ui = 0; ui < nwins; ui++) {
+		if(XGetWindowAttributes(dpy, wins[ui], &attr))
+			if(!attr.override_redirect && attr.map_state == IsViewable)
+				client_add(wins[ui]);
 	}
 	if(wins != NULL)
 		XFree(wins);
@@ -100,10 +102,10 @@ int main(int argc, char *argv[]) {
 			sr = select((qsfd[0] < dfd ? dfd : qsfd[0]) + 1, &fdsr, (fd_set *) NULL, (fd_set *) NULL, (struct timeval *) NULL);
 			if(sr == -1 && errno != EINTR)
 				error();
-			if(sr && FD_ISSET(qsfd[0], &fdsr) && read(qsfd[0], &sig, sizeof(int)) == sizeof(int)) {
-				if(sig == SIGUSR1)
+			if(sr && FD_ISSET(qsfd[0], &fdsr) && read(qsfd[0], &act, sizeof(int)) == sizeof(int)) {
+				if(act == REINIT)
 					cfg_reinitialize();
-				else exit(0);
+				else exit((act == ERROR) ? 1 : 0);
 			}
 		}
 }
@@ -140,12 +142,19 @@ void quit(void) {
 	XCloseDisplay(dpy);
 }
 
+void qsfd_send(int s) {
+	write(qsfd[1], &s, sizeof(s));
+}
+
 void error(void) {
 	perror("error");
-	exit(1);
+	qsfd_send(ERROR);
 }
 
 void qsh(int sig) {
-	write(qsfd[1], &sig, sizeof(int));
+	int act = QUIT;
+	if(sig == SIGUSR1)
+		act = REINIT;
+	qsfd_send(act);
 }
 

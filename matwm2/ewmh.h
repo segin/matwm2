@@ -1,3 +1,5 @@
+#ifndef __EWMH_H__
+#define __EWMH_H__
 enum {
   NET_SUPPORTED,
   NET_SUPPORTING_WM_CHECK,
@@ -50,4 +52,4 @@ enum {
 #define NET_WM_STATE_REMOVE                     0
 #define NET_WM_STATE_ADD                        1
 #define NET_WM_STATE_TOGGLE                     2
-
+#endif /* __EWMH_H__ */

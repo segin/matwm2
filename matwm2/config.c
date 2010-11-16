@@ -10,10 +10,7 @@ void cfg_read(int initial) {
 	char *home = getenv("HOME");
 	char *cfg, *cfgfn;
 	XGCValues gv;
-	cfg = (char *) malloc(strlen(DEF_CFG) + 1);
-	strncpy(cfg, DEF_CFG, strlen(DEF_CFG));
-	cfg_parse(cfg, initial);
-	free((void *) cfg);
+	cfg_parse_defaults(initial);
 	if(read_file(GCFGFN, &cfg) > 0) {
 		cfg_parse(cfg, initial);
 		free((void *) cfg);
@@ -31,13 +28,12 @@ void cfg_read(int initial) {
 	}
 	if(!font) {
 		fprintf(stderr, "error: font not found\n");
-		exit(1);
+		qsfd_send(ERROR);
 	}
 	keys_update();
 	text_height = font->max_bounds.ascent + font->max_bounds.descent;
 	title_height = text_height + title_spacing;
 	button_size = text_height - ((text_height % 2) ? 0 : 1);
-	nbuttons_left + nbuttons_right;
 	gv.line_width = 1;
 	gv.font = font->fid;
 	gv.foreground = fg.pixel;
@@ -48,6 +44,28 @@ void cfg_read(int initial) {
 	bgc = XCreateGC(dpy, root, GCLineWidth | GCForeground | GCFont, &gv);
 	gv.foreground = ibg.pixel;
 	ibgc = XCreateGC(dpy, root, GCLineWidth | GCForeground | GCFont, &gv);
+}
+
+void cfg_parse_defaults(int initial) {
+	char *opt, *key, *value;
+	int i, j;
+	for(i = 0; i < DEF_CFG_LINES; i++) {
+		j = strlen(def_cfg[i]);
+		opt = _malloc(j + 1);
+		strncpy(opt, def_cfg[i], j + 1);
+		value = eat(&opt, "#");
+  	unescape(value);
+		key = eat(&value, " \t");
+		if(value) {
+			while(*value == ' ' || *value == '\t')
+				value++;
+			for(j = strlen(value) - 1; value[j] == ' ' || value[j] == '\t'; j--);
+			value[j + 1] = 0;
+		}
+		cfg_set_opt(key, value, initial);
+		free(opt);
+	}
+	first = 0;
 }
 
 void cfg_parse(char *cfg, int initial) {
@@ -70,7 +88,6 @@ void cfg_parse(char *cfg, int initial) {
 }
 
 void cfg_set_opt(char *key, char *value, int initial) {
-	XColor dummy;
 	XFontStruct *newfont;
 	long i;
 	if(strcmp(key, "resetkeys") == 0)

@@ -86,9 +86,9 @@ void client_lower(client *c) {
 
 void client_over_fullscreen(client *c) { /* help a window getting above fullscreen windows by lowering it until it is under always-on-top windows */
 	int i, j, cc = client_number(stacking, c);
+	client *d;
 	if(fullscreen_stacking != FS_ONTOP)
 		return;
-	client *d;
 	for(i = cc; i >= 0; i--)
 		if(stacking[i]->flags & FULLSCREEN) {
 			d = stacking[i];
@@ -156,7 +156,6 @@ void client_expand_y(client *c, int d, int first) {  /* calculate vertical dimen
 }
 
 void client_expand(client *c, int d, int a) { /* see expand key action in the manual page for explanation of what this does */
-	int i;
 	if(!(c->flags & CAN_MOVE) || !(c->flags & CAN_RESIZE))
 		return;
 	if((c->flags & d) == d) {
@@ -213,7 +212,6 @@ void client_iconify(client *c) {
 }
 
 void client_restore(client *c) { /* restores iconic client */
-	int i;
 	if(!(c->flags & ICONIC))
 		return;
 	nicons--;

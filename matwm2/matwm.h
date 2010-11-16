@@ -1,21 +1,28 @@
+#ifndef __MATWM_H__
+#define __MATWM_H__
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 #include <X11/keysymdef.h>
 #include <X11/extensions/shape.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/uio.h>
+#include <sys/wait.h>
+#include <sys/select.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/uio.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <sys/select.h>
 #include <errno.h>
 
-#define NAME "matwm2"
+#define NAME "matwm2" /* our name, schould we forget it */
+#define CFGFN ".matwmrc" /* configuration file in $HOME */
+#define GCFGFN "/etc/matwmrc" /* global configuration file */
+#define MINSIZE 5 /* minimum size of windows (for both x and y) */
+#define NO_TITLE "-" /* windows that have no title get this name */
 
 typedef struct {
 	Window w;
@@ -32,7 +39,7 @@ typedef struct {
 	button      *buttons;
 } client;
 
-#define ICONIC          (1 << 0)
+#define ICONIC          (1 << 0) /* these bits are for the "flags" member of above structure */
 #define MAXIMIZED_L     (1 << 1)
 #define MAXIMIZED_R     (1 << 2)
 #define MAXIMIZED_T     (1 << 3)
@@ -56,7 +63,7 @@ typedef struct {
 #define DESKTOP_LOCKED  (1 << 21)
 #define IS_TASKBAR      (1 << 22)
 
-#define STICKY          -1
+#define STICKY          -1 /* special virtual desktop that is metaphoric for any virtual desktop */
 
 enum layers {
 	TOPMOST,
@@ -74,7 +81,7 @@ typedef struct {
 	char *arg;
 } keybind;
 
-enum {
+enum { /* key actions */
 	KA_NONE,
 	KA_NEXT,
 	KA_PREV,
@@ -96,7 +103,7 @@ enum {
 	KA_LOWER
 };
 
-enum {
+enum { /* button actions */
 	BA_NONE,
 	BA_MOVE,
 	BA_RESIZE,
@@ -108,12 +115,12 @@ enum {
 	BA_CLOSE
 };
 
-enum {
+enum { /* for drag() */
 	MOVE,
 	RESIZE
 };
 
-enum {
+enum { /* for frame buttons */
 	B_NONE,
 	B_CLOSE,
 	B_MAXIMIZE,
@@ -124,14 +131,20 @@ enum {
 	B_BELOW
 };
 
-enum {
+enum { /* fullscreen_stacking modes */
 	FS_NORMAL,
 	FS_ONTOP,
 	FS_ALWAYS_ONTOP
 };
 
+enum { /* for sending to qsfd pipe */
+	QUIT,
+	ERROR,
+	REINIT
+};
+
 #include "mwm_hints.h"
 #include "ewmh.h"
-#include "defaults.h"
+#include "defcfg.h"
 #include "all.h"
-
+#endif /* __MATWM_H__ */
