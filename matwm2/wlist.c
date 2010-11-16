@@ -103,6 +103,8 @@ int wlist_update(void) {
 	}
 	if(wlist_width > display_width)
 		wlist_width = display_width;
+	if(wlist_maxwidth && wlist_width > wlist_maxwidth + 2) /* add two because this specifies maximum width of items, not the list */
+		wlist_width = wlist_maxwidth + 2;
 	for(i = 0; i < cn; i++) {
 		if(i == cn - nicons)
 			wlist_height++;
@@ -116,12 +118,14 @@ int wlist_update(void) {
 }
 
 void wlist_item_draw(client *c) {
-	#ifdef XFT
+	int space = wlist_width - (2 + (wlist_margin * 2));
+	int center = (c->title_width < space) ? (space / 2) - (c->title_width / 2) : 0;
+	#ifdef USE_XFT
 	if(xftfont) {
 		XClearWindow(dpy, c->wlist_item);
-	  XftDrawString8(c->wlist_draw, (c == current) ? &xftfg : &xftifg, xftfont, center_wlist_items ? (wlist_width / 2) - c->title_width / 2 : wlist_margin, wlist_margin + xftfont->ascent, (unsigned char *) c->name, strlen(c->name));
+	  XftDrawString8(c->wlist_draw, (c == current) ? &xftfg : &xftifg, xftfont, wlist_margin + (center_wlist_items ? center : 0), wlist_margin + xftfont->ascent, (unsigned char *) c->name, strlen(c->name));
 	} else
 	#endif
-	XDrawString(dpy, c->wlist_item, (c == current) ? gc : igc, center_wlist_items ? (wlist_width / 2) - c->title_width / 2 : wlist_margin, wlist_margin + font->max_bounds.ascent, c->name, strlen(c->name));
+	XDrawString(dpy, c->wlist_item, (c == current) ? gc : igc, wlist_margin + (center_wlist_items ? center : 0), wlist_margin + font->max_bounds.ascent, c->name, strlen(c->name));
 }
 

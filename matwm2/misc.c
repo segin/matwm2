@@ -1,9 +1,9 @@
 #include "matwm.h"
 
 void spawn(char *cmd) { /* run a command with sh -c */
-	int pid = fork();
+	int pid = vfork();
 	if(pid == 0) {
-		if(fork() == 0) {
+		if(vfork() == 0) { /* we fork twice here to prevent leaving zombie processes around */
 			setsid();
 			if(dn)
 				setenv("DISPLAY", dn, 1);

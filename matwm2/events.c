@@ -33,7 +33,7 @@ void handle_event(XEvent ev) {
 				if(ev.xproperty.atom == XA_WM_NAME) {
 					if(c->name != no_title)
 						XFree(c->name);
-					#ifdef XFT
+					#ifdef USE_XFT
 					if(xftfont)
 						XftDrawDestroy(c->title_draw);
 					#endif
@@ -65,7 +65,7 @@ void handle_event(XEvent ev) {
 				XAllowEvents(dpy, ReplayPointer, CurrentTime);
 				if(ev.xbutton.window != c->window) {
 					if(lastclick + doubleclick_time > ev.xbutton.time && lastbutton == ev.xbutton.button && lastclick_client == c)
-						client_handle_button(c, ev, 1);
+						client_handle_button(c, ev, true);
 					lastclick = ev.xbutton.time;
 					lastclick_client = c;
 					lastbutton = ev.xbutton.button;
@@ -77,13 +77,13 @@ void handle_event(XEvent ev) {
 						client_raise(c);
 					return;
 				}
-				client_handle_button(c, ev, 0);
+				client_handle_button(c, ev, false);
 				return;
 			case FocusOut:
 				if(c == current && ev.xfocus.mode != NotifyGrab)
 					XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
 				return;
-			#ifdef SHAPE
+			#ifdef USE_SHAPE
 			default:
 				if(ev.type == shape_event) {
 					set_shape(c);
@@ -177,7 +177,7 @@ void handle_event(XEvent ev) {
 						client_focus(c);
 				}
 			} else if(has_child(root, ev.xmaprequest.window))
-				client_add(ev.xmaprequest.window);
+				client_add(ev.xmaprequest.window, false);
 			return;
 		case DestroyNotify:
 			c = owner(ev.xdestroywindow.window);
@@ -191,9 +191,9 @@ void handle_event(XEvent ev) {
 				if(!has_child(c->parent, c->window))
 					return;
 				if(ev.xconfigurerequest.value_mask & CWX)
-					c->x = ev.xconfigurerequest.x - gxo(c, 0);
+					c->x = ev.xconfigurerequest.x - gxo(c, false);
 				if(ev.xconfigurerequest.value_mask & CWY)
-					c->y = ev.xconfigurerequest.y - gyo(c, 0);
+					c->y = ev.xconfigurerequest.y - gyo(c, false);
 				if(ev.xconfigurerequest.value_mask & CWWidth)
 					c->width = ev.xconfigurerequest.width;
 				if(ev.xconfigurerequest.value_mask & CWHeight)

@@ -98,11 +98,11 @@ void button_draw(client *c, button *b) {
 }
 
 void buttons_update(client *c) { /* maps the buttons if the window has no buttons and schould have buttons and vice versa */
-	if(c->flags & HAS_BUTTONS && c->width <= c->buttons_left_width + c->buttons_right_width) {
+	if(c->flags & HAS_BUTTONS && c->width <= (c->buttons_left_width ? c->buttons_left_width + button_spacing : 0) + (c->buttons_right_width ? c->buttons_right_width + button_spacing : 0)) {
 		c->flags ^= HAS_BUTTONS;
 		XUnmapWindow(dpy, c->button_parent_left);
 		XUnmapWindow(dpy, c->button_parent_right);
-	} else if(!(c->flags & HAS_BUTTONS) && c->width > c->buttons_left_width + c->buttons_right_width) {
+	} else if(!(c->flags & HAS_BUTTONS) && c->width > (c->buttons_left_width ? c->buttons_left_width + button_spacing : 0) + (c->buttons_right_width ? c->buttons_right_width + button_spacing : 0)) {
 		c->flags |= HAS_BUTTONS;
 		XMapWindow(dpy, c->button_parent_left);
 		XMapWindow(dpy, c->button_parent_right);

@@ -13,6 +13,7 @@ char *def_cfg[DEF_CFG_LINES] = { /* we split up the default configuration into a
 	"title_spacing         2",
 	"button_spacing        2",
 	"wlist_margin          2",
+	"wlist_maxwidth        0",
 	"buttons_left          sticky ontop",
 	"buttons_right         iconify expand maximize close",
 	"center_title          false",

@@ -2,8 +2,8 @@
 
 XColor bg, ibg, fg, ifg, bfg, ibfg;
 GC gc, igc, bgc, ibgc;
-int border_spacing, border_width, button_spacing, wlist_margin, wlist_item_height, text_height, title_height, title_spacing, center_title, center_wlist_items, button_size, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first = 1, *buttons_right = NULL, nbuttons_right, *buttons_left = NULL, nbuttons_left, doubleclick_time, double1, double2, double3, double4, double5, fullscreen_stacking, map_center;
-#ifdef XFT
+int border_spacing, border_width, button_spacing, wlist_margin, wlist_maxwidth, wlist_item_height, text_height, title_height, title_spacing, center_title, center_wlist_items, button_size, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first = 1, *buttons_right = NULL, nbuttons_right, *buttons_left = NULL, nbuttons_left, doubleclick_time, double1, double2, double3, double4, double5, fullscreen_stacking, map_center;
+#ifdef USE_XFT
 XftFont *xftfont = NULL;
 XftColor xftfg, xftbg, xftifg, xftibg;
 #endif
@@ -32,7 +32,7 @@ void cfg_read(int initial) {
 		free((void *) cfgfn);
 	}
 	/* check if a valid font was set */
-	#ifdef XFT
+	#ifdef USE_XFT
 	if(!font && !xftfont) {
 	#else
 	if(!font) {
@@ -41,7 +41,7 @@ void cfg_read(int initial) {
 		qsfd_send(ERROR);
 	}
 	/* set variables that depend on font dimensions */
-	#ifdef XFT
+	#ifdef USE_XFT
 	if(xftfont)
 		text_height = xftfont->ascent + xftfont->descent;
 	else
@@ -62,7 +62,7 @@ void cfg_read(int initial) {
 	bgc = XCreateGC(dpy, root, GCLineWidth | GCForeground | (font ? GCFont : 0), &gv);
 	gv.foreground = ibg.pixel;
 	ibgc = XCreateGC(dpy, root, GCLineWidth | GCForeground | (font ? GCFont : 0), &gv);
-	#ifdef XFT
+	#ifdef USE_XFT
 	/* set Xft colors */
 	set_xft_color(&xftfg, fg);
 	set_xft_color(&xftbg, bg);
@@ -115,7 +115,7 @@ void cfg_parse(char *cfg, int initial) {
 }
 
 void cfg_set_opt(char *key, char *value, int initial) {
-	#ifdef XFT
+	#ifdef USE_XFT
 	XftFont *newxftfont;
 	#endif
 	XFontStruct *newfont;
@@ -147,7 +147,7 @@ void cfg_set_opt(char *key, char *value, int initial) {
 		if(newfont) {
 			if(font)
 				XFreeFont(dpy, font);
-			#ifdef XFT
+			#ifdef USE_XFT
 			if(xftfont) {
 				XftFontClose(dpy, xftfont);
 				xftfont = NULL;
@@ -155,7 +155,7 @@ void cfg_set_opt(char *key, char *value, int initial) {
 			#endif
 			font = newfont;
 		}
-		#ifdef XFT
+		#ifdef USE_XFT
 		else {
 			newxftfont = XftFontOpenName(dpy, screen, value);
 			if(newxftfont) {
@@ -194,6 +194,11 @@ void cfg_set_opt(char *key, char *value, int initial) {
 		i = strtol(value, NULL, 0);
 		if(i >= 0)
 			wlist_margin = i;
+	}
+	if(strcmp(key, "wlist_maxwidth") == 0) {
+		i = strtol(value, NULL, 0);
+		if(i >= 0)
+			wlist_maxwidth = i;
 	}
 	if(strcmp(key, "doubleclick_time") == 0) {
 		i = strtol(value, NULL, 0);
@@ -273,7 +278,7 @@ void cfg_set_opt(char *key, char *value, int initial) {
 
 void cfg_reinitialize(void) {
 	int i;
-	#ifdef XFT
+	#ifdef USE_XFT
 	int xft = xftfont ? 1 : 0;
 	#endif
 	/* free things from old configuration */
@@ -289,7 +294,7 @@ void cfg_reinitialize(void) {
 	p_attr.border_pixel = ibfg.pixel;
 	/* update clients */
 	for(i = 0; i < cn; i++) {
-		#ifdef XFT
+		#ifdef USE_XFT
 		if(xftfont && !xft)
 			clients[i]->wlist_draw = XftDrawCreate(dpy, clients[i]->wlist_item, visual, colormap);
 		if(!xftfont && xft) {
@@ -327,7 +332,7 @@ void str_color(char *str, XColor *c) {
 	}
 }
 
-#ifdef XFT
+#ifdef USE_XFT
 void set_xft_color(XftColor *xftcolor, XColor xcolor) {
 	xftcolor->pixel = xcolor.pixel;
 	xftcolor->color.red = xcolor.red;

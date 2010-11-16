@@ -1,3 +1,18 @@
+0.0.98:
+	updated synopsys section of manual page
+	SHAPE and XFT -> USE_SHAPE and USE_XFT
+	added parenthesis around assertion in client_add()
+	fixed bug that would make windows hinted to start iconic being mapped visible
+	removed adding comments from TODO, code is readable enough now in my opinion
+	Xft support disabled by default
+	renamed d argument of client_handle_button() and buttonaction() to is_double
+	use true and false for boolean values instead of 1 and 0, also use bool datatype (for wich a typedef and enum statement are added to matwm.h)
+	only use map_center behaviour (if enabled) for clients added because of MapRequest events
+	use vfork anyway - fuck the plan of making matwm valid ISO C90, it seems to be impossible
+	placed defcfg and header targets at the bottom of the makefile
+	removed HEADERS from makefile (depending on them doesn't work anyway apearantly)
+	fixed title window width calculation wich broke with last release
+
 0.0.97:
 	also did intendation for #ifdef stuff
 	makeheader.pl now handles #ifdef things too

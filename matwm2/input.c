@@ -82,8 +82,8 @@ void key_ungrab(keybind key) {
 		XUngrabKey(dpy, key.code, key.mask | mod_ignore[i], root);
 }
 
-int buttonaction(int button, int d) {
-	if(d)
+int buttonaction(int button, int is_double) {
+	if(is_double)
 		switch(button) {
 			case Button1:
 				return double1;

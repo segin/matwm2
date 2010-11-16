@@ -97,7 +97,7 @@ void get_mwm_hints(client *c) { /* read motif hints */
 	}
 }
 
-#ifdef SHAPE
+#ifdef USE_SHAPE
 void set_shape(client *c) { /* make the parent window of c have the same shape as its client window */
 	if(c->flags & SHAPED)
 		XShapeCombineShape(dpy, c->parent, ShapeBounding, client_border(c), client_border(c) + client_title(c), c->window, ShapeBounding, ShapeSet);
@@ -144,7 +144,7 @@ void delete_window(client *c) { /* for closing windows */
 	} else XKillClient(dpy, c->window);
 }
 
-int gxo(client *c, int initial) { /* returns offset for horizontal window gravity */
+int gxo(client *c, bool initial) { /* returns offset for horizontal window gravity */
 	if(c->normal_hints.flags & PWinGravity)
 		switch(c->normal_hints.win_gravity) {
 			case StaticGravity:
@@ -161,7 +161,7 @@ int gxo(client *c, int initial) { /* returns offset for horizontal window gravit
 	return ((c->flags & NO_STRUT) ? 0 : -ewmh_strut[0]);
 }
 
-int gyo(client *c, int initial) { /* returns offset for vertical window gravity */
+int gyo(client *c, bool initial) { /* returns offset for vertical window gravity */
 	if(c->normal_hints.flags & PWinGravity)
 		switch(c->normal_hints.win_gravity) {
 			case StaticGravity:

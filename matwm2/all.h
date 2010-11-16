@@ -41,8 +41,8 @@ void handle_event(XEvent ev);
 /* global variables from config.c */
 extern XColor bg, ibg, fg, ifg, bfg, ibfg;
 extern GC gc, igc, bgc, ibgc;
-extern int border_spacing, border_width, button_spacing, wlist_margin, wlist_item_height, text_height, title_height, title_spacing, center_title, center_wlist_items, button_size, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first, *buttons_right, nbuttons_right, *buttons_left, nbuttons_left, doubleclick_time, double1, double2, double3, double4, double5, fullscreen_stacking, map_center;
-#ifdef XFT
+extern int border_spacing, border_width, button_spacing, wlist_margin, wlist_maxwidth, wlist_item_height, text_height, title_height, title_spacing, center_title, center_wlist_items, button_size, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first, *buttons_right, nbuttons_right, *buttons_left, nbuttons_left, doubleclick_time, double1, double2, double3, double4, double5, fullscreen_stacking, map_center;
+#ifdef USE_XFT
 extern XftFont *xftfont;
 extern XftColor xftfg, xftbg, xftifg, xftibg;
 #endif
@@ -56,7 +56,7 @@ void cfg_parse(char *cfg, int initial);
 void cfg_set_opt(char *key, char *value, int initial);
 void cfg_reinitialize(void);
 void str_color(char *str, XColor *c);
-#ifdef XFT
+#ifdef USE_XFT
 void set_xft_color(XftColor *xftcolor, XColor xcolor);
 #endif
 void str_bool(char *str, int *b);
@@ -73,7 +73,7 @@ extern client **clients, **stacking, *current, *previous;
 extern int cn, nicons;
 
 /* functions from client.c */
-void client_add(Window w);
+void client_add(Window w, bool mapped);
 void client_show(client *c);
 void client_hide(client *c);
 void client_deparent(client *c);
@@ -104,14 +104,14 @@ int get_state_hint(Window w);
 int get_wm_state(Window w);
 void set_wm_state(Window w, long state);
 void get_mwm_hints(client *c);
-#ifdef SHAPE
+#ifdef USE_SHAPE
 void set_shape(client *c);
 #endif
 void configurenotify(client *c);
 int has_protocol(Window w, Atom protocol);
 void delete_window(client *c);
-int gxo(client *c, int initial);
-int gyo(client *c, int initial);
+int gxo(client *c, bool initial);
+int gyo(client *c, bool initial);
 int has_child(Window parent, Window child);
 int isviewable(Window w);
 Bool isunmap(Display *display, XEvent *event, XPointer arg);
@@ -176,7 +176,7 @@ void client_save(client *c);
 void client_to_border(client *c, char *a);
 void client_iconify_all(void);
 void client_end_all_iconic(void);
-void client_handle_button(client *c, XEvent ev, int d);
+void client_handle_button(client *c, XEvent ev, bool is_double);
 
 /* global variables from ewmh.c */
 extern Atom ewmh_atoms[EWMH_ATOM_COUNT];
@@ -239,7 +239,7 @@ void keys_ungrab(void);
 void keys_free(void);
 void key_grab(keybind key);
 void key_ungrab(keybind key);
-int buttonaction(int button, int d);
+int buttonaction(int button, int is_double);
 int keyaction(XEvent ev);
 char *keyarg(XEvent ev);
 int key_to_mask(KeyCode key);

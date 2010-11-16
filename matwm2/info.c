@@ -69,7 +69,7 @@ int client_height_total_intern(client *c) { /* returns the total height of a cli
 }
 
 int client_title_width(client *c) { /* returns the width of the title window of a client */
-	int avail = client_width(c) - ((c->flags & HAS_BUTTONS) ? c->buttons_left_width + c->buttons_right_width : 0);
+	int avail = client_width(c) - ((c->flags & HAS_BUTTONS) ? (c->buttons_left_width ? c->buttons_left_width + button_spacing : 0) + (c->buttons_right_width ? c->buttons_right_width + button_spacing : 0) : 0);
 	return (avail < c->title_width) ? avail : c->title_width;
 }
 

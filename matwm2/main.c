@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
 	Window dw, *wins;
 	XWindowAttributes attr;
 	int dfd, sr;
-	#ifdef SHAPE
+	#ifdef USE_SHAPE
 	int di;
 	#endif
 	fd_set fds, fdsr;
@@ -31,13 +31,13 @@ int main(int argc, char *argv[]) {
 		if(strcmp(argv[i], "-version") == 0) {
 			printf(NAME " version " VERSION "\n"
 				"compiled "
-				#ifdef SHAPE
+				#ifdef USE_SHAPE
 				"with"
 				#else
 				"without"
 				#endif
 				" shape extention support and "
-				#ifdef XFT
+				#ifdef USE_XFT
 				"with"
 				#else
 				"without"
@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
 	                      CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
 	p_attr.event_mask = SubstructureRedirectMask |  SubstructureNotifyMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask | LeaveWindowMask | ExposureMask;
 	p_attr.background_pixel = ibg.pixel;
-	#ifdef SHAPE
+	#ifdef USE_SHAPE
 	have_shape = XShapeQueryExtension(dpy, &shape_event, &di);
 	#endif
 	ewmh_initialize();
@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
 	for(ui = 0; ui < nwins; ui++) {
 		if(XGetWindowAttributes(dpy, wins[ui], &attr))
 			if(!attr.override_redirect && attr.map_state == IsViewable)
-				client_add(wins[ui]);
+				client_add(wins[ui], true);
 	}
 	if(wins != NULL)
 		XFree(wins);

@@ -295,8 +295,8 @@ void client_end_all_iconic(void) { /* to exit state induced by above function wi
 	}
 }
 
-void client_handle_button(client *c, XEvent ev, int d) { /* for when a mouse button is clicked or doubleclicked on a window */
-	int action = buttonaction(ev.xbutton.button, d);
+void client_handle_button(client *c, XEvent ev, bool is_double) { /* for when a mouse button is clicked or doubleclicked on a window */
+	int action = buttonaction(ev.xbutton.button, is_double);
 	if(!(c->flags & DONT_FOCUS)) {
 		if(action == BA_MOVE)
 			drag_start(MOVE, ev.xbutton.button, ev.xbutton.x_root, ev.xbutton.y_root);

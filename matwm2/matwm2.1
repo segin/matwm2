@@ -1,10 +1,14 @@
-.TH matwm2 1 "Januari 5, 2009" "" ""
+.TH matwm2 1 "Januari 6, 2009" "" ""
 .SH NAME
 matwm2 \- Window manager for X11
 .SH SYNOPSIS
 .B matwm2 [ \-display
 .I display
-.B ] [ \-defaults ]
+.B ]
+.PP
+.B matwm2 \-defaults
+.PP
+.B matwm2 \-version
 .SH DESCRIPTION
 .B matwm2
 is a simple window manager for X11. It features window frames with titlebar and buttons, configurable key bindings and mouse buttons, support for EWMH and motif hints, focus-follows-mouse and click-to-focus focus models and virtual desktops.
@@ -62,6 +66,8 @@ Sets how much space there is to be between the bottom of the title text and the 
 Sets the amount of space that goes between buttons (and the left buttons and title if center_title is false) to [integer] pixels.
 .IP "wlist_margin [integer]"
 Sets how much space goes around text in window list items to [integer] pixels.
+.IP "wlist_maxwidth [integer]"
+Sets the maximum with for items in the window list to [integer] pixels, if set to 0 or bigger then the display's width the window list will be restricted to the width of the display.
 .IP "snap [integer]"
 Snap windows together or to screen edges when they are [integer] pixels away from eachother, set to 0 to disable snapping.
 .IP "desktops [integer]"
