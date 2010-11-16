@@ -86,7 +86,7 @@ void get_mwm_hints(client *c) {
 
 void set_shape(client *c) {
   if(c->flags & SHAPED)
-    XShapeCombineShape(dpy, c->parent, ShapeBounding, border(c), border(c) + title(c), c->window, ShapeBounding, ShapeSet);
+    XShapeCombineShape(dpy, c->parent, ShapeBounding, client_border(c), client_border(c) + client_title(c), c->window, ShapeBounding, ShapeSet);
 }
 
 void configurenotify(client *c)
@@ -95,8 +95,8 @@ void configurenotify(client *c)
   ce.type = ConfigureNotify;
   ce.event = c->window;
   ce.window = c->window;
-  ce.x = c->x + border(c);
-  ce.y = c->y + border(c) + title(c);
+  ce.x = c->x + client_border(c);
+  ce.y = c->y + client_border(c) + client_title(c);
   ce.width = c->width;
   ce.height = c->height;
   ce.border_width = 0;
@@ -134,15 +134,15 @@ int gxo(client *c, int initial) {
   if(c->normal_hints.flags & PWinGravity)
     switch(c->normal_hints.win_gravity) {
       case StaticGravity:
-        return border(c);
+        return client_border(c);
       case NorthGravity:
       case SouthGravity:
       case CenterGravity:
-        return border(c) + (initial ? -c->oldbw : (c->width / 2));
+        return client_border(c) + (initial ? -c->oldbw : (c->width / 2));
       case NorthEastGravity:
       case EastGravity:
       case SouthEastGravity:
-        return ((border(c) * 2) + (initial ? -(c->oldbw * 2) : c->width)) + ((c->flags & NO_STRUT) ? 0 : ewmh_strut[1]);
+        return ((client_border(c) * 2) + (initial ? -(c->oldbw * 2) : c->width)) + ((c->flags & NO_STRUT) ? 0 : ewmh_strut[1]);
     }
   return ((c->flags & NO_STRUT) ? 0 : -ewmh_strut[0]);
 }
@@ -151,15 +151,15 @@ int gyo(client *c, int initial) {
   if(c->normal_hints.flags & PWinGravity)
     switch(c->normal_hints.win_gravity) {
       case StaticGravity:
-        return border(c) + title(c);
+        return client_border(c) + client_title(c);
       case EastGravity:
       case WestGravity:
       case CenterGravity:
-        return border(c) + ((title(c) + (initial ? -c->oldbw : c->height)) / 2);
+        return client_border(c) + ((client_title(c) + (initial ? -c->oldbw : c->height)) / 2);
       case SouthEastGravity:
       case SouthGravity:
       case SouthWestGravity:
-        return ((border(c) * 2) + title(c) + (initial ? -(c->oldbw * 2) : c->height)) + ((c->flags & NO_STRUT) ? 0 : ewmh_strut[3]);
+        return ((client_border(c) * 2) + client_title(c) + (initial ? -(c->oldbw * 2) : c->height)) + ((c->flags & NO_STRUT) ? 0 : ewmh_strut[3]);
     }
   return ((c->flags & NO_STRUT) ? 0 : -ewmh_strut[2]);
 }

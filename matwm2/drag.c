@@ -1,24 +1,26 @@
 #include "matwm.h"
 
-XButtonEvent be;
-int xo, yo;
+int drag_mode, drag_button, drag_xo, drag_yo;
 
-void drag_start(XEvent ev) {
+void drag_start(int mode, int button, int x, int y) {
   if(evh)
     return;
-  if(buttonaction(ev.xbutton.button) == BA_RESIZE) {
+  if(mode == RESIZE) {
     if(!(current->flags & CAN_RESIZE))
       return;
-    warpto(current);
-    xo = current->x + (border(current) * 2);
-    yo = current->y + (border(current) * 2) + title(current);
+    client_warp(current);
+    drag_xo = client_x(current) + (client_border(current) * 2);
+    drag_yo = client_y(current) + (client_border(current) * 2) + client_title(current);
   } else {
     if(!(current->flags & CAN_MOVE))
       return;
-    xo = ev.xbutton.x_root - current->x;
-    yo = ev.xbutton.y_root - current->y;
+    drag_xo = x - client_x(current);
+    drag_yo = y - client_y(current);
   }
-  be = ev.xbutton;
+  if(current->flags & ICONIC)
+    client_restore(current);
+  drag_mode = mode;
+  drag_button = button;
   evh = drag_handle_event;
   client_raise(current);
   XGrabPointer(dpy, root, True, ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, None, 0, CurrentTime);
@@ -33,17 +35,18 @@ int drag_handle_event(XEvent ev) {
   switch(ev.type) {
     case MotionNotify:
       while(XCheckTypedEvent(dpy, MotionNotify, &ev));
-      if(buttonaction(be.button) == BA_RESIZE) {
-        if(client_resize(current, snaph(current, ev.xmotion.x, snapv(current, ev.xmotion.x, ev.xmotion.y)) - xo, snapv(current, snaph(current, ev.xmotion.x, ev.xmotion.y), ev.xmotion.y) - yo))
+      if(drag_mode == RESIZE) {
+        if(client_resize(current, snaph(current, ev.xmotion.x, snapv(current, ev.xmotion.x, ev.xmotion.y)) - drag_xo, snapv(current, snaph(current, ev.xmotion.x, ev.xmotion.y), ev.xmotion.y) - drag_yo))
           current->flags ^= current->flags & (MAXIMISED | EXPANDED);
       } else {
-        if(client_move(current, snapx(current, ev.xmotion.x - xo, snapy(current, ev.xmotion.x - xo, ev.xmotion.y - yo)), snapy(current, snapx(current, ev.xmotion.x - xo, ev.xmotion.y - yo), ev.xmotion.y - yo)))
+        if(client_move(current, snapx(current, ev.xmotion.x - drag_xo, snapy(current, ev.xmotion.x - drag_xo, ev.xmotion.y - drag_yo)), snapy(current, snapx(current, ev.xmotion.x - drag_xo, ev.xmotion.y - drag_yo), ev.xmotion.y - drag_yo)))
           current->flags ^= current->flags & (MAXIMISED | EXPANDED);
       }
       return 1;
     case ButtonRelease:
-      if(ev.xbutton.button == be.button)
+      if(ev.xbutton.button == drag_button || drag_button == AnyButton)
         drag_end();
+      return 1;
     case EnterNotify:
     case ButtonPress:
       return 1;
@@ -59,7 +62,7 @@ int drag_handle_event(XEvent ev) {
 }
 
 int drag_release_wait(XEvent ev) {
-  if(ev.type == ButtonRelease && ev.xbutton.button == be.button) {
+  if(ev.type == ButtonRelease && (ev.xbutton.button == drag_button || drag_button == AnyButton)) {
     drag_end();
     return 1;
   }
@@ -70,19 +73,19 @@ int snapx(client *c, int nx, int ny) {
   int i;
   if(nx < 0 + snapat && nx > 0 - snapat)
     return 0;
-  if(nx < (display_width - total_width(c)) + snapat && nx > (display_width - total_width(c)) - snapat)
-    return display_width - total_width(c);
+  if(nx < (display_width - client_width_total(c)) + snapat && nx > (display_width - client_width_total(c)) - snapat)
+    return display_width - client_width_total(c);
   for(i = 0; i < cn; i++) {
-    if(clients[i] == c || clients[i]->flags & ICONIC || ny + total_height(c) < clients[i]->y || ny > clients[i]->y + total_height(clients[i]))
+    if(clients[i] == c || clients[i]->flags & ICONIC || ny + client_height_total(c) < clients[i]->y || ny > clients[i]->y + client_height_total(clients[i]))
       continue;
     if(nx < clients[i]->x + snapat && nx > clients[i]->x - snapat)
       return clients[i]->x;
-    if(nx < clients[i]->x + total_width(clients[i]) + snapat && nx > clients[i]->x + total_width(clients[i]) - snapat)
-      return clients[i]->x + total_width(clients[i]);
-    if(nx + total_width(c) < clients[i]->x + snapat && nx + total_width(c) > clients[i]->x - snapat)
-      return clients[i]->x - total_width(c);
-    if(nx + total_width(c) < clients[i]->x + total_width(clients[i]) + snapat && nx + total_width(c) > clients[i]->x + total_width(clients[i]) - snapat)
-      return clients[i]->x + total_width(clients[i]) - total_width(c);
+    if(nx < clients[i]->x + client_width_total(clients[i]) + snapat && nx > clients[i]->x + client_width_total(clients[i]) - snapat)
+      return clients[i]->x + client_width_total(clients[i]);
+    if(nx + client_width_total(c) < clients[i]->x + snapat && nx + client_width_total(c) > clients[i]->x - snapat)
+      return clients[i]->x - client_width_total(c);
+    if(nx + client_width_total(c) < clients[i]->x + client_width_total(clients[i]) + snapat && nx + client_width_total(c) > clients[i]->x + client_width_total(clients[i]) - snapat)
+      return clients[i]->x + client_width_total(clients[i]) - client_width_total(c);
   }
   return nx;
 }
@@ -91,19 +94,19 @@ int snapy(client *c, int nx, int ny) {
   int i;
   if(ny < 0 + snapat && ny > 0 - snapat)
     return 0;
-  if(ny < (display_height - total_height(c)) + snapat && ny > (display_height - total_height(c)) - snapat)
-    return display_height - total_height(c);
+  if(ny < (display_height - client_height_total(c)) + snapat && ny > (display_height - client_height_total(c)) - snapat)
+    return display_height - client_height_total(c);
   for(i = 0; i < cn; i++) {
-    if(clients[i] == c || clients[i]->flags & ICONIC || nx + total_width(c) < clients[i]->x || nx > clients[i]->x + total_width(clients[i]))
+    if(clients[i] == c || clients[i]->flags & ICONIC || nx + client_width_total(c) < clients[i]->x || nx > clients[i]->x + client_width_total(clients[i]))
       continue;
     if(ny < clients[i]->y + snapat && ny > clients[i]->y - snapat)
       return clients[i]->y;
-    if(ny < clients[i]->y + total_height(clients[i]) + snapat && ny > clients[i]->y + total_height(clients[i]) - snapat)
-      return clients[i]->y + total_height(clients[i]);
-    if(ny + total_height(c) < clients[i]->y + snapat && ny + total_height(c) > clients[i]->y - snapat)
-      return clients[i]->y - total_height(c);
-    if(ny + total_height(c) < clients[i]->y + total_height(clients[i]) + snapat && ny + total_height(c) > clients[i]->y + total_height(clients[i]) - snapat)
-      return clients[i]->y + total_height(clients[i]) - total_height(c);
+    if(ny < clients[i]->y + client_height_total(clients[i]) + snapat && ny > clients[i]->y + client_height_total(clients[i]) - snapat)
+      return clients[i]->y + client_height_total(clients[i]);
+    if(ny + client_height_total(c) < clients[i]->y + snapat && ny + client_height_total(c) > clients[i]->y - snapat)
+      return clients[i]->y - client_height_total(c);
+    if(ny + client_height_total(c) < clients[i]->y + client_height_total(clients[i]) + snapat && ny + client_height_total(c) > clients[i]->y + client_height_total(clients[i]) - snapat)
+      return clients[i]->y + client_height_total(clients[i]) - client_height_total(c);
   }
   return ny;
 }
@@ -113,12 +116,12 @@ int snaph(client *c, int nx, int ny) {
   if(nx < display_width + snapat && nx > display_width - snapat)
     return display_width;
   for(i = 0; i < cn; i++) {
-    if(clients[i] == c || clients[i]->flags & ICONIC || ny < clients[i]->y || c->y > clients[i]->y + total_height(clients[i]))
+    if(clients[i] == c || clients[i]->flags & ICONIC || ny < clients[i]->y || c->y > clients[i]->y + client_height_total(clients[i]))
       continue;
     if(nx < clients[i]->x + snapat && nx > clients[i]->x - snapat)
       return clients[i]->x;
-    if(nx < clients[i]->x + total_width(clients[i]) + snapat && nx > clients[i]->x + total_width(clients[i]) - snapat)
-      return clients[i]->x + total_width(clients[i]);
+    if(nx < clients[i]->x + client_width_total(clients[i]) + snapat && nx > clients[i]->x + client_width_total(clients[i]) - snapat)
+      return clients[i]->x + client_width_total(clients[i]);
   }
   return nx;
 }
@@ -128,12 +131,12 @@ int snapv(client *c, int nx, int ny) {
   if(ny < display_height + snapat && ny > display_height - snapat)
     return display_height;
   for(i = 0; i < cn; i++) {
-    if(clients[i] == c || clients[i]->flags & ICONIC || nx < clients[i]->x || c->x > clients[i]->x + total_width(clients[i]))
+    if(clients[i] == c || clients[i]->flags & ICONIC || nx < clients[i]->x || c->x > clients[i]->x + client_width_total(clients[i]))
       continue;
     if(ny < clients[i]->y + snapat && ny > clients[i]->y - snapat)
       return clients[i]->y;
-    if(ny < clients[i]->y + total_height(clients[i]) + snapat && ny > clients[i]->y + total_height(clients[i]) - snapat)
-      return clients[i]->y + total_height(clients[i]);
+    if(ny < clients[i]->y + client_height_total(clients[i]) + snapat && ny > clients[i]->y + client_height_total(clients[i]) - snapat)
+      return clients[i]->y + client_height_total(clients[i]);
   }
   return ny;
 }

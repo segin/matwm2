@@ -25,7 +25,7 @@ void wlist_end(void) {
     client_restore(current);
   else
     client_raise(current);
-  warpto(current);
+  client_warp(current);
 }
 
 int wlist_handle_event(XEvent ev) {

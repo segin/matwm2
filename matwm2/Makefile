@@ -4,6 +4,7 @@ CC      = cc
 
 CFLAGS  += -lXext -lX11 -I$(XROOT)/include -L$(XROOT)/lib
 #CFLAGS  += -DDEBUG -ggdb3 # -DDEBUG_EVENTS -DSYNC
+CFLAGS  += -Os
 
 all:		matwm2
 

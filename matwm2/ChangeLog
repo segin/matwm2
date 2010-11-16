@@ -1,0 +1,39 @@
+0.0.49:
+	introduced changelog
+	new windows map under window list or window currently being dragged
+	button_current now uses a value of "None" instead of the root window to define there is no current button
+	client_focus checks if window is really viewable before setting input focus
+	window list puts off screen windows on screen if they are chosen - with new client_save() function
+	renamed handle_button_event() to button_handle_event()
+	fixed bug in get_mwm_hints() that made it possible in weird conditions a call to XFree would be apropriate but not done, and it now passes mwmhints variable directly to XGetWindowProperty()
+	on exit clients are deparented in reverse order, as this has some advantages over the old method
+	removed useless get_wm_transient_for()
+	fixed wlist_end() segfaulting if current == NULL
+
+0.0.50:
+	fixed bug that would sometimes draw a little square in the topleft corner of the root window
+	added support for motif move hint and motif resize hint schould be fixed too
+	attempted to make enum statements in matwm.h more readable
+	stacking now keeps the stacking order of clients, clients keeps them from oldest to newest - and client_number() lets you specify one of those to dig trough
+	introduced "layer" member in client structure, wich defines the layer of the window (always on top, always on bottom etc)
+	partial EWMH implementation
+	if the CAN_MOVE or CAN_RESIZE bits are not set for a client, accordingly the buttons for that will no longer be grabbed
+
+0.0.51:
+	updated changelog @ 0.0.49 to state changelog was introduced then, and @ 0.0.50 the forgotten button grab stuff was added
+	renamed CHANGELOG to ChangeLog to comply with what is appearantly tradition
+	now maximise function takes ewmh_strut into account
+	xo and yo members now save the offset of the window when it's mapped, so it can be (hopefully) restored propperly later on
+	maximise and expand now check for CAN_MOVE and CAN_RESIZE bit
+	implemented a bit more EWMH things
+	maximise raises client given to it, not current
+	all macros are replaced by functions to give the window's size and position wich are now rather dynamically calculated then stored
+	changes in client size or position are now applied by calling client_update(), client_update_pos(), client_update_size() and client_update_title() functions
+	added fullscreen state
+	moved code around a bit creating a little more order
+	removed comment that didn't make sence anymore
+	no more warp to spawned windows, this fucks up some apps (xine)
+	further EWMH implementation
+	changed drag function to work with EWMH stuffs, also made it restore the client if it iconic
+	fixed iconify_all function that broke when stacking and clients variables were separated
+

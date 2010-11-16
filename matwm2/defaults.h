@@ -17,6 +17,7 @@ key                   mod1 Tab                next\n\
 key                   mod1 shift Tab          prev\n\
 key                   control mod1 s          iconify\n\
 key                   control mod1 x          maximise\n\
+key                   control mod1 f          fullscreen\n\
 key                   control mod1 e          expand\n\
 key                   control mod1 q          close\n\
 key                   control mod1 t          title\n\
@@ -29,6 +30,7 @@ key                   control mod1 Return     exec xterm\n\
 key                   mod4 q                  close\n\
 key                   mod4 s                  iconify\n\
 key                   mod4 x                  maximise\n\
+key                   mod4 f                  fullscreen\n\
 key                   mod4 e                  expand\n\
 key                   mod4 t                  title\n\
 key                   mod4 y                  topleft\n\

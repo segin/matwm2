@@ -3,14 +3,19 @@
 int client_move(client *c, int x, int y) {
   if(x == c->x && y == c->y)
     return 0;
-  XMoveWindow(dpy, c->parent, x, y);
+  c->width = client_width(c);
+  c->height = client_height(c);
+  c->flags ^= current->flags & (MAXIMISED | FULLSCREEN | EXPANDED);
   c->x = x;
   c->y = y;
-  configurenotify(c);
+  client_update_pos(c);
   return 1;
 }
 
 int client_resize(client *c, int width, int height) {
+  c->x = client_x(c);
+  c->y = client_y(c);
+  c->flags ^= c->flags & (MAXIMISED | FULLSCREEN | EXPANDED);
   if(c->normal_hints.flags & PResizeInc) {
     width -= (width - ((c->normal_hints.flags & PBaseSize) ? c->normal_hints.base_width : 0)) % c->normal_hints.width_inc;
     height -= (height - ((c->normal_hints.flags & PBaseSize) ? c->normal_hints.base_height : 0)) % c->normal_hints.height_inc;
@@ -41,13 +46,7 @@ int client_resize(client *c, int width, int height) {
     return 0;
   c->width = width;
   c->height = height;
-  buttons_update(c);
-  XMoveWindow(dpy, c->button_parent, (c->width + border_width) - button_parent_width, border_width);
-  XResizeWindow(dpy, c->title, c->width - ((c->flags & HAS_BUTTONS) ? button_parent_width + 2 : 0), text_height);
-  XResizeWindow(dpy, c->parent, total_width(c), total_height(c));
-  XResizeWindow(dpy, c->window, width, height);
-  client_draw_border(c);
-  client_draw_title(c);
+  client_update_size(c);
   return 1;
 }
 
@@ -79,61 +78,69 @@ void client_lower(client *c) {
 }
 
 void client_maximise(client *c) {
-  if(c->flags & MAXIMISED) {
-    c->flags ^= MAXIMISED;
-    client_move(c, c->prev_x, c->prev_y);
-    client_resize(c, c->prev_width, c->prev_height);
+  if(!(c->flags & CAN_MOVE) && !(c->flags & CAN_RESIZE))
     return;
+  if(c->flags & MAXIMISED)
+    c->flags ^= MAXIMISED;
+  else {
+    c->flags |= MAXIMISED;
+    client_raise(c);
   }
-  c->prev_x = c->x;
-  c->prev_y = c->y;
-  c->prev_width = c->width;
-  c->prev_height = c->height;
-  c->flags |= MAXIMISED;
-  client_raise(current);
-  client_move(c, 0, 0);
-  client_resize(c, display_width - (border(c) * 2), display_height - ((border(c) * 2) + title(c)));
+  client_update(c);
+  ewmh_update_state(c);
+}
+
+void client_fullscreen(client *c) {
+  if(!(c->flags & CAN_MOVE) && !(c->flags & CAN_RESIZE))
+    return;
+  if(c->flags & FULLSCREEN)
+    c->flags ^= FULLSCREEN;
+  else {
+    c->flags |= FULLSCREEN;
+    client_raise(c);
+  }
+  client_update(c);
+  ewmh_update_state(c);
 }
 
 void client_expand(client *c) {
-  int i, min_x = 0, min_y = 0, max_x = display_width, max_y = display_height;
-  if(c->flags & MAXIMISED)
-    client_maximise(c);
+  int i;
+  if(!(c->flags & CAN_MOVE) && !(c->flags & CAN_RESIZE))
+    return;
   if(c->flags & EXPANDED) {
     c->flags ^= EXPANDED;
-    client_move(c, c->expand_prev_x, c->expand_prev_y);
-    client_resize(c, c->expand_prev_width, c->expand_prev_height);
+    client_update(c);
     return;
   }
+  c->expand_x = 0;
+  c->expand_y = 0;
+  c->expand_width = display_width;
+  c->expand_height = display_height;
   for(i = 0; i < cn; i++) {
-    if(clients[i]->flags & ICONIC || c->y >= clients[i]->y + total_height(clients[i]) || c->y + total_height(c) <= clients[i]->y)
+    if(clients[i]->flags & ICONIC || c->y >= client_y(clients[i]) + client_height_total(clients[i]) || c->y + (c->height + (client_border(c) * 2) + client_title(c)) <= client_y(clients[i]))
       continue;
-    if(clients[i]->x + total_width(clients[i]) <= c->x && clients[i]->x + total_width(clients[i]) > min_x)
-      min_x = clients[i]->x + total_width(clients[i]);
-    if(clients[i]->x >= c->x + total_width(c) && clients[i]->x < max_x)
-      max_x = clients[i]->x;
+    if(client_x(clients[i]) + client_width_total(clients[i]) <= c->x && client_x(clients[i]) + client_width_total(clients[i]) > c->expand_x)
+      c->expand_x = client_x(clients[i]) + client_width_total(clients[i]);
+    if(client_x(clients[i]) >= c->x + (c->width + (client_border(c) * 2)) && client_x(clients[i]) < c->expand_width)
+      c->expand_width = client_x(clients[i]);
   }
   for(i = 0; i < cn; i++) {
-    if(clients[i]->flags & ICONIC || min_x >= clients[i]->x + total_width(clients[i]) || max_x <= clients[i]->x)
+    if(clients[i]->flags & ICONIC || c->expand_x >= client_x(clients[i]) + client_width_total(clients[i]) || c->expand_width <= client_x(clients[i]))
       continue;
-    if(clients[i]->y + total_height(clients[i]) <= c->y && clients[i]->y + total_height(clients[i]) > min_y)
-      min_y = clients[i]->y + total_height(clients[i]);
-    if(clients[i]->y >= c->y + total_height(c) && clients[i]->y < max_y)
-      max_y = clients[i]->y;
+    if(client_y(clients[i]) + client_height_total(clients[i]) <= c->y && client_y(clients[i]) + client_height_total(clients[i]) > c->expand_y)
+      c->expand_y = client_y(clients[i]) + client_height_total(clients[i]);
+    if(client_y(clients[i]) >= c->y + (c->height + (client_border(c) * 2) + client_title(c)) && client_y(clients[i]) < c->expand_height)
+      c->expand_height = client_y(clients[i]);
   }
-  c->expand_prev_x = c->x;
-  c->expand_prev_y = c->y;
-  c->expand_prev_width = c->width;
-  c->expand_prev_height = c->height;
-  client_move(c, min_x, min_y);
-  client_resize(c, max_x - (min_x + (border(c) * 2)), max_y - (min_y + (border(c) * 2) + title(c)));
+  c->expand_width -= c->expand_x + (client_border(c) * 2);
+  c->expand_height -= c->expand_y + (client_border(c) * 2) + client_title(c);
   c->flags |= EXPANDED;
+  client_update(c);
 }
 
 void client_toggle_title(client *c) {
   c->flags ^= HAS_TITLE;
-  XMoveWindow(dpy, c->window, border(c), border(c) + title(c));
-  XResizeWindow(dpy, c->parent, total_width(c), total_height(c));
+  client_update_title(c);
 }
 
 void client_iconify(client *c) {
@@ -174,12 +181,12 @@ void client_restore(client *c) {
 void client_save(client *c) {
   int x = c->x, y = c->y;
   if(c->x >= display_width)
-    x = display_width - total_width(c);
+    x = display_width - client_width_total(c);
   if(c->y >= display_height)
-    y = display_height - total_height(c);
-  if(c->x + total_width(c) <= 0)
+    y = display_height - client_height_total(c);
+  if(c->x + client_width_total(c) <= 0)
     x = 0;
-  if(c->y + total_height(c) <= 0)
+  if(c->y + client_height_total(c) <= 0)
     y = 0;
   client_move(c, x, y);
 }

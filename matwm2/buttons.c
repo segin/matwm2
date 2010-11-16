@@ -84,7 +84,7 @@ int button_handle_event(XEvent ev) {
     case LeaveNotify:
       if(button_down == 2)
         button_down = 1;
-      button_current = None; // make sure its not a button (i chose root because its always there and i assumed any value could be a window)
+      button_current = None;
       button_draw(c, ev.xcrossing.window);
       return 1;
     case ButtonPress:

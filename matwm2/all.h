@@ -5,6 +5,7 @@ void client_focus(client *c);
 void client_raise(client *c);
 void client_lower(client *c);
 void client_maximise(client *c);
+void client_fullscreen(client *c);
 void client_expand(client *c);
 void client_toggle_title(client *c);
 void client_iconify(client *c);
@@ -30,15 +31,18 @@ extern int cn, nicons;
 void client_add(Window w);
 void client_deparent(client *c);
 void client_remove(client *c);
-void client_draw_border(client *c);
-void client_draw_title(client *c);
-void clients_alloc(void);
-void client_set_bg(client *c, XColor color);
-void clients_apply_stacking(void);
 void client_grab_button(client *c, int button);
 void client_grab_buttons(client *c);
-int client_number(client **array, client *c);
-client *owner(Window w);
+void client_draw_border(client *c);
+void client_draw_title(client *c);
+void client_set_bg(client *c, XColor color);
+void clients_apply_stacking(void);
+void client_update_pos(client *c);
+void client_update_size(client *c);
+void client_update(client *c);
+void client_update_title(client *c);
+void client_warp(client *c);
+void clients_alloc(void);
 
 // global variables from config.c
 extern XColor bg, ibg, fg, ifg;
@@ -57,11 +61,10 @@ int str_buttonaction(char *str);
 int str_keyaction(char *str);
 
 // global variables from drag.c
-extern XButtonEvent be;
-extern int xo, yo;
+extern int drag_mode, drag_button, drag_xo, drag_yo;
 
 // functions from drag.c
-void drag_start(XEvent ev);
+void drag_start(int mode, int button, int x, int y);
 void drag_end(void);
 int drag_handle_event(XEvent ev);
 int drag_release_wait(XEvent ev);
@@ -87,10 +90,25 @@ extern long ewmh_strut[4];
 void ewmh_initialize(void);
 int ewmh_handle_event(XEvent ev);
 int get_ewmh_hints(client *c);
+void ewmh_set_desktop(client *c, long desktop);
 void ewmh_set_active(client *c);
+void ewmh_update_allowed_actions(client *c);
+void ewmh_update_state(client *c);
 void ewmh_update_stacking(void);
 void ewmh_update_clist(void);
 void ewmh_update_strut(void);
+
+// functions from info.c
+int client_x(client *c);
+int client_y(client *c);
+int client_width(client *c);
+int client_height(client *c);
+int client_border(client *c);
+int client_title(client *c);
+int client_width_total(client *c);
+int client_height_total(client *c);
+int client_number(client **array, client *c);
+client *owner(Window w);
 
 // global variables from input.c
 extern unsigned int mousemodmask, *mod_ignore;

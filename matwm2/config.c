@@ -161,6 +161,8 @@ int str_keyaction(char *str) {
     return KA_ICONIFY_ALL;
   if(strcmp(str, "maximise") == 0)
     return KA_MAXIMISE;
+  if(strcmp(str, "fullscreen") == 0)
+    return KA_FULLSCREEN;
   if(strcmp(str, "expand") == 0)
     return KA_EXPAND;
   if(strcmp(str, "title") == 0)

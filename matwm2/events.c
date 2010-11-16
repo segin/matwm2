@@ -41,7 +41,6 @@ void handle_event(XEvent ev) {
       if(c) {
         if(!has_child(c->parent, c->window))
           break;
-        c->flags ^= c->flags & (MAXIMISED | EXPANDED);
         client_resize(c, (ev.xconfigurerequest.value_mask & CWWidth) ? ev.xconfigurerequest.width : c->width, (ev.xconfigurerequest.value_mask & CWHeight) ? ev.xconfigurerequest.height : c->height);
         client_move(c, (ev.xconfigurerequest.value_mask & CWX) ? ev.xconfigurerequest.x - gxo(c, 0) : c->x, (ev.xconfigurerequest.value_mask & CWY) ? ev.xconfigurerequest.y - gyo(c, 0) : c->y);
       } else if(has_child(root, ev.xconfigurerequest.window)) {
@@ -71,8 +70,8 @@ void handle_event(XEvent ev) {
         get_normal_hints(c);
       if(ev.xproperty.atom == xa_motif_wm_hints && c) {
         get_mwm_hints(c);
-        XMoveWindow(dpy, c->window, border(c), border(c) + title(c));
-        XResizeWindow(dpy, c->parent, total_width(c), total_height(c));
+        XMoveWindow(dpy, c->window, client_border(c), client_border(c) + client_title(c));
+        XResizeWindow(dpy, c->parent, client_width_total(c), client_height_total(c));
       }
       break;
     case ClientMessage:
@@ -96,8 +95,10 @@ void handle_event(XEvent ev) {
       }
       break;
     case ButtonPress:
-      if(c && (buttonaction(ev.xbutton.button) == BA_MOVE || buttonaction(ev.xbutton.button) == BA_RESIZE))
-        drag_start(ev);
+      if(c && buttonaction(ev.xbutton.button) == BA_MOVE)
+        drag_start(MOVE, ev.xbutton.button, ev.xbutton.x_root, ev.xbutton.y_root);
+      if(c && buttonaction(ev.xbutton.button) == BA_RESIZE)
+        drag_start(RESIZE, ev.xbutton.button, ev.xbutton.x_root, ev.xbutton.y_root);
       break;
     case ButtonRelease:
       if(c) {
@@ -123,33 +124,31 @@ void handle_event(XEvent ev) {
         client_iconify(current);
       if(current && keyaction(ev) == KA_MAXIMISE)
         client_maximise(current);
+      if(current && keyaction(ev) == KA_FULLSCREEN)
+        client_fullscreen(current);
       if(current && keyaction(ev) == KA_EXPAND)
         client_expand(current);
       if(current && keyaction(ev) == KA_TITLE)
         client_toggle_title(current);
       if(current && keyaction(ev) == KA_BOTTOMLEFT) {
-        client_move(current, 0, display_height - total_height(current));
-        current->flags ^= current->flags & (MAXIMISED | EXPANDED);
-        warpto(current);
+        client_move(current, 0, display_height - client_height_total(current));
+        client_warp(current);
       }
       if(current && keyaction(ev) == KA_BOTTOMRIGHT) {
-        client_move(current, display_width - total_width(current), display_height - total_height(current));
-        current->flags ^= current->flags & (MAXIMISED | EXPANDED);
-        warpto(current);
+        client_move(current, display_width - client_width_total(current), display_height - client_height_total(current));
+        client_warp(current);
       }
       if(current && keyaction(ev) == KA_TOPRIGHT) {
-        current->flags ^= current->flags & (MAXIMISED | EXPANDED);
-        client_move(current, display_width - total_width(current), 0);
-        warpto(current);
+        client_move(current, display_width - client_width_total(current), 0);
+        client_warp(current);
       }
       if(current && keyaction(ev) == KA_TOPLEFT) {
         client_move(current, 0, 0);
-        current->flags ^= current->flags & (MAXIMISED | EXPANDED);
-        warpto(current);
+        client_warp(current);
       }
       if(cn && keyaction(ev) == KA_ICONIFY_ALL)
-        while(!(clients[0]->flags & ICONIC))
-          client_iconify(clients[0]);
+        while(!(stacking[0]->flags & ICONIC))
+          client_iconify(stacking[0]);
       if(keyaction(ev) == KA_EXEC)
         spawn(keyarg(ev));
       break;
