@@ -20,30 +20,31 @@ void grab_button(Window w, unsigned int button, unsigned int modmask, unsigned i
   }
 }
 
-void drag(int n, XButtonEvent *be, int res) {
+void drag(XButtonEvent *be, int res) {
   int xo, yo;
   XEvent ev;
   if(res) {
-    XWarpPointer(dpy, None, clients[n].parent, 0, 0, 0, 0, clients[n].width + border_width, clients[n].height + border_width + title_height);
-    xo = clients[n].x + border_width;
-    yo = clients[n].y + border_width + title_height;
+    warp();
+    xo = clients[current].x + border(current);
+    yo = clients[current].y + border(current) + title(current);
   }
   XGrabPointer(dpy, root, True, ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, None, 0, CurrentTime);
   while(1) {
+//    leaving this here just in case there turns out to be a problem with just nextevent - wich is now used so also things like shape events are handled
 //    XMaskEvent(dpy, PropertyChangeMask | SubstructureNotifyMask | SubstructureRedirectMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | ExposureMask | EnterWindowMask, &ev);
     XNextEvent(dpy, &ev);
     if(ev.type == MotionNotify) {
       while(XCheckTypedEvent(dpy, MotionNotify, &ev));
       if(res) {
-        resize(n, ev.xmotion.x - xo,  ev.xmotion.y - yo);
-      } else move(n, ev.xmotion.x - be->x, ev.xmotion.y - be->y);
+        resize(current, ev.xmotion.x - xo,  ev.xmotion.y - yo);
+      } else move(current, ev.xmotion.x - be->x, ev.xmotion.y - be->y);
     } else if(ev.type == ButtonRelease && ev.xbutton.button == be->button) {
       break;
     } else if(ev.type == EnterNotify || ev.type == ButtonPress) {
       continue;
     } else  {
       handle_event(ev);
-      if((ev.type == UnmapNotify && ev.xunmap.window == clients[n].window) || (ev.type == DestroyNotify && ev.xdestroywindow.window == clients[n].window) || ev.type == KeyPress) {
+      if((ev.type == UnmapNotify && ev.xunmap.window == clients[current].window) || (ev.type == DestroyNotify && ev.xdestroywindow.window == clients[current].window) || ev.type == KeyPress) {
         while(1) {
           XMaskEvent(dpy, ButtonReleaseMask, &ev);
           if(ev.xbutton.button == be->button)

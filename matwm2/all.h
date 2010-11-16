@@ -46,7 +46,7 @@ extern unsigned int mousemodmask, numlockmask;
 extern XModifierKeymap *modmap;
 void grab_key(Window w, unsigned int modmask, KeyCode key);
 void grab_button(Window w, unsigned int button, unsigned int modmask, unsigned int event_mask);
-void drag(int n, XButtonEvent *be, int res);
+void drag(XButtonEvent *be, int res);
 int getmodifier(KeyCode key);
 void mapkeys(void);
 
@@ -66,6 +66,7 @@ int xerrorhandler(Display *display, XErrorEvent *xerror);
 void getnormalhints(int n);
 int getstatehint(Window w);
 int get_wm_state(Window w);
+int get_wm_transient_for(Window w, Window *ret);
 void set_wm_state(Window w, long state);
 void get_mwm_hints(int n);
 void configurenotify(int n);

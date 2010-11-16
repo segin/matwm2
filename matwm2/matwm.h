@@ -25,13 +25,13 @@
 #define MWM_DECOR_MINIMIZE (1L << 5)
 #define MWM_DECOR_MAXIMIZE (1L << 6)
 
-#define border(c) (clients[c].border ? border_width : 0)
-#define title(c) ((clients[c].title && clients[c].border) ? title_height : 0)
-#define warp() XWarpPointer(dpy, None, clients[current].parent, 0, 0, 0, 0, clients[current].iconic ? icon_width - 1 : clients[current].width + (clients[current].border ? border_width : -1), clients[current].iconic ? 3 + title_height : ((clients[current].height + (clients[current].border ? border_width : -1)) + title(current)));
+#define border(c) ((!clients[c].shaped && clients[c].border) ? border_width : 0)
+#define title(c) ((!clients[c].shaped && clients[c].title && clients[c].border) ? title_height : 0)
+#define warp() XWarpPointer(dpy, None, clients[current].parent, 0, 0, 0, 0, clients[current].iconic ? icon_width - 1 : clients[current].width + (border(current) ? border_width : -1), clients[current].iconic ? 3 + title_height : ((clients[current].height + (border(current) ? border_width : -1)) + title(current)));
 
 typedef struct {
-  Window window, parent;
-  int x, y, width, height, oldbw, iconic, maximised, prev_x, prev_y, prev_width, prev_height, title, border, resize;
+  Window window, parent, transient_for;
+  int x, y, width, height, oldbw, iconic, maximised, prev_x, prev_y, prev_width, prev_height, title, border, resize, shaped, transient;
   XSizeHints normal_hints;
   char *name;
 } client;

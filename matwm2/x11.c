@@ -49,6 +49,19 @@ int get_wm_state(Window w) {
   return ret;
 }
 
+int get_wm_transient_for(Window w, Window *ret) {
+  Atom rt;
+  int rf;
+  unsigned long n, bar;
+  unsigned char *data;
+  if(XGetWindowProperty(dpy, w, XA_WM_TRANSIENT_FOR, 0, sizeof(Window), False, AnyPropertyType, &rt, &rf, &n, &bar, &data) == Success && n) {
+    *ret = *(Window *) data;
+    XFree(data);
+    return 1;
+  }
+  return 0;
+}
+
 void set_wm_state(Window w, long state) {
   long data[2];
   data[0] = (long) state;
@@ -66,10 +79,10 @@ void get_mwm_hints(int n) {
   clients[n].resize = 1;
   if(XGetWindowProperty(dpy, clients[n].window, xa_motif_wm_hints, 0, sizeof(MWMHints), False, AnyPropertyType, &rt, &rf, &nir, &bar, (unsigned char **) &mwmhints) == Success && nir == 5) {
     if(mwmhints->flags & MWM_HINTS_DECORATIONS && !(mwmhints->decorations & MWM_DECOR_ALL)) {
-      clients[n].title = mwmhints->decorations & MWM_DECOR_BORDER;
-      clients[n].border = mwmhints->decorations & MWM_DECOR_TITLE;
+      clients[n].title = mwmhints->decorations & MWM_DECOR_TITLE;
+      clients[n].border = mwmhints->decorations & MWM_DECOR_BORDER;
     }
-    if(mwmhints->flags & MWM_HINTS_FUNCTIONS)
+    if(mwmhints->flags & MWM_HINTS_FUNCTIONS && !(mwmhints->functions & MWM_FUNC_ALL))
       clients[n].resize = mwmhints->functions & MWM_FUNC_RESIZE;
     XFree(mwmhints);
   }
