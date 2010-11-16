@@ -41,7 +41,7 @@ Sets the function mouse buttons have on window borders. Possible button actions 
 .IP "border_width [integer]"
 Sets the width of window borders to [integer] pixels.
 .IP "snap [integer]"
-Snap windows together when they are [integer] pixels away from eachother, set to 0 to disable snapping.
+Snap windows together or to screen edges when they are [integer] pixels away from eachother, set to 0 to disable snapping.
 .IP "desktops [integer]"
 Sets the amount of virtual desktops.
 .IP "exec [command]"
@@ -50,6 +50,8 @@ Invokes "sh -c [command]".
 Ignore the state of specified modifier key(s).
 .IP "mouse_modifier [modifier key] [...]"
 If specified modifier key(s) are down, user can use the same button actions as set for the window frame in the client window itself.
+.IP "no_snap_modifier [modifier key] [...]"
+If specified modifier key(s) are down while dragging a window (either to move it or resize it) windows will not snap to eachother or window edges.
 .IP "click_focus [boolean]"
 Sets the focus model, if set to "true" matwm2 will focus windows when they are clicked. If set to "false" windows will be focussed when the mouse cursor moves over them.
 .IP "click_raise [boolean]"

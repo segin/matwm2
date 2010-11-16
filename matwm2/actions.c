@@ -60,6 +60,8 @@ int client_resize(client *c, int width, int height) {
 
 void client_focus(client *c) {
 	client *prev = current;
+	if(c && c->flags & DONT_FOCUS)
+		return;
 	current = c;
 	if(prev)
 		client_set_bg(prev, ibg, ifg);
@@ -163,7 +165,7 @@ void client_iconify(client *c) {
 	nicons++;
 	set_wm_state(c->window, IconicState);
 	client_hide(c);
-	if(c->desktop != desktop || c->desktop != STICKY)
+	if(c->desktop != desktop && c->desktop != STICKY)
 		XMapWindow(dpy, c->wlist_item);
 	c->flags |= ICONIC;
 	for(i = client_number(stacking, c); i < cn - 1; i++)
@@ -223,6 +225,7 @@ void client_to_border(client *c, char *a) {
 		a++;
 	}
 	client_move(c, x, y);
+	client_raise(c);
 	client_warp(c);
 }
 

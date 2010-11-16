@@ -155,13 +155,13 @@ int ewmh_get_hints(client *c) {
 		if(nir) {
 			if(*data == ewmh_atoms[NET_WM_WINDOW_TYPE_DESKTOP]) {
 				c->flags ^= c->flags & (CAN_MOVE | CAN_RESIZE | HAS_BORDER | HAS_TITLE);
-				c->flags |= NO_STRUT | DONT_LIST | FULLSCREEN;
+				c->flags |= NO_STRUT | DONT_LIST | FULLSCREEN | DONT_FOCUS;
 				c->layer = DESKTOP;
 				c->desktop = STICKY;
 			}
 			if(*data == ewmh_atoms[NET_WM_WINDOW_TYPE_DOCK]) {
 				c->flags ^= c->flags & (CAN_MOVE | CAN_RESIZE | HAS_BORDER | HAS_TITLE);
-				c->flags |= NO_STRUT | DONT_LIST;
+				c->flags |= NO_STRUT | DONT_LIST | DONT_FOCUS;
 				c->desktop = STICKY;
 			}
 		}

@@ -391,3 +391,12 @@
 	added error checking for desktop count and border width in config files
 	dc now is an unsigned integer, so up to 0xFFFFFFFF desktops are now supported
 
+0.0.68:
+	client_to_border() also raises the window
+	don't try to map window list items at iconify, when not necessary
+	don't focus desktops or taskbars
+	previous claim was bs, only 0xFFFFFFFE desktops can be done as 0xFFFFFFFF would be the sticky desktop, do error checking for it
+	leave previous value intact if errorous value set for border_width of desktops
+	added modifier mask to disable snapping
+	updated manual page about snapping also being for screen edges
+

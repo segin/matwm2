@@ -14,6 +14,7 @@ snap                  5\n\
 desktops              4\n\
 ignore_modifier       mod2 lock\n\
 mouse_modifier        mod1\n\
+no_snap_modifier			shift\n\
 click_focus						false\n\
 click_raise						false\n\
 key                   mod1 Tab                next\n\

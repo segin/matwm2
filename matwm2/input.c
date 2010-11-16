@@ -1,6 +1,6 @@
 #include "matwm.h"
 
-unsigned int mousemodmask = 0, *mod_ignore = NULL;
+unsigned int mousemodmask = 0, nosnapmodmask = 0, *mod_ignore = NULL;
 XModifierKeymap *modmap;
 keybind *keys = NULL;
 int keyn = 0, nmod_ignore = 0;

@@ -129,7 +129,7 @@ int client_number(client **array, client *c);
 client *owner(Window w);
 
 // global variables from input.c
-extern unsigned int mousemodmask, *mod_ignore;
+extern unsigned int mousemodmask, nosnapmodmask, *mod_ignore;
 extern XModifierKeymap *modmap;
 extern keybind *keys;
 extern int keyn, nmod_ignore;

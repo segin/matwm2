@@ -40,7 +40,9 @@ int drag_handle_event(XEvent ev) {
 				if(drag_mode == RESIZE) {
 					x = ev.xmotion.x + 2;
 					y = ev.xmotion.y + 2;
-					client_resize(current, snaph(current, x, snapv(current, x, y)) - drag_xo, snapv(current, snaph(current, x, y), y) - drag_yo);
+					if(nosnapmodmask && ev.xmotion.state & nosnapmodmask)
+						client_resize(current, x - drag_xo, y - drag_yo);
+					else client_resize(current, snaph(current, x, snapv(current, x, y)) - drag_xo, snapv(current, snaph(current, x, y), y) - drag_yo);
 				} else if(ev.xmotion.x == display_width - 1 && desktop < dc - 1) {
 					client_move(current, -(drag_xo + 1), ev.xmotion.y - drag_yo);
 					XWarpPointer(dpy, None, root, 0, 0, 0, 0, 1, ev.xmotion.y);
@@ -49,7 +51,9 @@ int drag_handle_event(XEvent ev) {
 					client_move(current, display_width - (drag_xo + 2), ev.xmotion.y - drag_yo);
 					XWarpPointer(dpy, None, root, 0, 0, 0, 0, display_width - 2, ev.xmotion.y);
 					desktop_goto(desktop - 1);
-				} else client_move(current, snapx(current, ev.xmotion.x - drag_xo, snapy(current, ev.xmotion.x - drag_xo, ev.xmotion.y - drag_yo)), snapy(current, snapx(current, ev.xmotion.x - drag_xo, ev.xmotion.y - drag_yo), ev.xmotion.y - drag_yo));
+				} else if(nosnapmodmask && ev.xmotion.state & nosnapmodmask)
+					client_move(current, ev.xmotion.x - drag_xo, ev.xmotion.y - drag_yo);
+				else client_move(current, snapx(current, ev.xmotion.x - drag_xo, snapy(current, ev.xmotion.x - drag_xo, ev.xmotion.y - drag_yo)), snapy(current, snapx(current, ev.xmotion.x - drag_xo, ev.xmotion.y - drag_yo), ev.xmotion.y - drag_yo));
 				return 1;
 			case ButtonRelease:
 				if(ev.xbutton.button == drag_button || drag_button == AnyButton)

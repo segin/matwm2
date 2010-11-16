@@ -45,6 +45,7 @@ typedef struct {
 #define NO_STRUT				(1 << 16)
 #define DONT_LIST				(1 << 17)
 #define RESTORE					(1 << 18)
+#define DONT_FOCUS			(1 << 19)
 
 #define STICKY					-1
 

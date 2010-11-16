@@ -61,7 +61,7 @@ void cfg_parse(char *cfg) {
 
 void cfg_set_opt(char *key, char *value) {
 	XColor dummy;
-	int i;
+	unsigned int i;
 	if(strcmp(key, "resetkeys") == 0)
 		keys_free();
 	if(!value)
@@ -86,14 +86,16 @@ void cfg_set_opt(char *key, char *value) {
 		}
 	}
 	if(strcmp(key, "border_width") == 0) {
-		border_width = strtol(value, NULL, 0);
-		border_width = (border_width > 0) ? border_width : 1;
+		i = strtol(value, NULL, 0);
+		if(i > 0)
+		  border_width = i;
 	}
 	if(strcmp(key, "snap") == 0)
 		snapat = strtol(value, NULL, 0);
 	if(strcmp(key, "desktops") == 0) {
-		dc = strtol(value, NULL, 0);
-		dc = (dc > 0) ? dc : 1;
+		i = strtol(value, NULL, 0);
+		if(i > 0 && i != STICKY)
+			dc = i;
 	}
 	if(strcmp(key, "button1") == 0)
 		button1 = str_buttonaction(value);
@@ -111,6 +113,8 @@ void cfg_set_opt(char *key, char *value) {
 		str_bool(value, &click_raise);
 	if(strcmp(key, "mouse_modifier") == 0)
 		str_key(&value, &mousemodmask);
+	if(strcmp(key, "no_snap_modifier") == 0)
+		str_key(&value, &nosnapmodmask);
 	if(strcmp(key, "ignore_modifier") == 0)
 		while(value) {
 			mod_ignore = (unsigned int *) realloc((void *) mod_ignore, (nmod_ignore + nmod_ignore + 2) * sizeof(unsigned int));
