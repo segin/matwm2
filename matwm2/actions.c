@@ -193,7 +193,8 @@ void client_iconify(client *c) {
 	nicons++;
 	c->flags |= ICONIC;
 	set_wm_state(c->window, IconicState);
-	client_hide(c);
+	if(c->desktop == desktop || c->desktop == STICKY)
+		client_hide(c);
 	if(!current)
 		client_focus_first();
 	if(c->desktop != desktop && c->desktop != STICKY)
