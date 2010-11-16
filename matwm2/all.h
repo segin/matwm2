@@ -19,6 +19,7 @@ void client_save(client *c);
 void client_to_border(client *c, char *a);
 void client_iconify_all(void);
 void client_end_all_iconic(void);
+void client_handle_button(client *c, XEvent ev, int d);
 
 /* global variables from buttons.c */
 extern button *button_current;
@@ -60,7 +61,7 @@ void clients_alloc(void);
 /* global variables from config.c */
 extern XColor bg, ibg, fg, ifg;
 extern GC gc, igc, bgc, ibgc;
-extern int border_width, text_height, title_height, title_spacing, center_title, center_wlist_items, button_size, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first, *buttons_right, nbuttons_right, *buttons_left, nbuttons_left, doubleclick_time, doubleclick;
+extern int border_width, text_height, title_height, title_spacing, center_title, center_wlist_items, button_size, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first, *buttons_right, nbuttons_right, *buttons_left, nbuttons_left, doubleclick_time, double1, double2, double3, double4, double5;
 extern XFontStruct *font;
 extern char *no_title;
 
@@ -75,7 +76,6 @@ KeySym str_key(char **str, unsigned int *mask);
 unsigned int str_modifier(char *name);
 int str_buttonaction(char *str);
 int str_keyaction(char *str);
-int str_doubleclick(char *str);
 int str_wbutton(char *button);
 void str_buttons(char *str, int **buttons, int *nbuttons);
 
@@ -96,6 +96,7 @@ int snapv(client *c, int nx, int ny);
 extern int (*evh)(XEvent);
 extern Time lastclick;
 extern unsigned int lastbutton;
+extern client *lastclick_client;
 
 /* functions from events.c */
 void handle_event(XEvent ev);
@@ -157,7 +158,7 @@ void keys_ungrab(void);
 void keys_free(void);
 void key_grab(keybind key);
 void key_ungrab(keybind key);
-int buttonaction(int button);
+int buttonaction(int button, int d);
 int keyaction(XEvent ev);
 char *keyarg(XEvent ev);
 int key_to_mask(KeyCode key);

@@ -43,7 +43,11 @@ Sets the foreground (text, border) color of window frames when they are not focu
 .IP "font [X11 font name]"
 Sets the font used for drawing text.
 .IP "button[1-5] [button action]"
-Sets the function mouse buttons have on window borders. Possible button actions are "move", "resize", "raise", "lower" and "none". "move" and "resize" raise the window and let the user drag it to resize or move it while the mouse button is held down. Moving windows over the right or left screen edge can be used to move them to the next desktop (at the right) or previous desktop (at the left). The "raise" and "lower" action send the window to the top or bottom of the stack respectively.
+Sets the function mouse buttons have on window borders. Possible button actions are "move", "resize", "raise", "lower", "iconify", "expand", "maximize", "close" and "none". "move" and "resize" raise the window and let the user drag it to resize or move it while the mouse button is held down. Moving windows over the right or left screen edge can be used to move them to the next desktop (at the right) or previous desktop (at the left). The other action are the same as the key actions with the same name described below.
+.IP "double[1-5] [button action]"
+Same as the above, but for double clicks.
+.IP "doubleclick_time [integer]"
+With this option you can specify how much time there can be between two clicks at most while still considering it a double click, in miliseconds. 
 .IP "border_width [integer]"
 Sets the width of window borders to [integer] pixels. Has to be 1 or greater.
 .IP "title_spacing [integer]"
@@ -66,10 +70,6 @@ Sets the focus model, if set to "true" matwm2 will focus windows when they are c
 If set to "true" windows will be risen when they (meaning the window itself, not its frame) are clicked, if set to "false" this behavior is disabled.
 .IP "focus_new [boolean]"
 If set to "true" new windows will be focussed when they appear and accordingly a value of "false" disables this behaviour. If you are dragging a window or in window list mode at the time of the window apearing the new window shall not be focussed even with this option set to "true".
-.IP "doubleclick [action]"
-Sets the action to be taken when a window frame is double clicked, can be either "maximize", "epand" and "none". These correspond with the key actions with the same name described below. You can use either the left or right (first and third respectively) mouse button to double click.
-.IP "doubleclick_time [integer]"
-With this option you can specify how much time there can be between two clicks at most while still considering it a double click, in miliseconds. 
 .IP "center_title [boolean]"
 If set to "true" the title of windows will apear in the center of the titlebar, if set to "false" it will be at the left.
 .IP "center_wlist_items [boolean]"

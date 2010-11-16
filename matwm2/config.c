@@ -2,7 +2,7 @@
 
 XColor bg, ibg, fg, ifg;
 GC gc, igc, bgc, ibgc;
-int border_width, text_height, title_height, title_spacing, center_title, center_wlist_items, button_size, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first = 1, *buttons_right = NULL, nbuttons_right, *buttons_left = NULL, nbuttons_left, doubleclick_time, doubleclick;
+int border_width, text_height, title_height, title_spacing, center_title, center_wlist_items, button_size, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first = 1, *buttons_right = NULL, nbuttons_right, *buttons_left = NULL, nbuttons_left, doubleclick_time, double1, double2, double3, double4, double5;
 XFontStruct *font = NULL;
 char *no_title = NO_TITLE;
 
@@ -131,8 +131,16 @@ void cfg_set_opt(char *key, char *value, int initial) {
 		button4 = str_buttonaction(value);
 	if(strcmp(key, "button5") == 0)
 		button5 = str_buttonaction(value);
-	if(strcmp(key, "doubleclick") == 0)
-		doubleclick = str_doubleclick(value);
+	if(strcmp(key, "double1") == 0)
+		double1 = str_buttonaction(value);
+	if(strcmp(key, "double2") == 0)
+		double2 = str_buttonaction(value);
+	if(strcmp(key, "double3") == 0)
+		double3 = str_buttonaction(value);
+	if(strcmp(key, "double4") == 0)
+		double4 = str_buttonaction(value);
+	if(strcmp(key, "double4") == 0)
+		double4 = str_buttonaction(value);
 	if(strcmp(key, "click_focus") == 0)
 		str_bool(value, &click_focus);
 	if(strcmp(key, "click_raise") == 0)
@@ -257,6 +265,14 @@ int str_buttonaction(char *str) {
 		return BA_RAISE;
 	if(strcmp(str, "lower") == 0)
 		return BA_LOWER;
+	if(strcmp(str, "maximize") == 0)
+		return BA_MAXIMIZE;
+	if(strcmp(str, "expand") == 0)
+		return BA_EXPAND;
+	if(strcmp(str, "iconify") == 0)
+		return BA_ICONIFY;
+	if(strcmp(str, "close") == 0)
+		return BA_CLOSE;
 	return BA_NONE;
 }
 
@@ -298,14 +314,6 @@ int str_keyaction(char *str) {
 	if(strcmp(str, "lower") == 0)
 		return KA_LOWER;
 	return KA_NONE;
-}
-
-int str_doubleclick(char *str) {
-	if(strcmp(str, "maximize") ==  0)
-		return D_MAXIMIZE;
-	if(strcmp(str, "expand") ==  0)
-		return D_EXPAND;
-	return D_NONE;
 }
 
 int str_wbutton(char *button) {

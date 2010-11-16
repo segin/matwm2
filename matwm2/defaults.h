@@ -16,13 +16,17 @@ taskbar_ontop         false\n\
 focus_new             false\n\
 click_focus           false\n\
 click_raise           false\n\
-doubleclick_time      300\n\
-doubleclick           maximize\n\
 button1               move\n\
 button2               none\n\
 button3               resize\n\
 button4               raise\n\
 button5               lower\n\
+doubleclick_time      300\n\
+double1               maximize\n\
+double2               none\n\
+double3               none\n\
+double4               none\n\
+double5               none\n\
 mouse_modifier        mod1\n\
 no_snap_modifier      shift\n\
 ignore_modifier       mod2 lock\n\

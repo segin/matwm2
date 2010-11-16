@@ -82,19 +82,33 @@ void key_ungrab(keybind key) {
 		XUngrabKey(dpy, key.code, key.mask | mod_ignore[i], root);
 }
 
-int buttonaction(int button) {
-	switch(button) {
-		case Button1:
-			return button1;
-		case Button2:
-			return button2;
-		case Button3:
-			return button3;
-		case Button4:
-			return button4;
-		case Button5:
-			return button5;
-	}
+int buttonaction(int button, int d) {
+	if(d)
+		switch(button) {
+			case Button1:
+				return double1;
+			case Button2:
+				return double2;
+			case Button3:
+				return double3;
+			case Button4:
+				return double4;
+			case Button5:
+				return double5;
+		}
+	else
+		switch(button) {
+			case Button1:
+				return button1;
+			case Button2:
+				return button2;
+			case Button3:
+				return button3;
+			case Button4:
+				return button4;
+			case Button5:
+				return button5;
+		}
 	return BA_NONE;
 }
 

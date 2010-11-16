@@ -3,6 +3,7 @@
 int (*evh)(XEvent) = NULL;
 Time lastclick = 0;
 unsigned int lastbutton = None;
+client *lastclick_client = NULL;
 
 void handle_event(XEvent ev) {
 	client *c = owner(ev.xany.window);
@@ -56,18 +57,11 @@ void handle_event(XEvent ev) {
 				return;
 			case ButtonPress:
 				XAllowEvents(dpy, ReplayPointer, CurrentTime);
-				if(ev.xbutton.window != c->window && (ev.xbutton.button == Button1 || ev.xbutton.button == Button3)) {
-					if(lastclick + doubleclick_time > ev.xbutton.time && lastbutton == ev.xbutton.button) {
-	 					if(doubleclick == D_MAXIMIZE) {
-							client_toggle_state(current, MAXIMIZED_L | MAXIMIZED_R | MAXIMIZED_T | MAXIMIZED_B);
-							return;
-						}
-						if(doubleclick == D_EXPAND) {
-							client_expand(c, EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B, 0);
-							return;
-						}
-					}
+				if(ev.xbutton.window != c->window) {
+					if(lastclick + doubleclick_time > ev.xbutton.time && lastbutton == ev.xbutton.button && lastclick_client == c)
+						client_handle_button(c, ev, 1);
 					lastclick = ev.xbutton.time;
+					lastclick_client = c;
 					lastbutton = ev.xbutton.button;
 				}
 				if(c != current)
@@ -77,16 +71,7 @@ void handle_event(XEvent ev) {
 						client_raise(c);
 					return;
 				}
-				if(buttonaction(ev.xbutton.button) == BA_MOVE)
-					drag_start(MOVE, ev.xbutton.button, ev.xbutton.x_root, ev.xbutton.y_root);
-				if(buttonaction(ev.xbutton.button) == BA_RESIZE)
-					drag_start(RESIZE, ev.xbutton.button, ev.xbutton.x_root, ev.xbutton.y_root);
-				return;
-			case ButtonRelease:
-				if(buttonaction(ev.xbutton.button) == BA_RAISE)
-					client_raise(c);
-				if(buttonaction(ev.xbutton.button) == BA_LOWER)
-					client_lower(c);
+				client_handle_button(c, ev, 0);
 				return;
 			case FocusOut:
 				if(c == current && ev.xfocus.mode != NotifyGrab)

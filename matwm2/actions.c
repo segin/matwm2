@@ -262,3 +262,23 @@ void client_end_all_iconic(void) {
 	}
 }
 
+void client_handle_button(client *c, XEvent ev, int d) {
+	int action = buttonaction(ev.xbutton.button, d);
+	if(action == BA_MOVE)
+		drag_start(MOVE, ev.xbutton.button, ev.xbutton.x_root, ev.xbutton.y_root);
+	if(action == BA_RESIZE)
+		drag_start(RESIZE, ev.xbutton.button, ev.xbutton.x_root, ev.xbutton.y_root);
+	if(action == BA_RAISE)
+		client_raise(c);
+	if(action == BA_LOWER)
+		client_lower(c);
+	if(action == BA_MAXIMIZE)
+		client_toggle_state(current, MAXIMIZED_L | MAXIMIZED_R | MAXIMIZED_T | MAXIMIZED_B);
+	if(action == BA_EXPAND)
+		client_expand(c, EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B, 0);
+	if(action == BA_ICONIFY)
+		client_iconify(c);
+	if(action == BA_CLOSE)
+		delete_window(c);
+}
+

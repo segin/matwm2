@@ -29,7 +29,7 @@ void buttons_create(client *c) {
 		c->nbuttons++;
 	}
 	for(i = 0; i < nbuttons_right; i++) {
-		if((buttons_right[i] == B_EXPAND || buttons_right[i] == B_MAXIMIZE) && !(c->flags & CAN_MOVE && c->flags & CAN_RESIZE))
+		if(((buttons_right[i] == B_EXPAND || buttons_right[i] == B_MAXIMIZE) && !(c->flags & CAN_MOVE && c->flags & CAN_RESIZE)))
 			continue;
 		c->buttons[c->nbuttons].w = XCreateWindow(dpy, c->button_parent_right, c->buttons_right_width, 0, button_size, button_size, 0,
 																							DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),

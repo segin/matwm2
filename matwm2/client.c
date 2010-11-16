@@ -149,9 +149,9 @@ void client_remove(client *c) {
 }
 
 void client_grab_button(client *c, int button) {
-	if(!(buttonaction(button) == BA_MOVE && !(c->flags & CAN_MOVE)) && !(buttonaction(button) == BA_RESIZE && !(c->flags & CAN_RESIZE))) {
+	if(!(c->flags & DONT_FOCUS)) {
 		button_grab(c->parent, button, mousemodmask, ButtonPressMask | ButtonReleaseMask);
-		if(nosnapmodmask && (buttonaction(button) == BA_MOVE || buttonaction(button) == BA_RESIZE))
+		if(nosnapmodmask && (buttonaction(button, 0) == BA_MOVE || buttonaction(button, 0) == BA_RESIZE || buttonaction(button, 1) == BA_MOVE || buttonaction(button, 1) == BA_RESIZE))
 			button_grab(c->parent, button, nosnapmodmask | mousemodmask, ButtonPressMask | ButtonReleaseMask);
 	}
 }

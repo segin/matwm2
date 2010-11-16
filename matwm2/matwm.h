@@ -101,7 +101,11 @@ enum {
 	BA_MOVE,
 	BA_RESIZE,
 	BA_RAISE,
-	BA_LOWER
+	BA_LOWER,
+	BA_MAXIMIZE,
+	BA_EXPAND,
+	BA_ICONIFY,
+	BA_CLOSE
 };
 
 enum {
@@ -110,20 +114,14 @@ enum {
 };
 
 enum {
+	B_NONE,
 	B_CLOSE,
 	B_MAXIMIZE,
 	B_EXPAND,
 	B_ICONIFY,
 	B_STICKY,
 	B_ONTOP,
-	B_BELOW,
-	B_NONE
-};
-
-enum {
-	D_MAXIMIZE,
-	D_EXPAND,
-	D_NONE
+	B_BELOW
 };
 
 #include "mwm_hints.h"

@@ -1,3 +1,8 @@
+0.0.84:
+	double click can be set for every mouse button in the same way normal mouse buttons can be configured
+	check if both clicks come from the same client with double clicks
+	fuck menus and taskbar @ TODO
+
 0.0.83:
 	sticky, ontop and below buttons added & man updated about this
 	double click actions now possible & added info about the options for this in the manual
