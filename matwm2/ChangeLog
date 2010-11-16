@@ -400,3 +400,11 @@
 	added modifier mask to disable snapping
 	updated manual page about snapping also being for screen edges
 
+0.0.69:
+	ignore whitespace at end of config file lines
+	avoid a few assertions in eat() that aren't necesarry at all
+	str_key return NoSymbol if no key could be found instead of 0
+	if a key action doesn't make sence, don't grab the key
+	don't grab mouse buttons if there is no mousemodmask
+	grab buttons also for mousemodmask|nosnapmodmask if nosnapmodmask is there
+

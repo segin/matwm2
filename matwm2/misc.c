@@ -38,8 +38,8 @@ char *eat(char **str, char *until) {
 			return ret;
 		}
 		c = until;
-		while(*c) {
-			if(ret && (**str == *c || **str == 0)) {
+		while(ret && *c) {
+			if(**str == *c || **str == 0) {
 				**str = 0;
 				(*str)++;
 				return ret;

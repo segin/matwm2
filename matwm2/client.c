@@ -148,16 +148,21 @@ void client_remove(client *c) {
 }
 
 void client_grab_button(client *c, int button) {
-	if(!(buttonaction(button) == BA_MOVE && !(c->flags & CAN_MOVE)) && !(buttonaction(button) == BA_RESIZE && !(c->flags & CAN_RESIZE)))
+	if(!(buttonaction(button) == BA_MOVE && !(c->flags & CAN_MOVE)) && !(buttonaction(button) == BA_RESIZE && !(c->flags & CAN_RESIZE))) {
 		button_grab(c->parent, button, mousemodmask, ButtonPressMask | ButtonReleaseMask);
+		if(nosnapmodmask && (buttonaction(button) == BA_MOVE || buttonaction(button) == BA_RESIZE))
+			button_grab(c->parent, button, nosnapmodmask | mousemodmask, ButtonPressMask | ButtonReleaseMask);
+	}
 }
 
 void client_grab_buttons(client *c) {
-	client_grab_button(c, Button1);
-	client_grab_button(c, Button2);
-	client_grab_button(c, Button3);
-	client_grab_button(c, Button4);
-	client_grab_button(c, Button5); 
+	if(mousemodmask) {
+		client_grab_button(c, Button1);
+		client_grab_button(c, Button2);
+		client_grab_button(c, Button3);
+		client_grab_button(c, Button4);
+		client_grab_button(c, Button5);
+	}
 	XGrabButton(dpy, AnyButton, AnyModifier, c->window, True, ButtonPressMask, GrabModeSync, GrabModeAsync, None, None);
 }
 

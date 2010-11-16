@@ -8,15 +8,19 @@ int keyn = 0, nmod_ignore = 0;
 void key_bind(char *str) {
 	keybind k;
 	k.sym = str_key(&str, &k.mask);
-	if(!str)
+	if(!str || k.sym == NoSymbol)
 		return;
 	k.action = str_keyaction(eat(&str, " \t"));
+	if(k.action == KA_NONE)
+		return;
 	if(str) {
 		while(*str == ' ' || *str == '\t')
 			str++;
 		k.arg = (char *) malloc(strlen(str) + 1);
 		strncpy(k.arg, str, strlen(str) + 1);
-	} else k.arg = NULL;
+	} else if(k.action == KA_EXEC)
+		return;
+	else k.arg = NULL;
 	keys = (keybind *) realloc((void *) keys, (keyn + 1) * sizeof(keybind));
 	if(!keys)
 		error();

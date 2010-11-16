@@ -48,13 +48,17 @@ void cfg_read(void) {
 
 void cfg_parse(char *cfg) {
 	char *opt, *key;
+	int i;
 	while(cfg) {
 		opt = eat(&cfg, "\n");
 		opt = eat(&opt, "#");
 		key = eat(&opt, "\t ");
-		if(opt)
+		if(opt) {
 			while(*opt == ' ' || *opt == '\t')
 				opt++;
+			for(i = strlen(opt) - 1; opt[i] == ' ' || opt[i] == '\t'; i--);
+			opt[i + 1] = 0;
+		}
 		cfg_set_opt(key, opt);
 	}
 }
@@ -145,7 +149,7 @@ KeySym str_key(char **str, unsigned int *mask) {
 			return XStringToKeysym(k);
 		*mask = *mask | mod;
 	}
-	return 0;
+	return NoSymbol;
 }
 
 unsigned int str_modifier(char *name) {
