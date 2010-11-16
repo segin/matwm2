@@ -86,6 +86,9 @@ bool ewmh_handle_event(XEvent *ev) {
 			c = owner(ev->xclient.window);
 			if(ev->xclient.message_type == ewmh_atoms[NET_WM_MOVERESIZE]) {
 				if(c) {
+					#ifdef DEBUG_EVENTS
+					printf(NAME ": ewmh_handle_event(): handling ClientMessage event\n\tatom: _NET_WM_MOVERESIZE\n");
+					#endif
 					if(ev->xclient.data.l[2] == NET_WM_MOVERESIZE_MOVE || ev->xclient.data.l[2] == NET_WM_MOVERESIZE_MOVE_KEYBOARD) {
 						client_focus(c, true);
 						xo = client_width_total_intern(c) / 2;
@@ -101,12 +104,19 @@ bool ewmh_handle_event(XEvent *ev) {
 				return true;
 			}
 			if(ev->xclient.message_type == ewmh_atoms[NET_CLOSE_WINDOW]) {
-				if(c)
+				if(c) {
+					#ifdef DEBUG_EVENTS
+					printf(NAME ": ewmh_handle_event(): handling ClientMessage event\n\tatom: _NET_CLOSE_WINDOW\n");
+					#endif
 					delete_window(c);
+				}
 				return true;
 			}
 			if(ev->xclient.message_type == ewmh_atoms[NET_ACTIVE_WINDOW]) {
 				if(c) {
+					#ifdef DEBUG_EVENTS
+					printf(NAME ": ewmh_handle_event(): handling ClientMessage event\n\tatom: _NET_ACTIVE_WINDOW\n");
+					#endif
 					if(c->flags & ICONIC)
 						client_restore(c);
 					else {
@@ -120,14 +130,21 @@ bool ewmh_handle_event(XEvent *ev) {
 				return true;
 			}
 			if(ev->xclient.message_type == ewmh_atoms[NET_RESTACK_WINDOW]) {
-				if(c && ev->xclient.data.l[1] == None)
+				if(c && ev->xclient.data.l[1] == None) {
+					#ifdef DEBUG_EVENTS
+					printf(NAME ": ewmh_handle_event(): handling ClientMessage event\n\tatom: _NET_RESTACK_WINDOW\n");
+					#endif
 					client_raise(c);
+				}
 				/* schould also add code for handling this when a sibling window is passed */
 				/* but we schould find/create a way to test this first */
 				return true;
 			}
 			if(ev->xclient.message_type == ewmh_atoms[NET_WM_STATE]) {
 				if(c) {
+					#ifdef DEBUG_EVENTS
+					printf(NAME ": ewmh_handle_event(): handling ClientMessage event\n\tatom: _NET_WM_STATE\n");
+					#endif
 					j = 0;
 					for(i = 1; i < 3; i++) {
 						if(((Atom) ev->xclient.data.l[i]) == ewmh_atoms[NET_WM_STATE_MAXIMIZED_HORZ])
@@ -147,15 +164,25 @@ bool ewmh_handle_event(XEvent *ev) {
 				}
 			}
 			if(ev->xclient.message_type == ewmh_atoms[NET_CURRENT_DESKTOP]) {
+				#ifdef DEBUG_EVENTS
+				printf(NAME ": ewmh_handle_event(): handling ClientMessage event\n\tatom: _NET_CURRENT_DESKTOP\n");
+				#endif
 				desktop_goto(ev->xclient.data.l[0]);
 				return true;
 			}
 			if(ev->xclient.message_type == ewmh_atoms[NET_WM_DESKTOP]) {
-				if(c && ev->xclient.data.l[0] >= STICKY)
+				if(c && ev->xclient.data.l[0] >= STICKY) {
+					#ifdef DEBUG_EVENTS
+					printf(NAME ": ewmh_handle_event(): handling ClientMessage event\n\tatom: _NET_WM_DESKTOP\n");
+					#endif
 					client_to_desktop(c, (ev->xclient.data.l[0] <= dc) ? ev->xclient.data.l[0] : dc - 1);
+				}
 				return true;
 			}
 			if(ev->xclient.message_type == ewmh_atoms[NET_REQUEST_FRAME_EXTENTS]) {
+				#ifdef DEBUG_EVENTS
+				printf(NAME ": ewmh_handle_event(): handling ClientMessage event\n\tatom: _NET_REQUEST_FRAME_EXTENTS\n");
+				#endif
 				extents[0] = border_width;
 				extents[1] = border_width;
 				extents[2] = border_width + title_height;
@@ -164,12 +191,18 @@ bool ewmh_handle_event(XEvent *ev) {
 				return true;
 			}
 			if(ev->xclient.message_type == ewmh_atoms[NET_SHOWING_DESKTOP]) {
+				#ifdef DEBUG_EVENTS
+				printf(NAME ": ewmh_handle_event(): handling ClientMessage event\n\tatom: _NET_SHOWING_DESKTOP\n");
+				#endif
 				client_iconify_all();
 				return true;
 			}
 			break;
 		case PropertyNotify:
 			if(ev->xproperty.atom == ewmh_atoms[NET_WM_STRUT_PARTIAL] || ev->xproperty.atom == ewmh_atoms[NET_WM_STRUT]) {
+				#ifdef DEBUG_EVENTS
+				printf(NAME ": ewmh_handle_event(): handling PropertyNotify event (_NET_WM_STRUT or _NET_WM_STRUT_PARTIAL changed)\n");
+				#endif
 				ewmh_update_strut();
 				return true;
 			}

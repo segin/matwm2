@@ -24,13 +24,14 @@ int main(int argc, char *argv[]) {
 	XEvent ev;
 	int i, dfd, sr;
 	unsigned int ui, nwins;
-	Window dw, *wins;
+	Window w, dw, *wins;
 	XWindowAttributes attr;
 	#ifdef USE_SHAPE
 	int di;
 	#endif
 	fd_set fds, fdsr;
 	char act;
+	client *c;
 	/* parse command line arguments */
 	for(i = 1; i < argc; i++) {
 		if(strcmp(argv[i], "-defaults") == 0) {
@@ -125,8 +126,10 @@ int main(int argc, char *argv[]) {
 	ewmh_initialize();
 	screens_get(); /* we need atoms from above XInternAtom() and ewmh_initialize() calls for this */
 	cfg_read(1); /* read configuration - see config.c */
+	/* select events on the root window */
 	if(!select_root_events()) /* config has to be read before this */
 		exit(1);
+	/* create window list window */
 	p_attr.override_redirect = True;
 	p_attr.background_pixel = fg.pixel;
 	p_attr.border_pixel = ibfg.pixel;
@@ -134,14 +137,17 @@ int main(int argc, char *argv[]) {
 	wlist = XCreateWindow(dpy, root, 0, 0, 1, 1, 0, /* create the window list */
 	                      DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
 	                      CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
-	p_attr.event_mask = SubstructureRedirectMask |  SubstructureNotifyMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask | LeaveWindowMask | ExposureMask;
+	/* set attributes for further use */
 	p_attr.background_pixel = ibg.pixel;
+	/* update EWMH hints */
 	ewmh_update(); /* for this we need wlist to be there and configuration to be read */
 	#ifdef USE_SHAPE
+	/* get info about shape extension */
 	have_shape = XShapeQueryExtension(dpy, &shape_event, &di);
 	#endif
-	XSetInputFocus(dpy, PointerRoot, RevertToPointerRoot, CurrentTime); /* set input focus to the root window */
-	XQueryTree(dpy, root, &dw, &dw, &wins, &nwins); /* look for windows already present */
+	/* look for windows that are already present */
+	XGetInputFocus(dpy, &w, &i); /* next step might change focus */
+	XQueryTree(dpy, root, &dw, &dw, &wins, &nwins);
 	for(ui = 0; ui < nwins; ui++)
 		if(XGetWindowAttributes(dpy, wins[ui], &attr)) {
 			if(!attr.override_redirect && attr.map_state == IsViewable)
@@ -150,11 +156,29 @@ int main(int argc, char *argv[]) {
 		}
 	if(wins != NULL)
 		XFree(wins);
+	/* look what window is to be focussed (if one) */
+	if(w == PointerRoot || w == root || w == None)
+		XQueryPointer(dpy, root, &dw, &w, &di, &di, &di, &di, &ui);
+	if(w != None && w != PointerRoot && w != root) {
+		c = owner(w);
+		if(c) client_focus(c, true);
+		else XSetInputFocus(dpy, w, RevertToPointerRoot, CurrentTime);
+	}	else {
+		client_focus_first();
+		if(!current) /* if input focus is set to None, input doesn't work at all */
+			XSetInputFocus(dpy, PointerRoot, RevertToPointerRoot, CurrentTime);
+	}
+	/* remove some events we might have generated */
+	XSync(dpy, False);
+	while(XCheckMaskEvent(dpy, FocusChangeMask | EnterWindowMask, &ev));
+	/* update EWMH client stuff */
 	ewmh_update_clist();
-	dfd = ConnectionNumber(dpy); /* get the file descriptor Xlib uses to communicate with the server */
+	/* initialize file descriptor set for select() */
+	dfd = ConnectionNumber(dpy); /* gets the file descriptor Xlib uses to communicate with the server */
 	FD_ZERO(&fds);
 	FD_SET(qsfd[0], &fds);
 	FD_SET(dfd, &fds);
+	/* our main loop */
 	while(1)
 		if(XPending(dpy)) { /* check if there are X events pending */
 			XNextEvent(dpy, &ev);

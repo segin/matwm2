@@ -78,6 +78,24 @@
 	fixed client_save() and made it obey map_center too
 	call client_save() in client_add()
 	added some printf statements for -DDEBUG
+	**pre4 release
+	corrected debugging message about adding client
+	added some debugging messages, improved old debugging messages
+	don't do the focus_new thing when adding existing clients on startup
+	try to preserve input focus on startup
+	more comments in main.c, and around things concerning input focus
+	client_focus_first() checks if the pointer is in a window of ours first, checks if previous is visible and can be focussed
+	don't handle NotifyPointer events normally, just set input focus the right way when it goes to the root window
+	don't listen to EnterNotify events generated because of grabbing/ungrabbing
+	set border width only right before reparenting a window
+	choose events for parent window and button windows etc separately
+	don't report focus changes with -DDEBUG
+	replaced some spaces by tabs in ewmh.h
+	configure script prints error on invalid argument, and returns 0 instead of 1 on --help or -h
+	configure script accepts --mandir instead of --maprefix (this apears to be the convention)
+	--enable-debug intended correctly in configure script usage message
+	removed taskbar plan from TODO - doesn't belong there it will be a separate project
+	removed matwm-remote plan from TODO - currently seems like a dumb idea, might reconsider this in future
 
 0.0.99:
 	using pid_t instead of int for pid in spawn()

@@ -5,6 +5,9 @@ int wlist_width, wlist_screen;
 client *client_before_wlist;
 
 void wlist_start(XEvent *ev) {
+	#ifdef DEBUG
+	printf(NAME ": wlist_start(): entering window list mode\n");
+	#endif
 	if(evh || !cn)
 		return;
 	if(!wlist_update())
@@ -21,6 +24,9 @@ void wlist_start(XEvent *ev) {
 }
 
 void wlist_end(int err) {
+	#ifdef DEBUG
+	printf(NAME ": wlist_end(): ending window list mode\n");
+	#endif
 	XUngrabKeyboard(dpy, CurrentTime);
 	evh = NULL;
 	if(current && !err) {
@@ -59,6 +65,9 @@ bool wlist_handle_event(XEvent *ev) {
 	action *a;
 	switch(ev->type) {
 		case KeyPress:
+			#ifdef DEBUG_EVENTS
+			printf(NAME ": wlist_handle_event(): handling KeyPress event\n");
+			#endif
 			a = keyaction(ev);
 			if(!a)
 				break;
@@ -70,6 +79,9 @@ bool wlist_handle_event(XEvent *ev) {
 			XWarpPointer(dpy, None, current->wlist_item, 0, 0, 0, 0, wlist_width - 2, wlist_item_height - 1);
 			break;
 		case KeyRelease:
+			#ifdef DEBUG_EVENTS
+			printf(NAME ": wlist_handle_event(): handling KeyRelease event\n");
+			#endif
 			mask = ev->xkey.state;
 			if(mask) {
 				mask ^= ev->xkey.state & key_to_mask(ev->xkey.keycode);
@@ -81,6 +93,9 @@ bool wlist_handle_event(XEvent *ev) {
 			}
 			break;
 		case ButtonPress:
+			#ifdef DEBUG_EVENTS
+			printf(NAME ": wlist_handle_event(): handling ButtonPress event\n");
+			#endif
 			if(click_focus) {
 				c = owner(ev->xbutton.window);
 				if(c)

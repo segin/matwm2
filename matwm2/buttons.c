@@ -5,6 +5,7 @@ int button_down = 0;
 
 void buttons_create(client *c) {
 	int i;
+	p_attr.event_mask = 0;
 	c->button_parent_left = XCreateWindow(dpy, c->parent, border_spacing, border_spacing, 1, 1, 0,
 	                                      depth, CopyFromParent, visual,
 	                                      CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
@@ -15,6 +16,7 @@ void buttons_create(client *c) {
 	c->nbuttons = 0;
 	c->buttons_left_width = 0;
 	c->buttons_right_width = 0;
+	p_attr.event_mask = ButtonPressMask | ButtonReleaseMask | EnterWindowMask | LeaveWindowMask | ExposureMask;
 	for(i = 0; i < nbuttons_left; i++) {
 		if((buttons_left[i] == B_EXPAND || buttons_left[i] == B_MAXIMIZE) && !(c->flags & CAN_MOVE && c->flags & CAN_RESIZE))
 			continue;
@@ -125,6 +127,9 @@ bool button_handle_event(XEvent *ev) {
 			button_draw(c, b);
 			return true;
 		case EnterNotify:
+			#ifdef DEBUG_EVENTS
+			printf(NAME ": button_handle_event(): handling EnterNotify event\n");
+			#endif
 			if(button_down) {
 				button_down = 2;
 				return true;
@@ -133,16 +138,26 @@ bool button_handle_event(XEvent *ev) {
 			button_draw(c, b);
 			return true;
 		case LeaveNotify:
+			#ifdef DEBUG_EVENTS
+			printf(NAME ": button_handle_event(): handling LeaveNotify event\n");
+			#endif
 			if(button_down == 2)
 				button_down = 1;
 			button_current = NULL;
 			button_draw(c, b);
 			return true;
 		case ButtonPress:
-			if(ev->xbutton.button == Button1 || ev->xbutton.button == Button3)
+			if(ev->xbutton.button == Button1 || ev->xbutton.button == Button3) {
+				#ifdef DEBUG_EVENTS
+				printf(NAME ": button_handle_event(): handling ButtonPress event\n");
+				#endif
 				button_down = 1;
+			}
 			return true;
 		case ButtonRelease:
+			#ifdef DEBUG_EVENTS
+			printf(NAME ": button_handle_event(): handling ButtonRelease event\n");
+			#endif
 			if(ev->xbutton.button == Button1 || ev->xbutton.button == Button3) {
 				if(button_current == b) {
 					if(b->action == B_ICONIFY)

@@ -13,8 +13,7 @@ int xerrorhandler(Display *display, XErrorEvent *xerror) { /* we set this as the
 		char ret[666];
 		XGetErrorText(xerror->display, xerror->error_code, ret, sizeof(ret));
 		c = owner(xerror->resourceid);
-		if(c) printf(NAME ": x error: %s\n\tresource: 0x%X (%s)\n\topcode: %i (%s)\n", ret, (unsigned int) xerror->resourceid, c->name, xerror->request_code, str_opcode(xerror->request_code));
-		else printf(NAME ": x error: %s\n\tresource: 0x%X\n\topcode %i (%s)\n", ret, (unsigned int) xerror->resourceid, xerror->request_code, str_opcode(xerror->request_code));
+		printf(NAME ": x error: %s\n\tresource: 0x%X (%s)\n\topcode: %i (%s)\n", ret, (unsigned int) xerror->resourceid, c ? c->name : ((xerror->resourceid == root) ? "root" : "unknown"), xerror->request_code, str_opcode(xerror->request_code));
 	}
 	#endif
 	return 0;

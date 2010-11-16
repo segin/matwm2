@@ -9,6 +9,7 @@ int nscreens = 0, cs = 0;
 bool screens_handle_event(XEvent *ev) {
 	int i;
 	if(ev->type == ConfigureNotify && ev->xconfigure.window == root) {
+		printf(NAME ": screens_handle_event(): handling ConfigureNotify event\n");
 		screens_get();
 		if(evh == wlist_handle_event)
 			wlist_update();
@@ -21,8 +22,11 @@ bool screens_handle_event(XEvent *ev) {
 }
 
 void screens_get(void) {
+	#if defined(USE_XINERAMA) || defined(DEBUG)
+	int i;
+	#endif
 	#ifdef USE_XINERAMA
-	int i, event, error;
+	int event, error;
 	XineramaScreenInfo *screeninfo;
 	if(XineramaQueryExtension(dpy, &event, &error)) {
 		screeninfo = XineramaQueryScreens(dpy, &nscreens);
@@ -51,6 +55,11 @@ void screens_get(void) {
 	ewmh_update_strut();
 	if(wlist_screen > nscreens)
 		wlist_screen = nscreens - 1;
+	#ifdef DEBUG
+	printf(NAME ": screens_get(): loaded screen info\n");
+	for(i = 0; i < nscreens; i++)
+		printf("\tscreen %i: %ix%i+%i+%i\n", i, screens[i].width, screens[i].height, screens[i].x, screens[i].y);
+	#endif
 }
 
 void screens_update_current(void) {

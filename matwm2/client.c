@@ -54,13 +54,15 @@ void client_add(Window w, bool mapped) {
 	}
 	XFetchName(dpy, w, &new->name);
 	/* create the parent window */
-	XSetWindowBorderWidth(dpy, w, 0);
+	p_attr.event_mask = SubstructureRedirectMask | SubstructureNotifyMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask;
 	new->parent = XCreateWindow(dpy, root, client_x(new), client_y(new), client_width_total_intern(new), client_height_total_intern(new), (new->flags & HAS_BORDER) ? border_width : 0,
 	                            depth, CopyFromParent, visual,
 	                            CWOverrideRedirect | CWBackPixel | CWBorderPixel | CWEventMask, &p_attr);
+	p_attr.event_mask = 0;
 	new->title = XCreateWindow(dpy, new->parent, border_spacing, border_spacing, 1, 1, 0,
 	                           depth, CopyFromParent, visual,
 	                           CWOverrideRedirect | CWEventMask, &p_attr);
+	p_attr.event_mask = ButtonPressMask | EnterWindowMask | ExposureMask;
 	new->wlist_item = XCreateWindow(dpy, wlist, 0, 0, 1, 1, 0,
 	                                depth, CopyFromParent, visual,
 	                                CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
@@ -84,6 +86,7 @@ void client_add(Window w, bool mapped) {
 	client_grab_buttons(new);
 	/* reparent the client window */
 	XAddToSaveSet(dpy, w);
+	XSetWindowBorderWidth(dpy, w, 0);
 	XReparentWindow(dpy, w, new->parent, client_border_intern(new), client_border_intern(new) + client_title(new));
 	if(new->flags & FULLSCREEN || new->flags & MAXIMIZED_L || new->flags & MAXIMIZED_R || new->flags & MAXIMIZED_T || new->flags & MAXIMIZED_B)
 		client_update_size(new);
@@ -115,7 +118,7 @@ void client_add(Window w, bool mapped) {
 				if(stacking[i]->flags & FULLSCREEN && !(stacking[i]->flags & ICONIC) && (stacking[i]->desktop == desktop || stacking[i]->desktop == STICKY))
 					break;
 		/* if i now is > 0 theres a fullscreen window we cannot go above obstructing the new window so we omit focus_new behaviour */
-		if(((focus_new && !i) || (!current && get_focus_window() == PointerRoot)) && client_visible(new))
+		if(!mapped && ((focus_new && !i) || (!current && get_focus_window() == PointerRoot)) && client_visible(new))
 			client_focus(new, true);
 	}
 	if(!(new->flags & ICONIC)) /* client_visible isn't apropriate here (what if the window would be moved to another desktop later) */
@@ -128,7 +131,7 @@ void client_add(Window w, bool mapped) {
 	ewmh_update_extents(new);
 	ewmh_update_clist();
 	#ifdef DEBUG
-	printf(NAME ": added client %X (%s)\n\tgeometry: %ix%i+%i+%i\n", (unsigned int) new->window, new->name, client_width(new), client_height(new), client_x(new), client_y(new));
+	printf(NAME ": client_add(): added client 0x%X (%s)\n\tgeometry: %ix%i+%i+%i\n", (unsigned int) new->window, new->name, client_width(new), client_height(new), client_x(new), client_y(new));
 	#endif
 }
 
@@ -157,7 +160,7 @@ void client_deparent(client *c) { /* reparent a client's window to the root wind
 void client_remove(client *c) {
 	int i;
 	#ifdef DEBUG
-	printf(NAME ": removing client 0x%X (%s)\n", (unsigned int) c->window, c->name);
+	printf(NAME ": client_remove(): removing client 0x%X (%s)\n", (unsigned int) c->window, c->name);
 	#endif
 	if(c->flags & ICONIC)
 		nicons--;

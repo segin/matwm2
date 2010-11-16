@@ -5,6 +5,9 @@ unsigned int drag_button;
 unsigned char drag_mode;
 
 void drag_start(unsigned char mode, int button, int x, int y) {
+	#ifdef DEBUG
+	printf(NAME ": drag_start(): entering drag mode\n");
+	#endif
 	if(evh)
 		return;
 	if(mode == A_RESIZE) {
@@ -31,6 +34,9 @@ void drag_start(unsigned char mode, int button, int x, int y) {
 }
 
 void drag_end(void) {
+	#ifdef DEBUG
+	printf(NAME ": drag_end(): ending drag mode\n");
+	#endif
 	XUngrabPointer(dpy, CurrentTime);
 	evh = NULL;
 }
@@ -61,25 +67,40 @@ bool drag_handle_event(XEvent *ev) {
 					else client_move(current, snap(current, ev->xmotion.x - drag_xo, snap(current, ev->xmotion.x - drag_xo, ev->xmotion.y - drag_yo, 'v'), 'h'), snap(current, snap(current, ev->xmotion.x - drag_xo, ev->xmotion.y - drag_yo, 'h'), ev->xmotion.y - drag_yo, 'v'));
 					return true;
 				case ButtonRelease:
-					if(ev->xbutton.button == drag_button || drag_button == AnyButton)
+					if(ev->xbutton.button == drag_button || drag_button == AnyButton) {
+						#ifdef DEBUG_EVENTS
+						printf(NAME ": drag_handle_event(): handling ButtonRelease event\n");
+						#endif
 						drag_end();
+					}
 					return true;
 				case EnterNotify:
 				case ButtonPress:
 					return true;
 				case UnmapNotify:
-					if(current->window == ev->xunmap.window)
+					if(current->window == ev->xunmap.window) {
+						#ifdef DEBUG_EVENTS
+						printf(NAME ": drag_handle_event(): got UnmapNotify\n");
+						#endif
 						evh = drag_release_wait;
+					}
 					break;
 				case DestroyNotify:
-					if(current->window == ev->xdestroywindow.window)
+					if(current->window == ev->xdestroywindow.window) {
+						#ifdef DEBUG_EVENTS
+						printf(NAME ": drag_handle_event(): got DestroyNotify\n");
+						#endif
 						evh = drag_release_wait;
+					}
 			}
 	return false;
 }
 
 bool drag_release_wait(XEvent *ev) {
 	if(ev->type == ButtonRelease && (ev->xbutton.button == drag_button || drag_button == AnyButton)) {
+		#ifdef DEBUG_EVENTS
+		printf(NAME ": drag_release_wait(): handling ButtonRelease event\n");
+		#endif
 		drag_end();
 		return true;
 	}

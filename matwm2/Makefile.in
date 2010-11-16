@@ -1,5 +1,5 @@
 PREFIX     = %PREFIX%
-MANPREFIX  = %MANPREFIX%
+MANDIR     = %MANDIR%
 CC         = %CC%
 RM         = %RM%
 
@@ -8,7 +8,7 @@ RM         = %RM%
 #CFLAGS    += -DDEBUG_EVENTS -DSYNC
 #CFLAGS    += -Wall -Wextra -Wno-unused-parameter
 
-CFLAGS    += -DVERSION="\"0.1.0pre4\"" %DEFINES% %CFLAGS%
+CFLAGS    += -DVERSION="\"0.1.0\"" %DEFINES% %CFLAGS%
 LDFLAGS   += %LDFLAGS%
 LIBS      += %LIBS%
 
@@ -23,12 +23,12 @@ clean:
 	$(RM) matwm2 *.o
 
 install: matwm2
-	mkdir -p $(PREFIX)/bin $(MANPREFIX)/man/man1
+	mkdir -p $(PREFIX)/bin $(MANDIR)/man1
 	install -s matwm2 $(PREFIX)/bin
-	install matwm2.1 $(MANPREFIX)/man/man1
+	install matwm2.1 $(MANDIR)/man1
 
 deinstall:
-	$(RM) $(PREFIX)/bin/matwm2 $(MANPREFIX)/man/man1/matwm2.1* $(MANPREFIX)/man/cat1/matwm2.1*
+	$(RM) $(PREFIX)/bin/matwm2 $(MANDIR)/man1/matwm2.1* $(MANDIR)/cat1/matwm2.1*
 
 # converts default_matwmrc into C code that can be compiled into the binary
 defcfg:

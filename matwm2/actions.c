@@ -322,16 +322,29 @@ void client_warp(client *c) { /* moves the pointer to a client */
 
 void client_focus_first(void) { /* to be called when focus window is lost */
 	int i;
-	if(previous && (previous->desktop == desktop || previous->desktop == STICKY)) {
+	unsigned int ui;
+	Window w, dw;
+	client *c;
+	/* check if the pointer is in a window */
+	XQueryPointer(dpy, root, &dw, &w, &i, &i, &i, &i, &ui);
+	c = owner(w);
+	if(c && !(c->flags & DONT_FOCUS)) {
+		client_focus(c, true);
+		return;
+	}
+	/* check if we can focus the previously focussed window */
+	if(previous && client_visible(previous) && !(previous->flags & DONT_FOCUS)) {
 		client_focus(previous, true);
 		return;
 	}
+	/* try to focus the window on top of the stack */
 	for(i = 0; i < cn; i++)
 		if(client_visible(stacking[i]) && !(stacking[i]->flags & DONT_FOCUS)) {
 			client_focus(stacking[i], true);
-			break;
+			return;
 		}
-	if(i == cn)
+	/* if we still found no window, give up and focus NULL */
+	if(current)
 		client_focus(NULL, true);
 }
 

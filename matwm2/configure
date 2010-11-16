@@ -2,7 +2,7 @@
 
 # defaults
 default_prefix="/usr/local"
-default_manprefix="/usr/local"
+default_mandir="/usr/local/man"
 default_cc="cc"
 default_rm="rm -f"
 shape="yes"
@@ -13,9 +13,34 @@ debug="no"
 
 # make sure a few variables are not set
 unset prefix
-unset manprefix
+unset mandir
 unset cc
 unset rm
+
+# function to print usage instructions
+usage() {
+	echo "Usage: $0 [options]"
+	echo
+	echo "Options: (defaults between brackets)"
+	echo "	--prefix=[/usr/local]    Set the prefix in wich to install binaries"
+	echo "	--mandir=[/usr/local]    Set which directory to install manual pages in"
+	echo "	--cc=[cc]                Set the compiler"
+	echo "	--rm=[rm -f]             Set the command to delete files"
+	echo "	--disable-shape          Disable support for shaped windows"
+	echo "	--disable-xinerama       Disable support for xinerama"
+	echo "	--disable-xft            Disable support for Xft"
+	echo "	--disable-vfork          Disable use of the vfork() system call"
+	echo "	--enable-debug           Enable debugging output"
+	echo "	-h, --help               Print this message and exit"
+	echo
+	echo "Influential environment variables:"
+	echo "	PREFIX    Prefix for installing binaries"
+	echo "	MANDIR    Directory for installing man pages"
+	echo "	CC        Compiler"
+	echo "	RM        Command for deleting files"
+	echo
+	echo "Send comments, suggestions and bugs to Mattis Michel <sic_zer0@hotmail.com>"
+}
 
 # process command line arguments
 echo "processing command line arguments..."
@@ -23,8 +48,8 @@ for opt in $*; do
 	case $opt in
 	--prefix=*)         prefix=`echo $opt | cut -d '=' -f 2`
 	                    echo "	prefix explicitly set to $prefix";;
-	--manprefix=*)      manprefix=`echo $opt | cut -d '=' -f 2`
-	                    echo "	man prefix explicitly set to $manprefix";;
+	--mandir=*)         mandir=`echo $opt | cut -d '=' -f 2`
+	                    echo "	man directory explicitly set to $mandir";;
 	--cc=*)             cc=`echo $opt | cut -d '=' -f 2`
 	                    echo "	compiler explicitly set to $cc";;
 	--rm=*)             rm=`echo $opt | cut -d '=' -f 2`
@@ -39,28 +64,13 @@ for opt in $*; do
 	                    echo "	use of vfork system call explicitly disabled";;
 	--enable-debug)     debug="yes"
 	                    echo "	debugging output enabled explicitly";;
-	*)                  echo "Usage: $0 [options]"
-	                    echo
-	                    echo "Options: (defaults between brackets)"
-	                    echo "	--prefix=[/usr/local]    Set the prefix in wich to install binaries"
-	                    echo "	--manprefix=[/usr/local] Set the prefix in wich to install manual pages"
-	                    echo "	--cc=[cc]                Set the compiler"
-	                    echo "	--rm=[rm -f]             Set the command to delete files"
-	                    echo "	--disable-shape          Disable support for shaped windows"
-	                    echo "	--disable-xinerama       Disable support for xinerama"
-	                    echo "	--disable-xft            Disable support for Xft"
-	                    echo "	--disable-vfork          Disable use of the vfork() system call"
-	                    echo "  --enable-debug           Enable debugging output"
-	                    echo "	-h, --help               Print this message and exit"
-	                    echo
-	                    echo "Influential environment variables:"
-	                    echo "	PREFIX    Prefix for installing binaries"
-	                    echo "	MANPREFIX Prefix for installing man pages"
-	                    echo "	CC        Compiler"
-	                    echo "	RM        Command for deleting files"
-	                    echo
-	                    echo "Send comments, suggestions and bugs to Mattis Michel <sic_zer0@hotmail.com>"
-	                    exit
+	-h)                 usage
+	                    exit;;
+	--help)             usage
+	                    exit;;
+	*)                  echo "	error: invalid argument \"$opt\""
+	                    usage
+											exit 1;;
 	esac
 done
 
@@ -73,10 +83,10 @@ if [ -z "$prefix" ]; then
 	fi
 fi
 
-if [ -z "$manprefix" ]; then
-	if [ -n "$MANPREFIX" ]; then
-		manprefix="$MANPREFIX"
-		echo "	default man prefix overridden by environment variable \$MANPREFIX ($manprefix)"
+if [ -z "$mandir" ]; then
+	if [ -n "$MANDIR" ]; then
+		mandir="$MANDIR"
+		echo "	default man directory overridden by environment variable \$MANDIR ($mandir)"
 	fi
 fi
 
@@ -96,7 +106,7 @@ fi
 
 # use the defaults for variables not set yet
 if [ -z "$prefix" ];    then prefix="$default_prefix"; fi
-if [ -z "$manprefix" ]; then manprefix="$default_manprefix"; fi
+if [ -z "$mandir" ];    then mandir="$default_mandir"; fi
 if [ -z "$cc" ];        then cc="$default_cc"; fi
 if [ -z "$rm" ];        then rm="$default_rm"; fi
 
@@ -199,7 +209,7 @@ echo "done"
 # let the sedding begin
 echo -n "generating Makefile from Makefine.in... "
 sed -e "s#%PREFIX%#${prefix}#g"\
-    -e "s#%MANPREFIX%#${manprefix}#g"\
+    -e "s#%MANDIR%#${mandir}#g"\
     -e "s#%CC%#${cc}#g"\
     -e "s#%RM%#${rm}#g"\
     -e "s#%DEFINES%#${defines}#g"\
@@ -212,7 +222,7 @@ echo "done"
 # print summary of configuration done
 echo "summary:"
 echo "	prefix:                 $prefix"
-echo "	man prefix:             $manprefix"
+echo "	man directory:          $mandir"
 echo "	compiler:               $cc"
 echo "	rm command:             $rm"
 echo "	shaped windows support: $shape"
