@@ -416,3 +416,12 @@
 0.0.71:
 	fixed overriding stuff by "none" key action and	made keybinder use memory a little more efficient - do not allocate memory for keys that are later overridden
 
+0.0.72:
+	introduced client_focus_first() to focus the topmost visible window (called on enterevent for root window or window with DONT_FOCUS flag if no current window is there (in case the current window dissapeared), and on desktop change)
+	client_clear_state() now used instead of twice the same code
+	client_move() and client_resize() no longer return integer, was used nowhere as far as i know
+	title_width renamed to client_title_width()
+	introduced client_visible() function to replace a load of assertions
+	removed seemingly obsolete or non-necessary initialisation of modifier masks in input.c (default configuration schould always be sane anyway - not makeing this foolproof as users can fuck it up badly anyway)
+	added warning about default initialisation of things in default config being important for matwm to work in README
+

@@ -88,7 +88,7 @@ int snapx(client *c, int nx, int ny) {
 	if(nx < (display_width - client_width_total(c)) + snapat && nx > (display_width - client_width_total(c)) - snapat)
 		return display_width - client_width_total(c);
 	for(i = 0; i < cn; i++) {
-		if(clients[i] == c || (clients[i]->desktop != STICKY && clients[i]->desktop != desktop) || ny + client_height_total(c) < client_y(clients[i]) || ny > client_y(clients[i]) + client_height_total(clients[i]) || clients[i]->flags & ICONIC)
+		if(clients[i] == c || !client_visible(clients[i]) || ny + client_height_total(c) < client_y(clients[i]) || ny > client_y(clients[i]) + client_height_total(clients[i]))
 			continue;
 		if(nx < client_x(clients[i]) + snapat && nx > client_x(clients[i]) - snapat)
 			return client_x(clients[i]);
@@ -109,7 +109,7 @@ int snapy(client *c, int nx, int ny) {
 	if(ny < (display_height - client_height_total(c)) + snapat && ny > (display_height - client_height_total(c)) - snapat)
 		return display_height - client_height_total(c);
 	for(i = 0; i < cn; i++) {
-		if(clients[i] == c ||(clients[i]->desktop != STICKY && clients[i]->desktop != desktop) || nx + client_width_total(c) < client_x(clients[i]) || nx > client_x(clients[i]) + client_width_total(clients[i]) || clients[i]->flags & ICONIC)
+		if(clients[i] == c || !client_visible(clients[i]) || nx + client_width_total(c) < client_x(clients[i]) || nx > client_x(clients[i]) + client_width_total(clients[i]))
 			continue;
 		if(ny < client_y(clients[i]) + snapat && ny > client_y(clients[i]) - snapat)
 			return client_y(clients[i]);

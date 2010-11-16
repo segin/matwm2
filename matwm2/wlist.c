@@ -84,7 +84,7 @@ int wlist_update(void) {
 	int i, nc = 0, offset = 1, nl = 0;
 	wlist_width = 3;
 	for(i = 0; i < cn; i++)
-		if(!(stacking[i]->flags & DONT_LIST) && (stacking[i]->desktop == desktop || stacking[i]->flags & ICONIC || stacking[i]->desktop == STICKY)) {
+		if(!(stacking[i]->flags & DONT_LIST) && (client_visible(stacking[i]) || stacking[i]->flags & ICONIC)) {
 			if(stacking[i]->title_width + 6 > wlist_width)
 				wlist_width = stacking[i]->title_width + 6;
 		} else nl++;
@@ -97,7 +97,7 @@ int wlist_update(void) {
 	for(i = 0; i < cn; i++) {
 		if(i == cn - nicons)
 			offset = 2;
-		if(!(stacking[i]->flags & DONT_LIST) && (stacking[i]->desktop == desktop || stacking[i]->flags & ICONIC || stacking[i]->desktop == STICKY)) {
+		if(!(stacking[i]->flags & DONT_LIST) && (client_visible(stacking[i]) || stacking[i]->flags & ICONIC)) {
 			XMoveResizeWindow(dpy, stacking[i]->wlist_item, 1, offset + ((title_height + 5) * nc), wlist_width - 2, title_height + 4);
 			nc++;
 		}

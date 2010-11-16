@@ -131,16 +131,8 @@ void client_remove(client *c) {
 	for(i = client_number(stacking, c) + 1; i < cn; i++)
 		stacking[i - 1] = stacking[i];
 	cn--;
-	if(c == current) {
+	if(c == current)
 		current = NULL;
-		for(i = 0; i < cn; i++)
-			if(stacking[i]->desktop == desktop || stacking[i]->desktop == STICKY) {
-				client_focus(stacking[i]);
-				break;
-			}
-		if(!current)
-			client_focus(NULL);
-	}
 	free(c);
 	clients_alloc();
 	if(evh == wlist_handle_event)
@@ -178,7 +170,7 @@ void client_update_name(client *c) {
 	c->title_pixmap = XCreatePixmap(dpy, c->title, c->title_width, text_height, DefaultDepth(dpy, screen));
 	client_draw_title(c);
 	XSetWindowBackgroundPixmap(dpy, c->title, c->title_pixmap);
-	XResizeWindow(dpy, c->title, title_width(c), text_height);
+	XResizeWindow(dpy, c->title, client_title_width(c), text_height);
 }
 
 void client_set_bg(client *c, XColor color, XColor border) {
@@ -225,7 +217,7 @@ void client_update_size(client *c) {
 	int width = client_width(c);
 	buttons_update(c);
 	XMoveWindow(dpy, c->button_parent, (width + border_width - 1) - button_parent_width, border_width - 1);
-	XResizeWindow(dpy, c->title, title_width(c), text_height);
+	XResizeWindow(dpy, c->title, client_title_width(c), text_height);
 	XResizeWindow(dpy, c->parent, client_width_total_intern(c), client_height_total_intern(c));
 	XResizeWindow(dpy, c->window, width, client_height(c));
 	buttons_draw(c);
@@ -234,7 +226,7 @@ void client_update_size(client *c) {
 void client_update(client *c) {
 	int width = client_width(c);
 	XMoveWindow(dpy, c->button_parent, (width + border_width - 1) - button_parent_width, border_width - 1);
-	XResizeWindow(dpy, c->title, title_width(c), text_height);
+	XResizeWindow(dpy, c->title, client_title_width(c), text_height);
 	XMoveResizeWindow(dpy, c->parent, client_x(c), client_y(c), client_width_total_intern(c), client_height_total_intern(c));
 	XResizeWindow(dpy, c->window, width, client_height(c));
 	buttons_update(c);
@@ -249,6 +241,24 @@ void client_update_title(client *c) {
 
 void client_warp(client *c) {
 	XWarpPointer(dpy, None, c->parent, 0, 0, 0, 0, client_width_total_intern(c) - 1, client_height_total_intern(c) - 1);
+}
+
+void client_focus_first(void) {
+	int i;
+	for(i = 0; i < cn; i++)
+		if(client_visible(stacking[i]) && !(stacking[i]->flags & DONT_FOCUS)) {
+			client_focus(stacking[i]);
+			break;
+		}
+	if(i == cn)
+		client_focus(NULL);
+}
+
+void client_clear_state(client *c) {
+	if(c->flags & (MAXIMISED_L | MAXIMISED_R | MAXIMISED_T | MAXIMISED_B | EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B | FULLSCREEN)) {
+		c->flags ^= current->flags & (MAXIMISED_L | MAXIMISED_R | MAXIMISED_T | MAXIMISED_B | EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B | FULLSCREEN);
+		ewmh_update_state(c);
+	}
 }
 
 void clients_alloc(void) {

@@ -2,28 +2,22 @@
 
 int all_iconic = 0;
 
-int client_move(client *c, int x, int y) {
+void client_move(client *c, int x, int y) {
 	if(x == c->x && y == c->y)
-		return 0;
+		return;
+	client_clear_state(c);
 	c->width = client_width(c);
 	c->height = client_height(c);
-	if(current->flags & (MAXIMISED_L | MAXIMISED_R | MAXIMISED_T | MAXIMISED_B | EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B | FULLSCREEN)) {
-		c->flags ^= current->flags & (MAXIMISED_L | MAXIMISED_R | MAXIMISED_T | MAXIMISED_B | EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B | FULLSCREEN);
-		ewmh_update_state(c);
-	}
 	c->x = x;
 	c->y = y;
 	client_update_pos(c);
-	return 1;
+	return;
 }
 
-int client_resize(client *c, int width, int height) {
+void client_resize(client *c, int width, int height) {
 	c->x = client_x(c);
 	c->y = client_y(c);
-	if(current->flags & (MAXIMISED_L | MAXIMISED_R | MAXIMISED_T | MAXIMISED_B | EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B | FULLSCREEN)) {
-		c->flags ^= c->flags & (MAXIMISED_L | MAXIMISED_R | MAXIMISED_T | MAXIMISED_B | EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B | FULLSCREEN);
-		ewmh_update_state(c);
-	}
+	client_clear_state(c);
 	if(c->normal_hints.flags & PResizeInc) {
 		width -= (width - ((c->normal_hints.flags & PBaseSize) ? c->normal_hints.base_width : 0)) % c->normal_hints.width_inc;
 		height -= (height - ((c->normal_hints.flags & PBaseSize) ? c->normal_hints.base_height : 0)) % c->normal_hints.height_inc;
@@ -51,11 +45,11 @@ int client_resize(client *c, int width, int height) {
 	if(height < MINSIZE)
 		height = MINSIZE;
 	if(width == c->width && height == c->height)
-		return 0;
+		return;
 	c->width = width;
 	c->height = height;
 	client_update_size(c);
-	return 1;
+	return;
 }
 
 void client_focus(client *c) {
@@ -132,7 +126,7 @@ void client_expand(client *c, int d) {
 	c->expand_width = (d & EXPANDED_R) ? display_width : (client_x(c) + client_width_total(c));
 	c->expand_height = (d & EXPANDED_B) ? display_height : (client_y(c) + client_height_total(c));
 	for(i = 0; i < cn; i++) {
-		if((clients[i]->desktop != STICKY && clients[i]->desktop != desktop) || c->y >= client_y(clients[i]) + client_height_total(clients[i]) || c->y + (c->height + (client_border(c) * 2) + client_title(c)) <= client_y(clients[i]) || clients[i]->flags & ICONIC)
+		if(!client_visible(clients[i]) || c->y >= client_y(clients[i]) + client_height_total(clients[i]) || c->y + (c->height + (client_border(c) * 2) + client_title(c)) <= client_y(clients[i]))
 			continue;
 		if(d & EXPANDED_L && client_x(clients[i]) + client_width_total(clients[i]) <= c->x && client_x(clients[i]) + client_width_total(clients[i]) > c->expand_x)
 			c->expand_x = client_x(clients[i]) + client_width_total(clients[i]);
@@ -140,7 +134,7 @@ void client_expand(client *c, int d) {
 			c->expand_width = client_x(clients[i]);
 	}
 	for(i = 0; i < cn; i++) {
-		if((clients[i]->desktop != STICKY && clients[i]->desktop != desktop) || c->expand_x >= client_x(clients[i]) + client_width_total(clients[i]) || c->expand_width <= client_x(clients[i]) || clients[i]->flags & ICONIC)
+		if(!client_visible(clients[i]) || c->expand_x >= client_x(clients[i]) + client_width_total(clients[i]) || c->expand_width <= client_x(clients[i]))
 			continue;
 		if(d & EXPANDED_T && client_y(clients[i]) + client_height_total(clients[i]) <= c->y && client_y(clients[i]) + client_height_total(clients[i]) > c->expand_y)
 			c->expand_y = client_y(clients[i]) + client_height_total(clients[i]);
@@ -163,11 +157,12 @@ void client_iconify(client *c) {
 	if(c->flags & ICONIC || c->flags & DONT_LIST)
 		return;
 	nicons++;
+	c->flags |= ICONIC;
 	set_wm_state(c->window, IconicState);
 	client_hide(c);
+	client_focus(NULL);
 	if(c->desktop != desktop && c->desktop != STICKY)
 		XMapWindow(dpy, c->wlist_item);
-	c->flags |= ICONIC;
 	for(i = client_number(stacking, c); i < cn - 1; i++)
 		stacking[i] = stacking[i + 1];
 	stacking[cn - 1] = c;
@@ -240,7 +235,7 @@ void client_iconify_all(void) {
 		all_iconic = 0;
 	} else {
 		for(i = 0; i < cn; i++)
-			if((clients[i]->desktop == desktop || clients[i]->desktop == STICKY) && !(clients[i]->flags & ICONIC) && !(clients[i]->flags & DONT_LIST)) {
+			if(client_visible(clients[i]) && !(clients[i]->flags & DONT_LIST)) {
 				client_iconify(clients[i]);
 				clients[i]->flags |= RESTORE;
 			} else clients[i]->flags ^= clients[i]->flags & RESTORE;

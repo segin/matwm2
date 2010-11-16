@@ -2,8 +2,8 @@
 extern int all_iconic;
 
 // functions from actions.c
-int client_move(client *c, int x, int y);
-int client_resize(client *c, int width, int height);
+void client_move(client *c, int x, int y);
+void client_resize(client *c, int width, int height);
 void client_focus(client *c);
 void client_raise(client *c);
 void client_lower(client *c);
@@ -50,6 +50,8 @@ void client_update_size(client *c);
 void client_update(client *c);
 void client_update_title(client *c);
 void client_warp(client *c);
+void client_focus_first(void);
+void client_clear_state(client *c);
 void clients_alloc(void);
 
 // global variables from config.c
@@ -123,7 +125,8 @@ int client_width_total(client *c);
 int client_height_total(client *c);
 int client_width_total_intern(client *c);
 int client_height_total_intern(client *c);
-int title_width(client *c);
+int client_title_width(client *c);
+int client_visible(client *c);
 int client_number(client **array, client *c);
 client *owner(Window w);
 

@@ -4,7 +4,7 @@ It is written and maintained by Mattis Michel <sic_zer0@hotmail.com>, and distri
 To compile and install, review the first block of text in the Makefile to specify the right folders to look for headers and libraries in and install to.
 If you want to define any extra flags for compiling (like debugging symbols) look at the second paragraph in the Makefile.
 After that run "make" and "make install" - if all goes well it schould then be compiled and installed.
-Default built-in configuration is in defaults.h if you would want to change it.
+Default built-in configuration is in defaults.h if you would want to change it. Note that initialisation of most variables done in it is absolutely necessary for matwm2 to work propperly.
 
 Before usage and for further information, please consult the manual page (run "man matwm2" on a terminal, after it has been installed).
 

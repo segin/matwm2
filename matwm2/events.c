@@ -45,8 +45,11 @@ void handle_event(XEvent ev) {
 					client_iconify(c);
 				return;
 			case EnterNotify:
-				if(c != current && !click_focus)
-					client_focus(c);
+				if(c != current && !click_focus) {
+					if(!current && c->flags & DONT_FOCUS)
+						client_focus_first();
+					else client_focus(c);
+				}
 				return;
 			case Expose:
 				if(ev.xexpose.count == 0 && evh == wlist_handle_event && c && ev.xexpose.window == c->wlist_item)
@@ -231,6 +234,10 @@ void handle_event(XEvent ev) {
 					client_update_size(clients[i]);
 			}
 			return;
+		case EnterNotify:
+			if(ev.xcrossing.window == root && !current)
+				client_focus_first();
+			break;
 	}
 }
 

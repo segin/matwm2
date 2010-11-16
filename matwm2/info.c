@@ -68,9 +68,13 @@ int client_height_total_intern(client *c) {
 	return client_height(c) + (client_border_intern(c) * 2) + client_title(c);
 }
 
-int title_width(client *c) {
+int client_title_width(client *c) {
 	int avail = client_width(c) - ((c->flags & HAS_BUTTONS) ? button_parent_width + 2 : 0);
 	return (avail < c->title_width) ? avail : c->title_width;
+}
+
+int client_visible(client *c) {
+	return (c->desktop == desktop || c->desktop == STICKY) && !(c->flags & ICONIC);
 }
 
 int client_number(client **array, client *c) {
