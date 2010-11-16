@@ -111,9 +111,9 @@ int ewmh_handle_event(XEvent ev) {
 				int s = 0;
 				for(i = 1; i < 3; i++) {
 					if(ev.xclient.data.l[i] == ewmh_atoms[NET_WM_STATE_MAXIMIZED_HORZ])
-						s |= MAXIMISED_L | MAXIMISED_R;
+						s |= MAXIMIZED_L | MAXIMIZED_R;
 					if(ev.xclient.data.l[i] == ewmh_atoms[NET_WM_STATE_MAXIMIZED_VERT])
-						s |= MAXIMISED_T | MAXIMISED_B;
+						s |= MAXIMIZED_T | MAXIMIZED_B;
 				}
 				if(s)
 					client_toggle_state(c, s);
@@ -182,7 +182,7 @@ int ewmh_get_hints(client *c) {
 			}
 			if(*data == ewmh_atoms[NET_WM_WINDOW_TYPE_DOCK]) {
 				c->flags ^= c->flags & (CAN_MOVE | CAN_RESIZE | HAS_BORDER | HAS_TITLE);
-				c->flags |= NO_STRUT | DONT_LIST | DONT_FOCUS | DESKTOP_LOCKED;
+				c->flags |= NO_STRUT | DONT_LIST | DONT_FOCUS | DESKTOP_LOCKED | IS_TASKBAR;
 				c->desktop = STICKY;
 				if(taskbar_ontop)
 					c->layer = TOP;
@@ -237,9 +237,9 @@ void ewmh_update_allowed_actions(client *c) {
 void ewmh_update_state(client *c) {
 	int statec = 0;
 	Atom state[12];
-	if(c->flags & MAXIMISED_L && c->flags & MAXIMISED_R)
+	if(c->flags & MAXIMIZED_L && c->flags & MAXIMIZED_R)
 		state[statec++] = ewmh_atoms[NET_WM_STATE_MAXIMIZED_HORZ];
-	if(c->flags & MAXIMISED_T && c->flags & MAXIMISED_B)
+	if(c->flags & MAXIMIZED_T && c->flags & MAXIMIZED_B)
 		state[statec++] = ewmh_atoms[NET_WM_STATE_MAXIMIZED_VERT];
 	if(c->flags & FULLSCREEN)
 		state[statec++] = ewmh_atoms[NET_WM_STATE_FULLSCREEN];

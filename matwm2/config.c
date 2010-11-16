@@ -2,20 +2,20 @@
 
 XColor bg, ibg, fg, ifg;
 GC gc, igc, bgc, ibgc;
-int border_width, text_height, title_height, button_parent_width, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc;
-XFontStruct *font;
+int border_width, text_height, title_height, button_parent_width, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first = 0;
+XFontStruct *font = NULL;
 char *no_title = NO_TITLE;
 
-void cfg_read(void) {
+void cfg_read(int initial) {
 	char *home = getenv("HOME");
 	char *cfg, *cfgfn;
 	XGCValues gv;
 	cfg = (char *) malloc(strlen(DEF_CFG) + 1);
 	strncpy(cfg, DEF_CFG, strlen(DEF_CFG));
-	cfg_parse(cfg);
+	cfg_parse(cfg, initial);
 	free((void *) cfg);
 	if(read_file(GCFGFN, &cfg) > 0) {
-		cfg_parse(cfg);
+		cfg_parse(cfg, initial);
 		free((void *) cfg);
 	}
 	if(home) {
@@ -24,10 +24,14 @@ void cfg_read(void) {
 		strncat(cfgfn, "/", 1);
 		strncat(cfgfn, CFGFN, strlen(CFGFN));
 		if(read_file(cfgfn, &cfg) > 0) {
-			cfg_parse(cfg);
+			cfg_parse(cfg, initial);
 			free((void *) cfg);
 		}
 		free((void *) cfgfn);
+	}
+	if(!font) {
+		fprintf(stderr, "error: font not found\n");
+		exit(1);
 	}
 	keys_update();
 	text_height = font->max_bounds.ascent + font->max_bounds.descent;
@@ -45,7 +49,7 @@ void cfg_read(void) {
 	ibgc = XCreateGC(dpy, root, GCLineWidth | GCForeground | GCFont, &gv);
 }
 
-void cfg_parse(char *cfg) {
+void cfg_parse(char *cfg, int initial) {
 	char *opt, *key;
 	int i;
 	while(cfg) {
@@ -58,12 +62,14 @@ void cfg_parse(char *cfg) {
 			for(i = strlen(opt) - 1; opt[i] == ' ' || opt[i] == '\t'; i--);
 			opt[i + 1] = 0;
 		}
-		cfg_set_opt(key, opt);
+		cfg_set_opt(key, opt, initial);
 	}
+	first = 0;
 }
 
-void cfg_set_opt(char *key, char *value) {
+void cfg_set_opt(char *key, char *value, int initial) {
 	XColor dummy;
+	XFontStruct *newfont;
 	long i;
 	if(strcmp(key, "resetkeys") == 0)
 		keys_free();
@@ -71,21 +77,24 @@ void cfg_set_opt(char *key, char *value) {
 		return;
 	if(strcmp(key, "key") == 0)
 		key_bind(value);
-	if(strcmp(key, "exec") == 0)
+	if(strcmp(key, "exec") == 0 && initial)
+		spawn(value);
+	if(strcmp(key, "exec_onload") == 0)
 		spawn(value);
 	if(strcmp(key, "background") == 0)
-		XAllocNamedColor(dpy, DefaultColormap(dpy, screen), value, &bg, &dummy);
+		str_color(value, &bg);
 	if(strcmp(key, "inactive_background") == 0)
-		XAllocNamedColor(dpy, DefaultColormap(dpy, screen), value, &ibg, &dummy);
+		str_color(value, &ibg);
 	if(strcmp(key, "foreground") == 0)
-		XAllocNamedColor(dpy, DefaultColormap(dpy, screen), value, &fg, &dummy);
+		str_color(value, &fg);
 	if(strcmp(key, "inactive_foreground") == 0)
-		XAllocNamedColor(dpy, DefaultColormap(dpy, screen), value, &ifg, &dummy);
+		str_color(value, &ifg);
 	if(strcmp(key, "font") == 0) {
-		font = XLoadQueryFont(dpy, value);
-		if(!font) {
-			fprintf(stderr, "error: font not found\n");
-			exit(1);
+		newfont = XLoadQueryFont(dpy, value);
+		if(newfont) {
+			if(font)
+				XFreeFont(dpy, font);
+			font = newfont;
 		}
 	}
 	if(strcmp(key, "border_width") == 0) {
@@ -122,16 +131,45 @@ void cfg_set_opt(char *key, char *value) {
 		str_key(&value, &mousemodmask);
 	if(strcmp(key, "no_snap_modifier") == 0)
 		str_key(&value, &nosnapmodmask);
-	if(strcmp(key, "ignore_modifier") == 0)
+	if(strcmp(key, "ignore_modifier") == 0) {
+		if(mod_ignore) {
+			nmod_ignore = 0;
+			free((void *) mod_ignore);
+			mod_ignore = NULL;
+		}
 		while(value) {
 			mod_ignore = (unsigned int *) realloc((void *) mod_ignore, (nmod_ignore + nmod_ignore + 2) * sizeof(unsigned int));
 			if(!mod_ignore)
 				error();
 			mod_ignore[nmod_ignore] = str_modifier(eat(&value, " \t"));
+			if(mod_ignore[nmod_ignore] == None)
+				continue;
 			for(i = 0; i < nmod_ignore; i++)
 				mod_ignore[nmod_ignore + 1 + i] = mod_ignore[i] | mod_ignore[nmod_ignore];
 			nmod_ignore += nmod_ignore + 1;
 		}
+	}
+}
+
+void cfg_reinitialize(void) {
+	int i;
+	for(i = 0; i < cn; i++) {
+		client_update(clients[i]);
+		(clients[i] == current) ? client_set_bg(clients[i], bg, fg) : client_set_bg(clients[i], ibg, ifg);
+		if(clients[i]->flags & IS_TASKBAR)
+			client_set_layer(clients[i], taskbar_ontop ? TOP : NORMAL);
+		XMoveWindow(dpy, clients[i]->title, border_width - 1, border_width - 1);
+		XUngrabButton(dpy, AnyButton, AnyModifier, clients[i]->parent);
+		client_grab_buttons(clients[i]);
+	}
+}
+
+void str_color(char *str, XColor *c) {
+	XColor newcolor, dummy;
+	if(!first && XAllocNamedColor(dpy, DefaultColormap(dpy, screen), str, &newcolor, &dummy)) {
+		XFreeColors(dpy, colormap, &c->pixel, 1, 0);
+		*c = newcolor;
+	}
 }
 
 void str_bool(char *str, int *b) {
@@ -196,8 +234,8 @@ int str_keyaction(char *str) {
 		return KA_ICONIFY;
 	if(strcmp(str, "iconify_all") == 0)
 		return KA_ICONIFY_ALL;
-	if(strcmp(str, "maximise") == 0)
-		return KA_MAXIMISE;
+	if(strcmp(str, "maximize") == 0)
+		return KA_MAXIMIZE;
 	if(strcmp(str, "fullscreen") == 0)
 		return KA_FULLSCREEN;
 	if(strcmp(str, "expand") == 0)

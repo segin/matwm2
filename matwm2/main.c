@@ -6,6 +6,7 @@ Window root;
 Atom xa_wm_protocols, xa_wm_delete, xa_wm_state, xa_wm_change_state, xa_motif_wm_hints;
 XSetWindowAttributes p_attr;
 char *dn = NULL;
+Colormap colormap;
 
 int main(int argc, char *argv[]) {
 	XEvent ev;
@@ -13,7 +14,7 @@ int main(int argc, char *argv[]) {
 	Window dw, *wins;
 	XWindowAttributes attr;
 	struct sigaction qsa;
-	int dfd, di, sr;
+	int dfd, di, sr, sig;
 	fd_set fds, fdsr;
 	for(i = 1; i < argc; i++) {
 		if(strcmp(argv[i], "-defaults") == 0) {
@@ -35,6 +36,7 @@ int main(int argc, char *argv[]) {
 	}
 	screen = DefaultScreen(dpy);
 	root = RootWindow(dpy, screen);
+	colormap = DefaultColormap(dpy, screen);
 	atexit(&quit);
 	if(pipe(qsfd) != 0)
 		error();
@@ -56,7 +58,7 @@ int main(int argc, char *argv[]) {
 	xa_motif_wm_hints = XInternAtom(dpy, "_MOTIF_WM_HINTS", False);
 	display_width = XDisplayWidth(dpy, screen);
 	display_height = XDisplayHeight(dpy, screen);
-	cfg_read();
+	cfg_read(1);
 	p_attr.override_redirect = True;
 	p_attr.background_pixel = fg.pixel;
 	p_attr.border_pixel = ifg.pixel;
@@ -93,8 +95,12 @@ int main(int argc, char *argv[]) {
 			sr = select((qsfd[0] < dfd ? dfd : qsfd[0]) + 1, &fdsr, (fd_set *) NULL, (fd_set *) NULL, (struct timeval *) NULL);
 			if(sr == -1 && errno != EINTR)
 				error();
-			if(sr && FD_ISSET(qsfd[0], &fdsr))
-				exit(0);
+			if(sr && FD_ISSET(qsfd[0], &fdsr) && read(qsfd[0], &sig, sizeof(int)) == sizeof(int))
+				if(sig == SIGHUP) {
+					keys_free();
+					cfg_read(0);
+					cfg_reinitialize();
+				} else exit(0);
 		}
 }
 
@@ -119,6 +125,8 @@ void quit(void) {
 		free((void *) stacking);
 	if(clients)
 		free((void *) clients);
+	if(mod_ignore)
+		free((void *) mod_ignore);
 	keys_free();
 	XSetInputFocus(dpy, PointerRoot, RevertToPointerRoot, CurrentTime);
 	XCloseDisplay(dpy);

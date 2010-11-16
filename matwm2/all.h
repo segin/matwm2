@@ -1,7 +1,7 @@
-// global variables from actions.c
+/* global variables from actions.c */
 extern int all_iconic;
 
-// functions from actions.c
+/* functions from actions.c */
 void client_move(client *c, int x, int y);
 void client_resize(client *c, int width, int height);
 void client_focus(client *c);
@@ -20,22 +20,22 @@ void client_to_border(client *c, char *a);
 void client_iconify_all(void);
 void client_end_all_iconic(void);
 
-// global variables from buttons.c
+/* global variables from buttons.c */
 extern Window button_current;
 extern int button_down;
 
-// functions from buttons.c
+/* functions from buttons.c */
 void buttons_create(client *c);
 void buttons_draw(client *c);
 void button_draw(client *c, Window b);
 void buttons_update(client *c);
 int button_handle_event(XEvent ev);
 
-// global variables from client.c
+/* global variables from client.c */
 extern client **clients, **stacking, *current, *previous;
 extern int cn, nicons;
 
-// functions from client.c
+/* functions from client.c */
 void client_add(Window w);
 void client_show(client *c);
 void client_hide(client *c);
@@ -57,27 +57,29 @@ void client_focus_first(void);
 void client_clear_state(client *c);
 void clients_alloc(void);
 
-// global variables from config.c
+/* global variables from config.c */
 extern XColor bg, ibg, fg, ifg;
 extern GC gc, igc, bgc, ibgc;
-extern int border_width, text_height, title_height, button_parent_width, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc;
+extern int border_width, text_height, title_height, button_parent_width, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first;
 extern XFontStruct *font;
 extern char *no_title;
 
-// functions from config.c
-void cfg_read(void);
-void cfg_parse(char *cfg);
-void cfg_set_opt(char *key, char *value);
+/* functions from config.c */
+void cfg_read(int initial);
+void cfg_parse(char *cfg, int initial);
+void cfg_set_opt(char *key, char *value, int initial);
+void cfg_reinitialize(void);
+void str_color(char *str, XColor *c);
 void str_bool(char *str, int *b);
 KeySym str_key(char **str, unsigned int *mask);
 unsigned int str_modifier(char *name);
 int str_buttonaction(char *str);
 int str_keyaction(char *str);
 
-// global variables from drag.c
+/* global variables from drag.c */
 extern int drag_mode, drag_button, drag_xo, drag_yo;
 
-// functions from drag.c
+/* functions from drag.c */
 void drag_start(int mode, int button, int x, int y);
 void drag_end(void);
 int drag_handle_event(XEvent ev);
@@ -87,20 +89,20 @@ int snapy(client *c, int nx, int ny);
 int snaph(client *c, int nx, int ny);
 int snapv(client *c, int nx, int ny);
 
-// global variables from events.c
+/* global variables from events.c */
 extern int (*evh)(XEvent);
 
-// functions from events.c
+/* functions from events.c */
 void handle_event(XEvent ev);
 
-// functions from evn.c
+/* functions from evn.c */
 char *event_name(XEvent ev);
 
-// global variables from ewmh.c
+/* global variables from ewmh.c */
 extern Atom ewmh_atoms[EWMH_ATOM_COUNT];
 extern long ewmh_strut[4];
 
-// functions from ewmh.c
+/* functions from ewmh.c */
 void ewmh_initialize(void);
 int ewmh_handle_event(XEvent ev);
 int ewmh_get_hints(client *c);
@@ -116,7 +118,7 @@ void ewmh_update_clist(void);
 void ewmh_update_strut(void);
 void ewmh_update_showing_desktop(void);
 
-// functions from info.c
+/* functions from info.c */
 int client_x(client *c);
 int client_y(client *c);
 int client_width(client *c);
@@ -134,13 +136,13 @@ int client_layer(client *c);
 int client_number(client **array, client *c);
 client *owner(Window w);
 
-// global variables from input.c
+/* global variables from input.c */
 extern unsigned int mousemodmask, nosnapmodmask, *mod_ignore;
 extern XModifierKeymap *modmap;
 extern keybind *keys;
 extern int keyn, nmod_ignore;
 
-// functions from input.c
+/* functions from input.c */
 void keys_alloc(int n);
 void key_bind(char *str);
 void keys_update(void);
@@ -156,38 +158,39 @@ void button_grab(Window w, unsigned int button, unsigned int modmask, unsigned i
 void button_ungrab(Window w, unsigned int button, unsigned int modmask);
 int cmpmodmask(int m1, int m2);
 
-// global variables from main.c
+/* global variables from main.c */
 extern Display *dpy;
 extern int screen, display_width, display_height, have_shape, shape_event, qsfd[2];
 extern Window root;
 extern Atom xa_wm_protocols, xa_wm_delete, xa_wm_state, xa_wm_change_state, xa_motif_wm_hints;
 extern XSetWindowAttributes p_attr;
 extern char *dn;
+extern Colormap colormap;
 
-// functions from main.c
+/* functions from main.c */
 int main(int argc, char *argv[]);
 void quit(void);
 void error(void);
 void qsh(int sig);
 
-// functions from misc.c
+/* functions from misc.c */
 void spawn(char *cmd);
 int read_file(char *path, char **buf);
 char *eat(char **str, char *until);
 
-// global variables from vdesk.c
+/* global variables from vdesk.c */
 extern int desktop;
 
-// functions from vdesk.c
+/* functions from vdesk.c */
 void desktop_goto(int d);
 void client_to_desktop(client *c, int d);
 
-// global variables from wlist.c
+/* global variables from wlist.c */
 extern Window wlist;
 extern int wlist_width;
 extern client *client_before_wlist;
 
-// functions from wlist.c
+/* functions from wlist.c */
 void wlist_start(XEvent ev);
 void wlist_end(int err);
 client *wlist_next(void);
@@ -196,7 +199,7 @@ int wlist_handle_event(XEvent ev);
 int wlist_update(void);
 void wlist_item_draw(client *c);
 
-// functions from x11.c
+/* functions from x11.c */
 int xerrorhandler(Display *display, XErrorEvent *xerror);
 void get_normal_hints(client *c);
 int get_state_hint(Window w);

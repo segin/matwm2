@@ -3,7 +3,7 @@
 int client_x(client *c) {
 	if(c->flags & FULLSCREEN)
 		return -client_border(c);
-	if(c->flags & MAXIMISED_L)
+	if(c->flags & MAXIMIZED_L)
 		return ewmh_strut[0];
 	if(c->flags & EXPANDED_L)
 		return c->expand_x;
@@ -13,7 +13,7 @@ int client_x(client *c) {
 int client_y(client *c) {
 	if(c->flags & FULLSCREEN)
 		return -(client_border(c) + client_title(c));
-	if(c->flags & MAXIMISED_T)
+	if(c->flags & MAXIMIZED_T)
 		return ewmh_strut[2];
 	if(c->flags & EXPANDED_T)
 		return c->expand_y;
@@ -23,7 +23,7 @@ int client_y(client *c) {
 int client_width(client *c) {
 	if(c->flags & FULLSCREEN)
 		return display_width;
-	if(c->flags & MAXIMISED_R)
+	if(c->flags & MAXIMIZED_R)
 		return display_width - ((client_border(c) * 2) + ewmh_strut[1] + client_x(c));
 	if(c->flags & EXPANDED_R)
 		return c->expand_width;
@@ -33,7 +33,7 @@ int client_width(client *c) {
 int client_height(client *c) {
 	if(c->flags & FULLSCREEN)
 		return display_height;
-	if(c->flags & MAXIMISED_B)
+	if(c->flags & MAXIMIZED_B)
 		return display_height - ((client_border(c) * 2) + client_title(c) + ewmh_strut[3] + client_y(c));
 	if(c->flags & EXPANDED_B)
 		return c->expand_height;

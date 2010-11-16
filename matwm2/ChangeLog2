@@ -7,7 +7,7 @@
 	propperly free font structures, colors and ignore modifiers
 	added exec_onload command to run things from configuration file whenever it is loaded (exec commands will only be executed when matwm starts)
 	updated manual about new functions and added some details about configuration behaviour
-	reversed order of ChangeLog, and fixed typo in 0.0.52 entry in it
+	reversed order of ChangeLog, and fixed typo in 0.0.52 entry
 
 0.0.80:
 	don't try to expand to directions already expanded to

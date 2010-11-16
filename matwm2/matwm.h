@@ -18,7 +18,7 @@
 #define NAME "matwm2"
 
 typedef struct {
-	Window			window, parent, title, wlist_item, button_parent, button_iconify, button_maximise, button_expand, button_close;
+	Window			window, parent, title, wlist_item, button_parent, button_iconify, button_maximize, button_expand, button_close;
 	int					x, y, width, height, flags, layer, desktop, xo, yo, oldbw;
 	int					expand_x, expand_y, expand_width, expand_height, title_width;
 	Pixmap			title_pixmap;
@@ -27,10 +27,10 @@ typedef struct {
 } client;
 
 #define ICONIC					(1 << 0)
-#define MAXIMISED_L			(1 << 1)
-#define MAXIMISED_R			(1 << 2)
-#define MAXIMISED_T			(1 << 3)
-#define MAXIMISED_B			(1 << 4)
+#define MAXIMIZED_L			(1 << 1)
+#define MAXIMIZED_R			(1 << 2)
+#define MAXIMIZED_T			(1 << 3)
+#define MAXIMIZED_B			(1 << 4)
 #define EXPANDED_L			(1 << 5)
 #define EXPANDED_R			(1 << 6)
 #define EXPANDED_T			(1 << 7)
@@ -48,6 +48,7 @@ typedef struct {
 #define DONT_FOCUS			(1 << 19)
 #define CLICK_FOCUS			(1 << 20)
 #define DESKTOP_LOCKED	(1 << 21)
+#define IS_TASKBAR			(1 << 22)
 
 #define STICKY					-1
 
@@ -73,7 +74,7 @@ enum {
 	KA_PREV,
 	KA_ICONIFY,
 	KA_ICONIFY_ALL,
-	KA_MAXIMISE,
+	KA_MAXIMIZE,
 	KA_FULLSCREEN,
 	KA_EXPAND,
 	KA_CLOSE,

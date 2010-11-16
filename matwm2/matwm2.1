@@ -9,7 +9,7 @@ matwm2 \- Window manager for X11
 .B matwm2
 is a simple window manager for X11. It features window frames with titlebar and buttons, configurable key bindings and mouse buttons, support for EWMH and motif hints, focus-follows-mouse and click-to-focus focus models and virtual desktops.
 .PP
-Window borders have 4 buttons, wich do the same as the following key actions explained below (from left to right): "iconify", "expand", "maximise" and "close". To exit matwm send it SIGINT signal. At exit matwm will place the windows back on the root window in stacking order, iconic windows on the bottom, above that the windows from all inactive desktops in reverse order and then above those the windows from the current desktop and sticky windows shown on it. When a focussed window dissapears the window that was focussed before will be focused (unless the "click_focus" option is set to "false" and the cursor is above another window due to the window dissapearing), and if no previous window is there (if it has dissapeared for example) then the topmost window will be focused.
+Window borders have 4 buttons, wich do the same as the following key actions explained below (from left to right): "iconify", "expand", "maximise" and "close". To exit matwm2 send it SIGINT signal. At exit matwm2 will place the windows back on the root window in stacking order, iconic windows on the bottom, above that the windows from all inactive desktops in reverse order and then above those the windows from the current desktop and sticky windows shown on it. If matwm2 receives a SIGHUP signal it will reload all configuration files. When a focussed window dissapears the window that was focussed before will be focused (unless the "click_focus" option is set to "false" and the cursor is above another window due to the window dissapearing), and if no previous window is there (if it has dissapeared for example) then the topmost window will be focused.
 .PP
 Further, explanition of the various options in the configuration file(s) below combined with the default configuration, schould give you an idea of how to use matwm2. Just keep in mind there is no default built-in way of launching applications exept the ctrl-mod1-return key binding, wich spawns an xterm.
 .SH OPTIONS
@@ -23,9 +23,9 @@ System wide configuration file.
 .IP $HOME/.matwmrc
 Per user configuration file.
 .PP
-Both of these config files share the same format, and can be considered a list of "commands" that may or may not have arguments, separated by spaces. The commands themselves are separated by newlines. If matwm2 encounters a '#' character in one of these files, the rest of the line is ignored.
+Both of these config files share the same format, and can be considered a list of "commands" that may or may not have arguments, separated by spaces. The commands themselves are separated by newlines. If matwm2 encounters a '#' character in one of these files, the rest of the line is ignored. Any value set last overrides previous values for the setting, matwm2 reads the default configuration first, after that it reads the global configuration file and last the the user's personal configuration file (if these exist).
 .PP
-Following is a list of possible commands for matwm configuration files and their explanation. Valid modifier keys are "shift", "lock", "control" and "mod1" to "mod5" (see: output of xmodmap).
+Following is a list of possible commands for matwm2 configuration files and their explanation. Valid modifier keys are "shift", "lock", "control" and "mod1" to "mod5" (see: output of xmodmap).
 .IP "background [X11 color name]"
 Sets the background color of window frames when they are focussed.
 .IP "inactive_background [X11 color name]"
@@ -47,7 +47,7 @@ Sets the amount of virtual desktops.
 .IP "exec [command]"
 Invokes "sh -c [command]".
 .IP "ignore_modifier [modifier key] [...]
-Ignore the state of specified modifier key(s).
+Ignore the state of specified modifier key(s). Set to "none" to disable.
 .IP "mouse_modifier [modifier key] [...]"
 If specified modifier key(s) are down, user can use the same button actions as set for the window frame in the client window itself.
 .IP "no_snap_modifier [modifier key] [...]"
@@ -67,7 +67,9 @@ Binds the specified modifier and key combination to [key action]. Key names are 
 .PP
 Following is a list of possible key actions and their explanation.
 .IP "exec [command]"
-Invokes "sh -c [command]".
+Invoke "sh -c [command]" when matwm2 starts. Doesn't override previous occurences of this command.
+.IP "exec_onload [command]"
+Invoke "sh -c [command]" whenever the configuration file it is in is read. This also can't be overriden.
 .IP "next"
 Focus the next window in the stacking. Pressing a key bound to this or the "prev" action will show you a list with all currently visible and iconic windows, wich will dissapear when all modifiers of either key action are released. Afterwards the window selected will be raised. If it is off screen it will be brought back on screen, also the mouse will be warped to the bottom right corner of the window. Between the last normal window and the first iconic window there will be slightly more spacing, to clarify what windows are iconic. Items in this list can also be focussed with the mouse in the same way as windows.
 .IP "prev"

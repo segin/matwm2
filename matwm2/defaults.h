@@ -22,9 +22,9 @@ taskbar_ontop         false\n\
 key                   mod1 Tab                next\n\
 key                   mod1 shift Tab          prev\n\
 key                   control mod1 s          iconify\n\
-key                   control mod1 x          maximise\n\
-key                   control mod1 h          maximise h\n\
-key                   control mod1 v          maximise v\n\
+key                   control mod1 x          maximize\n\
+key                   control mod1 h          maximize h\n\
+key                   control mod1 v          maximize v\n\
 key                   control mod1 f          fullscreen\n\
 key                   control mod1 e          expand\n\
 key                   control mod1 r          expand a\n\
@@ -44,9 +44,9 @@ key                   control mod1 Right      next_desktop\n\
 key                   control mod1 Left       prev_desktop\n\
 key                   control mod1 Return     exec xterm\n\
 key                   mod4 s                  iconify\n\
-key                   mod4 x                  maximise\n\
-key                   mod4 h                  maximise h\n\
-key                   mod4 v                  maximise v\n\
+key                   mod4 x                  maximize\n\
+key                   mod4 h                  maximize h\n\
+key                   mod4 v                  maximize v\n\
 key                   mod4 f                  fullscreen\n\
 key                   mod4 e                  expand\n\
 key                   mod4 r                  expand a\n\

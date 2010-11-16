@@ -58,7 +58,7 @@ void client_add(Window w) {
 		XMapWindow(dpy, new->wlist_item);
 	XAddToSaveSet(dpy, w);
 	XReparentWindow(dpy, w, new->parent, client_border_intern(new), client_border_intern(new) + client_title(new));
-	if(new->flags & FULLSCREEN || new->flags & MAXIMISED_L || new->flags & MAXIMISED_R || new->flags & MAXIMISED_T || new->flags & MAXIMISED_B)
+	if(new->flags & FULLSCREEN || new->flags & MAXIMIZED_L || new->flags & MAXIMIZED_R || new->flags & MAXIMIZED_T || new->flags & MAXIMIZED_B)
 		client_update_size(new);
 	else
 		configurenotify(new);
@@ -122,7 +122,7 @@ void client_remove(client *c) {
 	int i;
 	if(c->flags & ICONIC)
 		nicons--;
-	if(button_current == c->button_iconify || button_current == c->button_expand || button_current == c->button_maximise || button_current == c->button_close)
+	if(button_current == c->button_iconify || button_current == c->button_expand || button_current == c->button_maximize || button_current == c->button_close)
 		button_current = None;
 	XDestroyWindow(dpy, c->parent);
 	XDestroyWindow(dpy, c->wlist_item);
@@ -187,7 +187,7 @@ void client_set_bg(client *c, XColor color, XColor border) {
 	XSetWindowBackground(dpy, c->button_parent, color.pixel);
 	XSetWindowBackground(dpy, c->button_iconify, color.pixel);
 	XSetWindowBackground(dpy, c->button_expand, color.pixel);
-	XSetWindowBackground(dpy, c->button_maximise, color.pixel);
+	XSetWindowBackground(dpy, c->button_maximize, color.pixel);
 	XSetWindowBackground(dpy, c->button_close, color.pixel);
 	XSetWindowBackground(dpy, c->wlist_item, color.pixel);
 	if(c->desktop == desktop || c->desktop == STICKY) {
@@ -283,8 +283,8 @@ void client_clear_state(client *c) {
 	c->y = client_y(c);
 	c->width = client_width(c);
 	c->height = client_height(c);
-	if(c->flags & (MAXIMISED_L | MAXIMISED_R | MAXIMISED_T | MAXIMISED_B | EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B | FULLSCREEN)) {
-		c->flags ^= c->flags & (MAXIMISED_L | MAXIMISED_R | MAXIMISED_T | MAXIMISED_B | EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B | FULLSCREEN);
+	if(c->flags & (MAXIMIZED_L | MAXIMIZED_R | MAXIMIZED_T | MAXIMIZED_B | EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B | FULLSCREEN)) {
+		c->flags ^= c->flags & (MAXIMIZED_L | MAXIMIZED_R | MAXIMIZED_T | MAXIMIZED_B | EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B | FULLSCREEN);
 		ewmh_update_state(c);
 	}
 }

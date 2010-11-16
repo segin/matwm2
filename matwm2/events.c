@@ -90,24 +90,24 @@ void handle_event(XEvent ev) {
 			case KA_ICONIFY:
 				client_iconify(current);
 				return;
-			case KA_MAXIMISE:
+			case KA_MAXIMIZE:
 				a = keyarg(ev);
 				while(a && *a) {
 					if(*a == 'h')
-						i |= MAXIMISED_L | MAXIMISED_R;
+						i |= MAXIMIZED_L | MAXIMIZED_R;
 					if(*a == 'v')
-						i |= MAXIMISED_T | MAXIMISED_B;
+						i |= MAXIMIZED_T | MAXIMIZED_B;
 					if(*a == 'l')
-						i |= MAXIMISED_L;
+						i |= MAXIMIZED_L;
 					if(*a == 'r')
-						i |= MAXIMISED_R;
+						i |= MAXIMIZED_R;
 					if(*a == 'u')
-						i |= MAXIMISED_T;
+						i |= MAXIMIZED_T;
 					if(*a == 'd')
-						i |= MAXIMISED_B;
+						i |= MAXIMIZED_B;
 					a++;
 				}
-				client_toggle_state(current, i ? i : (MAXIMISED_L | MAXIMISED_R | MAXIMISED_T | MAXIMISED_B));
+				client_toggle_state(current, i ? i : (MAXIMIZED_L | MAXIMIZED_R | MAXIMIZED_T | MAXIMIZED_B));
 				return;
 			case KA_EXPAND:
 				a = keyarg(ev);
