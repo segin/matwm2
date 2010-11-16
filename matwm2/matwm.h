@@ -46,6 +46,8 @@ typedef struct {
 #define DONT_LIST				(1 << 17)
 #define RESTORE					(1 << 18)
 #define DONT_FOCUS			(1 << 19)
+#define CLICK_FOCUS			(1 << 20)
+#define DESKTOP_LOCKED	(1 << 21)
 
 #define STICKY					-1
 

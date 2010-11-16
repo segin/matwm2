@@ -425,3 +425,7 @@
 	removed seemingly obsolete or non-necessary initialisation of modifier masks in input.c (default configuration schould always be sane anyway - not makeing this foolproof as users can fuck it up badly anyway)
 	added warning about default initialisation of things in default config being important for matwm to work in README
 
+0.0.73:
+	introduces CLICK_FOCUS and DESKTOP_LOCKED flags for better handling of special EWMH window types
+	client_focus_first() stuff on EnterNotify, schould also work when click_focus is set
+

@@ -45,10 +45,11 @@ void handle_event(XEvent ev) {
 					client_iconify(c);
 				return;
 			case EnterNotify:
-				if(c != current && !click_focus) {
-					if(!current && c->flags & DONT_FOCUS)
+				if(c != current) {
+					if(!current && (c->flags & DONT_FOCUS || c->flags & CLICK_FOCUS))
 						client_focus_first();
-					else client_focus(c);
+					else if(!(c->flags & CLICK_FOCUS) && !click_focus)
+						client_focus(c);
 				}
 				return;
 			case Expose:

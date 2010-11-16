@@ -25,6 +25,8 @@ void desktop_goto(int d) {
 
 void client_to_desktop(client *c, int d) {
 	int i;
+	if(c->flags & DESKTOP_LOCKED)
+		return;
 	if(client_visible(c) && (d != desktop && d != STICKY))	{
 		client_hide(c);
 		if(!current)
