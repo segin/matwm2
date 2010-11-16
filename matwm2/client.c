@@ -3,28 +3,28 @@
 client *clients;
 int cn = 0, current = 0;
 
-void add_client(Window w, int new) {
+void add_client(Window w) {
   XWindowAttributes attr;
   XGetWindowAttributes(dpy, w, &attr);
   int wm_state = get_wm_state(w);
-  if(new && wm_state == WithdrawnState) {
+  if(wm_state == WithdrawnState) {
     wm_state = getstatehint(w);
     set_wm_state(w, wm_state != WithdrawnState ? wm_state : NormalState);
   }
   alloc_clients();
-  clients[cn].x = attr.x;
-  clients[cn].y = attr.y;
   clients[cn].width = attr.width;
   clients[cn].height = attr.height;
   clients[cn].oldbw = attr.border_width;
   clients[cn].window = w;
+  getnormalhints(cn);
+  clients[cn].x = attr.x - gxo(cn, 1);
+  clients[cn].y = attr.y - gyo(cn, 1);
   clients[cn].iconic = (wm_state == IconicState) ? 1 : 0;
   clients[cn].maximised = 0;
   XFetchName(dpy, w, &clients[cn].name);
-  getnormalhints(cn);
   XSelectInput(dpy, w, PropertyChangeMask);
   XSetWindowBorderWidth(dpy, w, 0);
-  clients[cn].parent = XCreateWindow(dpy, root, clients[cn].x - (new ? gxo(cn, 1) : 0), clients[cn].y - (new ? gyo(cn, 1) : 0), (wm_state == IconicState) ? icon_width : (clients[cn].width + (border_width * 2)), title_height + ((wm_state == IconicState) ? 4 : (clients[cn].height + (border_width * 2))), 0,
+  clients[cn].parent = XCreateWindow(dpy, root, clients[cn].x, clients[cn].y, (wm_state == IconicState) ? icon_width : (clients[cn].width + (border_width * 2)), title_height + ((wm_state == IconicState) ? 4 : (clients[cn].height + (border_width * 2))), 0,
                                      DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
                                      CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
   XAddToSaveSet(dpy, w);
@@ -47,7 +47,7 @@ void remove_client(int n, int fc) {
   if(XCheckTypedWindowEvent(dpy, clients[n].parent, DestroyNotify, &ev) == False) {
     if(fc)
       set_wm_state(clients[n].window, WithdrawnState);
-    XReparentWindow(dpy, clients[n].window, root, clients[n].x, clients[n].y);
+    XReparentWindow(dpy, clients[n].window, root, clients[n].x + gxo(n, 1), clients[n].y + gyo(n, 1));
     XSetWindowBorderWidth(dpy, clients[n].window, clients[n].oldbw);
     XRemoveFromSaveSet(dpy, clients[n].window);
   }

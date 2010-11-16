@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
   for(i = 0; i < nwins; i++) {
     XGetWindowAttributes(dpy, wins[i], &attr);
     if(!attr.override_redirect && attr.map_state == IsViewable)
-      add_client(wins[i], 0);
+      add_client(wins[i]);
   }
   if(wins != NULL)
     XFree(wins);

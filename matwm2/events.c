@@ -15,7 +15,7 @@ void handle_event(XEvent ev) {
       if(i < cn) {
         if(clients[c].iconic)
           restore(c);
-      } else add_client(ev.xmaprequest.window, 1);
+      } else add_client(ev.xmaprequest.window);
       break;
     case DestroyNotify:
       if(c < cn)

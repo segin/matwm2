@@ -3,7 +3,7 @@
 // client.c
 extern client *clients;
 extern int cn, current;
-void add_client(Window w, int new);
+void add_client(Window w);
 void remove_client(int n, int fc);
 void draw_client(int n);
 void alloc_clients(void);

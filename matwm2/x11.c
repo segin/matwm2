@@ -84,7 +84,6 @@ int has_protocol(Window w, Atom protocol) {
   return ret;
 }
 
-
 void delete_window(int n) {
   XEvent ev;
   if(has_protocol(clients[n].window, xa_wm_delete)) {
@@ -106,11 +105,11 @@ int gxo(int c, int i) {
       case NorthGravity:
       case SouthGravity:
       case CenterGravity:
-        return border_width + (i ? 0 : (clients[c].width / 2));
+        return border_width + (i ? -clients[c].oldbw : (clients[c].width / 2));
       case NorthEastGravity:
       case EastGravity:
       case SouthEastGravity:
-        return (border_width * 2) + (i ? 0 : clients[c].width);
+        return (border_width * 2) + (i ? -clients[c].oldbw * 2 : clients[c].width);
     }
   return 0;
 }
@@ -123,11 +122,11 @@ int gyo(int c, int i) {
       case EastGravity:
       case WestGravity:
       case CenterGravity:
-        return border_width + ((title_height + (i ? 0 : clients[c].height)) / 2);
+        return border_width + ((title_height + (i ? -clients[c].oldbw : clients[c].height)) / 2);
       case SouthEastGravity:
       case SouthGravity:
       case SouthWestGravity:
-        return (border_width * 2) + title_height + (i ? 0 : clients[c].height);
+        return (border_width * 2) + title_height + (i ? -clients[c].oldbw * 2 : clients[c].height);
     }
   return 0;
 }

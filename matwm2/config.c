@@ -26,8 +26,8 @@ key xrm_getkey(XrmDatabase db, char *opt_name, char *def) {
 int xrm_getint(XrmDatabase db, char *opt_name, int def) {
   char *type;
   XrmValue value;
-  if(db && XrmGetResource(db, opt_name, opt_name, &type, &value) == True && strcmp(type, "Integer") == 0)
-    return *(int *) value.addr;
+  if(db && XrmGetResource(db, opt_name, opt_name, &type, &value) == True && strcmp(type, "String") == 0)
+    return (int) strtol((char *) value.addr, NULL, 10);
   return def;
 }
 
