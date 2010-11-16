@@ -30,6 +30,7 @@ void drag(int n, XButtonEvent *be) {
   while(1) {
     XMaskEvent(dpy, PropertyChangeMask | SubstructureNotifyMask | SubstructureRedirectMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | ExposureMask | EnterWindowMask, &ev);
     if(ev.type == MotionNotify) {
+      while(XCheckTypedEvent(dpy, MotionNotify, &ev));
       if(be->button == resize_button) {
         resize(n, ev.xmotion.x - xo,  ev.xmotion.y - yo);
       } else move(n, ev.xmotion.x - be->x, ev.xmotion.y - be->y);

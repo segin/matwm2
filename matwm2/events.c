@@ -57,7 +57,7 @@ void handle_event(XEvent ev) {
       break;
     case KeyPress:
       if(ev.xkey.keycode == XKeysymToKeycode(dpy, XK_Tab))
-        next();
+        next(1);
       break;
   }
 }

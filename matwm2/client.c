@@ -55,7 +55,7 @@ void remove_client(int n) {
   for(i = n; i < cn; i++)
     clients[i] = clients[i + 1];
   alloc_clients();
-  prev();
+  prev(0);
 }
 
 void draw_client(int n) {
@@ -191,6 +191,8 @@ void delete_window(int n) {
 }
 
 void move(int n, int x, int y) {
+  if(x == clients[n].x && y == clients[n].y)
+    return;
   XMoveWindow(dpy, clients[n].parent, x, y);
   configurenotify(n);
   clients[n].x = x;
@@ -224,10 +226,13 @@ void resize(int n, int width, int height) {
     width = MINSIZE;
   if(height < MINSIZE)
     height = MINSIZE;
+  if(width == clients[n].width && height == clients[n].height)
+    return;
   XResizeWindow(dpy, clients[n].parent, width + (border_width * 2), height + (border_width * 2) + title_height);
   XResizeWindow(dpy, clients[n].window, width, height);
   clients[n].width = width;
   clients[n].height = height;
+  draw_client(n);
 }
 
 void focus(int n) {
@@ -241,19 +246,21 @@ void focus(int n) {
   }
 }
 
-void next(void) {
+void next(int warp) {
   if(cn > 0) {
     focus((current + 1 < cn) ? current + 1 : 0);
     XRaiseWindow(dpy, clients[current].parent);
-    XWarpPointer(dpy, None, clients[current].parent, 0, 0, 0, 0, clients[current].width + border_width,  clients[current].height + border_width + title_height);
+    if(warp)
+      XWarpPointer(dpy, None, clients[current].parent, 0, 0, 0, 0, clients[current].width + border_width,  clients[current].height + border_width + title_height);
   }
 }
 
-void prev(void) {
+void prev(int warp) {
   if(cn > 0) {
     focus((current - 1 >= 0) ? current - 1 : cn - 1);
     XRaiseWindow(dpy, clients[current].parent);
-    XWarpPointer(dpy, None, clients[current].parent, 0, 0, 0, 0, clients[current].width + border_width,  clients[current].height + border_width + title_height);
+    if(warp)
+      XWarpPointer(dpy, None, clients[current].parent, 0, 0, 0, 0, clients[current].width + border_width,  clients[current].height + border_width + title_height);
   }
 }
 

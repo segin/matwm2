@@ -34,8 +34,8 @@ void delete_window(int n);
 void move(int n, int x, int y);
 void resize(int n, int width, int height);
 void focus(int n);
-void next(void);
-void prev(void);
+void next(int warp);
+void prev(int warp);
 
 // config.c
 extern XColor bg, ibg;
