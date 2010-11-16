@@ -36,7 +36,7 @@ void add_client(Window w) {
                               CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
   new->icon = XCreateWindow(dpy, wlist, 0, 0, 1, 1, 0,
                             DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
-                             CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
+                            CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
   XAddToSaveSet(dpy, w);
   XReparentWindow(dpy, w, new->parent, border(new), border(new) + title(new));
   grab_button(new->parent, AnyButton, mousemodmask, ButtonPressMask | ButtonReleaseMask);
@@ -68,6 +68,7 @@ void remove_client(client *c, int fc) {
     XReparentWindow(dpy, c->window, root, c->x + gxo(c, 1), c->y + gyo(c, 1));
     XSetWindowBorderWidth(dpy, c->window, c->oldbw);
     XRemoveFromSaveSet(dpy, c->window);
+    XLowerWindow(dpy, c->window);
   }
   XDestroyWindow(dpy, c->parent);
   XDestroyWindow(dpy, c->icon);

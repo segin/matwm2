@@ -18,7 +18,8 @@ void end(void) {
     remove_client(clients[0], 0);
   }
   if(clients)
-    free(clients);
+    free((void *) clients);
+  unbind_keys();
   XCloseDisplay(dpy);
 }
 
@@ -59,7 +60,7 @@ int main(int argc, char *argv[]) {
   xa_motif_wm_hints = XInternAtom(dpy, "_MOTIF_WM_HINTS", False);
   display_width = XDisplayWidth(dpy, screen);
   display_height = XDisplayHeight(dpy, screen);
-  config_read();
+  cfg_init();
   p_attr.override_redirect = True;
   p_attr.background_pixel = fg.pixel;
   p_attr.event_mask = ExposureMask | KeyReleaseMask;
@@ -69,7 +70,6 @@ int main(int argc, char *argv[]) {
   p_attr.background_pixel = ibg.pixel;
   p_attr.event_mask = SubstructureRedirectMask | SubstructureNotifyMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask | ExposureMask;
   have_shape = XShapeQueryExtension(dpy, &shape_event, &di);
-  mapkeys();
   XQueryTree(dpy, root, &dw, &dw, &wins, &nwins);
   for(i = 0; i < nwins; i++) {
     XGetWindowAttributes(dpy, wins[i], &attr);

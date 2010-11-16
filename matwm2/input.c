@@ -12,6 +12,15 @@ void grab_key(Window w, unsigned int modmask, KeyCode key) {
   }
 }
 
+void ungrab_key(Window w, unsigned int modmask, KeyCode key) {
+  XUngrabKey(dpy, key, modmask, w);
+  XUngrabKey(dpy, key, LockMask | modmask, w);
+  if(numlockmask) {
+    XUngrabKey(dpy, key, numlockmask | modmask, w);
+  XUngrabKey(dpy, key, numlockmask | LockMask | modmask, w);
+  }
+}
+
 void grab_button(Window w, unsigned int button, unsigned int modmask, unsigned int event_mask) {
   XGrabButton(dpy, button, modmask, w, False, event_mask, GrabModeAsync, GrabModeSync, None, None);
   XGrabButton(dpy, button, LockMask | modmask, w, False, event_mask, GrabModeAsync, GrabModeSync, None, None);
@@ -40,21 +49,19 @@ int getmodifier(char *name) {
     return Mod5Mask;
   return 0;
 }
+keybind *evkey(XEvent ev) {
+  int i;
+  for(i = 0; i < keyn; i++)
+    if(keys[i].code == ev.xkey.keycode && cmpmask(ev.xkey.state, keys[i].mask))
+      return &keys[i];
+}
 
-void mapkeys(void) {
-  int i, j;
-  modmap = XGetModifierMapping(dpy);
-  numlockmask = key_to_mask(XKeysymToKeycode(dpy, XK_Num_Lock));
-  string_to_key(xrm_getstr(cfg, "mouse_modifier", DEF_MOUSEMOD), &mousemodmask);
-  key_next = xrm_getkey(cfg, "key_next", DEF_KEY_NEXT);
-  key_prev = xrm_getkey(cfg, "key_prev", DEF_KEY_PREV);
-  key_iconify = xrm_getkey(cfg, "key_iconify", DEF_KEY_ICONIFY);
-  key_close = xrm_getkey(cfg, "key_close", DEF_KEY_CLOSE);
-  key_maximise = xrm_getkey(cfg, "key_maximise", DEF_KEY_MAXIMISE);
-  key_bottomleft = xrm_getkey(cfg, "key_bottomleft", DEF_KEY_BOTTOMLEFT);
-  key_bottomright = xrm_getkey(cfg, "key_bottomright", DEF_KEY_BOTTOMRIGHT);
-  key_topleft = xrm_getkey(cfg, "key_topleft", DEF_KEY_TOPLEFT);
-  key_topright = xrm_getkey(cfg, "key_topright", DEF_KEY_TOPRIGHT);
+int keyaction(XEvent ev) {
+  int i;
+  for(i = 0; i < keyn; i++)
+    if(keys[i].code == ev.xkey.keycode && cmpmask(ev.xkey.state, keys[i].mask))
+      return keys[i].action;
+  return KA_NONE;
 }
 
 int key_to_mask(KeyCode key) {

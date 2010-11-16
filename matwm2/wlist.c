@@ -27,9 +27,9 @@ int wlist_handle_event(XEvent ev) {
   int mask, i;
   switch(ev.type) {
     case KeyPress:
-      if(iskey(key_next)) {
+      if(keyaction(ev) == KA_NEXT) {
         focus((client_number(current) < cn - 1) ? clients[client_number(current) + 1] : clients[0]);
-      } else if(iskey(key_prev)) {
+      } else if(keyaction(ev) == KA_PREV) {
         focus((client_number(current) > 0) ? clients[client_number(current) - 1] : clients[cn - 1]);
       } else break;
       XWarpPointer(dpy, None, current->icon, 0, 0, 0, 0, wlist_width - 2, 3 + title_height);
@@ -38,7 +38,10 @@ int wlist_handle_event(XEvent ev) {
       mask = key_to_mask(ev.xkey.keycode);
       if(mask) {
         mask = rmbit(ev.xkey.state, mask);
-        if(!cmpmask(mask, key_next.mask) && !cmpmask(mask, key_prev.mask))
+        for(i = 0; i < keyn; i++)
+          if((keys[i].action == KA_NEXT || keys[i].action == KA_PREV) && cmpmask(keys[i].mask, mask))
+            break;
+        if(i == keyn)
           wlist_end();
       }
     case ButtonPress:

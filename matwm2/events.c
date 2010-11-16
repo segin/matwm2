@@ -87,26 +87,27 @@ void handle_event(XEvent ev) {
       if(ev.xmapping.request != MappingPointer) {
         XUngrabKeyboard(dpy, CurrentTime);
         XRefreshKeyboardMapping(&ev.xmapping);
-        mapkeys();
       }
       break;
     case KeyPress:
-      if(current && iskey(key_close))
+      if(current && keyaction(ev) == KA_CLOSE)
         delete_window(current);
-      if(iskey(key_next) || iskey(key_prev))
+      if(keyaction(ev) == KA_NEXT || keyaction(ev) == KA_PREV)
         wlist_start(ev);
-      if(current && iskey(key_iconify))
+      if(current && keyaction(ev) == KA_ICONIFY)
         iconify(current);
-      if(current && iskey(key_maximise))
+      if(current && keyaction(ev) == KA_MAXIMISE)
         maximise(current);
-      if(current && iskey(key_bottomleft))
+      if(current && keyaction(ev) == KA_BOTTOMLEFT)
         move(current, 0, display_height - total_height(current));
-      if(current && iskey(key_bottomright))
+      if(current && keyaction(ev) == KA_BOTTOMRIGHT)
         move(current, display_width - total_width(current), display_height - total_height(current));
-      if(current && iskey(key_topright))
+      if(current && keyaction(ev) == KA_TOPRIGHT)
         move(current, display_width - total_width(current), 0);
-      if(current && iskey(key_topleft))
+      if(current && keyaction(ev) == KA_TOPLEFT)
         move(current, 0, 0);
+      if(keyaction(ev) == KA_EXEC)
+        popen(evkey(ev)->arg, "r");
       break;
     case ConfigureNotify:
       if(root == ev.xconfigure.window) {

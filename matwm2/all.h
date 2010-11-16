@@ -18,19 +18,21 @@ client *owner(Window w);
 
 // config.c
 extern XColor bg, ibg, fg, ifg;
-extern int border_width, title_height, snapat;
-extern int button1, button2, button3, button4, button5;
-extern key key_next, key_prev, key_iconify, key_maximise, key_close, key_bottomleft, key_bottomright, key_topleft, key_topright;
-extern XFontStruct *font;
 extern GC gc, igc;
-extern XrmDatabase cfg;
-char *xrm_getstr(XrmDatabase db, char *opt_name, char *def);
-key xrm_getkey(XrmDatabase db, char *opt_name, char *def);
-int xrm_getint(XrmDatabase db, char *opt_name, int def);
+extern int border_width, title_height, snapat, button1, button2, button3, button4, button5, keyn;
+extern XFontStruct *font;
+extern keybind *keys;
+void cfg_init(void);
+void setopt(char *key, char *value);
+void readcfg(char *cfg);
+void bind_key(char *str);
+void unbind_keys(void);
 int strbuttonaction(char *str);
+int strkeyaction(char *str);
 int buttonaction(int button);
-KeyCode string_to_key(char *str, int *mask);
-void config_read(void);
+KeyCode str_key(char **str, int *mask);
+int read_file(char *path, char **buf);
+char *eat(char **str, char *until);
 
 // drag.c
 extern XButtonEvent be;
@@ -58,9 +60,11 @@ void restore(client *c);
 extern unsigned int mousemodmask, numlockmask;
 extern XModifierKeymap *modmap;
 void grab_key(Window w, unsigned int modmask, KeyCode key);
+void ungrab_key(Window w, unsigned int modmask, KeyCode key);
 void grab_button(Window w, unsigned int button, unsigned int modmask, unsigned int event_mask);
 int getmodifier(char *name);
-void mapkeys(void);
+keybind *evkey(XEvent ev);
+int keyaction(XEvent ev);
 int key_to_mask(KeyCode key);
 
 // main.c
