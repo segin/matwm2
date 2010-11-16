@@ -33,16 +33,29 @@ void add_client(Window w, int g) {
   grab_button(clients[cn].parent, AnyButton, mousemodmask, ButtonPressMask | ButtonReleaseMask);
   configurenotify(cn);
   cn++;
+  if(current == cn - 1)
+    focus(cn - 1);
 }
 
 void remove_client(int n) {
-  int i;
+  unsigned int i, nwins;
+  Window dw1, dw2, *wins;
+  XQueryTree(dpy, clients[n].parent, &dw1, &dw2, &wins, &nwins);
+  for(i = 0; i < nwins; i++)
+    if(wins[i] == clients[n].window) {
+      XReparentWindow(dpy, clients[n].window, root, clients[n].x, clients[n].y);
+      XSetWindowBorderWidth(dpy, clients[n].window, clients[n].oldbw);
+      XRemoveFromSaveSet(dpy, clients[n].window);
+    }
+  if(wins != NULL)
+    XFree(wins);
   XDestroyWindow(dpy, clients[n].parent);
   XFree(clients[n].name);
   cn--;
   for(i = n; i < cn; i++)
     clients[i] = clients[i + 1];
   alloc_clients();
+  prev();
 }
 
 void draw_client(int n) {
@@ -61,7 +74,8 @@ void add_initial_clients(void) {
     if(!attr.override_redirect && attr.map_state == IsViewable)
       add_client(wins[i], 0);
   }
-  XFree(wins);
+  if(wins != NULL)
+    XFree(wins);
 }
 
 void alloc_clients(void) {

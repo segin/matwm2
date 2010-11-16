@@ -25,12 +25,8 @@ void open_display(char *display) {
 }
 
 void end(void) {
-  while(cn) {
-    XReparentWindow(dpy, clients->window, root, clients->x, clients->y);
-    XSetWindowBorderWidth(dpy, clients->window, clients->oldbw);
-    XRemoveFromSaveSet(dpy, clients->window);
+  while(cn)
     remove_client(0);
-  }
   free(clients);
   XCloseDisplay(dpy);
 }
