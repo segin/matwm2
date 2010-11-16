@@ -3,9 +3,9 @@
 int error_status = 0;
 
 int xerrorhandler(Display *display, XErrorEvent *xerror) { /* we set this as the X error handler in main() */
-#ifdef DEBUG
+	#ifdef DEBUG
 	client *c;
-#endif
+	#endif
 	if(xerror->error_code == BadAccess && xerror->resourceid == root) {
 		if(!error_status) { /* if we are still doing X stuff before handling the data in qsfd the error might occur again */
 			fprintf(stderr,"error: root window at display %s is not available\n", XDisplayName(dn));
@@ -13,7 +13,7 @@ int xerrorhandler(Display *display, XErrorEvent *xerror) { /* we set this as the
 			error_status++;
 		}
 	}
-#ifdef DEBUG
+	#ifdef DEBUG
 	else {
 		char ret[666];
 		XGetErrorText(xerror->display, xerror->error_code, ret, sizeof(ret));
@@ -21,7 +21,7 @@ int xerrorhandler(Display *display, XErrorEvent *xerror) { /* we set this as the
 		if(c) printf("%i (%s): x error: %s\n", (int) xerror->resourceid, c->name, ret);
 		else printf("%i: x error: %s\n", (int) xerror->resourceid, ret);
 	}
-#endif
+	#endif
 	return 0;
 }
 

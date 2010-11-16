@@ -9,10 +9,10 @@ void handle_event(XEvent ev) {
 	client *c = owner(ev.xany.window);
 	int i = 0, j = 0;
 	char *a;
-#ifdef DEBUG_EVENTS
+	#ifdef DEBUG_EVENTS
 	if(c) printf("%i (%s): %s\n", ev.xany.window, c->name, event_name(ev));
 	else printf("%i: %s\n", ev.xany.window, event_name(ev));
-#endif
+	#endif
 	if((evh && evh(ev)) || button_handle_event(ev) || ewmh_handle_event(ev))
 		return;
 	if(c) {
@@ -33,6 +33,10 @@ void handle_event(XEvent ev) {
 				if(ev.xproperty.atom == XA_WM_NAME) {
 					if(c->name != no_title)
 						XFree(c->name);
+					#ifdef XFT
+					if(xftfont)
+						XftDrawDestroy(c->title_draw);
+					#endif
 					XFreePixmap(dpy, c->title_pixmap);
 					XFetchName(dpy, c->window, &c->name);
 					client_update_name(c);
@@ -79,13 +83,13 @@ void handle_event(XEvent ev) {
 				if(c == current && ev.xfocus.mode != NotifyGrab)
 					XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
 				return;
-#ifdef SHAPE
+			#ifdef SHAPE
 			default:
 				if(ev.type == shape_event) {
 					set_shape(c);
 					return;
 				}
-#endif
+			#endif
 		}
 	}
 	if(current && ev.type == KeyPress)

@@ -9,10 +9,11 @@ border_spacing        2
 border_width          1
 title_spacing         2
 button_spacing        2
+wlist_margin          2
 buttons_left          sticky ontop
 buttons_right         iconify expand maximize close
 center_title          false
-center_wlist_items		false
+center_wlist_items    false
 desktops              4
 snap                  5
 taskbar_ontop         false

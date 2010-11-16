@@ -1,12 +1,13 @@
 #include "matwm.h"
 
 Display *dpy = NULL;
-int screen, display_width, display_height, have_shape, shape_event, qsfd[2];
+int screen, depth, display_width, display_height, have_shape, shape_event, qsfd[2];
 Window root;
 Atom xa_wm_protocols, xa_wm_delete, xa_wm_state, xa_wm_change_state, xa_motif_wm_hints;
 XSetWindowAttributes p_attr;
 char *dn = NULL;
 Colormap colormap;
+Visual *visual;
 
 int main(int argc, char *argv[]) {
 	XEvent ev;
@@ -14,7 +15,10 @@ int main(int argc, char *argv[]) {
 	unsigned int ui, nwins;
 	Window dw, *wins;
 	XWindowAttributes attr;
-	int dfd, di, sr;
+	int dfd, sr;
+	#ifdef SHAPE
+	int di;
+	#endif
 	fd_set fds, fdsr;
 	char act;
 	/* parse command line arguments */
@@ -25,7 +29,21 @@ int main(int argc, char *argv[]) {
 			return 0;
 		}
 		if(strcmp(argv[i], "-version") == 0) {
-			printf("%s version %s\n", NAME, VERSION);
+			printf(NAME " version " VERSION "\n"
+				"compiled "
+				#ifdef SHAPE
+				"with"
+				#else
+				"without"
+				#endif
+				" shape extention support and "
+				#ifdef XFT
+				"with"
+				#else
+				"without"
+				#endif
+				" Xft support\n"
+			);
 			return 0;
 		}
 		if(strcmp(argv[i], "-display") == 0) {
@@ -54,12 +72,14 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "error: can't open display \"%s\"\n", XDisplayName(dn));
 		exit(1);
 	}
-#ifdef SYNC
+	#ifdef SYNC
 	XSynchronize(dpy, True); /* synchronise all events, useful to make output from DEBUG_EVENTS more useful */
-#endif
+	#endif
 	screen = DefaultScreen(dpy);
 	root = RootWindow(dpy, screen);
 	colormap = DefaultColormap(dpy, screen);
+	depth = DefaultDepth(dpy, screen);
+	visual = DefaultVisual(dpy, screen);
 	XSetErrorHandler(&xerrorhandler); /* set up error handler - to be found in x11.c */
 	XSelectInput(dpy, root, StructureNotifyMask | SubstructureRedirectMask | SubstructureNotifyMask); /* only one application can select these, this will error if another window manager is running */
 	xa_wm_protocols = XInternAtom(dpy, "WM_PROTOCOLS", False);
@@ -79,9 +99,9 @@ int main(int argc, char *argv[]) {
 	                      CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
 	p_attr.event_mask = SubstructureRedirectMask |  SubstructureNotifyMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask | LeaveWindowMask | ExposureMask;
 	p_attr.background_pixel = ibg.pixel;
-#ifdef SHAPE
+	#ifdef SHAPE
 	have_shape = XShapeQueryExtension(dpy, &shape_event, &di);
-#endif
+	#endif
 	ewmh_initialize();
 	XSetInputFocus(dpy, PointerRoot, RevertToPointerRoot, CurrentTime); /* set input focus to the root window */
 	XQueryTree(dpy, root, &dw, &dw, &wins, &nwins); /* look for windows already present */

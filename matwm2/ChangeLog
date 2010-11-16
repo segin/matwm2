@@ -1,3 +1,20 @@
+0.0.97:
+	also did intendation for #ifdef stuff
+	makeheader.pl now handles #ifdef things too
+	use strict and warnings in them perl scrips
+	ifdefs around declaration of variables only used by shape extention stuff
+	don't put -l flags in $(LDFLAGS) but in $(LIBS) as gentoo patch suggests
+	DefaultDepth() and DefaultVisual() no longer used directly everywhere
+	also replaced direct use of DefaultColormap() with colormap in config.c
+	removed if(c->name) in wlist_item_draw - windows always have names
+	only calculate window list item width's once
+	removed misplaced tab in default_matwmrc
+	added support for Xft fonts
+	-version now also prints wheter matwm was compiled with/without shape extention and Xft support
+	added wlist_margin option to set how much space goes around text on items in the window list
+	updated manual page about changes described by last three lines
+	revised the calculations done for constructing the window list
+
 0.0.96:
 	always return 1 if we could use an event in ewmh_handle_event()
 	don't define variable in the middle of ewmh_handle_event()

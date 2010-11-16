@@ -5,8 +5,11 @@ int cn = 0, nicons = 0; /* cn keeps the number of clients, of wich nicons are ic
 
 void client_add(Window w) {
 	XWindowAttributes attr;
-	int i, di, bounding_shaped, wm_state, state_hint;
+	int i, wm_state, state_hint;
+	#ifdef SHAPE
+	int di, bounding_shaped;
 	unsigned int dui;
+	#endif
 	client *new = (client *) _malloc(sizeof(client));
 	new->window = w;
 	/* set client state */
@@ -25,11 +28,11 @@ void client_add(Window w) {
 	new->flags = HAS_TITLE | HAS_BORDER | HAS_BUTTONS | CAN_MOVE | CAN_RESIZE;
 	if(wm_state == IconicState)
 		new->flags |= ICONIC;
-#ifdef SHAPE
+	#ifdef SHAPE
 	if(have_shape)
 		if(XShapeQueryExtents(dpy, new->window, &bounding_shaped, &di, &di, &dui, &dui, &di, &di, &di, &dui, &dui) && bounding_shaped)
 			new->flags |= SHAPED;
-#endif
+	#endif
 	/* read hints - these eventually override stuff we have just set */
 	get_normal_hints(new);
 	get_mwm_hints(new);
@@ -47,27 +50,31 @@ void client_add(Window w) {
 	/* create the parent window */
 	XSetWindowBorderWidth(dpy, w, 0);
 	new->parent = XCreateWindow(dpy, root, client_x(new), client_y(new), client_width_total_intern(new), client_height_total_intern(new), (new->flags & HAS_BORDER) ? border_width : 0,
-	                            DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
+	                            depth, CopyFromParent, visual,
 	                            CWOverrideRedirect | CWBackPixel | CWBorderPixel | CWEventMask, &p_attr);
 	new->title = XCreateWindow(dpy, new->parent, border_spacing, border_spacing, 1, 1, 0,
-	                           DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
+	                           depth, CopyFromParent, visual,
 	                           CWOverrideRedirect | CWEventMask, &p_attr);
 	new->wlist_item = XCreateWindow(dpy, wlist, 0, 0, 1, 1, 0,
-	                                DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
+	                                depth, CopyFromParent, visual,
 	                                CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
+	#ifdef XFT
+	if(xftfont)
+		new->wlist_draw = XftDrawCreate(dpy, new->wlist_item, visual, colormap);
+	#endif
 	buttons_create(new); /* must be called before client_update_name() is called, else the title window will be initially misplaced */
 	client_update_name(new);
 	XMapWindow(dpy, new->title);
 	if(!(new->flags & DONT_LIST) && (new->flags & ICONIC || (new->desktop == desktop || new->desktop == STICKY)))
 		XMapWindow(dpy, new->wlist_item);
-#ifdef SHAPE
+	#ifdef SHAPE
 	set_shape(new);
-#endif
+	#endif
 	/* select wich events we want from the client window */
 	XSelectInput(dpy, w, PropertyChangeMask | FocusChangeMask);
-#ifdef SHAPE
+	#ifdef SHAPE
 	XShapeSelectInput(dpy, w, ShapeNotifyMask);
-#endif
+	#endif
 	client_grab_buttons(new);
 	/* reparent the client window */
 	XAddToSaveSet(dpy, w);
@@ -143,6 +150,12 @@ void client_remove(client *c) {
 	for(i = 0; i < c->nbuttons; i++)
 		if(button_current == &c->buttons[i])
 			button_current = NULL;
+	#ifdef XFT
+	if(xftfont) {
+		XftDrawDestroy(c->title_draw);
+		XftDrawDestroy(c->wlist_draw);
+	}
+	#endif
 	XDestroyWindow(dpy, c->parent);
 	XDestroyWindow(dpy, c->wlist_item);
 	free((void *) c->buttons);
@@ -189,16 +202,36 @@ void client_grab_buttons(client *c) {
 
 void client_draw_title(client *c) { /* draw the title pixmap for a client */
 	XFillRectangle(dpy, c->title_pixmap, (c == current) ? bgc : ibgc, 0, 0, c->title_width, text_height);
+	#ifdef XFT
+	if(xftfont)
+	  XftDrawString8(c->title_draw, (c == current) ? &xftfg : &xftifg, xftfont, 0, xftfont->ascent, (unsigned char *) c->name, strlen(c->name));
+	else
+	#endif
 	XDrawString(dpy, c->title_pixmap, (c == current) ? gc : igc, 0, font->max_bounds.ascent, c->name, strlen(c->name));
 }
 
 void client_update_name(client *c) { /* apply changes in the name of a client */
+	#ifdef XFT
+	XGlyphInfo extents;
+	#endif
 	if(!c->name)
 		c->name = no_title;
 	if(strlen(c->name) == 0)
 		c->name = no_title;
+	#ifdef XFT
+	if(xftfont) {
+		XftTextExtents8(dpy, xftfont, (FcChar8 *) c->name, strlen(c->name), &extents);
+		c->title_width = extents.xOff;
+	} else
+	#endif
 	c->title_width = XTextWidth(font, c->name, strlen(c->name)) + 1;
-	c->title_pixmap = XCreatePixmap(dpy, c->title, c->title_width, text_height, DefaultDepth(dpy, screen));
+	/* exept for the first time we call this function we schould free this pixmap first */
+	c->title_pixmap = XCreatePixmap(dpy, c->title, c->title_width, text_height, depth);
+	#ifdef XFT
+	/* destroy this too before recurrent calls */
+	if(xftfont)
+		c->title_draw = XftDrawCreate(dpy, c->title_pixmap, visual, colormap);
+	#endif
 	client_draw_title(c);
 	XSetWindowBackgroundPixmap(dpy, c->title, c->title_pixmap);
 	XMoveResizeWindow(dpy, c->title, client_title_x(c), border_spacing, client_title_width(c), text_height);

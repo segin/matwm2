@@ -60,7 +60,7 @@ int wlist_handle_event(XEvent ev) {
 			} else if(i == KA_PREV) {
 				client_focus(wlist_prev());
 			} else break;
-			XWarpPointer(dpy, None, current->wlist_item, 0, 0, 0, 0, wlist_width - 2, 3 + title_height);
+			XWarpPointer(dpy, None, current->wlist_item, 0, 0, 0, 0, wlist_width - 2, wlist_item_height - 1);
 			break;
 		case KeyRelease:
 			mask = ev.xkey.state;
@@ -89,12 +89,13 @@ int wlist_handle_event(XEvent ev) {
 }
 
 int wlist_update(void) {
-	int i, nc = 0, offset = 1, nl = 0;
+	int i, wlist_height = 1, nl = 0, item_width;
 	wlist_width = 3;
 	for(i = 0; i < cn; i++)
 		if(!(stacking[i]->flags & DONT_LIST) && (client_visible(stacking[i]) || stacking[i]->flags & ICONIC)) {
-			if(stacking[i]->title_width + 6 > wlist_width)
-				wlist_width = stacking[i]->title_width + 6;
+			item_width = stacking[i]->title_width + 2 + (wlist_margin * 2);
+			if(item_width > wlist_width)
+				wlist_width = stacking[i]->title_width + 2 + (wlist_margin * 2);
 		} else nl++;
 	if(nl == cn) { /* no clients that have to be listed */
 		wlist_end(1);
@@ -104,18 +105,23 @@ int wlist_update(void) {
 		wlist_width = display_width;
 	for(i = 0; i < cn; i++) {
 		if(i == cn - nicons)
-			offset = 2;
+			wlist_height++;
 		if(!(stacking[i]->flags & DONT_LIST) && (client_visible(stacking[i]) || stacking[i]->flags & ICONIC)) {
-			XMoveResizeWindow(dpy, stacking[i]->wlist_item, 1, offset + ((title_height + 5) * nc), wlist_width - 2, title_height + 4);
-			nc++;
+			XMoveResizeWindow(dpy, stacking[i]->wlist_item, 1, wlist_height, wlist_width - 2, wlist_item_height);
+			wlist_height += wlist_item_height + 1;
 		}
 	}
-	XMoveResizeWindow(dpy, wlist, (display_width / 2) - (wlist_width / 2), (display_height / 2) - (1 + ((title_height + 5) * nc) / 2), wlist_width, offset + ((title_height + 5) * nc));
+	XMoveResizeWindow(dpy, wlist, (display_width / 2) - (wlist_width / 2), (display_height / 2) - (wlist_height / 2), wlist_width, wlist_height);
 	return 1;
 }
 
 void wlist_item_draw(client *c) {
-	if(c->name)
-		XDrawString(dpy, c->wlist_item, (c == current) ? gc : igc, center_wlist_items ? (wlist_width / 2) - c->title_width / 2 : 2, 2 + font->max_bounds.ascent, c->name, strlen(c->name));
+	#ifdef XFT
+	if(xftfont) {
+		XClearWindow(dpy, c->wlist_item);
+	  XftDrawString8(c->wlist_draw, (c == current) ? &xftfg : &xftifg, xftfont, center_wlist_items ? (wlist_width / 2) - c->title_width / 2 : wlist_margin, wlist_margin + xftfont->ascent, (unsigned char *) c->name, strlen(c->name));
+	} else
+	#endif
+	XDrawString(dpy, c->wlist_item, (c == current) ? gc : igc, center_wlist_items ? (wlist_width / 2) - c->title_width / 2 : wlist_margin, wlist_margin + font->max_bounds.ascent, c->name, strlen(c->name));
 }
 

@@ -2,6 +2,9 @@
 #############################################################################
 # converts default_matwmrc into C code that can be compiled into the binary #
 #############################################################################
+use strict;
+use warnings;
+
 open CFG, "<", "default_matwmrc";
 my @lines = <CFG>;
 close CFG;

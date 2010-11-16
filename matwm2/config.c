@@ -2,7 +2,11 @@
 
 XColor bg, ibg, fg, ifg, bfg, ibfg;
 GC gc, igc, bgc, ibgc;
-int border_spacing, border_width, button_spacing, text_height, title_height, title_spacing, center_title, center_wlist_items, button_size, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first = 1, *buttons_right = NULL, nbuttons_right, *buttons_left = NULL, nbuttons_left, doubleclick_time, double1, double2, double3, double4, double5, fullscreen_stacking, map_center;
+int border_spacing, border_width, button_spacing, wlist_margin, wlist_item_height, text_height, title_height, title_spacing, center_title, center_wlist_items, button_size, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first = 1, *buttons_right = NULL, nbuttons_right, *buttons_left = NULL, nbuttons_left, doubleclick_time, double1, double2, double3, double4, double5, fullscreen_stacking, map_center;
+#ifdef XFT
+XftFont *xftfont = NULL;
+XftColor xftfg, xftbg, xftifg, xftibg;
+#endif
 XFontStruct *font = NULL;
 char *no_title = NO_TITLE;
 
@@ -28,25 +32,43 @@ void cfg_read(int initial) {
 		free((void *) cfgfn);
 	}
 	/* check if a valid font was set */
+	#ifdef XFT
+	if(!font && !xftfont) {
+	#else
 	if(!font) {
+	#endif
 		fprintf(stderr, "error: font not found\n");
 		qsfd_send(ERROR);
 	}
 	/* set variables that depend on font dimensions */
+	#ifdef XFT
+	if(xftfont)
+		text_height = xftfont->ascent + xftfont->descent;
+	else
+	#endif
 	text_height = font->max_bounds.ascent + font->max_bounds.descent;
 	title_height = text_height + title_spacing;
 	button_size = text_height - ((text_height % 2) ? 0 : 1);
+	wlist_item_height = text_height + (wlist_margin * 2);
 	/* create graphics contexts */
 	gv.line_width = 1;
-	gv.font = font->fid;
 	gv.foreground = fg.pixel;
-	gc = XCreateGC(dpy, root, GCLineWidth | GCForeground | GCFont, &gv);
+	if(font)
+		gv.font = font->fid;
+	gc = XCreateGC(dpy, root, GCLineWidth | GCForeground | (font ? GCFont : 0), &gv);
 	gv.foreground = ifg.pixel;
-	igc = XCreateGC(dpy, root, GCLineWidth | GCForeground | GCFont, &gv);
+	igc = XCreateGC(dpy, root, GCLineWidth | GCForeground | (font ? GCFont : 0), &gv);
 	gv.foreground = bg.pixel;
-	bgc = XCreateGC(dpy, root, GCLineWidth | GCForeground | GCFont, &gv);
+	bgc = XCreateGC(dpy, root, GCLineWidth | GCForeground | (font ? GCFont : 0), &gv);
 	gv.foreground = ibg.pixel;
-	ibgc = XCreateGC(dpy, root, GCLineWidth | GCForeground | GCFont, &gv);
+	ibgc = XCreateGC(dpy, root, GCLineWidth | GCForeground | (font ? GCFont : 0), &gv);
+	#ifdef XFT
+	/* set Xft colors */
+	set_xft_color(&xftfg, fg);
+	set_xft_color(&xftbg, bg);
+	set_xft_color(&xftifg, ifg);
+	set_xft_color(&xftibg, ibg);
+	#endif
 	/* grab keys etc */
 	keys_update();
 }
@@ -93,6 +115,9 @@ void cfg_parse(char *cfg, int initial) {
 }
 
 void cfg_set_opt(char *key, char *value, int initial) {
+	#ifdef XFT
+	XftFont *newxftfont;
+	#endif
 	XFontStruct *newfont;
 	long i;
 	if(strcmp(key, "resetkeys") == 0)
@@ -122,8 +147,28 @@ void cfg_set_opt(char *key, char *value, int initial) {
 		if(newfont) {
 			if(font)
 				XFreeFont(dpy, font);
+			#ifdef XFT
+			if(xftfont) {
+				XftFontClose(dpy, xftfont);
+				xftfont = NULL;
+			}
+			#endif
 			font = newfont;
 		}
+		#ifdef XFT
+		else {
+			newxftfont = XftFontOpenName(dpy, screen, value);
+			if(newxftfont) {
+				if(xftfont)
+					XftFontClose(dpy, xftfont);
+				if(font) {
+					XFreeFont(dpy, font);
+					font = NULL;
+				}
+				xftfont = newxftfont;
+			}
+		}
+		#endif
 	}
 	if(strcmp(key, "border_width") == 0) {
 		i = strtol(value, NULL, 0);
@@ -144,6 +189,11 @@ void cfg_set_opt(char *key, char *value, int initial) {
 		i = strtol(value, NULL, 0);
 		if(i >= 0)
 			button_spacing = i;
+	}
+	if(strcmp(key, "wlist_margin") == 0) {
+		i = strtol(value, NULL, 0);
+		if(i >= 0)
+			wlist_margin = i;
 	}
 	if(strcmp(key, "doubleclick_time") == 0) {
 		i = strtol(value, NULL, 0);
@@ -223,6 +273,9 @@ void cfg_set_opt(char *key, char *value, int initial) {
 
 void cfg_reinitialize(void) {
 	int i;
+	#ifdef XFT
+	int xft = xftfont ? 1 : 0;
+	#endif
 	/* free things from old configuration */
 	XFreeGC(dpy, gc);
 	XFreeGC(dpy, igc);
@@ -236,6 +289,14 @@ void cfg_reinitialize(void) {
 	p_attr.border_pixel = ibfg.pixel;
 	/* update clients */
 	for(i = 0; i < cn; i++) {
+		#ifdef XFT
+		if(xftfont && !xft)
+			clients[i]->wlist_draw = XftDrawCreate(dpy, clients[i]->wlist_item, visual, colormap);
+		if(!xftfont && xft) {
+			XftDrawDestroy(clients[i]->title_draw);
+			XftDrawDestroy(clients[i]->wlist_draw);
+		}
+		#endif
 		XDestroyWindow(dpy, clients[i]->button_parent_left);
 		XDestroyWindow(dpy, clients[i]->button_parent_right);
 		free((void *) clients[i]->buttons);
@@ -259,12 +320,22 @@ void cfg_reinitialize(void) {
 
 void str_color(char *str, XColor *c) {
 	XColor newcolor, dummy;
-	if(XAllocNamedColor(dpy, DefaultColormap(dpy, screen), str, &newcolor, &dummy)) {
+	if(XAllocNamedColor(dpy, colormap, str, &newcolor, &dummy)) {
 		if(!first)
 			XFreeColors(dpy, colormap, &c->pixel, 1, 0);
 		*c = newcolor;
 	}
 }
+
+#ifdef XFT
+void set_xft_color(XftColor *xftcolor, XColor xcolor) {
+	xftcolor->pixel = xcolor.pixel;
+	xftcolor->color.red = xcolor.red;
+	xftcolor->color.green = xcolor.green;
+	xftcolor->color.blue = xcolor.blue;
+	xftcolor->color.alpha = USHRT_MAX;
+}
+#endif
 
 void str_bool(char *str, int *b) {
 	if(strcmp(str, "false") == 0)
@@ -405,4 +476,3 @@ void str_buttons(char *str, int **buttons, int *nbuttons) {
 			(*nbuttons)++;
 	}
 }
-

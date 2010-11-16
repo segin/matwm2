@@ -7,6 +7,9 @@
 #ifdef SHAPE
 #include <X11/extensions/shape.h>
 #endif
+#ifdef XFT
+#include <X11/Xft/Xft.h>
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/uio.h>
@@ -19,6 +22,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <limits.h>
 
 #define NAME "matwm2" /* our name, schould we forget it */
 #define CFGFN ".matwmrc" /* configuration file in $HOME */
@@ -36,6 +40,9 @@ typedef struct {
 	int         x, y, width, height, flags, layer, desktop, xo, yo, oldbw;
 	int         expand_x, expand_y, expand_width, expand_height, title_width, buttons_left_width, buttons_right_width, nbuttons;
 	Pixmap      title_pixmap;
+	#ifdef XFT
+	XftDraw     *title_draw, *wlist_draw;
+	#endif
 	XSizeHints  normal_hints;
 	char        *name;
 	button      *buttons;

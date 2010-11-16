@@ -1,11 +1,12 @@
 /* global variables from main.c */
 extern Display *dpy;
-extern int screen, display_width, display_height, have_shape, shape_event, qsfd[2];
+extern int screen, depth, display_width, display_height, have_shape, shape_event, qsfd[2];
 extern Window root;
 extern Atom xa_wm_protocols, xa_wm_delete, xa_wm_state, xa_wm_change_state, xa_motif_wm_hints;
 extern XSetWindowAttributes p_attr;
 extern char *dn;
 extern Colormap colormap;
+extern Visual *visual;
 
 /* functions from main.c */
 int main(int argc, char *argv[]);
@@ -40,7 +41,11 @@ void handle_event(XEvent ev);
 /* global variables from config.c */
 extern XColor bg, ibg, fg, ifg, bfg, ibfg;
 extern GC gc, igc, bgc, ibgc;
-extern int border_spacing, border_width, button_spacing, text_height, title_height, title_spacing, center_title, center_wlist_items, button_size, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first, *buttons_right, nbuttons_right, *buttons_left, nbuttons_left, doubleclick_time, double1, double2, double3, double4, double5, fullscreen_stacking, map_center;
+extern int border_spacing, border_width, button_spacing, wlist_margin, wlist_item_height, text_height, title_height, title_spacing, center_title, center_wlist_items, button_size, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first, *buttons_right, nbuttons_right, *buttons_left, nbuttons_left, doubleclick_time, double1, double2, double3, double4, double5, fullscreen_stacking, map_center;
+#ifdef XFT
+extern XftFont *xftfont;
+extern XftColor xftfg, xftbg, xftifg, xftibg;
+#endif
 extern XFontStruct *font;
 extern char *no_title;
 
@@ -51,6 +56,9 @@ void cfg_parse(char *cfg, int initial);
 void cfg_set_opt(char *key, char *value, int initial);
 void cfg_reinitialize(void);
 void str_color(char *str, XColor *c);
+#ifdef XFT
+void set_xft_color(XftColor *xftcolor, XColor xcolor);
+#endif
 void str_bool(char *str, int *b);
 void str_fsstacking(char *str, int *s);
 KeySym str_key(char **str, unsigned int *mask);
@@ -96,7 +104,9 @@ int get_state_hint(Window w);
 int get_wm_state(Window w);
 void set_wm_state(Window w, long state);
 void get_mwm_hints(client *c);
+#ifdef SHAPE
 void set_shape(client *c);
+#endif
 void configurenotify(client *c);
 int has_protocol(Window w, Atom protocol);
 void delete_window(client *c);
@@ -121,7 +131,9 @@ int snaph(client *c, int nx, int ny);
 int snapv(client *c, int nx, int ny);
 
 /* functions from evn.c */
+#ifdef DEBUG_EVENTS
 char *event_name(XEvent ev);
+#endif /* DEBUG_EVENTS */
 
 /* functions from misc.c */
 void spawn(char *cmd);

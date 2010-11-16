@@ -1,4 +1,4 @@
-.TH matwm2 1 "October 7, 2009" "" ""
+.TH matwm2 1 "Januari 5, 2009" "" ""
 .SH NAME
 matwm2 \- Window manager for X11
 .SH SYNOPSIS
@@ -18,7 +18,7 @@ Further, explanition of the various options in the configuration file(s) below c
 .IP -display display
 Specify the X display to use.
 .IP -version
-Show wich version of matwm this is and exit.
+Show wich version of matwm this is and exit. As of version 0.0.97 this will also print wheter it was compiled with shape extention and Xft support or not.
 .IP -defaults
 Print built-in default configuration to stdout and exit.
 .SH FILES
@@ -44,8 +44,8 @@ Sets the foreground (text, border) color of window frames when they are not focu
 Sets the color for borders around focussed windows.
 .IP "inactive_border_color [X11 color name]"
 Sets the color for the borders of not focussed windows.
-.IP "font [X11 font name]"
-Sets the font used for drawing text.
+.IP "font [font name]"
+Sets the font used for drawing text. Will take both X11 font names and - if compiled with Xft support (run "matwm2 -version" to find out) - fontconfig patterns.
 .IP "button[1-5] [button action]"
 Sets the function mouse buttons have on window borders. Possible button actions are "move", "resize", "raise", "lower", "iconify", "expand", "maximize", "close" and "none". "move" and "resize" raise the window and let the user drag it to resize or move it while the mouse button is held down. Moving windows over the right or left screen edge can be used to move them to the next desktop (at the right) or previous desktop (at the left). The other action are the same as the key actions with the same name described below.
 .IP "double[1-5] [button action]"
@@ -60,6 +60,8 @@ Sets the space between the window border and the actual client window to [interg
 Sets how much space there is to be between the bottom of the title text and the actual client window.
 .IP "button_spacing [integer]"
 Sets the amount of space that goes between buttons (and the left buttons and title if center_title is false) to [integer] pixels.
+.IP "wlist_margin [integer]"
+Sets how much space goes around text in window list items to [integer] pixels.
 .IP "snap [integer]"
 Snap windows together or to screen edges when they are [integer] pixels away from eachother, set to 0 to disable snapping.
 .IP "desktops [integer]"

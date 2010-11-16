@@ -6,10 +6,10 @@ int button_down = 0;
 void buttons_create(client *c) {
 	int i;
 	c->button_parent_left = XCreateWindow(dpy, c->parent, border_spacing, border_spacing, 1, 1, 0,
-	                                      DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
+	                                      depth, CopyFromParent, visual,
 	                                      CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
 	c->button_parent_right = XCreateWindow(dpy, c->parent, 0, 0, 1, 1, 0,
-	                                       DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
+	                                       depth, CopyFromParent, visual,
 	                                       CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
 	c->buttons = (void *) malloc(sizeof(button) * (nbuttons_left + nbuttons_right));
 	if(!c->buttons)
@@ -21,7 +21,7 @@ void buttons_create(client *c) {
 		if((buttons_left[i] == B_EXPAND || buttons_left[i] == B_MAXIMIZE) && !(c->flags & CAN_MOVE && c->flags & CAN_RESIZE))
 			continue;
 		c->buttons[c->nbuttons].w = XCreateWindow(dpy, c->button_parent_left, c->buttons_left_width, 0, button_size, button_size, 0,
-		                                          DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
+		                                          depth, CopyFromParent, visual,
 		                                          CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
 		XMapWindow(dpy, c->buttons[c->nbuttons].w);
 		c->buttons[c->nbuttons].action = buttons_left[i];
@@ -32,7 +32,7 @@ void buttons_create(client *c) {
 		if(((buttons_right[i] == B_EXPAND || buttons_right[i] == B_MAXIMIZE) && !(c->flags & CAN_MOVE && c->flags & CAN_RESIZE)))
 			continue;
 		c->buttons[c->nbuttons].w = XCreateWindow(dpy, c->button_parent_right, c->buttons_right_width, 0, button_size, button_size, 0,
-																							DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
+																							depth, CopyFromParent, visual,
 																							CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
 		XMapWindow(dpy, c->buttons[c->nbuttons].w);
 		c->buttons[c->nbuttons].action = buttons_right[i];
