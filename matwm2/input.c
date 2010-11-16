@@ -5,7 +5,7 @@ XModifierKeymap *modmap;
 keybind *keys = NULL;
 int keyn = 0, nmod_ignore  = 0;
 
-void bind_key(char *str) {
+void key_bind(char *str) {
   keybind k;
   k.sym = str_key(&str, &k.mask);
   if(!str)
@@ -24,22 +24,22 @@ void bind_key(char *str) {
   keyn++;
 }
 
-void update_keys(void) {
+void keys_update(void) {
   int i;
   modmap = XGetModifierMapping(dpy);
   for(i = 0; i < keyn; i++) {
     keys[i].code = XKeysymToKeycode(dpy, keys[i].sym);
-    grab_key(keys[i]);
+    key_grab(keys[i]);
   }
 }
 
-void ungrab_keys(void) {
+void keys_ungrab(void) {
   int i;
   for(i = 0; i < keyn; i++)
-    ungrab_key(keys[i]);
+    key_ungrab(keys[i]);
 }
 
-void free_keys(void) {
+void keys_free(void) {
   int i;
   for(i = 0; i < keyn; i++)
     if(keys[i].arg)
@@ -47,6 +47,20 @@ void free_keys(void) {
   free((void *) keys);
   keys = NULL;
   keyn = 0;
+}
+
+void key_grab(keybind key) {
+  int i;
+  XGrabKey(dpy, key.code, key.mask, root, True, GrabModeAsync, GrabModeAsync);
+  for(i = 0; i < nmod_ignore; i++)
+    XGrabKey(dpy, key.code, key.mask | mod_ignore[i], root, True, GrabModeAsync, GrabModeAsync);
+}
+
+void key_ungrab(keybind key) {
+  int i;
+  XUngrabKey(dpy, key.code, key.mask, root);
+  for(i = 0; i < nmod_ignore; i++)
+    XUngrabKey(dpy, key.code, key.mask | mod_ignore[i], root);
 }
 
 int buttonaction(int button) {
@@ -89,21 +103,7 @@ int key_to_mask(KeyCode key) {
   return 0;
 }
 
-void grab_key(keybind key) {
-  int i;
-  XGrabKey(dpy, key.code, key.mask, root, True, GrabModeAsync, GrabModeAsync);
-  for(i = 0; i < nmod_ignore; i++)
-    XGrabKey(dpy, key.code, key.mask | mod_ignore[i], root, True, GrabModeAsync, GrabModeAsync);
-}
-
-void ungrab_key(keybind key) {
-  int i;
-  XUngrabKey(dpy, key.code, key.mask, root);
-  for(i = 0; i < nmod_ignore; i++)
-    XUngrabKey(dpy, key.code, key.mask | mod_ignore[i], root);
-}
-
-void grab_button(Window w, unsigned int button, unsigned int modmask, unsigned int event_mask) {
+void button_grab(Window w, unsigned int button, unsigned int modmask, unsigned int event_mask) {
   int i;
   XGrabButton(dpy, button, modmask, w, False, event_mask, GrabModeAsync, GrabModeSync, None, None);
   for(i = 0; i < nmod_ignore; i++)

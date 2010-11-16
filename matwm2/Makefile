@@ -3,18 +3,18 @@ XROOT   = /usr/X11R6
 CC      = cc
 
 CFLAGS  += -lXext -lX11 -I$(XROOT)/include -L$(XROOT)/lib
-DEFINES += -DDEBUG
+CFLAGS += -DDEBUG -ggdb3
 
 all:		matwm2
 
 matwm2:
-		$(CC) $(DEFINES) $(CFLAGS) *.c -o $@
+		$(CC) $(CFLAGS) *.c -o $@
 
 clean:
 		rm -f matwm2
 
 header:
-		./makeheader
+		./makeheader *.c > all.h
 
 install:	matwm2
 		install -s matwm2 $(prefix)/bin

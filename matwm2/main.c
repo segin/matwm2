@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
   for(i = 0; i < nwins; i++) {
     XGetWindowAttributes(dpy, wins[i], &attr);
     if(!attr.override_redirect && attr.map_state == IsViewable)
-      add_client(wins[i]);
+      client_add(wins[i]);
   }
   if(wins != NULL)
     XFree(wins);
@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
       sr = select((qsfd[0] < dfd ? dfd : qsfd[0]) + 1, &fdsr, (fd_set *) NULL, (fd_set *) NULL, (struct timeval *) NULL);
       if(sr == -1 && errno != EINTR)
         error();
-      if(FD_ISSET(qsfd[0], &fdsr))
+      if(sr && FD_ISSET(qsfd[0], &fdsr))
         exit(0);
     }
 }
@@ -93,11 +93,12 @@ void end(void) {
   while(cn) {
     if(clients[0]->flags & ICONIC)
       XMapWindow(dpy, clients[0]->window);
-    remove_client(clients[0]);
+    client_deparent(clients[0]);
+    client_remove(clients[0]);
   }
   if(clients)
     free((void *) clients);
-  free_keys();
+  keys_free();
   XCloseDisplay(dpy);
 }
 

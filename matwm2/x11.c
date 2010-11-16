@@ -15,12 +15,12 @@ int xerrorhandler(Display *display, XErrorEvent *xerror) {
   return 0;
 }
 
-void getnormalhints(client *c) {
+void get_normal_hints(client *c) {
   long sr;
   XGetWMNormalHints(dpy, c->window, &c->normal_hints, &sr);
 }
 
-int getstatehint(Window w) {
+int get_state_hint(Window w) {
   int ret = WithdrawnState;
   XWMHints *wm_hints = XGetWMHints(dpy, w);
   if(wm_hints) {
@@ -86,6 +86,11 @@ void get_mwm_hints(client *c) {
     }
     XFree(mwmhints);
   }
+}
+
+void set_shape(client *c) {
+  if(c->flags & SHAPED)
+    XShapeCombineShape(dpy, c->parent, ShapeBounding, border(c), border(c) + title(c), c->window, ShapeBounding, ShapeSet);
 }
 
 void configurenotify(client *c)

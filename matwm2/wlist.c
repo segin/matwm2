@@ -17,9 +17,10 @@ void wlist_start(XEvent ev) {
 void wlist_end(void) {
   XUngrabKeyboard(dpy, CurrentTime);
   XUnmapWindow(dpy, wlist);
-  restore(current);
-  raise_client(current);
+  client_restore(current);
+  client_raise(current);
   warpto(current);
+  XSetInputFocus(dpy, current->window, RevertToPointerRoot, CurrentTime);
   evh = NULL;
 }
 
@@ -28,9 +29,9 @@ int wlist_handle_event(XEvent ev) {
   switch(ev.type) {
     case KeyPress:
       if(keyaction(ev) == KA_NEXT) {
-        focus((client_number(current) < cn - 1) ? clients[client_number(current) + 1] : clients[0]);
+        client_focus((client_number(current) < cn - 1) ? clients[client_number(current) + 1] : clients[0]);
       } else if(keyaction(ev) == KA_PREV) {
-        focus((client_number(current) > 0) ? clients[client_number(current) - 1] : clients[cn - 1]);
+        client_focus((client_number(current) > 0) ? clients[client_number(current) - 1] : clients[cn - 1]);
       } else break;
       XWarpPointer(dpy, None, current->wlist_item, 0, 0, 0, 0, wlist_width - 2, 3 + title_height);
       break;

@@ -16,7 +16,7 @@
 #include <errno.h>
 
 typedef struct {
-  Window        window, parent, wlist_item, button_parent, button_iconify, button_maximise, button_expand, button_close;
+  Window        window, parent, title, wlist_item, button_parent, button_iconify, button_maximise, button_expand, button_close;
   int           x, y, width, height, flags;
   int           oldbw, prev_x, prev_y, prev_width, prev_height;
   int           expand_prev_x, expand_prev_y, expand_prev_width, expand_prev_height;

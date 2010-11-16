@@ -6,7 +6,7 @@ Bool isunmap(Display *display, XEvent *event, XPointer arg) {
   return False;
 }
 
-void iconify(client *c) {
+void client_iconify(client *c) {
   int i;
   XEvent ev;
   if(c->flags & ICONIC)
@@ -20,10 +20,10 @@ void iconify(client *c) {
   for(i = client_number(c); i < cn - 1; i++)
     clients[i] = clients[i + 1];
   clients[cn - 1] = c;
-  focus(clients[0]);
+  client_focus(clients[0]);
 }
 
-void restore(client *c) {
+void client_restore(client *c) {
   int i;
   if(!(c->flags & ICONIC))
     return;

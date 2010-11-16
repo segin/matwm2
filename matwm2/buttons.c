@@ -7,16 +7,16 @@ void buttons_create(client *c) {
   c->button_parent = XCreateWindow(dpy, c->parent, (c->width + border_width) - button_parent_width, border_width, button_parent_width, text_height, 0,
                                    DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
                                    CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
-  c->button_iconify = XCreateWindow(dpy, c->button_parent, 2, 0, text_height, text_height, 0,
+  c->button_iconify = XCreateWindow(dpy, c->button_parent, 0, 0, text_height, text_height, 0,
                                     DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
                                     CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
-  c->button_expand = XCreateWindow(dpy, c->button_parent, text_height + 4, 0, text_height, text_height, 0,
+  c->button_expand = XCreateWindow(dpy, c->button_parent, text_height + 2, 0, text_height, text_height, 0,
                                    DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
                                    CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
-  c->button_maximise = XCreateWindow(dpy, c->button_parent, 2 + ((text_height + 2) * 2), 0, text_height, text_height, 0,
+  c->button_maximise = XCreateWindow(dpy, c->button_parent, ((text_height + 2) * 2), 0, text_height, text_height, 0,
                                      DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
                                      CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
-  c->button_close = XCreateWindow(dpy, c->button_parent, 2 + ((text_height + 2) * 3), 0, text_height, text_height, 0,
+  c->button_close = XCreateWindow(dpy, c->button_parent, ((text_height + 2) * 3), 0, text_height, text_height, 0,
                                   DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
                                   CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
   XMapWindow(dpy, c->button_parent);
@@ -27,19 +27,38 @@ void buttons_create(client *c) {
 }
 
 void buttons_draw(client *c) {
-  XClearWindow(dpy, c->button_parent);
-  XClearWindow(dpy, c->button_iconify);
-  XClearWindow(dpy, c->button_expand);
-  XClearWindow(dpy, c->button_maximise);
-  XClearWindow(dpy, c->button_close);
+  button_draw(c, c->button_iconify);
+  button_draw(c, c->button_expand);
+  button_draw(c, c->button_maximise);
+  button_draw(c, c->button_close);
+}
+
+void button_draw(client *c, Window b) {
+  XClearWindow(dpy, b);
   if(button_current != root)
     XDrawRectangle(dpy, button_current, gc, 0, 0, text_height - 1, text_height - 1);
-  XDrawRectangle(dpy, c->button_iconify, (c == current) ? gc : igc, 5, 5, text_height - 11, text_height - 11);
-  XDrawLine(dpy, c->button_expand, (c == current) ? gc : igc, text_height / 2, 3, text_height / 2, text_height - 3);
-  XDrawLine(dpy, c->button_expand, (c == current) ? gc : igc, 3, text_height / 2, text_height - 3, text_height / 2);
-  XDrawRectangle(dpy, c->button_maximise, (c == current) ? gc : igc, 2, 2, text_height - 5, text_height - 5);
-  XDrawLine(dpy, c->button_close, (c == current) ? gc : igc, 2, 2, text_height - 2, text_height - 2);
-  XDrawLine(dpy, c->button_close, (c == current) ? gc : igc, 2, text_height - 3, text_height - 2, 1);
+  if(b == c->button_iconify)
+    XDrawRectangle(dpy, c->button_iconify, (c == current) ? gc : igc, 5, 5, text_height - 11, text_height - 11);
+  if(b == c->button_expand) {
+    XDrawLine(dpy, c->button_expand, (c == current) ? gc : igc, text_height / 2, 3, text_height / 2, text_height - 3);
+    XDrawLine(dpy, c->button_expand, (c == current) ? gc : igc, 3, text_height / 2, text_height - 3, text_height / 2);
+  }
+  if(b == c->button_maximise)
+    XDrawRectangle(dpy, c->button_maximise, (c == current) ? gc : igc, 2, 2, text_height - 5, text_height - 5);
+  if(b == c->button_close) {
+    XDrawLine(dpy, c->button_close, (c == current) ? gc : igc, 2, 2, text_height - 2, text_height - 2);
+    XDrawLine(dpy, c->button_close, (c == current) ? gc : igc, 2, text_height - 3, text_height - 2, 1);
+  }
+}
+
+void buttons_update(client *c) {
+  if(c->flags & HAS_BUTTONS && c->width <= button_parent_width + 2) {
+    c->flags ^= HAS_BUTTONS;
+    XUnmapWindow(dpy, c->button_parent);
+  } else if(!(c->flags & HAS_BUTTONS) && c->width > button_parent_width + 2) {
+    c->flags |= HAS_BUTTONS;
+    XMapWindow(dpy, c->button_parent);
+  }
 }
 
 int handle_button_event(XEvent ev) {
@@ -52,7 +71,7 @@ int handle_button_event(XEvent ev) {
     return 0;
   switch(ev.type) {
     case Expose:
-      buttons_draw(c);
+      button_draw(c, ev.xexpose.window);
       return 1;
     case EnterNotify:
       if(button_down) {
@@ -60,13 +79,13 @@ int handle_button_event(XEvent ev) {
         return 1;
       }
       button_current = ev.xcrossing.window;
-      buttons_draw(c);
+      button_draw(c, ev.xcrossing.window);
       return 1;
     case LeaveNotify:
       if(button_down == 2)
         button_down = 1;
       button_current = root; // make sure its not a button (i chose root because its always there and i assumed any value could be a window)
-      buttons_draw(c);
+      button_draw(c, ev.xcrossing.window);
       return 1;
     case ButtonPress:
       if(ev.xbutton.button == Button1)
@@ -76,17 +95,17 @@ int handle_button_event(XEvent ev) {
       if(ev.xbutton.button == Button1) {
         if(button_current == ev.xbutton.window) {
           if(ev.xbutton.window == c->button_iconify)
-            iconify(c);
+            client_iconify(c);
           if(ev.xbutton.window == c->button_expand)
-            expand(c);
+            client_expand(c);
           if(ev.xbutton.window == c->button_maximise)
-            maximise(c);
+            client_maximise(c);
           if(ev.xbutton.window == c->button_close)
             delete_window(c);
         }
         if(button_down == 2) {
           button_current = ev.xbutton.window;
-          buttons_draw(c);
+          button_draw(c, ev.xbutton.window);
         }
         button_down = 0;
       }

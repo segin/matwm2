@@ -8,7 +8,7 @@ void drag_start(XEvent ev) {
     return;
   evh = drag_handle_event;
   be = ev.xbutton;
-  raise_client(current);
+  client_raise(current);
   if(buttonaction(be.button) == BA_RESIZE) {
     warpto(current);
     xo = current->x + (border(current) * 2);
@@ -30,10 +30,10 @@ int drag_handle_event(XEvent ev) {
     case MotionNotify:
       while(XCheckTypedEvent(dpy, MotionNotify, &ev));
       if(buttonaction(be.button) == BA_RESIZE) {
-        if(resize(current, snaph(current, ev.xmotion.x, snapv(current, ev.xmotion.x, ev.xmotion.y)) - xo, snapv(current, snaph(current, ev.xmotion.x, ev.xmotion.y), ev.xmotion.y) - yo))
+        if(client_resize(current, snaph(current, ev.xmotion.x, snapv(current, ev.xmotion.x, ev.xmotion.y)) - xo, snapv(current, snaph(current, ev.xmotion.x, ev.xmotion.y), ev.xmotion.y) - yo))
           current->flags ^= current->flags & (MAXIMISED | EXPANDED);
       } else {
-        if(move(current, snapx(current, ev.xmotion.x - xo, snapy(current, ev.xmotion.x - xo, ev.xmotion.y - yo)), snapy(current, snapx(current, ev.xmotion.x - xo, ev.xmotion.y - yo), ev.xmotion.y - yo)))
+        if(client_move(current, snapx(current, ev.xmotion.x - xo, snapy(current, ev.xmotion.x - xo, ev.xmotion.y - yo)), snapy(current, snapx(current, ev.xmotion.x - xo, ev.xmotion.y - yo), ev.xmotion.y - yo)))
           current->flags ^= current->flags & (MAXIMISED | EXPANDED);
       }
       return 1;

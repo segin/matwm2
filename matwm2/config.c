@@ -25,10 +25,10 @@ void cfg_read(void) {
     }
     free((void *) cfgfn);
   }
-  update_keys();
+  keys_update();
   text_height = font->max_bounds.ascent + font->max_bounds.descent;
   title_height = text_height + 2;
-  button_parent_width = (text_height * 4) + 8;
+  button_parent_width = (text_height * 4) + 6;
   gv.function = GXinvert;
   gv.subwindow_mode = IncludeInferiors;
   gv.line_width = 1;
@@ -54,10 +54,10 @@ void cfg_parse(char *cfg) {
     val = opt;
     if(strcmp(key, "key") == 0) {
       if(old_keys) {
-        free_keys();
+        keys_free();
         old_keys = NULL;
       }
-      bind_key(val);
+      key_bind(val);
     } else cfg_set_opt(key, val);
   }
 }
