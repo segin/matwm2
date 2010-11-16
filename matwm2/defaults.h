@@ -4,13 +4,13 @@
 #define DEF_IFG                 "lightgray"
 #define DEF_FONT                "variable"
 #define DEF_CBUTTON1            "move"
-#define DEF_CBUTTON2            NULL
+#define DEF_CBUTTON2            ""
 #define DEF_CBUTTON3            "resize"
 #define DEF_CBUTTON4            "lower"
 #define DEF_CBUTTON5            "raise"
 #define DEF_IBUTTON1            "restore"
-#define DEF_IBUTTON2            NULL
-#define DEF_IBUTTON3            NULL
+#define DEF_IBUTTON2            ""
+#define DEF_IBUTTON3            ""
 #define DEF_IBUTTON4            "lower"
 #define DEF_IBUTTON5            "raise"
 #define DEF_MOUSEMOD            "Alt_L"

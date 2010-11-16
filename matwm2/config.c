@@ -57,7 +57,7 @@ char *buttonaction(int n, int button) {
     case Button5:
       return cbutton5;
   }
-  return None;
+  return "";
 }
 
 KeyCode string_to_key(char *str, int *mask) {
