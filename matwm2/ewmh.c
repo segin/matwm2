@@ -118,7 +118,7 @@ int ewmh_handle_event(XEvent ev) {
 				if(s)
 					client_toggle_state(c, s);
 				if(ev.xclient.data.l[1] == ewmh_atoms[NET_WM_STATE_FULLSCREEN] && (ev.xclient.data.l[0] == NET_WM_STATE_TOGGLE || (ev.xclient.data.l[0] == NET_WM_STATE_ADD && !(c->flags & FULLSCREEN)) || (ev.xclient.data.l[0] == NET_WM_STATE_REMOVE && (c->flags & FULLSCREEN))))
-					client_toggle_state(c, FULLSCREEN);
+					client_fullscreen(c);
 				if(ev.xclient.data.l[1] == ewmh_atoms[NET_WM_STATE_ABOVE])
 					client_set_layer(c, (c->layer == TOP) ? NORMAL : TOP);
 				if(ev.xclient.data.l[1] == ewmh_atoms[NET_WM_STATE_BELOW])

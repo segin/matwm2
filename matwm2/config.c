@@ -2,7 +2,7 @@
 
 XColor bg, ibg, fg, ifg;
 GC gc, igc, bgc, ibgc;
-int border_width, text_height, title_height, title_spacing, center_title, center_wlist_items, button_size, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first = 1, *buttons_right = NULL, nbuttons_right, *buttons_left = NULL, nbuttons_left, doubleclick_time, double1, double2, double3, double4, double5;
+int border_width, text_height, title_height, title_spacing, center_title, center_wlist_items, button_size, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first = 1, *buttons_right = NULL, nbuttons_right, *buttons_left = NULL, nbuttons_left, doubleclick_time, double1, double2, double3, double4, double5, fullscreen_stacking;
 XFontStruct *font = NULL;
 char *no_title = NO_TITLE;
 
@@ -147,6 +147,8 @@ void cfg_set_opt(char *key, char *value, int initial) {
 		str_bool(value, &click_raise);
 	if(strcmp(key, "focus_new") == 0)
 		str_bool(value, &focus_new);
+	if(strcmp(key, "fullscreen_stacking") == 0)
+		str_fsstacking(value, &fullscreen_stacking);
 	if(strcmp(key, "taskbar_ontop") == 0)
 		str_bool(value, &taskbar_ontop);
 	if(strcmp(key, "center_title") == 0)
@@ -201,6 +203,8 @@ void cfg_reinitialize(void) {
 			client_set_layer(clients[i], taskbar_ontop ? TOP : NORMAL);
 		XUngrabButton(dpy, AnyButton, AnyModifier, clients[i]->parent);
 		client_grab_buttons(clients[i]);
+		if(clients[i]->flags & FULLSCREEN && clients[i]->layer <= NORMAL && fullscreen_stacking != FS_NORMAL)
+			client_update_layer(clients[i], (fullscreen_stacking == FS_ALWAYS_ONTOP) ? NORMAL : TOP);
 		ewmh_update_extents(clients[i]);
 	}
 	ewmh_update_number_of_desktops();
@@ -220,6 +224,15 @@ void str_bool(char *str, int *b) {
 		*b = 0;
 	if(strcmp(str, "true") == 0)
 		*b = 1;
+}
+
+void str_fsstacking(char *str, int *s) {
+	if(strcmp(str, "normal") == 0)
+		*s = FS_NORMAL;
+	if(strcmp(str, "ontop") == 0)
+		*s = FS_ONTOP;
+	if(strcmp(str, "always_ontop") == 0)
+		*s = FS_ALWAYS_ONTOP;
 }
 
 KeySym str_key(char **str, unsigned int *mask) {

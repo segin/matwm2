@@ -14,6 +14,7 @@ desktops              4\n\
 snap                  5\n\
 taskbar_ontop         false\n\
 focus_new             false\n\
+fullscreen_stacking   ontop\n\
 click_focus           false\n\
 click_raise           false\n\
 button1               move\n\

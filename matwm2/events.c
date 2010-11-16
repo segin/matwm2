@@ -132,9 +132,7 @@ void handle_event(XEvent ev) {
 				client_expand(current, i ? i : (EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B), j);
 				return;
 			case KA_FULLSCREEN:
-				i = client_layer(current);
-				client_toggle_state(current, FULLSCREEN);
-				client_update_layer(current, i);
+				client_fullscreen(current);
 				return;
 			case KA_STICKY:
 				client_to_desktop(current, (current->desktop == STICKY) ? desktop : STICKY);

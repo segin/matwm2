@@ -80,6 +80,8 @@ Set a list of buttons (from left to right) to show at the left of the title of w
 Same as the "buttons_left" option but for buttons at the right of the titlebar.
 .IP "taskbar_ontop"
 If set to "true" taskbar windows that use EWMH hints will be kept ontop, if set to "false" windows can cover them.
+.IP "fullscreen_stacking [stacking mode]"
+If set to "normal" fullscreen windows behave like other windows in terms of stacking, when this is set to "ontop" they can raise over always-on-top windows and if set to "always_ontop" fullscreened windows are always on top and new windows will not be focussed if theres a fullscreen window above them. 
 .IP "resetkeys"
 Remove all previously defined key bindings from memory.
 .IP "key [modifier key] [...] [X11 key name] [key action]"

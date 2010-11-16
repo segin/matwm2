@@ -88,7 +88,7 @@ int client_visible(client *c) {
 }
 
 int client_layer(client *c) {
-	if(c->layer <= NORMAL && c->flags & FULLSCREEN)
+	if(fullscreen_stacking == FS_ALWAYS_ONTOP && c->layer <= NORMAL && c->flags & FULLSCREEN)
 		return TOP;
 	return c->layer;
 }

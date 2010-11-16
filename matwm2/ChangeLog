@@ -1,3 +1,6 @@
+0.0.85:
+	multiple stacking modes for fullscreen windows
+
 0.0.84:
 	double click can be set for every mouse button in the same way normal mouse buttons can be configured
 	check if both clicks come from the same client with double clicks

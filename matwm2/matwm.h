@@ -124,6 +124,12 @@ enum {
 	B_BELOW
 };
 
+enum {
+	FS_NORMAL,
+	FS_ONTOP,
+	FS_ALWAYS_ONTOP
+};
+
 #include "mwm_hints.h"
 #include "ewmh.h"
 #include "defaults.h"

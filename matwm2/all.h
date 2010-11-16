@@ -7,6 +7,8 @@ void client_resize(client *c, int width, int height);
 void client_focus(client *c);
 void client_raise(client *c);
 void client_lower(client *c);
+void client_over_fullscreen(client *c);
+void client_fullscreen(client *c);
 void client_set_layer(client *c, int layer);
 void client_toggle_state(client *c, int state);
 void client_expand_x(client *c, int d, int first);
@@ -61,7 +63,7 @@ void clients_alloc(void);
 /* global variables from config.c */
 extern XColor bg, ibg, fg, ifg;
 extern GC gc, igc, bgc, ibgc;
-extern int border_width, text_height, title_height, title_spacing, center_title, center_wlist_items, button_size, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first, *buttons_right, nbuttons_right, *buttons_left, nbuttons_left, doubleclick_time, double1, double2, double3, double4, double5;
+extern int border_width, text_height, title_height, title_spacing, center_title, center_wlist_items, button_size, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first, *buttons_right, nbuttons_right, *buttons_left, nbuttons_left, doubleclick_time, double1, double2, double3, double4, double5, fullscreen_stacking;
 extern XFontStruct *font;
 extern char *no_title;
 
@@ -72,6 +74,7 @@ void cfg_set_opt(char *key, char *value, int initial);
 void cfg_reinitialize(void);
 void str_color(char *str, XColor *c);
 void str_bool(char *str, int *b);
+void str_fsstacking(char *str, int *s);
 KeySym str_key(char **str, unsigned int *mask);
 unsigned int str_modifier(char *name);
 int str_buttonaction(char *str);

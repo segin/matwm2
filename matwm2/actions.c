@@ -69,10 +69,10 @@ void client_focus(client *c) {
 
 void client_raise(client *c) {
 	int i;
-	for(i = client_number(stacking, c); i > 0 && (client_layer(stacking[i - 1]) >= client_layer(c) || stacking[i - 1]->flags & ICONIC); i--)
+	for(i = client_number(stacking, c); i > 0 && (client_layer(stacking[i - 1]) >= client_layer(c) || stacking[i - 1]->flags & ICONIC || (fullscreen_stacking == FS_ONTOP && c->flags & FULLSCREEN && c->layer <= NORMAL)); i--)
 		stacking[i] = stacking[i - 1];
 	stacking[i] = c;
-	clients_apply_stacking();
+	client_over_fullscreen(c);
 }
 
 void client_lower(client *c) {
@@ -81,6 +81,30 @@ void client_lower(client *c) {
 		stacking[i] = stacking[i + 1];
 	stacking[i] = c;
 	clients_apply_stacking();
+}
+
+void client_over_fullscreen(client *c) {
+	int i, j, cc = client_number(stacking, c);
+	if(fullscreen_stacking != FS_ONTOP)
+		return;
+	client *d;
+	for(i = cc; i >= 0; i--)
+		if(stacking[i]->flags & FULLSCREEN) {
+			d = stacking[i];
+			for(j = i; j < cn - 1 && client_layer(stacking[j + 1]) <= client_layer(d) && !(stacking[j + 1]->flags & ICONIC) && j < cc; j++)
+				stacking[j] = stacking[j + 1];
+			stacking[j] = d;
+		}
+	clients_apply_stacking();
+}
+
+void client_fullscreen(client *c) {
+	int prev = client_layer(current);
+	client_toggle_state(c, FULLSCREEN);
+	if(fullscreen_stacking == FS_ALWAYS_ONTOP)
+	  client_update_layer(current, prev);
+	if(fullscreen_stacking == FS_ONTOP && !(c->flags & FULLSCREEN))
+	  client_update_layer(current, TOP);
 }
 
 void client_set_layer(client *c, int layer) {

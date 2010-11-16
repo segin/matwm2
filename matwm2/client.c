@@ -81,8 +81,16 @@ void client_add(Window w) {
 	clients[cn - 1] = new;
 	if(evh == wlist_handle_event)
 		wlist_update();
-	else if((focus_new || !current) && !(new->flags & ICONIC))
-		client_focus(new);
+	else {
+		i = 0;
+		if(fullscreen_stacking == FS_ALWAYS_ONTOP)
+			for(i = client_number(stacking, new); i >= 0; i--)
+				if(stacking[i]->flags & FULLSCREEN && !(stacking[i]->flags & ICONIC) && (stacking[i]->desktop == desktop || stacking[i]->desktop == STICKY))
+					break;
+		if(((focus_new && !i) || !current) && !(new->flags & ICONIC))
+			client_focus(new);
+	}
+	client_over_fullscreen(new);
 	ewmh_update_desktop(new);
 	ewmh_update_allowed_actions(new);
 	ewmh_update_state(new);
