@@ -66,8 +66,8 @@ void handle_event(XEvent ev) {
         getnormalhints(i);
       if(ev.xproperty.atom == xa_motif_wm_hints && i < cn) {
         get_mwm_hints(i);
-        XMoveWindow(dpy, clients[i].window, border(cn), border(cn) + title(cn));
-        XResizeWindow(dpy, clients[i].parent, (clients[i].iconic && !clients[i].transient) ? icon_width : (clients[i].width + (border(i) * 2)), (clients[i].iconic && !clients[cn].transient) ? title_height + 4 : (clients[i].height + (border(i) * 2) + title(i)));
+        XMoveWindow(dpy, clients[i].window, border(i), border(i) + title(i));
+        XResizeWindow(dpy, clients[i].parent, (clients[i].iconic && !clients[i].transient) ? icon_width : (clients[i].width + (border(i) * 2)), (clients[i].iconic && !clients[i].transient) ? title_height + 4 : (clients[i].height + (border(i) * 2) + title(i)));
       }
       break;
     case ClientMessage:

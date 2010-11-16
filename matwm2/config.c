@@ -64,7 +64,7 @@ KeyCode string_to_key(char *str, int *mask) {
   int p = 0, l = 0, len = strlen(str), mod;
   char t[len + 1];
   *mask = 0;
-  strlcpy(t, str, len + 1);
+  strncpy(t, str, len + 1);
   while(p < len + 1) {
     if(t[p] == ' ' || t[p] == '\t' || t[p] == 0) {
       t[p] = 0;
@@ -90,9 +90,9 @@ void config_read(void) {
   char cfgfn[cfglen];
   XrmInitialize();
   if(home) {
-    strlcpy(cfgfn, home, cfglen);
-    strlcat(cfgfn, "/", cfglen);
-    strlcat(cfgfn, CFGFN, cfglen);
+    strncpy(cfgfn, home, cfglen);
+    strncat(cfgfn, "/", cfglen);
+    strncat(cfgfn, CFGFN, cfglen);
     cfg = XrmGetFileDatabase(cfgfn);
   }
   cbutton1 = xrm_getstr(cfg, "client_button1", DEF_CBUTTON1);
