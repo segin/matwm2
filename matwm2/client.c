@@ -5,17 +5,18 @@ int cn = 0, nicons = 0; /* cn keeps the number of clients, of wich nicons are ic
 
 void client_add(Window w, bool mapped) {
 	XWindowAttributes attr;
-	int i, wm_state;
+	int i, wm_state, state_hint;
 	#ifdef USE_SHAPE
 	int di, bounding_shaped;
 	unsigned int dui;
 	#endif
 	client *new = (client *) _malloc(sizeof(client));
 	new->window = w;
+	get_wm_hints(new, &state_hint);
 	/* set client state */
 	wm_state = get_wm_state(w);
 	if(wm_state == WithdrawnState) {
-		wm_state = get_state_hint(w);
+		wm_state = state_hint;
 		set_wm_state(w, (wm_state != WithdrawnState) ? wm_state : NormalState);
 	}
 	/* read attributes and fill up client structure with them */
@@ -25,6 +26,7 @@ void client_add(Window w, bool mapped) {
 	new->oldbw = attr.border_width;
 	new->layer = NORMAL;
 	new->desktop = desktop;
+	new->screen = cs;
 	new->flags = HAS_TITLE | HAS_BORDER | CAN_MOVE | CAN_RESIZE;
 	if(wm_state == IconicState)
 		new->flags |= ICONIC;
@@ -308,6 +310,8 @@ void client_update_size(client *c) { /* apply changes in the size of a client */
 	XResizeWindow(dpy, c->parent, client_width_total_intern(c), client_height_total_intern(c));
 	XResizeWindow(dpy, c->window, width, client_height(c));
 	buttons_draw(c);
+	configurenotify(c); /* for jedit and perhaps other applications that are reluctant to listen */
+
 }
 
 void client_update(client *c) { /* apply changes in position and size of a window (or border width etc) */
@@ -318,6 +322,7 @@ void client_update(client *c) { /* apply changes in position and size of a windo
 	XMoveResizeWindow(dpy, c->parent, client_x(c), client_y(c), client_width_total_intern(c), client_height_total_intern(c));
 	XMoveResizeWindow(dpy, c->window, client_border_intern(c), client_border_intern(c) + client_title(c), width, client_height(c));
 	buttons_draw(c);
+	configurenotify(c); /* see client_update_size() */
 }
 
 void client_update_title(client *c) { /* apply changes if titlebar is turned on or off */

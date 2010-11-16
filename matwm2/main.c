@@ -14,7 +14,7 @@
 Display *dpy = NULL;
 int screen, depth, have_shape, shape_event, qsfd[2];
 Window root;
-Atom xa_wm_protocols, xa_wm_delete, xa_wm_state, xa_wm_change_state, xa_motif_wm_hints;
+Atom xa_wm_protocols, xa_wm_delete, xa_wm_take_focus, xa_wm_state, xa_wm_change_state, xa_motif_wm_hints;
 XSetWindowAttributes p_attr;
 char *dn = NULL, *perror_str = NAME ": error";
 Colormap colormap;
@@ -120,6 +120,7 @@ int main(int argc, char *argv[]) {
 	XSetErrorHandler(&xerrorhandler); /* set up error handler - to be found in x11.c */
 	xa_wm_protocols = XInternAtom(dpy, "WM_PROTOCOLS", False);
 	xa_wm_delete = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
+	xa_wm_take_focus = XInternAtom(dpy, "WM_TAKE_FOCUS", False);
 	xa_wm_state = XInternAtom(dpy, "WM_STATE", False);
 	xa_wm_change_state = XInternAtom(dpy, "WM_CHANGE_STATE", False);
 	xa_motif_wm_hints = XInternAtom(dpy, "_MOTIF_WM_HINTS", False);

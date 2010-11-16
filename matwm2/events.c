@@ -8,7 +8,7 @@ client *lastclick_client = NULL;
 void handle_event(XEvent *ev) {
 	client *c = owner(ev->xany.window);
 	#ifdef DEBUG_EVENTS
-	if(ev->type != Expose && ev->type != MotionNotify && (ev->type != ConfigureNotify && ev->xconfigure.window != root)) /* this makes the output slightly more manageable */
+	if(ev->type != Expose && ev->type != MotionNotify && !(ev->type == ConfigureNotify && ev->xconfigure.window != root)) /* this makes the output slightly more manageable */
 		printf(NAME ": handle_event(): got %s\n\twindow: 0x%X (%s)\n", event_name(ev), (unsigned int) ev->xany.window, c ? c->name : ((ev->xany.window == root) ? "root" : "unknown"));
 	#endif
 	if((evh && evh(ev)) || button_handle_event(ev) || ewmh_handle_event(ev) || screens_handle_event(ev)) {
@@ -104,7 +104,7 @@ void handle_event(XEvent *ev) {
 				} else if(click_raise)
 					client_raise(c);
 				return;
-			case FocusIn: /* we ignore pointer events, these happen if the input focus is on the root window - wich we handle below */
+			case FocusIn: /* we ignore pointer events, these happen if the input focus is on the root window */
 				if(allow_focus_stealing && c != current && ev->xfocus.mode != NotifyGrab && ev->xfocus.mode != NotifyUngrab && ev->xfocus.detail != NotifyPointer) {
 					#ifdef DEBUG_EVENTS
 					printf(NAME ": handle_event(): handling FocusIn event\n\twindow: 0x%X (%s)\n", (unsigned int) c->window, c->name);
@@ -112,15 +112,22 @@ void handle_event(XEvent *ev) {
 					client_focus(c, false);
 				}
 				return;
-			case FocusOut: /* not here, way below */
+			case FocusOut:
 				if(c == current && ev->xfocus.mode != NotifyGrab && ev->xfocus.mode != NotifyUngrab && ev->xfocus.detail != NotifyInferior) {
 					#ifdef DEBUG_EVENTS
 					printf(NAME ": handle_event(): handling FocusOut event\n\twindow: 0x%X (%s)\n", (unsigned int) c->window, c->name);
 					#endif
-					if(allow_focus_stealing && ev->xfocus.detail == NotifyNonlinear && ev->xfocus.detail != NotifyPointer)
-						client_focus(NULL, false);
-					else
-						XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
+					if(allow_focus_stealing && ev->xfocus.detail != NotifyAncestor) {
+						#ifdef DEBUG_EVENTS
+						printf("\tfocus lost\n");
+						#endif
+						client_focus(NULL, false); /* we do this so windows that aren't managed can take focus */
+					} else {
+						#ifdef DEBUG_EVENTS
+						printf("\tre-focussing this window\n");
+						#endif
+						take_focus(c);
+					}
 				}
 				return;
 			#ifdef USE_SHAPE
@@ -235,14 +242,5 @@ void handle_event(XEvent *ev) {
 			lastbutton = ev->xbutton.button;
 			client_action(current, root_buttonaction(ev->xbutton.button, false), ev);
 			return;
-		case FocusIn:
-			if(ev->xfocus.window == root && ev->xfocus.mode != NotifyGrab && ev->xfocus.mode != NotifyUngrab && ev->xfocus.detail != NotifyVirtual && ev->xfocus.detail != NotifyNonlinearVirtual) {
-				#ifdef DEBUG_EVENTS
-				printf(NAME ": handle_event(): handling FocusIn event\n\twindow: %X (root)\n", (unsigned int) ev->xfocus.window);
-				#endif
-				if(client_visible(current))
-					XSetInputFocus(dpy, current->window, RevertToPointerRoot, CurrentTime);
-				else client_focus_first();
-			}
 	}
 }

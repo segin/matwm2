@@ -41,15 +41,15 @@ void get_normal_hints(client *c) { /* read normal size hints */
 		c->flags ^= c->flags & CAN_RESIZE; /* min and max size are equal, so the window can't be resized */
 }
 
-int get_state_hint(Window w) { /* read hint for the initial state of a window */
-	int ret = WithdrawnState;
-	XWMHints *wm_hints = XGetWMHints(dpy, w);
+void get_wm_hints(client *c, int *state_hint) { /* read hint for the initial state of a window */
+	XWMHints *wm_hints = XGetWMHints(dpy, c->window);
+	*state_hint = WithdrawnState;
 	if(wm_hints) {
 		if(wm_hints->flags & StateHint)
-			ret = wm_hints->initial_state;
+			*state_hint = wm_hints->initial_state;
+		c->want_input_focus = (wm_hints->flags & InputHint && wm_hints->input == False) ? false : true;
 		XFree(wm_hints);
 	}
-	return ret;
 }
 
 int get_wm_state(Window w) { /* read current state of the window */
@@ -148,9 +148,25 @@ void delete_window(client *c) { /* for closing windows */
 		ev.xclient.message_type = xa_wm_protocols;
 		ev.xclient.format = 32;
 		ev.xclient.data.l[0] = xa_wm_delete;
-		ev.xclient.data.l[1] = CurrentTime;
+		ev.xclient.data.l[1] = CurrentTime; /* */
 		XSendEvent(dpy, c->window, False, NoEventMask, &ev);
 	} else XKillClient(dpy, c->window);
+}
+
+void take_focus(client *c) {
+	XEvent ev;
+	if(c->want_input_focus)
+		XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
+	else XSetInputFocus(dpy, None, RevertToPointerRoot, CurrentTime);
+	if(has_protocol(c->window, xa_wm_take_focus)) {
+		ev.type = ClientMessage;
+		ev.xclient.window = c->window;
+		ev.xclient.message_type = xa_wm_protocols;
+		ev.xclient.format = 32;
+		ev.xclient.data.l[0] = xa_wm_take_focus;
+		ev.xclient.data.l[1] = CurrentTime; /* ICCCM says we schould use a valid timestamp instead, poke me if this breaks something */
+		XSendEvent(dpy, c->window, False, NoEventMask, &ev);
+	}
 }
 
 int gxo(client *c, bool initial) { /* returns offset for horizontal window gravity */

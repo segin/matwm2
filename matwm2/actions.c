@@ -63,8 +63,9 @@ void client_focus(client *c, bool set_input_focus) {
 		client_set_bg(prev, ibg, ibfg);
 	if(c) {
 		client_set_bg(c, bg, bfg);
-		if((c->desktop == desktop || c->desktop == STICKY) && isviewable(c->window) && evh != wlist_handle_event && set_input_focus)
-			XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
+		if((c->desktop == desktop || c->desktop == STICKY) && isviewable(c->window) && evh != wlist_handle_event && set_input_focus) {
+			take_focus(c);
+		}
 	} else if(set_input_focus)
 		XSetInputFocus(dpy, PointerRoot, RevertToPointerRoot, CurrentTime);
 	ewmh_set_active(c);
@@ -325,17 +326,26 @@ void client_focus_first(void) { /* to be called when focus window is lost */
 	int i;
 	unsigned int ui;
 	Window w, dw;
-	client *c;
-	/* check if the pointer is in a window */
-	XQueryPointer(dpy, root, &dw, &w, &i, &i, &i, &i, &ui);
-	c = owner(w);
-	if(c && !(c->flags & DONT_FOCUS)) {
+	client *c = NULL;
+	XEvent ev;
+	/* check if the pointer just dropped into a window */
+	XSync(dpy, False);
+	while(XCheckTypedEvent(dpy, EnterNotify, &ev))
+		c = owner(ev.xcrossing.window);
+	if(c) {
 		client_focus(c, true);
 		return;
 	}
 	/* check if we can focus the previously focussed window */
 	if(previous && client_visible(previous) && !(previous->flags & DONT_FOCUS)) {
 		client_focus(previous, true);
+		return;
+	}
+	/* check if the pointer is in a window */
+	XQueryPointer(dpy, root, &dw, &w, &i, &i, &i, &i, &ui);
+	c = owner(w);
+	if(c && !(c->flags & DONT_FOCUS)) {
+		client_focus(c, true);
 		return;
 	}
 	/* try to focus the window on top of the stack */

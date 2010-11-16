@@ -38,7 +38,7 @@ void wlist_end(int err) {
 		else
 			client_raise(current);
 		client_warp(current);
-		XSetInputFocus(dpy, current->window, RevertToPointerRoot, CurrentTime);
+		take_focus(current);
 	}
 	XUnmapWindow(dpy, wlist);
 }

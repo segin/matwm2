@@ -24,6 +24,9 @@
 #define NO_TITLE "-" /* windows that have no title get this name */
 #define INSANE_CONFIG_FILE_SIZE (1024 * 1024) /* if a config file is bigger then this, we won't be surprised and quit if it can't be loaded to memory */
 
+typedef char bool;
+enum { false, true };
+
 typedef struct {
 	Window w;
 	unsigned char action;
@@ -40,6 +43,7 @@ typedef struct {
 	XSizeHints  normal_hints;
 	char        *name;
 	button      *buttons;
+	bool        want_input_focus;
 } client;
 
 #define ICONIC          (1 << 0) /* these bits are for the "flags" member of above structure */
@@ -134,9 +138,6 @@ enum { /* for sending to qsfd pipe */
 	QUIT,
 	REINIT
 };
-
-typedef char bool;
-enum { false, true };
 
 #include "mwm_hints.h"
 #include "ewmh.h"

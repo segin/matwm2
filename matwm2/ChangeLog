@@ -1,3 +1,15 @@
+0.1.2:
+	take into account the action with NET_WM_STATE messages for NET_WM_STATE_ABOVE and NET_WM_STATE_BELOW
+	added comment about why we focus NULL on FocusOut events in events.c
+	initialize screen member of clients propperly, fixes potential segfaulting when a window is initially maximized/fullscreen
+	fixed filtering ConfigureNotify events for debugging output (would catch a lot of events it schouldn't catch)
+	send extra ConfigureNotify when updating size (jedit needs this)
+	corrected debugging message for FocusIn events on root windows
+	respect ICCCM input hints
+	added support for WM_TAKE_FOCUS protocol - fixes focussing jedit and probally a lot of other (java and perhaps non-java) applications
+	check if the pointer just dropped into another window on client_focus_first
+	ignore FocusIn on root window - FocusOut with NotifyAncestor detail will do instead
+
 0.1.1:
 	fixed expanding while window maximised/fullscreen
 	strip whitespace from cflags etc in configure script

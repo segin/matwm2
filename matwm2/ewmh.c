@@ -24,6 +24,9 @@ void ewmh_initialize(void) {
 	ewmh_atoms[NET_CLIENT_LIST_STACKING] = XInternAtom(dpy, "_NET_CLIENT_LIST_STACKING", False);
 	ewmh_atoms[NET_ACTIVE_WINDOW] = XInternAtom(dpy, "_NET_ACTIVE_WINDOW", False);
 	ewmh_atoms[NET_WM_STATE] = XInternAtom(dpy, "_NET_WM_STATE", False);
+	ewmh_atoms[NET_WM_STATE_ADD] = XInternAtom(dpy, "_NET_WM_STATE_ADD", False);
+	ewmh_atoms[NET_WM_STATE_REMOVE] = XInternAtom(dpy, "_NET_WM_STATE_REMOVE", False);
+	ewmh_atoms[NET_WM_STATE_TOGGLE] = XInternAtom(dpy, "_NET_WM_STATE_TOGGLE", False);
 	ewmh_atoms[NET_WM_STATE_FULLSCREEN] = XInternAtom(dpy, "_NET_WM_STATE_FULLSCREEN", False);
 	ewmh_atoms[NET_WM_STATE_MAXIMIZED_HORZ] = XInternAtom(dpy, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
 	ewmh_atoms[NET_WM_STATE_MAXIMIZED_VERT] = XInternAtom(dpy, "_NET_WM_STATE_MAXIMIZED_VERT", False);
@@ -156,10 +159,22 @@ bool ewmh_handle_event(XEvent *ev) {
 						client_toggle_state(c, j);
 					if(((Atom) ev->xclient.data.l[1]) == ewmh_atoms[NET_WM_STATE_FULLSCREEN] && (ev->xclient.data.l[0] == NET_WM_STATE_TOGGLE || (ev->xclient.data.l[0] == NET_WM_STATE_ADD && !(c->flags & FULLSCREEN)) || (ev->xclient.data.l[0] == NET_WM_STATE_REMOVE && (c->flags & FULLSCREEN))))
 						client_fullscreen(c);
-					if(((Atom) ev->xclient.data.l[1]) == ewmh_atoms[NET_WM_STATE_ABOVE])
-						client_set_layer(c, (c->layer == TOP) ? NORMAL : TOP);
-					if(((Atom) ev->xclient.data.l[1]) == ewmh_atoms[NET_WM_STATE_BELOW])
-						client_set_layer(c, (c->layer == BOTTOM) ? NORMAL : BOTTOM);
+					if(((Atom) ev->xclient.data.l[1]) == ewmh_atoms[NET_WM_STATE_ABOVE]) {
+						if(((Atom) ev->xclient.data.l[0]) == ewmh_atoms[NET_WM_STATE_ADD])
+							client_set_layer(c, TOP);
+						if(((Atom) ev->xclient.data.l[0]) == ewmh_atoms[NET_WM_STATE_REMOVE] && c->layer == TOP)
+							client_set_layer(c, NORMAL);
+						if(((Atom) ev->xclient.data.l[0]) == ewmh_atoms[NET_WM_STATE_TOGGLE])
+							client_set_layer(c, (c->layer == TOP) ? NORMAL : TOP);
+					}
+					if(((Atom) ev->xclient.data.l[1]) == ewmh_atoms[NET_WM_STATE_BELOW]) {
+						if(((Atom) ev->xclient.data.l[0]) == ewmh_atoms[NET_WM_STATE_ADD])
+							client_set_layer(c, BOTTOM);
+						if(((Atom) ev->xclient.data.l[0]) == ewmh_atoms[NET_WM_STATE_REMOVE] && c->layer == BOTTOM)
+							client_set_layer(c, NORMAL);
+						if(((Atom) ev->xclient.data.l[0]) == ewmh_atoms[NET_WM_STATE_TOGGLE])
+							client_set_layer(c, (c->layer == BOTTOM) ? NORMAL : BOTTOM);
+					}
 					return true;
 				}
 			}
@@ -248,11 +263,13 @@ void ewmh_get_hints(client *c) {
 				c->flags |= NO_STRUT | DONT_LIST | FULLSCREEN | CLICK_FOCUS | DESKTOP_LOCKED;
 				c->layer = DESKTOP;
 				c->desktop = STICKY;
+				c->screen = ewmh_screen;
 			}
 			if(data == ewmh_atoms[NET_WM_WINDOW_TYPE_DOCK]) {
 				c->flags ^= c->flags & (CAN_MOVE | CAN_RESIZE | HAS_BORDER | HAS_TITLE);
 				c->flags |= NO_STRUT | DONT_LIST | DONT_FOCUS | DESKTOP_LOCKED | IS_TASKBAR;
 				c->desktop = STICKY;
+				c->screen = ewmh_screen;
 				if(taskbar_ontop)
 					c->layer = TOP;
 			}
