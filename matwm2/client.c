@@ -37,10 +37,6 @@ void add_client(Window w, int g) {
 
 void remove_client(int n) {
   int i;
-  current = cn;
-  XReparentWindow(dpy, clients[n].window, root, clients[n].x, clients[n].y);
-  XSetWindowBorderWidth(dpy, clients[n].window, clients[n].oldbw);
-  XRemoveFromSaveSet(dpy, clients[n].window);
   XDestroyWindow(dpy, clients[n].parent);
   XFree(clients[n].name);
   cn--;
@@ -49,10 +45,10 @@ void remove_client(int n) {
   alloc_clients();
 }
 
-void client_draw(int n) {
+void draw_client(int n) {
   if(clients[n].name)
     XDrawString(dpy, clients[n].parent, (n == current) ? gc : igc, border_width + font->max_bounds.lbearing, border_width + font->max_bounds.ascent, clients[n].name, strlen(clients[n].name));
-  XDrawRectangle(dpy, clients[n].parent, (n == current) ? gc : igc, 0, 0, clients[n].width + (border_width * 2), clients[n].height + (border_width * 2) + title_height);
+  XDrawRectangle(dpy, clients[n].parent, (n == current) ? gc : igc, 0, 0, clients[n].width + (border_width * 2) - 1, clients[n].height + (border_width * 2) + title_height - 1);
 }
 
 void add_initial_clients(void) {
@@ -75,18 +71,6 @@ void alloc_clients(void) {
     end();
     exit(1);
   }
-}
-
-int has_protocol(Window w, Atom protocol) {
-  int i, count, ret = 0;
-  Atom *protocols;
-  if(XGetWMProtocols(dpy, w, &protocols, &count)) {
-    for(i = 0; i < count; i++)
-      if(protocols[i] == protocol)
-        ret++;
-    XFree(protocols);
-  }
-  return ret;
 }
 
 int gxo(int c, int i) {
@@ -142,6 +126,18 @@ void configurenotify(int n)
   ce.above = None;
   ce.override_redirect = 0;
   XSendEvent(dpy, clients[n].window, False, StructureNotifyMask, (XEvent *) &ce);
+}
+
+int has_protocol(Window w, Atom protocol) {
+  int i, count, ret = 0;
+  Atom *protocols;
+  if(XGetWMProtocols(dpy, w, &protocols, &count)) {
+    for(i = 0; i < count; i++)
+      if(protocols[i] == protocol)
+        ret++;
+    XFree(protocols);
+  }
+  return ret;
 }
 
 void set_wm_state(Window w, long state) {
@@ -227,7 +223,7 @@ void focus(int n) {
   for(i = 0; i < cn; i++) {
     XSetWindowBackground(dpy, clients[i].parent, i == n ? bg.pixel : ibg.pixel);
     XClearWindow(dpy, clients[i].parent);
-    client_draw(i);
+    draw_client(i);
   }
 }
 

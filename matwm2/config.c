@@ -5,7 +5,6 @@
 XColor bg, ibg;
 int border_width, title_height;
 unsigned int mousemodmask, move_button, resize_button, lower_button;
-unsigned int numlockmask = 0;
 XFontStruct *font;
 GC gc, igc;
 
@@ -14,8 +13,6 @@ void config_read(void) {
   XColor dummy;
   XColor fc, ifc;
   XGCValues gv;
-  XModifierKeymap *modmap = XGetModifierMapping(dpy);
-  int i;
   XAllocNamedColor(dpy, DefaultColormap(dpy, screen), DEF_BG, &bg, &dummy);
   XAllocNamedColor(dpy, DefaultColormap(dpy, screen), DEF_IBG, &ibg, &dummy);
   border_width = DEF_BW;
@@ -34,16 +31,13 @@ void config_read(void) {
   XAllocNamedColor(dpy, DefaultColormap(dpy, screen), DEF_IFG, &ifc, &dummy);
   gv.function = GXinvert;
   gv.subwindow_mode = IncludeInferiors;
-  gv.line_width = 2;
+  gv.line_width = 1;
   gv.font = font->fid;
   gv.function = GXcopy;
   gv.foreground = fc.pixel;
   gc = XCreateGC(dpy, root, GCFunction | GCSubwindowMode | GCLineWidth | GCForeground | GCFont, &gv);
   gv.foreground = ifc.pixel;
   igc = XCreateGC(dpy, root, GCFunction | GCSubwindowMode | GCLineWidth | GCForeground | GCFont, &gv);
-  for(i = 0; i < 8; i++)
-    if(modmap->modifiermap[modmap->max_keypermod * i] == XKeysymToKeycode(dpy, XK_Num_Lock))
-      numlockmask = (1 << i);
   grab_keysym(root, Mod1Mask, XK_Tab);
 }
 

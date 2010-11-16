@@ -33,7 +33,7 @@ void handle_event(XEvent ev) {
           XFree(clients[i].name);
         XFetchName(dpy, clients[i].window, &clients[i].name);
         XClearWindow(dpy, clients[i].parent);
-        client_draw(i);
+        draw_client(i);
       }
       if(ev.xproperty.atom == XA_WM_NORMAL_HINTS && i < cn)
         getnormalhints(i);
@@ -44,7 +44,7 @@ void handle_event(XEvent ev) {
       break;
     case Expose:
       if(c < cn && ev.xexpose.count == 0)
-        client_draw(c);
+        draw_client(c);
       break;
     case ButtonPress:
       if(c < cn) {

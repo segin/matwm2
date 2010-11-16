@@ -4,6 +4,7 @@
 Display *dpy;
 int screen;
 Window root;
+unsigned int numlockmask = 0;
 Atom wm_protocols, wm_delete, wm_state;
 
 void open_display(char *display) {
@@ -26,6 +27,8 @@ void open_display(char *display) {
 void end(void) {
   while(cn) {
     XReparentWindow(dpy, clients->window, root, clients->x, clients->y);
+    XSetWindowBorderWidth(dpy, clients->window, clients->oldbw);
+    XRemoveFromSaveSet(dpy, clients->window);
     remove_client(0);
   }
   free(clients);
@@ -39,14 +42,20 @@ void quit(int sig) {
 
 int main(int argc, char *argv[]) {
   XEvent ev;
+  XModifierKeymap *modmap;
+  int i;
   open_display(0);
   XSetErrorHandler(&xerrorhandler);
-  config_read();
-  add_initial_clients();
   wm_protocols = XInternAtom(dpy, "WM_PROTOCOLS", False);
   wm_delete = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
   wm_state = XInternAtom(dpy, "WM_STATE", False);
+  modmap = XGetModifierMapping(dpy);
+  for(i = 0; i < 8; i++)
+    if(modmap->modifiermap[modmap->max_keypermod * i] == XKeysymToKeycode(dpy, XK_Num_Lock))
+      numlockmask = (1 << i);
+  config_read();
   XSelectInput(dpy, root, SubstructureRedirectMask | SubstructureNotifyMask);
+  add_initial_clients();
   while(1) {
     XNextEvent(dpy, &ev);
     handle_event(ev);
