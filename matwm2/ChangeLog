@@ -413,3 +413,6 @@
 	NET_WM_WINDOW_TYPE things override other ewmh hints
 	small correction to manual page
 
+0.0.71:
+	fixed overriding stuff by "none" key action and	made keybinder use memory a little more efficient - do not allocate memory for keys that are later overridden
+

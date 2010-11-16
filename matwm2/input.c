@@ -5,14 +5,19 @@ XModifierKeymap *modmap;
 keybind *keys = NULL;
 int keyn = 0, nmod_ignore = 0;
 
+void keys_alloc(int n) {
+	keys = (keybind *) realloc((void *) keys, n * sizeof(keybind));
+	if(!keys)
+		error();
+}
+
 void key_bind(char *str) {
 	keybind k;
+	int i;
 	k.sym = str_key(&str, &k.mask);
 	if(!str || k.sym == NoSymbol)
 		return;
 	k.action = str_keyaction(eat(&str, " \t"));
-	if(k.action == KA_NONE)
-		return;
 	if(str) {
 		while(*str == ' ' || *str == '\t')
 			str++;
@@ -21,11 +26,20 @@ void key_bind(char *str) {
 	} else if(k.action == KA_EXEC)
 		return;
 	else k.arg = NULL;
-	keys = (keybind *) realloc((void *) keys, (keyn + 1) * sizeof(keybind));
-	if(!keys)
-		error();
-	keys[keyn] = k;
-	keyn++;
+	for(i = 0; i < keyn; i++)
+		if(keys[i].sym == k.sym && keys[i].mask == k.mask) {
+			free((void *) keys[i].arg);
+			if(k.action == KA_NONE) {
+				keys[i] = keys[keyn - 1];
+				keys_alloc(--keyn);
+			} else keys[i] = k;
+			return;
+		}
+	if(k.action != KA_NONE) {
+		keys_alloc(keyn + 1);
+		keys[keyn] = k;
+		keyn++;
+	}
 }
 
 void keys_update(void) {
@@ -84,11 +98,11 @@ int buttonaction(int button) {
 }
 
 int keyaction(XEvent ev) {
-	int i, a = KA_NONE;
+	int i;
 	for(i = 0; i < keyn; i++)
 		if(keys[i].code == ev.xkey.keycode && cmpmodmask(keys[i].mask, ev.xkey.state))
-			a = keys[i].action;
-	return a;
+			return keys[i].action;
+	return KA_NONE;
 }
 
 char *keyarg(XEvent ev) {

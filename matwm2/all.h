@@ -134,6 +134,7 @@ extern keybind *keys;
 extern int keyn, nmod_ignore;
 
 // functions from input.c
+void keys_alloc(int n);
 void key_bind(char *str);
 void keys_update(void);
 void keys_ungrab(void);
