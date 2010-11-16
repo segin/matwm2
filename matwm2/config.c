@@ -179,14 +179,8 @@ int str_keyaction(char *str) {
 		return KA_STICKY;
 	if(strcmp(str, "title") == 0)
 		return KA_TITLE;
-	if(strcmp(str, "topleft") == 0)
-		return KA_TOPLEFT;
-	if(strcmp(str, "topright") == 0)
-		return KA_TOPRIGHT;
-	if(strcmp(str, "bottomleft") == 0)
-		return KA_BOTTOMLEFT;
-	if(strcmp(str, "bottomright") == 0)
-		return KA_BOTTOMRIGHT;
+	if(strcmp(str, "to_border") == 0)
+		return KA_TO_BORDER;
 	if(strcmp(str, "close") == 0)
 		return KA_CLOSE;
 	if(strcmp(str, "exec") == 0)

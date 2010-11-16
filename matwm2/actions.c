@@ -196,3 +196,19 @@ void client_save(client *c) {
 	client_move(c, x, y);
 }
 
+void client_to_border(client *c, char *a) {
+	int x = client_x(c), y = client_y(c);
+	while(a && *a) {
+			if(*a == 'l')
+			x = ewmh_strut[0];
+		if(*a == 'r')
+			x = display_width - (client_width_total(c) + ewmh_strut[1]);
+		if(*a == 't')
+			y = ewmh_strut[2];
+		if(*a == 'b')
+			y = display_height - (client_height_total(c) + ewmh_strut[3]);
+		a++;
+	}
+	client_move(c, x, y);
+}
+

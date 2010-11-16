@@ -4,7 +4,7 @@ keybinds for moving/resizeing
 a way to see state of windows for the user (sticky, ontop/below)
 watch config file for changes in thread (fstat, time) - and adapt select loop so it can also receive something to know it schould reload config instead of makeing mess of it
 also new config thing perhaps
-implement more EWMH stuffs
+implement more EWMH stuffs (showing desktop mode)
 click to focus option
 more structure in events.c
 shade function

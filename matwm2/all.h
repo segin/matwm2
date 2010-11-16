@@ -11,6 +11,7 @@ void client_toggle_title(client *c);
 void client_iconify(client *c);
 void client_restore(client *c);
 void client_save(client *c);
+void client_to_border(client *c, char *a);
 
 // global variables from buttons.c
 extern Window button_current;

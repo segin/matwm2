@@ -87,9 +87,9 @@ void handle_event(XEvent ev) {
 						i |= MAXIMISED_L;
 					if(*a == 'r')
 						i |= MAXIMISED_R;
-					if(*a == 't')
+					if(*a == 'u')
 						i |= MAXIMISED_T;
-					if(*a == 'b')
+					if(*a == 'd')
 						i |= MAXIMISED_B;
 					a++;
 				}
@@ -106,9 +106,9 @@ void handle_event(XEvent ev) {
 						i |= EXPANDED_L;
 					if(*a == 'r')
 						i |= EXPANDED_R;
-					if(*a == 't')
+					if(*a == 'u')
 						i |= EXPANDED_T;
-					if(*a == 'b')
+					if(*a == 'd')
 						i |= EXPANDED_B;
 					a++;
 				}
@@ -123,21 +123,8 @@ void handle_event(XEvent ev) {
 			case KA_TITLE:
 				client_toggle_title(current);
 				return;
-			case KA_BOTTOMLEFT:
-				client_move(current, ewmh_strut[0], display_height - (client_height_total(current) + ewmh_strut[3]));
-				client_warp(current);
-				return;
-			case KA_BOTTOMRIGHT:
-				client_move(current, display_width - (client_width_total(current) + ewmh_strut[1]), display_height - (client_height_total(current) + ewmh_strut[3]));
-				client_warp(current);
-				return;
-			case KA_TOPRIGHT:
-				client_move(current, display_width - (client_width_total(current) - ewmh_strut[1]), ewmh_strut[2]);
-				client_warp(current);
-				return;
-			case KA_TOPLEFT:
-				client_move(current, ewmh_strut[0], ewmh_strut[2]);
-				client_warp(current);
+			case KA_TO_BORDER:
+				client_to_border(current, keyarg(ev));
 				return;
 			case KA_ONTOP:
 				if(!(current->layer == DESKTOP))

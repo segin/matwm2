@@ -124,3 +124,10 @@
 	intendation now done with tabs instead of spaces
 	all horizontal/vertical stuff now also works for expand, and for both now l, r, t and b argument can be used to apply these actions in one of these directions
 
+0.0.64:
+	ewmh state only set to maximized if maximised to both directions
+	replaced t and b arguments for maximise and expand with u and d (up and down)
+	added my e-mail adress in the LICENCE file
+	wrote a man page
+	topleft, topright, bottomleft and bottomright key actions were replaced by new to_corner
+

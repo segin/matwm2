@@ -217,9 +217,9 @@ void ewmh_update_allowed_actions(client *c) {
 void ewmh_update_state(client *c) {
 	int statec = 0;
 	Atom state[12];
-	if(c->flags & MAXIMISED_L || c->flags & MAXIMISED_R)
+	if(c->flags & MAXIMISED_L && c->flags & MAXIMISED_R)
 		state[statec++] = ewmh_atoms[NET_WM_STATE_MAXIMIZED_HORZ];
-	if(c->flags & MAXIMISED_T || c->flags & MAXIMISED_B)
+	if(c->flags & MAXIMISED_T && c->flags & MAXIMISED_B)
 		state[statec++] = ewmh_atoms[NET_WM_STATE_MAXIMIZED_VERT];
 	if(c->flags & FULLSCREEN)
 		state[statec++] = ewmh_atoms[NET_WM_STATE_FULLSCREEN];

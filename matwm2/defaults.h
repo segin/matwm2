@@ -27,10 +27,10 @@ key                   control mod1 j          expand v\n\
 key                   control mod1 q          close\n\
 key                   control mod1 d          sticky\n\
 key                   control mod1 t          title\n\
-key                   control mod1 y          topleft\n\
-key                   control mod1 u          topright\n\
-key                   control mod1 b          bottomleft\n\
-key                   control mod1 n          bottomright\n\
+key                   control mod1 y          to_border tl\n\
+key                   control mod1 u          to_border tr\n\
+key                   control mod1 b          to_border bl\n\
+key                   control mod1 n          to_border br\n\
 key                   control mod1 o          ontop\n\
 key                   control mod1 p          below\n\
 key                   control mod1 a          iconify_all\n\
@@ -48,10 +48,10 @@ key                   mod4 j                  expand v\n\
 key                   mod4 q                  close\n\
 key                   mod4 d                  sticky\n\
 key                   mod4 t                  title\n\
-key                   mod4 y                  topleft\n\
-key                   mod4 u                  topright\n\
-key                   mod4 b                  bottomleft\n\
-key                   mod4 n                  bottomright\n\
+key                   mod4 y                  to_border tl\n\
+key                   mod4 u                  to_border tr\n\
+key                   mod4 b                  to_border bl\n\
+key                   mod4 n                  to_border br\n\
 key                   mod4 o                  ontop\n\
 key                   mod4 p                  below\n\
 key                   mod4 a                  iconify_all\n\
