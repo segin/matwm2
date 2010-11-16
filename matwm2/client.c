@@ -79,7 +79,7 @@ void client_add(Window w) {
 		for(i = cn - 1; i > 0 && (stacking[i - 1]->flags & ICONIC || client_layer(stacking[i - 1]) >= client_layer(new)); i--)
 			stacking[i] = stacking[i - 1];
 		stacking[i] = new;
-		if(evh == drag_handle_event)
+		if(evh == drag_handle_event && current)
 			client_raise(current); /* to make sure the window we are dragging stays on top */
 		XMapWindow(dpy, new->window); /* only iconic windows expect to be unmapped */
 		if(new->desktop == desktop || new->desktop == STICKY)

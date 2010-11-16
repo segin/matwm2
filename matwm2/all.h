@@ -12,7 +12,7 @@ int main(int argc, char *argv[]);
 void quit(void);
 void qsfd_send(char s);
 void error(void);
-void qsh(int sig);
+void sighandler(int sig);
 
 /* global variables from wlist.c */
 extern Window wlist;

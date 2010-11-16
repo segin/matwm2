@@ -14,7 +14,6 @@ int main(int argc, char *argv[]) {
 	unsigned int ui, nwins;
 	Window dw, *wins;
 	XWindowAttributes attr;
-	struct sigaction qsa;
 	int dfd, di, sr;
 	fd_set fds, fdsr;
 	char act;
@@ -28,8 +27,12 @@ int main(int argc, char *argv[]) {
 			printf("%s version %s\n", NAME, VERSION);
 			return 0;
 		}
-		if(strcmp(argv[i], "-display") == 0 && i + 1 < argc) {
-			dn = argv[i + 1];
+		if(strcmp(argv[i], "-display") == 0) {
+			if(i + 1 >= argc) {
+				fprintf(stderr, "error: argument -display needs an argument\n");
+				return 1;
+			}
+ 			dn = argv[i + 1];
 			i++;
 			continue;
 		}
@@ -47,13 +50,10 @@ int main(int argc, char *argv[]) {
 	atexit(&quit);
 	if(pipe(qsfd) != 0)
 		error();
-	qsa.sa_handler = qsh;
-	sigemptyset(&qsa.sa_mask);
-	qsa.sa_flags = 0;
-	sigaction(SIGTERM, &qsa, NULL);
-	sigaction(SIGINT, &qsa, NULL);
-	sigaction(SIGHUP, &qsa, NULL);
-	sigaction(SIGUSR1, &qsa, NULL);
+	signal(SIGTERM, &sighandler);
+	signal(SIGINT, &sighandler);
+	signal(SIGHUP, &sighandler);
+	signal(SIGUSR1, &sighandler);
 #ifdef SYNC
 	XSynchronize(dpy, True);
 #endif
@@ -154,7 +154,7 @@ void error(void) {
 	qsfd_send(ERROR);
 }
 
-void qsh(int sig) {
+void sighandler(int sig) {
 	int act = QUIT;
 	if(sig == SIGUSR1)
 		act = REINIT;

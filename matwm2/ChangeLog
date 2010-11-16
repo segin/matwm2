@@ -1,3 +1,9 @@
+0.0.94:
+	fixed evil bug that would happen when windows would dissapear while being dragged
+	renamed qsh to sighandler
+	using signal() instead of sigaction() now - apearantly sigaction() is no valid ISO C90
+	using fork() instead of vfork() by default - also to comply with ISO C90
+
 0.0.93:
 	revised motif hints implementation once more (decoration hints schould be fixed now)
 	mid-sentence tabs in mwm_hints.h replaced by spaces, added comments
@@ -14,6 +20,8 @@
 	more parenthesis in call to select() in main() in main.c 
 	explicity check if sr is zero in main loop
 	send only one char to qsfd instead of an integer
+	check if current exists if trying to raise it when adding new client in drag mode
+	better error message if -display without argument given
 
 0.0.92:
 	makeheader now allows comments next to global variables - needed for client.c since 0.0.91
