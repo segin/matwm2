@@ -33,9 +33,9 @@ int wlist_handle_event(XEvent ev) {
   switch(ev.type) {
     case KeyPress:
       if(keyaction(ev) == KA_NEXT) {
-        client_focus((client_number(current) < cn - 1) ? clients[client_number(current) + 1] : clients[0]);
+        client_focus((client_number(stacking, current) < cn - 1) ? stacking[client_number(stacking, current) + 1] : stacking[0]);
       } else if(keyaction(ev) == KA_PREV) {
-        client_focus((client_number(current) > 0) ? clients[client_number(current) - 1] : clients[cn - 1]);
+        client_focus((client_number(stacking, current) > 0) ? stacking[client_number(stacking, current) - 1] : stacking[cn - 1]);
       } else break;
       XWarpPointer(dpy, None, current->wlist_item, 0, 0, 0, 0, wlist_width - 2, 3 + title_height);
       break;
@@ -63,17 +63,17 @@ void wlist_update(void) {
   if(!cn)
     wlist_end();
   for(i = 0; i < cn; i++)
-    if(clients[i]->name) {
-      tl = XTextWidth(font, clients[i]->name, strlen(clients[i]->name)) + 6;
+    if(stacking[i]->name) {
+      tl = XTextWidth(font, stacking[i]->name, strlen(stacking[i]->name)) + 6;
       if(tl > wlist_width)
         wlist_width = tl;
     }
   if(wlist_width > display_width)
     wlist_width = display_width;
   for(i = 0; i < cn; i++) {
-    if(!(clients[0]->flags & ICONIC) && clients[i]->flags & ICONIC)
+    if(i == cn - nicons)
       offset = 2;
-    XMoveResizeWindow(dpy, clients[i]->wlist_item, 1, offset + ((title_height + 5) * nc), wlist_width - 2, title_height + 4);
+    XMoveResizeWindow(dpy, stacking[i]->wlist_item, 1, offset + ((title_height + 5) * nc), wlist_width - 2, title_height + 4);
     nc++;
   }
   XMoveResizeWindow(dpy, wlist, (display_width / 2) - (wlist_width / 2), (display_height / 2) - (1 + ((title_height + 5) * cn) / 2), wlist_width, offset + ((title_height + 5) * cn));

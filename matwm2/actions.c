@@ -59,22 +59,23 @@ void client_focus(client *c) {
   client_set_bg(c, bg);
   if(!(c->flags & ICONIC) && isviewable(c->window))
     XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
+  ewmh_set_active(c);
 }
 
 void client_raise(client *c) {
   int i;
-  XRaiseWindow(dpy, c->parent);
-  for(i = client_number(c); i > 0; i--)
-    clients[i] = clients[i - 1];
-  clients[0] = c;
+  for(i = client_number(stacking, c); i > 0 && stacking[i - 1]->layer >= c->layer; i--)
+    stacking[i] = stacking[i - 1];
+  stacking[i] = c;
+  clients_apply_stacking();
 }
 
 void client_lower(client *c) {
   int i;
-  XLowerWindow(dpy, c->parent);
-  for(i = client_number(c); i < cn - 1 && !(clients[i + 1]->flags & ICONIC); i++)
-    clients[i] = clients[i + 1];
-  clients[i] = c;
+  for(i = client_number(stacking, c); i < cn - 1 && stacking[i + 1]->layer <= c->layer && !(stacking[i + 1]->flags & ICONIC); i++)
+    stacking[i] = stacking[i + 1];
+  stacking[i] = c;
+  clients_apply_stacking();
 }
 
 void client_maximise(client *c) {
@@ -140,6 +141,7 @@ void client_iconify(client *c) {
   XEvent ev;
   if(c->flags & ICONIC)
     return;
+  nicons++;
   set_wm_state(c->window, IconicState);
   XUnmapWindow(dpy, c->parent);
   XUnmapWindow(dpy, c->window);
@@ -148,23 +150,23 @@ void client_iconify(client *c) {
   XIfEvent(dpy, &ev, &isunmap, (XPointer) &c->window);
   if(current == c && evh == drag_handle_event)
     evh = drag_release_wait;
-  for(i = client_number(c); i < cn - 1; i++)
-    clients[i] = clients[i + 1];
-  clients[cn - 1] = c;
-  client_focus(clients[0]);
+  for(i = client_number(stacking, c); i < cn - 1; i++)
+    stacking[i] = stacking[i + 1];
+  stacking[cn - 1] = c;
+  client_focus(stacking[0]);
+  ewmh_update_stacking();
 }
 
 void client_restore(client *c) {
   int i;
   if(!(c->flags & ICONIC))
     return;
-  XMapRaised(dpy, c->parent);
+  nicons--;
+  c->flags ^= ICONIC;
+  client_raise(c);
+  XMapWindow(dpy, c->parent);
   XMapWindow(dpy, c->window);
   set_wm_state(c->window, NormalState);
-  c->flags ^= ICONIC;
-  for(i = client_number(c); i > 0; i--)
-    clients[i] = clients[i - 1];
-  clients[0] = c;
   if(c == current)
     XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
 }

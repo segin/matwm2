@@ -7,5 +7,13 @@
 	fixed bug in get_mwm_hints() that made it possible in weird conditions a call to XFree would be apropriate but not done, and it now passes mwmhints variable directly to XGetWindowProperty()
 	on exit clients are deparented in reverse order, as this has some advantages over the old method
 	removed useless get_wm_transient_for()
-	fixed wlist_end() segfaulting if current == NULL
+       	fixed wlist_end() segfaulting if current == NULL
+
+0.0.50:
+	fixed bug that would sometimes draw a little square in the topleft corner of the root window
+	added support for motif move hint and motif resize hint schould be fixed too
+        attempted to make enum statements in matwm.h more readable
+        stacking now keeps the stacking order of clients, clients keeps them from oldest to newest - and client_number() lets you specify one of those to dig trough
+        introduced "layer" member in client structure, wich defines the layer of the window (always on top, always on bottom etc)
+        partial EWMH implementation
 

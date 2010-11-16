@@ -11,7 +11,7 @@ void handle_event(XEvent ev) {
 #endif
   if(evh && evh(ev))
     return;
-  if(button_handle_event(ev))
+  if(button_handle_event(ev) || ewmh_handle_event(ev))
     return;
   if(c && !has_child(c->parent, c->window) && ev.type != DestroyNotify)
     return;

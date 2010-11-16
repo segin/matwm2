@@ -23,8 +23,8 @@ void buttons_update(client *c);
 int button_handle_event(XEvent ev);
 
 // global variables from client.c
-extern client **clients, *current;
-extern int cn;
+extern client **clients, **stacking, *current;
+extern int cn, nicons;
 
 // functions from client.c
 void client_add(Window w);
@@ -34,7 +34,10 @@ void client_draw_border(client *c);
 void client_draw_title(client *c);
 void clients_alloc(void);
 void client_set_bg(client *c, XColor color);
-int client_number(client *c);
+void clients_apply_stacking(void);
+void client_grab_button(client *c, int button);
+void client_grab_buttons(client *c);
+int client_number(client **array, client *c);
 client *owner(Window w);
 
 // global variables from config.c
@@ -75,6 +78,19 @@ void handle_event(XEvent ev);
 
 // functions from evn.c
 char *event_name(XEvent ev);
+
+// global variables from ewmh.c
+extern Atom ewmh_atoms[EWMH_ATOM_COUNT];
+extern long ewmh_strut[4];
+
+// functions from ewmh.c
+void ewmh_initialize(void);
+int ewmh_handle_event(XEvent ev);
+int get_ewmh_hints(client *c);
+void ewmh_set_active(client *c);
+void ewmh_update_stacking(void);
+void ewmh_update_clist(void);
+void ewmh_update_strut(void);
 
 // global variables from input.c
 extern unsigned int mousemodmask, *mod_ignore;

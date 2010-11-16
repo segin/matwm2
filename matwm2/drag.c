@@ -6,17 +6,21 @@ int xo, yo;
 void drag_start(XEvent ev) {
   if(evh)
     return;
-  evh = drag_handle_event;
-  be = ev.xbutton;
-  client_raise(current);
-  if(buttonaction(be.button) == BA_RESIZE) {
+  if(buttonaction(ev.xbutton.button) == BA_RESIZE) {
+    if(!(current->flags & CAN_RESIZE))
+      return;
     warpto(current);
     xo = current->x + (border(current) * 2);
     yo = current->y + (border(current) * 2) + title(current);
   } else {
-    xo = be.x_root - current->x;
-    yo = be.y_root - current->y;
+    if(!(current->flags & CAN_MOVE))
+      return;
+    xo = ev.xbutton.x_root - current->x;
+    yo = ev.xbutton.y_root - current->y;
   }
+  be = ev.xbutton;
+  evh = drag_handle_event;
+  client_raise(current);
   XGrabPointer(dpy, root, True, ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, None, 0, CurrentTime);
 }
 

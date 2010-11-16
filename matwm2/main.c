@@ -65,8 +65,8 @@ int main(int argc, char *argv[]) {
                         CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
   p_attr.background_pixel = ibg.pixel;
   p_attr.event_mask = SubstructureRedirectMask | SubstructureNotifyMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask | LeaveWindowMask | ExposureMask;
-  button_current = root; // haxorish way to assure myself the window is not a button window
   have_shape = XShapeQueryExtension(dpy, &shape_event, &di);
+  ewmh_initialize();
   XQueryTree(dpy, root, &dw, &dw, &wins, &nwins);
   for(i = 0; i < nwins; i++) {
     XGetWindowAttributes(dpy, wins[i], &attr);
@@ -95,11 +95,13 @@ int main(int argc, char *argv[]) {
 
 void end(void) {
   while(cn) {
-    if(clients[cn - 1]->flags & ICONIC)
-      XMapWindow(dpy, clients[cn - 1]->window);
-    client_deparent(clients[cn - 1]);
-    client_remove(clients[cn - 1]);
+    if(stacking[cn - 1]->flags & ICONIC)
+      XMapWindow(dpy, stacking[cn - 1]->window);
+    client_deparent(stacking[cn - 1]);
+    client_remove(stacking[cn - 1]);
   }
+  if(stacking)
+    free((void *) stacking);
   if(clients)
     free((void *) clients);
   keys_free();

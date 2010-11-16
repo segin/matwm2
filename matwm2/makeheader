@@ -1,6 +1,6 @@
 #!/bin/sh
 while [ $# -gt 0 ]; do
-  gv="`cat $1 | sed -E -n 's/^([a-zA-Z0-9\-_]+[ \t]+.+;)$/extern \1/p' | sed -E 's/[ \t]=[ \t][^,;]+([,;])/\1/g'`"
+  gv="`cat $1 | sed -E -n 's/^([a-zA-Z0-9\-_]+[ \t]+.+;)$/extern \1/p' | sed -E 's/[ \t]=[ \t]{[^}]+}([,;])/\1/g' | sed -E 's/[ \t]=[ \t][^,;]+([,;])/\1/g'`"
   f="`cat $1 | sed -E -n 's/^([a-zA-Z0-9\-_]+[ \t]+[a-zA-Z0-9\-_ \t]*\**[a-zA-Z0-9\-_]+\(.+\))[ \t]+\{$/\1;/p'`"
   if test -n "$gv"; then
     echo "// global variables from $1"

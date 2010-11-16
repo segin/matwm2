@@ -1,7 +1,7 @@
 #include "matwm.h"
 
-client **clients = NULL, *current = NULL;
-int cn = 0;
+client **clients = NULL, **stacking = NULL, *current = NULL;
+int cn = 0, nicons = 0;
 
 void client_add(Window w) {
   XWindowAttributes attr;
@@ -18,11 +18,13 @@ void client_add(Window w) {
   new->height = attr.height;
   new->oldbw = attr.border_width;
   new->window = w;
-  new->flags = HAS_TITLE | HAS_BORDER | HAS_BUTTONS | CAN_RESIZE;
+  new->flags = HAS_TITLE | HAS_BORDER | HAS_BUTTONS | CAN_MOVE | CAN_RESIZE;
+  new->layer = NORMAL;
   if(have_shape && XShapeQueryExtents(dpy, new->window, &bounding_shaped, &di, &di, &dui, &dui, &di, &di, &di, &dui, &dui) && bounding_shaped)
     new->flags |= SHAPED;
   get_normal_hints(new);
   get_mwm_hints(new);
+  get_ewmh_hints(new);
   new->x = attr.x - gxo(new, 1);
   new->y = attr.y - gyo(new, 1);
   if(wm_state == IconicState)
@@ -44,54 +46,59 @@ void client_add(Window w) {
                                   CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
   buttons_create(new);
   buttons_update(new);
+  client_grab_buttons(new);
   XMapWindow(dpy, new->title);
   XMapWindow(dpy, new->wlist_item);
   XAddToSaveSet(dpy, w);
   XReparentWindow(dpy, w, new->parent, border(new), border(new) + title(new));
-  button_grab(new->parent, AnyButton, mousemodmask, ButtonPressMask | ButtonReleaseMask);
   configurenotify(new);
   set_shape(new);
   cn++;
   clients_alloc();
   if(!(new->flags & ICONIC)) {
-    XMapRaised(dpy, w);
-    XRaiseWindow(dpy, new->parent);
-    if(evh == wlist_handle_event)
-      XRaiseWindow(dpy, wlist);
-    else if(evh == drag_handle_event)
+    for(i = cn - 1; i > 0 && (stacking[i - 1]->flags & ICONIC || stacking[i - 1]->layer >= new->layer); i--)
+      stacking[i] = stacking[i - 1];
+    stacking[i] = new;
+    clients_apply_stacking();
+    if(evh == drag_handle_event)
       client_raise(current);
-    else warpto(new);
-    XMapWindow(dpy, new->parent);
-    for(i = cn - 1; i > 0; i--)
-      clients[i] = clients[i - 1];
-    clients[0] = new;
-    if(evh != wlist_handle_event && evh != drag_handle_event)
+    else if(evh != wlist_handle_event)
       warpto(new);
-  } else clients[cn - 1] = new;
+    XMapRaised(dpy, w);
+    XMapWindow(dpy, new->parent);
+  } else {
+    stacking[cn - 1] = new;
+    nicons++;
+  }
+  clients[cn - 1] = new;
   if(!current)
     client_focus(new);
   if(evh == wlist_handle_event)
     wlist_update();
+  ewmh_update_clist();
 }
 
 void client_deparent(client *c) {
   XReparentWindow(dpy, c->window, root, c->x + gxo(c, 1), c->y + gyo(c, 1));
   XSetWindowBorderWidth(dpy, c->window, c->oldbw);
   XRemoveFromSaveSet(dpy, c->window);
-  XLowerWindow(dpy, c->window);
 }
 
 void client_remove(client *c) {
   XEvent ev;
   int i;
+  if(c->flags & ICONIC)
+    nicons--;
   if(button_current == c->button_iconify || button_current == c->button_expand || button_current == c->button_maximise || button_current == c->button_close)
     button_current = None;
   XDestroyWindow(dpy, c->parent);
   XDestroyWindow(dpy, c->wlist_item);
   if(c->name != no_title)
     XFree(c->name);
-  for(i = client_number(c) + 1; i < cn; i++)
+  for(i = client_number(clients, c) + 1; i < cn; i++)
     clients[i - 1] = clients[i];
+  for(i = client_number(stacking, c) + 1; i < cn; i++)
+    stacking[i - 1] = stacking[i];
   cn--;
   if(c == current) {
     current = NULL;
@@ -102,6 +109,7 @@ void client_remove(client *c) {
   clients_alloc();
   if(evh == wlist_handle_event)
     wlist_update();
+  ewmh_update_clist();
 }
 
 void client_draw_border(client *c) {
@@ -119,6 +127,10 @@ void clients_alloc(void) {
   if(!newptr)
     error();
   clients = newptr;
+  newptr = (client **) realloc((void *) stacking, cn * sizeof(client *));
+  if(!newptr)
+    error();
+  stacking = newptr;
 }
 
 void client_set_bg(client *c, XColor color) {
@@ -144,10 +156,33 @@ void client_set_bg(client *c, XColor color) {
   }
 }
 
-int client_number(client *c) {
+void clients_apply_stacking(void) {
+  int i = 0;
+  Window wins[cn + 1];
+  wins[0] = wlist;
+  for(i = 0; i < cn && !(stacking[i]->flags & ICONIC); i++)
+    wins[i + 1] = stacking[i]->parent;
+  XRestackWindows(dpy, wins, i + 1);
+  ewmh_update_stacking();
+}
+
+void client_grab_button(client *c, int button) {
+  if(!(buttonaction(button) == BA_MOVE && !(c->flags & CAN_MOVE)) && !(buttonaction(button) == BA_RESIZE && !(c->flags & CAN_RESIZE)))
+    button_grab(c->parent, button, mousemodmask, ButtonPressMask | ButtonReleaseMask);
+}
+
+void client_grab_buttons(client *c) {
+  client_grab_button(c, Button1);
+  client_grab_button(c, Button2);
+  client_grab_button(c, Button3);
+  client_grab_button(c, Button4);
+  client_grab_button(c, Button5);
+}
+
+int client_number(client **array, client *c) {
   int i;
   for(i = 0; i < cn; i++)
-    if(clients[i] == c)
+    if(array[i] == c)
       break;
   return i;
 }

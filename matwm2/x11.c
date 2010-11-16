@@ -61,17 +61,23 @@ void get_mwm_hints(client *c) {
   if(XGetWindowProperty(dpy, c->window, xa_motif_wm_hints, 0, 3, False, AnyPropertyType, &rt, &rf, &nir, &bar, (unsigned char **) &mwmhints) == Success) {
     if(nir > 2) {
       if(mwmhints->flags & MWM_HINTS_DECORATIONS) {
-        c->flags ^= c->flags & (HAS_TITLE | HAS_BORDER | CAN_RESIZE);
+        c->flags ^= c->flags & (HAS_TITLE | HAS_BORDER | CAN_MOVE | CAN_RESIZE);
+        if(mwmhints->functions & MWM_FUNC_ALL) {
+          mwmhints->functions &= ~MWM_FUNC_ALL;
+          mwmhints->functions = (MWM_FUNC_RESIZE | MWM_FUNC_MOVE) & (~mwmhints->functions);
+        }
         if(mwmhints->decorations & MWM_DECOR_ALL) {
           mwmhints->decorations &= ~MWM_DECOR_ALL;
           mwmhints->decorations = (MWM_DECOR_TITLE | MWM_DECOR_BORDER | MWM_DECOR_RESIZEH) & (~mwmhints->decorations);
         }
+        if(mwmhints->functions & MWM_FUNC_MOVE)
+          c->flags |= CAN_MOVE;
+        if(mwmhints->functions & MWM_FUNC_RESIZE)
+          c->flags |= CAN_RESIZE;
         if(mwmhints->decorations & MWM_DECOR_TITLE)
           c->flags |= HAS_TITLE;
         if(mwmhints->decorations & MWM_DECOR_BORDER)
           c->flags |= HAS_BORDER;
-        if(mwmhints->decorations & MWM_DECOR_RESIZEH)
-          c->flags |= CAN_RESIZE;
       }
     }
     XFree((void *) mwmhints);
@@ -136,9 +142,9 @@ int gxo(client *c, int initial) {
       case NorthEastGravity:
       case EastGravity:
       case SouthEastGravity:
-        return (border(c) * 2) + (initial ? -c->oldbw * 2 : c->width);
+        return ((border(c) * 2) + (initial ? -(c->oldbw * 2) : c->width)) + ((c->flags & NO_STRUT) ? 0 : ewmh_strut[1]);
     }
-  return 0;
+  return ((c->flags & NO_STRUT) ? 0 : -ewmh_strut[0]);
 }
 
 int gyo(client *c, int initial) {
@@ -153,9 +159,9 @@ int gyo(client *c, int initial) {
       case SouthEastGravity:
       case SouthGravity:
       case SouthWestGravity:
-        return (border(c) * 2) + title(c) + (initial ? -c->oldbw * 2 : c->height);
+        return ((border(c) * 2) + title(c) + (initial ? -(c->oldbw * 2) : c->height)) + ((c->flags & NO_STRUT) ? 0 : ewmh_strut[3]);
     }
-  return 0;
+  return ((c->flags & NO_STRUT) ? 0 : -ewmh_strut[2]);
 }
 
 int has_child(Window parent, Window child) {
