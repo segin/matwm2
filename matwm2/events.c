@@ -21,7 +21,7 @@ void handle_event(XEvent ev) {
     case MapRequest:
       c = owner(ev.xmaprequest.window);
       if(c) {
-        if(c->state & ICONIC)
+        if(c->flags & ICONIC)
           restore(c);
       } else add_client(ev.xmaprequest.window);
       break;
@@ -42,7 +42,7 @@ void handle_event(XEvent ev) {
     case ConfigureRequest:
       c = owner(ev.xconfigurerequest.window);
       if(c) {
-        c->state ^= c->state & (MAXIMISED | EXPANDED);
+        c->flags ^= c->flags & (MAXIMISED | EXPANDED);
         resize(c, (ev.xconfigurerequest.value_mask & CWWidth) ? ev.xconfigurerequest.width : c->width, (ev.xconfigurerequest.value_mask & CWHeight) ? ev.xconfigurerequest.height : c->height);
         move(c, (ev.xconfigurerequest.value_mask & CWX) ? ev.xconfigurerequest.x - gxo(c, 0) : c->x, (ev.xconfigurerequest.value_mask & CWY) ? ev.xconfigurerequest.y - gyo(c, 0) : c->y);
       } else {
@@ -72,6 +72,10 @@ void handle_event(XEvent ev) {
         getnormalhints(c);
       if(ev.xproperty.atom == xa_motif_wm_hints && c) {
         get_mwm_hints(c);
+        if(c->flags & HAS_TITLE && !(c->flags & HAS_BUTTONS))
+          XUnmapWindow(dpy, c->button_parent);
+        if(!(c->flags & HAS_TITLE) && c->flags & HAS_BUTTONS)
+          XMapWindow(dpy, c->button_parent);
         XMoveWindow(dpy, c->window, border(c), border(c) + title(c));
         XResizeWindow(dpy, c->parent, total_width(c), total_height(c));
       }
@@ -124,24 +128,26 @@ void handle_event(XEvent ev) {
         maximise(current);
       if(current && keyaction(ev) == KA_EXPAND)
         expand(current);
+      if(current && keyaction(ev) == KA_TITLE)
+        toggle_title(current);
       if(current && keyaction(ev) == KA_BOTTOMLEFT) {
         move(current, 0, display_height - total_height(current));
-        current->state ^= current->state & (MAXIMISED | EXPANDED);
+        current->flags ^= current->flags & (MAXIMISED | EXPANDED);
         warpto(current);
       }
       if(current && keyaction(ev) == KA_BOTTOMRIGHT) {
         move(current, display_width - total_width(current), display_height - total_height(current));
-        current->state ^= current->state & (MAXIMISED | EXPANDED);
+        current->flags ^= current->flags & (MAXIMISED | EXPANDED);
         warpto(current);
       }
       if(current && keyaction(ev) == KA_TOPRIGHT) {
-        current->state ^= current->state & (MAXIMISED | EXPANDED);
+        current->flags ^= current->flags & (MAXIMISED | EXPANDED);
         move(current, display_width - total_width(current), 0);
         warpto(current);
       }
       if(current && keyaction(ev) == KA_TOPLEFT) {
         move(current, 0, 0);
-        current->state ^= current->state & (MAXIMISED | EXPANDED);
+        current->flags ^= current->flags & (MAXIMISED | EXPANDED);
         warpto(current);
       }
       if(keyaction(ev) == KA_EXEC)

@@ -19,6 +19,7 @@ void raise_client(client *c);
 void lower_client(client *c);
 void maximise(client *c);
 void expand(client *c);
+void toggle_title(client *c);
 void set_shape(client *c);
 int client_number(client *c);
 client *owner(Window w);

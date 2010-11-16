@@ -66,7 +66,7 @@ void wlist_update(void) {
   if(wlist_width > display_width)
     wlist_width = display_width;
   for(i = 0; i < cn; i++) {
-    if(!(clients[0]->state & ICONIC) && clients[i]->state & ICONIC)
+    if(!(clients[0]->flags & ICONIC) && clients[i]->flags & ICONIC)
       offset = 2;
     XMoveResizeWindow(dpy, clients[i]->wlist_item, 1, offset + ((title_height + 5) * nc), wlist_width - 2, title_height + 4);
     nc++;

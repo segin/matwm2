@@ -165,6 +165,8 @@ int str_keyaction(char *str) {
     return KA_MAXIMISE;
   if(strcmp(str, "expand") == 0)
     return KA_EXPAND;
+  if(strcmp(str, "title") == 0)
+    return KA_TITLE;
   if(strcmp(str, "topleft") == 0)
     return KA_TOPLEFT;
   if(strcmp(str, "topright") == 0)

@@ -69,9 +69,6 @@ void get_mwm_hints(client *c) {
   unsigned long nir, bar;
   unsigned char *prop;
   MWMHints *mwmhints;
-  c->title = 1;
-  c->border = 1;
-  c->resize = 1;
   if(XGetWindowProperty(dpy, c->window, xa_motif_wm_hints, 0, 3, False, AnyPropertyType, &rt, &rf, &nir, &bar, (unsigned char **) &prop) == Success && nir > 2) {
     mwmhints = (MWMHints *) prop;
     if(mwmhints->flags & MWM_HINTS_DECORATIONS) {
@@ -79,9 +76,12 @@ void get_mwm_hints(client *c) {
         mwmhints->decorations &= ~MWM_DECOR_ALL;
         mwmhints->decorations = (MWM_DECOR_TITLE | MWM_DECOR_BORDER | MWM_DECOR_RESIZEH) & (~mwmhints->decorations);
       }
-      c->title = mwmhints->decorations & MWM_DECOR_TITLE;
-      c->border = mwmhints->decorations & MWM_DECOR_BORDER;
-      c->resize = mwmhints->decorations & MWM_DECOR_RESIZEH;
+      if(mwmhints->decorations & MWM_DECOR_TITLE)
+        c->flags |= HAS_TITLE;
+      if(mwmhints->decorations & MWM_DECOR_BORDER)
+        c->flags |= HAS_BORDER;
+      if(mwmhints->decorations & MWM_DECOR_RESIZEH)
+        c->flags |= CAN_RESIZE;
     }
     XFree(mwmhints);
   }
