@@ -31,12 +31,14 @@ void buttons_draw(client *c) {
   XClearWindow(dpy, c->button_expand);
   XClearWindow(dpy, c->button_maximise);
   XClearWindow(dpy, c->button_close);
-  XDrawRectangle(dpy, c->button_iconify, (c->button_iconify == button_current) ? gc : igc, (text_height / 2) - 1, (text_height / 2) - 1, 2, 2);
-  XDrawLine(dpy, c->button_expand, (c->button_expand == button_current) ? gc : igc, text_height / 2, 3, text_height / 2, text_height - 3);
-  XDrawLine(dpy, c->button_expand, (c->button_expand == button_current) ? gc : igc, 3, text_height / 2, text_height - 3, text_height / 2);
-  XDrawRectangle(dpy, c->button_maximise, (c->button_maximise == button_current) ? gc : igc, 2, 2, text_height - 5, text_height - 5);
-  XDrawLine(dpy, c->button_close, (c->button_close == button_current) ? gc : igc, 2, 2, text_height - 2, text_height - 2);
-  XDrawLine(dpy, c->button_close, (c->button_close == button_current) ? gc : igc, 2, text_height - 3, text_height - 2, 1);
+  if(button_current != root)
+    XDrawRectangle(dpy, button_current, gc, 0, 0, text_height - 1, text_height - 1);
+  XDrawRectangle(dpy, c->button_iconify, (c == current) ? gc : igc, 5, 5, text_height - 11, text_height - 11);
+  XDrawLine(dpy, c->button_expand, (c == current) ? gc : igc, text_height / 2, 3, text_height / 2, text_height - 3);
+  XDrawLine(dpy, c->button_expand, (c == current) ? gc : igc, 3, text_height / 2, text_height - 3, text_height / 2);
+  XDrawRectangle(dpy, c->button_maximise, (c == current) ? gc : igc, 2, 2, text_height - 5, text_height - 5);
+  XDrawLine(dpy, c->button_close, (c == current) ? gc : igc, 2, 2, text_height - 2, text_height - 2);
+  XDrawLine(dpy, c->button_close, (c == current) ? gc : igc, 2, text_height - 3, text_height - 2, 1);
 }
 
 int handle_button_event(XEvent ev) {
