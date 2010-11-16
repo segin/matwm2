@@ -55,8 +55,7 @@ void clients_alloc(void);
 // global variables from config.c
 extern XColor bg, ibg, fg, ifg;
 extern GC gc, igc, bgc, ibgc;
-extern int border_width, text_height, title_height, button_parent_width, snapat, button1, button2, button3, button4, button5, click_focus, click_raise;
-extern unsigned int dc;
+extern int border_width, text_height, title_height, button_parent_width, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, dc;
 extern XFontStruct *font;
 extern char *no_title;
 

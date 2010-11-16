@@ -6,7 +6,7 @@ long ewmh_strut[4];
 void ewmh_initialize(void) {
 	Atom rt;
 	int rf;
-	unsigned long nir, bar, *d;
+	long nir, bar, *d;
 	long vp[] = {0, 0};
 	ewmh_atoms[NET_SUPPORTED] = XInternAtom(dpy, "_NET_SUPPORTED", False);
 	ewmh_atoms[NET_SUPPORTING_WM_CHECK] = XInternAtom(dpy, "_NET_SUPPORTING_WM_CHECK", False);
@@ -151,22 +151,6 @@ int ewmh_get_hints(client *c) {
 	Atom rt, *data;
 	int rf;
 	long nir, bar, *d;
-	if(XGetWindowProperty(dpy, c->window, ewmh_atoms[NET_WM_WINDOW_TYPE], 0, 1, False, XA_ATOM, &rt, &rf, &nir, &bar, (unsigned char **) &data) == Success) {
-		if(nir) {
-			if(*data == ewmh_atoms[NET_WM_WINDOW_TYPE_DESKTOP]) {
-				c->flags ^= c->flags & (CAN_MOVE | CAN_RESIZE | HAS_BORDER | HAS_TITLE);
-				c->flags |= NO_STRUT | DONT_LIST | FULLSCREEN | DONT_FOCUS;
-				c->layer = DESKTOP;
-				c->desktop = STICKY;
-			}
-			if(*data == ewmh_atoms[NET_WM_WINDOW_TYPE_DOCK]) {
-				c->flags ^= c->flags & (CAN_MOVE | CAN_RESIZE | HAS_BORDER | HAS_TITLE);
-				c->flags |= NO_STRUT | DONT_LIST | DONT_FOCUS;
-				c->desktop = STICKY;
-			}
-		}
-		XFree((void *) data);
-	}
 	if(XGetWindowProperty(dpy, c->window, ewmh_atoms[NET_WM_DESKTOP], 0, 1, False, XA_CARDINAL, &rt, &rf, &nir, &bar, (unsigned char **) &d) == Success) {
 		if(nir) {
 			if(*d < STICKY)
@@ -185,6 +169,22 @@ int ewmh_get_hints(client *c) {
 				c->layer = TOP;
 			if(*data == ewmh_atoms[NET_WM_STATE_BELOW])
 				c->layer = BOTTOM;
+		}
+		XFree((void *) data);
+	}
+	if(XGetWindowProperty(dpy, c->window, ewmh_atoms[NET_WM_WINDOW_TYPE], 0, 1, False, XA_ATOM, &rt, &rf, &nir, &bar, (unsigned char **) &data) == Success) {
+		if(nir) {
+			if(*data == ewmh_atoms[NET_WM_WINDOW_TYPE_DESKTOP]) {
+				c->flags ^= c->flags & (CAN_MOVE | CAN_RESIZE | HAS_BORDER | HAS_TITLE);
+				c->flags |= NO_STRUT | DONT_LIST | FULLSCREEN | DONT_FOCUS;
+				c->layer = DESKTOP;
+				c->desktop = STICKY;
+			}
+			if(*data == ewmh_atoms[NET_WM_WINDOW_TYPE_DOCK]) {
+				c->flags ^= c->flags & (CAN_MOVE | CAN_RESIZE | HAS_BORDER | HAS_TITLE);
+				c->flags |= NO_STRUT | DONT_LIST | DONT_FOCUS;
+				c->desktop = STICKY;
+			}
 		}
 		XFree((void *) data);
 	}

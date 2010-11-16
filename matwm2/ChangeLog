@@ -408,3 +408,8 @@
 	don't grab mouse buttons if there is no mousemodmask
 	grab buttons also for mousemodmask|nosnapmodmask if nosnapmodmask is there
 
+0.0.70:
+	fuck support for 0xFFFFFFFE desktops, it messed up support for 32bit platform
+	NET_WM_WINDOW_TYPE things override other ewmh hints
+	small correction to manual page
+

@@ -2,8 +2,7 @@
 
 XColor bg, ibg, fg, ifg;
 GC gc, igc, bgc, ibgc;
-int border_width, text_height, title_height, button_parent_width, snapat, button1, button2, button3, button4, button5, click_focus, click_raise;
-unsigned int dc;
+int border_width, text_height, title_height, button_parent_width, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, dc;
 XFontStruct *font;
 char *no_title = NO_TITLE;
 
@@ -65,7 +64,7 @@ void cfg_parse(char *cfg) {
 
 void cfg_set_opt(char *key, char *value) {
 	XColor dummy;
-	unsigned int i;
+	long i;
 	if(strcmp(key, "resetkeys") == 0)
 		keys_free();
 	if(!value)
@@ -98,7 +97,7 @@ void cfg_set_opt(char *key, char *value) {
 		snapat = strtol(value, NULL, 0);
 	if(strcmp(key, "desktops") == 0) {
 		i = strtol(value, NULL, 0);
-		if(i > 0 && i != STICKY)
+		if(i > STICKY)
 			dc = i;
 	}
 	if(strcmp(key, "button1") == 0)
