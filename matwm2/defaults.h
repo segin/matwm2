@@ -24,6 +24,7 @@ key                   control mod1 y          topleft\n\
 key                   control mod1 u          topright\n\
 key                   control mod1 b          bottomleft\n\
 key                   control mod1 n          bottomright\n\
+key                   control mod1 a          iconify_all\n\
 key                   control mod1 Return     exec xterm\n\
 key                   mod4 q                  close\n\
 key                   mod4 s                  iconify\n\
@@ -33,7 +34,8 @@ key                   mod4 t                  title\n\
 key                   mod4 y                  topleft\n\
 key                   mod4 u                  topright\n\
 key                   mod4 b                  bottomleft\n\
-key                   mod4 n                  bottomright\n"
+key                   mod4 n                  bottomright\n\
+key                   mod4 a                  iconify_all\n"
 
 #define MINSIZE                 5
 #define CFGFN                   ".matwmrc"

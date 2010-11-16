@@ -29,15 +29,12 @@ void cfg_read(void) {
   text_height = font->max_bounds.ascent + font->max_bounds.descent;
   title_height = text_height + 2;
   button_parent_width = (text_height * 4) + 6;
-  gv.function = GXinvert;
-  gv.subwindow_mode = IncludeInferiors;
   gv.line_width = 1;
   gv.font = font->fid;
-  gv.function = GXcopy;
   gv.foreground = fg.pixel;
-  gc = XCreateGC(dpy, root, GCFunction | GCSubwindowMode | GCLineWidth | GCForeground | GCFont, &gv);
+  gc = XCreateGC(dpy, root, GCLineWidth | GCForeground | GCFont, &gv);
   gv.foreground = ifg.pixel;
-  igc = XCreateGC(dpy, root, GCFunction | GCSubwindowMode | GCLineWidth | GCForeground | GCFont, &gv);
+  igc = XCreateGC(dpy, root, GCLineWidth | GCForeground | GCFont, &gv);
 }
 
 void cfg_parse(char *cfg) {
@@ -160,6 +157,8 @@ int str_keyaction(char *str) {
     return KA_PREV;
   if(strcmp(str, "iconify") == 0)
     return KA_ICONIFY;
+  if(strcmp(str, "iconify_all") == 0)
+    return KA_ICONIFY_ALL;
   if(strcmp(str, "maximise") == 0)
     return KA_MAXIMISE;
   if(strcmp(str, "expand") == 0)

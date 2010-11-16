@@ -147,6 +147,9 @@ void handle_event(XEvent ev) {
         current->flags ^= current->flags & (MAXIMISED | EXPANDED);
         warpto(current);
       }
+      if(cn && keyaction(ev) == KA_ICONIFY_ALL)
+        while(!(clients[0]->flags & ICONIC))
+          client_iconify(clients[0]);
       if(keyaction(ev) == KA_EXEC)
         spawn(keyarg(ev));
       break;

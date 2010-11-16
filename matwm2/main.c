@@ -22,7 +22,8 @@ int main(int argc, char *argv[]) {
     }
     if(strcmp(argv[i], "-display") == 0 && i + 1 < argc) {
       dn = argv[i + 1];
-      break;
+      i++;
+      continue;
     }
     fprintf(stderr, "error: argument %s not recognised\n", argv[i]);
     return 1;
