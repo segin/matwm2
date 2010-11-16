@@ -76,16 +76,16 @@ int snapx(client *c, int nx, int ny) {
   if(nx < (display_width - client_width_total(c)) + snapat && nx > (display_width - client_width_total(c)) - snapat)
     return display_width - client_width_total(c);
   for(i = 0; i < cn; i++) {
-    if(clients[i] == c || clients[i]->flags & ICONIC || ny + client_height_total(c) < clients[i]->y || ny > clients[i]->y + client_height_total(clients[i]))
+    if(clients[i] == c || clients[i]->flags & ICONIC || ny + client_height_total(c) < client_y(clients[i]) || ny > client_y(clients[i]) + client_height_total(clients[i]))
       continue;
-    if(nx < clients[i]->x + snapat && nx > clients[i]->x - snapat)
-      return clients[i]->x;
-    if(nx < clients[i]->x + client_width_total(clients[i]) + snapat && nx > clients[i]->x + client_width_total(clients[i]) - snapat)
-      return clients[i]->x + client_width_total(clients[i]);
-    if(nx + client_width_total(c) < clients[i]->x + snapat && nx + client_width_total(c) > clients[i]->x - snapat)
-      return clients[i]->x - client_width_total(c);
-    if(nx + client_width_total(c) < clients[i]->x + client_width_total(clients[i]) + snapat && nx + client_width_total(c) > clients[i]->x + client_width_total(clients[i]) - snapat)
-      return clients[i]->x + client_width_total(clients[i]) - client_width_total(c);
+    if(nx < client_x(clients[i]) + snapat && nx > client_x(clients[i]) - snapat)
+      return client_x(clients[i]);
+    if(nx < client_x(clients[i]) + client_width_total(clients[i]) + snapat && nx > client_x(clients[i]) + client_width_total(clients[i]) - snapat)
+      return client_x(clients[i]) + client_width_total(clients[i]);
+    if(nx + client_width_total(c) < client_x(clients[i]) + snapat && nx + client_width_total(c) > client_x(clients[i]) - snapat)
+      return client_x(clients[i]) - client_width_total(c);
+    if(nx + client_width_total(c) < client_x(clients[i]) + client_width_total(clients[i]) + snapat && nx + client_width_total(c) > client_x(clients[i]) + client_width_total(clients[i]) - snapat)
+      return client_x(clients[i]) + client_width_total(clients[i]) - client_width_total(c);
   }
   return nx;
 }
@@ -97,16 +97,16 @@ int snapy(client *c, int nx, int ny) {
   if(ny < (display_height - client_height_total(c)) + snapat && ny > (display_height - client_height_total(c)) - snapat)
     return display_height - client_height_total(c);
   for(i = 0; i < cn; i++) {
-    if(clients[i] == c || clients[i]->flags & ICONIC || nx + client_width_total(c) < clients[i]->x || nx > clients[i]->x + client_width_total(clients[i]))
+    if(clients[i] == c || clients[i]->flags & ICONIC || nx + client_width_total(c) < client_x(clients[i]) || nx > client_x(clients[i]) + client_width_total(clients[i]))
       continue;
-    if(ny < clients[i]->y + snapat && ny > clients[i]->y - snapat)
-      return clients[i]->y;
-    if(ny < clients[i]->y + client_height_total(clients[i]) + snapat && ny > clients[i]->y + client_height_total(clients[i]) - snapat)
-      return clients[i]->y + client_height_total(clients[i]);
-    if(ny + client_height_total(c) < clients[i]->y + snapat && ny + client_height_total(c) > clients[i]->y - snapat)
-      return clients[i]->y - client_height_total(c);
-    if(ny + client_height_total(c) < clients[i]->y + client_height_total(clients[i]) + snapat && ny + client_height_total(c) > clients[i]->y + client_height_total(clients[i]) - snapat)
-      return clients[i]->y + client_height_total(clients[i]) - client_height_total(c);
+    if(ny < client_y(clients[i]) + snapat && ny > client_y(clients[i]) - snapat)
+      return client_y(clients[i]);
+    if(ny < client_y(clients[i]) + client_height_total(clients[i]) + snapat && ny > client_y(clients[i]) + client_height_total(clients[i]) - snapat)
+      return client_y(clients[i]) + client_height_total(clients[i]);
+    if(ny + client_height_total(c) < client_y(clients[i]) + snapat && ny + client_height_total(c) > client_y(clients[i]) - snapat)
+      return client_y(clients[i]) - client_height_total(c);
+    if(ny + client_height_total(c) < client_y(clients[i]) + client_height_total(clients[i]) + snapat && ny + client_height_total(c) > client_y(clients[i]) + client_height_total(clients[i]) - snapat)
+      return client_y(clients[i]) + client_height_total(clients[i]) - client_height_total(c);
   }
   return ny;
 }
@@ -116,12 +116,12 @@ int snaph(client *c, int nx, int ny) {
   if(nx < display_width + snapat && nx > display_width - snapat)
     return display_width;
   for(i = 0; i < cn; i++) {
-    if(clients[i] == c || clients[i]->flags & ICONIC || ny < clients[i]->y || c->y > clients[i]->y + client_height_total(clients[i]))
+    if(clients[i] == c || clients[i]->flags & ICONIC || ny < client_y(clients[i]) || c->y > client_y(clients[i]) + client_height_total(clients[i]))
       continue;
-    if(nx < clients[i]->x + snapat && nx > clients[i]->x - snapat)
-      return clients[i]->x;
-    if(nx < clients[i]->x + client_width_total(clients[i]) + snapat && nx > clients[i]->x + client_width_total(clients[i]) - snapat)
-      return clients[i]->x + client_width_total(clients[i]);
+    if(nx < client_x(clients[i]) + snapat && nx > client_x(clients[i]) - snapat)
+      return client_x(clients[i]);
+    if(nx < client_x(clients[i]) + client_width_total(clients[i]) + snapat && nx > client_x(clients[i]) + client_width_total(clients[i]) - snapat)
+      return client_x(clients[i]) + client_width_total(clients[i]);
   }
   return nx;
 }
@@ -131,12 +131,12 @@ int snapv(client *c, int nx, int ny) {
   if(ny < display_height + snapat && ny > display_height - snapat)
     return display_height;
   for(i = 0; i < cn; i++) {
-    if(clients[i] == c || clients[i]->flags & ICONIC || nx < clients[i]->x || c->x > clients[i]->x + client_width_total(clients[i]))
+    if(clients[i] == c || clients[i]->flags & ICONIC || nx < client_x(clients[i]) || c->x > client_x(clients[i]) + client_width_total(clients[i]))
       continue;
-    if(ny < clients[i]->y + snapat && ny > clients[i]->y - snapat)
-      return clients[i]->y;
-    if(ny < clients[i]->y + client_height_total(clients[i]) + snapat && ny > clients[i]->y + client_height_total(clients[i]) - snapat)
-      return clients[i]->y + client_height_total(clients[i]);
+    if(ny < client_y(clients[i]) + snapat && ny > client_y(clients[i]) - snapat)
+      return client_y(clients[i]);
+    if(ny < client_y(clients[i]) + client_height_total(clients[i]) + snapat && ny > client_y(clients[i]) + client_height_total(clients[i]) - snapat)
+      return client_y(clients[i]) + client_height_total(clients[i]);
   }
   return ny;
 }

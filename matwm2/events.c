@@ -78,12 +78,8 @@ void handle_event(XEvent ev) {
         client_focus(c);
       break;
     case Expose:
-      if(ev.xexpose.count == 0) {
-        if(c && ev.xexpose.window == c->parent)
-          client_draw_border(c);
-        if(evh == wlist_handle_event && c && ev.xexpose.window == c->wlist_item)
+      if(ev.xexpose.count == 0 && evh == wlist_handle_event && c && ev.xexpose.window == c->wlist_item)
           wlist_item_draw(c);
-      }
       break;
     case ButtonPress:
       if(c && buttonaction(ev.xbutton.button) == BA_MOVE)

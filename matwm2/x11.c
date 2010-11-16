@@ -20,6 +20,8 @@ int xerrorhandler(Display *display, XErrorEvent *xerror) {
 void get_normal_hints(client *c) {
   long sr;
   XGetWMNormalHints(dpy, c->window, &c->normal_hints, &sr);
+  if(c->normal_hints.flags & PMinSize && c->normal_hints.flags & PMaxSize && c->normal_hints.min_width == c->normal_hints.max_width && c->normal_hints.min_height == c->normal_hints.max_height)
+    c->flags ^= c->flags & CAN_RESIZE;
 }
 
 int get_state_hint(Window w) {

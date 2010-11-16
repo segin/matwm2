@@ -61,7 +61,7 @@ int ewmh_handle_event(XEvent ev) {
       if(c && ev.xclient.message_type == ewmh_atoms[NET_WM_MOVERESIZE]) {
         if(ev.xclient.data.l[2] == NET_WM_MOVERESIZE_MOVE || ev.xclient.data.l[2] == NET_WM_MOVERESIZE_MOVE_KEYBOARD) {
           client_focus(c);
-          int xo = client_width_total(c) / 2, yo = client_height_total(c) / 2;
+          int xo = client_width_total_intern(c) / 2, yo = client_height_total_intern(c) / 2;
           XWarpPointer(dpy, None, c->parent, 0, 0, 0, 0, xo, yo);
           drag_start(MOVE, AnyButton, client_x(c) + xo, client_y(c) + yo);
         }

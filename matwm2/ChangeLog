@@ -45,3 +45,11 @@
 	let X draw the border now, as this also redraws faster
 	beause of changes makeing motif hints property notify response be broken, it was removed - i doubt any application uses it anyway so it is not worth the effort for now
 
+0.0.53:
+	fixed the very annoying bug in mouse warping introduced with previous version
+	removed now obsolete references to client_draw_border()
+	introduced functions for calculating the internal size of clients, wich makes stuff a little easyer with the border being around the window insit of in it now
+	fixed window snapping - it did not yet use client_x() and client_y() to get window positions, wich obviously fucked up with expanded/maximised/fullscreened windows etc
+	maximise, expand and fullscreen only work if CAN_MOVE and CAN_RESIZE are set for the client, like they schould (used to work as long as one of them was set)
+	CAN_RESIZE will be removed from flags if maximum size and minimum size are equal
+

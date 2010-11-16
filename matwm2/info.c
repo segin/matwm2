@@ -44,7 +44,7 @@ int client_border(client *c) {
   return (!(c->flags & SHAPED) && c->flags & HAS_BORDER) ? border_width : 0;
 }
 
-int client_border_internal(client *c) {
+int client_border_intern(client *c) {
   return (!(c->flags & SHAPED) && c->flags & HAS_BORDER) ? border_width - 1 : 0;
 }
 
@@ -58,6 +58,14 @@ int client_width_total(client *c) {
 
 int client_height_total(client *c) {
   return client_height(c) + (client_border(c) * 2) + client_title(c);
+}
+
+int client_width_total_intern(client *c) {
+  return client_width(c) + (client_border_intern(c) * 2);
+}
+
+int client_height_total_intern(client *c) {
+  return client_height(c) + (client_border_intern(c) * 2) + client_title(c);
 }
 
 int title_width(client *c) {

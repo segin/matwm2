@@ -78,7 +78,7 @@ void client_lower(client *c) {
 }
 
 void client_maximise(client *c) {
-  if(!(c->flags & CAN_MOVE) && !(c->flags & CAN_RESIZE))
+  if(!(c->flags & CAN_MOVE) || !(c->flags & CAN_RESIZE))
     return;
   if(c->flags & MAXIMISED)
     c->flags ^= MAXIMISED;
@@ -91,7 +91,7 @@ void client_maximise(client *c) {
 }
 
 void client_fullscreen(client *c) {
-  if(!(c->flags & CAN_MOVE) && !(c->flags & CAN_RESIZE))
+  if(!(c->flags & CAN_MOVE) || !(c->flags & CAN_RESIZE))
     return;
   if(c->flags & FULLSCREEN)
     c->flags ^= FULLSCREEN;
@@ -105,7 +105,7 @@ void client_fullscreen(client *c) {
 
 void client_expand(client *c) {
   int i;
-  if(!(c->flags & CAN_MOVE) && !(c->flags & CAN_RESIZE))
+  if(!(c->flags & CAN_MOVE) || !(c->flags & CAN_RESIZE))
     return;
   if(c->flags & EXPANDED) {
     c->flags ^= EXPANDED;
