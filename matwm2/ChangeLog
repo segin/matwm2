@@ -1,3 +1,7 @@
+0.0.86:
+	better choise of wich buttons to grab on windows in client_grab_button()
+	store return value of buttonaction() in client_grab_button() instead of using it over and over in the assertions
+
 0.0.85:
 	multiple stacking modes for fullscreen windows
 

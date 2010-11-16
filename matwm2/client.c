@@ -157,9 +157,10 @@ void client_remove(client *c) {
 }
 
 void client_grab_button(client *c, int button) {
-	if(!(c->flags & DONT_FOCUS)) {
+	int na = buttonaction(button, 0), da = buttonaction(button, 1);
+	if(!(!(c->flags & CAN_MOVE) && (na == BA_MOVE || na == BA_EXPAND || na == BA_MAXIMIZE || na == BA_NONE) && (da == BA_MOVE || da == BA_EXPAND || da == BA_MAXIMIZE || da == BA_NONE)) && !(!(c->flags & CAN_RESIZE) && (na == BA_RESIZE || na == BA_EXPAND || na == BA_MAXIMIZE || na == BA_NONE) && (da == BA_RESIZE || da == BA_EXPAND || da == BA_MAXIMIZE || da == BA_NONE)) && !(!(c->flags & CAN_MOVE) && !(c->flags & CAN_RESIZE) && (na == BA_MOVE && na == BA_RESIZE || na == BA_EXPAND || na == BA_MAXIMIZE || na == BA_NONE) && (da == BA_MOVE || da == BA_RESIZE || da == BA_EXPAND || da == BA_MAXIMIZE || da == BA_NONE)) && !(c->flags & DONT_FOCUS && (na == BA_MOVE || na == BA_RESIZE || na == BA_NONE) && (da == BA_MOVE || da == BA_RESIZE || da == BA_NONE))) {
 		button_grab(c->parent, button, mousemodmask, ButtonPressMask | ButtonReleaseMask);
-		if(nosnapmodmask && (buttonaction(button, 0) == BA_MOVE || buttonaction(button, 0) == BA_RESIZE || buttonaction(button, 1) == BA_MOVE || buttonaction(button, 1) == BA_RESIZE))
+		if(nosnapmodmask && (na == BA_MOVE || na == BA_RESIZE || da == BA_MOVE || da == BA_RESIZE))
 			button_grab(c->parent, button, nosnapmodmask | mousemodmask, ButtonPressMask | ButtonReleaseMask);
 	}
 }
