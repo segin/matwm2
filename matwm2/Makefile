@@ -1,17 +1,24 @@
-CC      = cc
+prefix  = /usr/local
 XROOT   = /usr/X11R6
+CC      = cc
 
 CFLAGS  += -lXext -lX11 -I$(XROOT)/include -L$(XROOT)/lib
-DEFINES = -DDEBUG
-SRCS    = client.c events.c main.c x11.c config.c icons.c misc.c drag.c input.c wlist.c xev.c
-OBJS    = $(SRCS:.c=.o)
+#DEFINES += -DDEBUG
 
-all:	matwm2
+all:		matwm2
 
-matwm2: $(OBJS)
-	$(CC) $(CFLAGS) $(DEFINES) $(OBJS) -o $@
+matwm2:
+		$(CC) $(DEFINES) $(CFLAGS) *.c -o $@
 
 clean:
-	rm -f *.o
-	rm -f matwm2
+		rm -f matwm2
+
+header:
+		./makeheader
+
+install:	matwm2
+		install -s matwm2 $(prefix)/bin
+
+deinstall:
+		rm -f $(prefix)/bin/matwm2
 

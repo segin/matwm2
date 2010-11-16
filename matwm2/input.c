@@ -14,8 +14,8 @@ void bind_key(char *str) {
   if(str) {
     while(*str == ' ' || *str == '\t')
       str++;
-    k.arg = (char *) malloc(strlen(str));
-    strncpy(k.arg, str, strlen(str));
+    k.arg = (char *) malloc(strlen(str) + 1);
+    strncpy(k.arg, str, strlen(str) + 1);
   } else k.arg = NULL;
   keys = (keybind *) realloc((void *) keys, (keyn + 1) * sizeof(keybind));
   if(!keys)
@@ -42,7 +42,8 @@ void ungrab_keys(void) {
 void free_keys(void) {
   int i;
   for(i = 0; i < keyn; i++)
-    free((void *) keys[i].arg);
+    if(keys[i].arg)
+      free((void *) keys[i].arg);
   free((void *) keys);
   keys = NULL;
   keyn = 0;

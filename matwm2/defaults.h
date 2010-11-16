@@ -3,7 +3,7 @@ background:            darkred\n\
 inactive_background:   dimgray\n\
 foreground:            lightgray\n\
 inactive_foreground:   lightgray\n\
-font:                  *\n\
+font:                  fixed\n\
 button1:               move\n\
 button2:               none\n\
 button3:               resize\n\

@@ -8,23 +8,23 @@ char *no_title = NO_TITLE;
 
 void cfg_read(void) {
   char *home = getenv("HOME");
-  int cfglen = home ? strlen(home) + strlen(CFGFN) + 2 : 0;
-  char *cfg, *cfgfn = (char *) malloc(cfglen);
+  char *cfg, *cfgfn;
   XGCValues gv;
-  cfg = (char *) malloc(strlen(DEF_CFG));
+  cfg = (char *) malloc(strlen(DEF_CFG) + 1);
   strncpy(cfg, DEF_CFG, strlen(DEF_CFG));
   cfg_parse(cfg);
   free((void *) cfg);
   if(home) {
-    strncpy(cfgfn, home, cfglen);
-    strncat(cfgfn, "/", cfglen);
-    strncat(cfgfn, CFGFN, cfglen);
+    cfgfn = (char *) malloc(strlen(home) + strlen(CFGFN) + 2);
+    strncpy(cfgfn, home, strlen(home) + 1);
+    strncat(cfgfn, "/", 1);
+    strncat(cfgfn, CFGFN, strlen(CFGFN));
     if(read_file(cfgfn, &cfg) > 0) {
       cfg_parse(cfg);
       free((void *) cfg);
     }
+    free((void *) cfgfn);
   }
-  free((void *) cfgfn);
   update_keys();
   title_height = font->max_bounds.ascent + font->max_bounds.descent + 2;
   gv.function = GXinvert;

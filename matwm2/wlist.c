@@ -59,7 +59,7 @@ void wlist_update(void) {
     wlist_end();
   for(i = 0; i < cn; i++)
     if(clients[i]->name) {
-      tl = XTextWidth(font, clients[i]->name, strlen(clients[i]->name)) + 7;
+      tl = XTextWidth(font, clients[i]->name, strlen(clients[i]->name)) + font->max_bounds.lbearing + font->max_bounds.rbearing + 6;
       if(tl > wlist_width)
         wlist_width = tl;
     }

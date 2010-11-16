@@ -10,7 +10,7 @@ void spawn(char *cmd) {
 
 int read_file(char *path, char **buf) {
   struct stat sb;
-  int r = 0, fd = open(path, O_RDONLY | O_EXLOCK);
+  int r = 0, fd = open(path, O_RDONLY);
   if(fd > 0) {
     if(fstat(fd, &sb) == 0) {
       *buf = (char *) malloc(sb.st_size);
@@ -19,6 +19,7 @@ int read_file(char *path, char **buf) {
       r = read(fd, (void *) *buf, sb.st_size);
       if(r <= 0)
         free((void *) *buf);
+      else buf[r] = 0;
     }
     close(fd);
   }
