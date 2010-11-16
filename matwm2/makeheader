@@ -12,8 +12,8 @@ print H <<ENDTOP;
 
 // client structure
 typedef struct client {
-  Window window, parent;
-  int x, y, width, height, oldbw;
+  Window window, parent, taskbutton;
+  int x, y, width, height, oldbw, minimised;
   XSizeHints normal_hints;
   char *name;
 } client;

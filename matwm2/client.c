@@ -6,8 +6,12 @@ int cn = 0, current = 0;
 
 void add_client(Window w, int g) {
   XWindowAttributes attr;
-  XSetWindowAttributes p_attr;
   XGetWindowAttributes(dpy, w, &attr);
+  int wm_state = get_wm_state(w);
+  if(wm_state == WithdrawnState) {
+    wm_state = getstatehint(w);
+    set_wm_state(w, wm_state != WithdrawnState ? wm_state : NormalState);
+  }
   alloc_clients();
   clients[cn].x = attr.x;
   clients[cn].y = attr.y;
@@ -15,53 +19,86 @@ void add_client(Window w, int g) {
   clients[cn].height = attr.height;
   clients[cn].oldbw = attr.border_width;
   clients[cn].window = w;
+  clients[cn].minimised = (wm_state == IconicState) ? 1 : 0;
   XFetchName(dpy, w, &clients[cn].name);
   getnormalhints(cn);
   XSelectInput(dpy, w, PropertyChangeMask);
   XSetWindowBorderWidth(dpy, w, 0);
-  p_attr.override_redirect = True;
-  p_attr.background_pixel = ibg.pixel;
-  p_attr.event_mask = SubstructureRedirectMask | SubstructureNotifyMask | ButtonPressMask | EnterWindowMask | ExposureMask;
   clients[cn].parent = XCreateWindow(dpy, root, clients[cn].x - (g ? gxo(cn, 1) : 0), clients[cn].y - (g ? gyo(cn, 1) : 0), clients[cn].width + (border_width * 2), clients[cn].height + (border_width * 2) + title_height, 0,
                                      DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
                                      CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
+  clients[cn].taskbutton = XCreateWindow(dpy, taskbar, 0, 0, taskbutton_width, title_height + 4, 0,
+                                         DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
+                                         CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
   XAddToSaveSet(dpy, w);
   XReparentWindow(dpy, w, clients[cn].parent, border_width, border_width + title_height);
   XMapWindow(dpy, w);
-  XMapRaised(dpy, clients[cn].parent);
-  set_wm_state(w, NormalState);
   grab_button(clients[cn].parent, AnyButton, mousemodmask, ButtonPressMask | ButtonReleaseMask);
   configurenotify(cn);
   cn++;
-  if(current == cn - 1)
+  if(wm_state == IconicState) {
+    XMapWindow(dpy, clients[cn - 1].taskbutton);
+    update_taskbar();
+  } else XMapRaised(dpy, clients[cn - 1].parent);
+  if(current >= cn - 1)
     focus(cn - 1);
+}
+
+void update_taskbar(void) {
+  int i, xo = 0, yo = 0;
+  for(i = 0; i < cn; i++) 
+    if(clients[i].minimised) {
+      if(xo == taskbar_width) {
+        xo = 0;
+        yo++;
+      }
+      XMoveWindow(dpy, clients[i].taskbutton, 1 + ((taskbutton_width + 1) * xo), 1 + ((title_height + 5) * yo));
+      xo++;
+    }
+  XMoveResizeWindow(dpy, taskbar, 0, XDisplayHeight(dpy, screen) - (1 + ((title_height + 5) * (yo + 1))), 1 + (((taskbutton_width + 1) * (yo ? taskbar_width : xo))),  1 + ((title_height + 5) * (yo + 1)));
+  if(!taskbar_visible && xo) {
+    XMapWindow(dpy, taskbar);
+    taskbar_visible = 1;
+  } else if(taskbar_visible && !xo) {
+    XUnmapWindow(dpy, taskbar);
+    taskbar_visible = 0;
+  }
 }
 
 void remove_client(int n) {
   unsigned int i, nwins;
   Window dw1, dw2, *wins;
   XQueryTree(dpy, clients[n].parent, &dw1, &dw2, &wins, &nwins);
-  for(i = 0; i < nwins; i++)
-    if(wins[i] == clients[n].window) {
-      XReparentWindow(dpy, clients[n].window, root, clients[n].x, clients[n].y);
-      XSetWindowBorderWidth(dpy, clients[n].window, clients[n].oldbw);
-      XRemoveFromSaveSet(dpy, clients[n].window);
-    }
-  if(wins != NULL)
+  if(wins != NULL) {
+    for(i = 0; i < nwins; i++)
+      if(wins[i] == clients[n].window) {
+        XReparentWindow(dpy, clients[n].window, root, clients[n].x, clients[n].y);
+        XSetWindowBorderWidth(dpy, clients[n].window, clients[n].oldbw);
+        XRemoveFromSaveSet(dpy, clients[n].window);
+      }
     XFree(wins);
+  }
+  XDestroyWindow(dpy, clients[n].taskbutton);
   XDestroyWindow(dpy, clients[n].parent);
   XFree(clients[n].name);
   cn--;
   for(i = n; i < cn; i++)
     clients[i] = clients[i + 1];
   alloc_clients();
-  prev(0);
+  update_taskbar();
 }
 
 void draw_client(int n) {
   if(clients[n].name)
     XDrawString(dpy, clients[n].parent, (n == current) ? gc : igc, border_width + font->max_bounds.lbearing, border_width + font->max_bounds.ascent, clients[n].name, strlen(clients[n].name));
   XDrawRectangle(dpy, clients[n].parent, (n == current) ? gc : igc, 0, 0, clients[n].width + (border_width * 2) - 1, clients[n].height + (border_width * 2) + title_height - 1);
+  XClearArea(dpy, clients[n].parent, clients[n].width + border_width - 1, border_width, border_width, title_height, False);
+}
+
+void draw_taskbutton(int n) {
+  if(clients[n].name)
+    XDrawString(dpy, clients[n].taskbutton, (n == current) ? gc : igc, 2 + font->max_bounds.lbearing, 2 + font->max_bounds.ascent, clients[n].name, strlen(clients[n].name));
+  XClearArea(dpy, clients[n].taskbutton, taskbutton_width - 2, 2, 2, title_height, False);
 }
 
 void add_initial_clients(void) {
@@ -126,6 +163,16 @@ void getnormalhints(int n) {
   XGetWMNormalHints(dpy, clients[n].window, &clients[n].normal_hints, &sr);
 }
 
+int getstatehint(Window w) {
+  int ret = WithdrawnState;
+  XWMHints *wm_hints = XGetWMHints(dpy, w);
+  if(wm_hints) {
+    ret = wm_hints->initial_state;
+    XFree(wm_hints);
+  }
+  return ret;
+}
+
 void configurenotify(int n)
 {
   XConfigureEvent ce;
@@ -154,11 +201,24 @@ int has_protocol(Window w, Atom protocol) {
   return ret;
 }
 
+int get_wm_state(Window w) {
+  Atom rt;
+  int rf;
+  unsigned long n, bar;
+  unsigned char *data;
+  long ret = WithdrawnState;
+  if(XGetWindowProperty(dpy, w, xa_wm_state, 0L, 2L, False, AnyPropertyType, &rt, &rf, &n, &bar, &data) == Success && n) {
+    ret = *(long *) data;
+    XFree(data);
+  }
+  return ret;
+}
+
 void set_wm_state(Window w, long state) {
   long data[2];
   data[0] = (long) state;
   data[1] = None;
-  XChangeProperty(dpy, w, wm_state, wm_state, 32, PropModeReplace, (unsigned char *) data, 2);
+  XChangeProperty(dpy, w, xa_wm_state, xa_wm_state, 32, PropModeReplace, (unsigned char *) data, 2);
 }
 
 void configure(int c, XConfigureRequestEvent *e) {
@@ -179,12 +239,12 @@ void configure(int c, XConfigureRequestEvent *e) {
 
 void delete_window(int n) {
   XEvent ev;
-  if(has_protocol(clients[n].window, wm_delete)) {
+  if(has_protocol(clients[n].window, xa_wm_delete)) {
     ev.type = ClientMessage;
     ev.xclient.window = clients[n].window;
-    ev.xclient.message_type = wm_protocols;
+    ev.xclient.message_type = xa_wm_protocols;
     ev.xclient.format = 32;
-    ev.xclient.data.l[0] = wm_delete;
+    ev.xclient.data.l[0] = xa_wm_delete;
     ev.xclient.data.l[1] = CurrentTime;
     XSendEvent(dpy, clients[n].window, False, NoEventMask, &ev);
   } else XKillClient(dpy, clients[n].window);
@@ -236,31 +296,64 @@ void resize(int n, int width, int height) {
 }
 
 void focus(int n) {
-  int i;
-  XSetInputFocus(dpy, clients[n].window, RevertToPointerRoot, CurrentTime);
+  int i = current < cn ? current : n;
   current = n;
-  for(i = 0; i < cn; i++) {
+  while(i < cn) {
     XSetWindowBackground(dpy, clients[i].parent, i == n ? bg.pixel : ibg.pixel);
-    XClearWindow(dpy, clients[i].parent);
-    draw_client(i);
+    XSetWindowBackground(dpy, clients[i].taskbutton, i == n ? bg.pixel : ibg.pixel);
+    XClearWindow(dpy, clients[i].minimised ? clients[i].taskbutton : clients[i].parent);
+    clients[i].minimised ? draw_taskbutton(i) : draw_client(i);
+    i = (i != n) ? n : cn;
+  }
+  if(!clients[n].minimised)
+    XSetInputFocus(dpy, clients[n].window, RevertToPointerRoot, CurrentTime);
+}
+
+void next(int minimised, int warp) {
+  int i = current + 1 < cn ? current + 1 : 0;
+  while(i < cn && i != current) {
+    if(minimised ? clients[i].minimised : !clients[i].minimised) {
+      focus(i);
+      XRaiseWindow(dpy, clients[current].parent);
+      if(warp)
+        XWarpPointer(dpy, None, minimised ? clients[current].taskbutton : clients[current].parent, 0, 0, 0, 0, minimised ? taskbutton_width - 1 : clients[current].width + border_width,  (minimised ? 3 : (clients[current].height + border_width)) + title_height);
+      return;
+    }
+    i++;
+    if(current < cn && i == cn)
+      i = 0;
   }
 }
 
-void next(int warp) {
-  if(cn > 0) {
-    focus((current + 1 < cn) ? current + 1 : 0);
-    XRaiseWindow(dpy, clients[current].parent);
-    if(warp)
-      XWarpPointer(dpy, None, clients[current].parent, 0, 0, 0, 0, clients[current].width + border_width,  clients[current].height + border_width + title_height);
+void prev(int minimised, int warp) {
+  int i = current - 1 < cn ? current - 1 : cn -1;
+  while(i >= 0 && i != current) {
+    if(minimised ? clients[i].minimised : !clients[i].minimised) {
+      focus(i);
+      XRaiseWindow(dpy, clients[current].parent);
+      if(warp)
+        XWarpPointer(dpy, None, minimised ? clients[current].taskbutton : clients[current].parent, 0, 0, 0, 0, minimised ? taskbutton_width - 1 : clients[current].width + border_width,  (minimised ? 3 : (clients[current].height + border_width)) + title_height);
+      return;
+    }
+    if(current < cn && !i)
+      i = cn;
+    i--;
   }
 }
 
-void prev(int warp) {
-  if(cn > 0) {
-    focus((current - 1 >= 0) ? current - 1 : cn - 1);
-    XRaiseWindow(dpy, clients[current].parent);
-    if(warp)
-      XWarpPointer(dpy, None, clients[current].parent, 0, 0, 0, 0, clients[current].width + border_width,  clients[current].height + border_width + title_height);
+void minimise(int n) {
+  if(clients[n].minimised) {
+    XMapRaised(dpy, clients[n].parent);
+    XUnmapWindow(dpy, clients[n].taskbutton);
+    set_wm_state(clients[n].window, NormalState);
+    clients[n].minimised = 0;
+    update_taskbar();
+    return;
   }
+  set_wm_state(clients[n].window, IconicState);
+  XUnmapWindow(dpy, clients[n].parent);
+  clients[n].minimised = 1;
+  update_taskbar();
+  XMapWindow(dpy, clients[n].taskbutton);
 }
 

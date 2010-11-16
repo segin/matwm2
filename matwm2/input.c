@@ -22,7 +22,7 @@ void drag(int n, XButtonEvent *be) {
   int xo, yo;
   XEvent ev;
   if(be->button == resize_button) {
-    XWarpPointer(dpy, None, clients[n].parent, 0, 0, 0, 0, clients[n].width + border_width,  clients[n].height + border_width + title_height);
+    XWarpPointer(dpy, None, clients[n].parent, 0, 0, 0, 0, clients[n].width + border_width, clients[n].height + border_width + title_height);
     xo = clients[n].x + border_width;
     yo = clients[n].y + border_width + title_height;
   }

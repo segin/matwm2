@@ -4,7 +4,7 @@
 void handle_event(XEvent ev) {
   int c, i;
   for(c = 0; c < cn; c++)
-    if(clients[c].parent == ev.xany.window)
+    if(clients[c].parent == ev.xany.window || clients[c].taskbutton == ev.xany.window)
       break;
   switch(ev.type) {
     case MapRequest:
@@ -32,8 +32,8 @@ void handle_event(XEvent ev) {
         if(clients[i].name)
           XFree(clients[i].name);
         XFetchName(dpy, clients[i].window, &clients[i].name);
-        XClearWindow(dpy, clients[i].parent);
-        draw_client(i);
+        XClearWindow(dpy, clients[i].minimised ? clients[i].taskbutton : clients[i].parent);
+        clients[i].minimised ? draw_taskbutton(i) : draw_client(i);
       }
       if(ev.xproperty.atom == XA_WM_NORMAL_HINTS && i < cn)
         getnormalhints(i);
@@ -44,20 +44,35 @@ void handle_event(XEvent ev) {
       break;
     case Expose:
       if(c < cn && ev.xexpose.count == 0)
-        draw_client(c);
+        clients[c].minimised ? draw_taskbutton(c) : draw_client(c);
       break;
     case ButtonPress:
-      if(c < cn) {
-        if(ev.xbutton.button == move_button || ev.xbutton.button == resize_button) {
+      if(c < cn && !clients[c].minimised && (ev.xbutton.button == move_button || ev.xbutton.button == resize_button)) {
           XRaiseWindow(dpy, clients[c].parent);
           drag(c, &ev.xbutton);
-        } else if(ev.xbutton.button == lower_button)
-          XLowerWindow(dpy, clients[c].parent);
-      }
+        }
       break;
+    case ButtonRelease:
+      if(ev.xbutton.button == tb_raise_button && ((c < cn && clients[c].minimised) || ev.xbutton.window == taskbar)) {
+        XRaiseWindow(dpy, taskbar);
+      } else if(ev.xbutton.button == tb_lower_button && ((c < cn && clients[c].minimised) || ev.xbutton.window == taskbar)) {
+        XLowerWindow(dpy, taskbar);
+      } else if(c < cn)
+        if(clients[c].minimised && ev.xbutton.button == tb_restore_button) {
+          minimise(c);
+        } else if(ev.xbutton.button == raise_button) {
+          XRaiseWindow(dpy, clients[c].parent);
+        } else if(ev.xbutton.button == lower_button) 
+          XLowerWindow(dpy, clients[c].parent);
     case KeyPress:
+      if(ev.xkey.keycode == XKeysymToKeycode(dpy, XK_s) && current < cn)
+        minimise(current);
       if(ev.xkey.keycode == XKeysymToKeycode(dpy, XK_Tab))
-        next(1);
+        next(0, 1);
+      if(ev.xkey.keycode == XKeysymToKeycode(dpy, XK_a)) {
+        next(1, 1);
+        XRaiseWindow(dpy, taskbar);
+      }
       break;
   }
 }
