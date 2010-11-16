@@ -31,13 +31,8 @@ void handle_event(XEvent ev) {
         remove_client(c);
       break;
     case UnmapNotify:
-      if(c && c->window == ev.xunmap.window) {
-        if(XCheckIfEvent(dpy, &ev, &isgone, (XPointer) &c->window) == False) {
-          deparent_client(c);
-          set_wm_state(c->window, WithdrawnState);
-        }
+      if(c && c->window == ev.xunmap.window)
         remove_client(c);
-      }
       break;
     case ConfigureRequest:
       c = owner(ev.xconfigurerequest.window);

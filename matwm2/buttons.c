@@ -1,6 +1,7 @@
 #include "matwm.h"
 
-Window button_current, button_down;
+Window button_current;
+int button_down = 0;
 
 void buttons_create(client *c) {
   c->button_parent = XCreateWindow(dpy, c->parent, (c->width + border_width) - button_parent_width, border_width, button_parent_width, text_height, 0,
@@ -54,28 +55,40 @@ int handle_button_event(XEvent ev) {
       buttons_draw(c);
       return 1;
     case EnterNotify:
+      if(button_down) {
+        button_down = 2;
+        return 1;
+      }
       button_current = ev.xcrossing.window;
       buttons_draw(c);
       return 1;
     case LeaveNotify:
+      if(button_down == 2)
+        button_down = 1;
       button_current = root; // make sure its not a button (i chose root because its always there and i assumed any value could be a window)
-      button_down = root;
       buttons_draw(c);
       return 1;
     case ButtonPress:
       if(ev.xbutton.button == Button1)
-        button_down = ev.xbutton.window;
+        button_down = 1;
       return 1;
     case ButtonRelease:
-      if(ev.xbutton.button == Button1 && button_down == ev.xbutton.window) {
-        if(ev.xbutton.window == c->button_iconify)
-          iconify(c);
-        if(ev.xbutton.window == c->button_expand)
-          expand(c);
-        if(ev.xbutton.window == c->button_maximise)
-          maximise(c);
-        if(ev.xbutton.window == c->button_close)
-          delete_window(c);
+      if(ev.xbutton.button == Button1) {
+        if(button_current == ev.xbutton.window) {
+          if(ev.xbutton.window == c->button_iconify)
+            iconify(c);
+          if(ev.xbutton.window == c->button_expand)
+            expand(c);
+          if(ev.xbutton.window == c->button_maximise)
+            maximise(c);
+          if(ev.xbutton.window == c->button_close)
+            delete_window(c);
+        }
+        if(button_down == 2) {
+          button_current = ev.xbutton.window;
+          buttons_draw(c);
+        }
+        button_down = 0;
       }
       return 1;
   }

@@ -9,11 +9,11 @@ char *dn = NULL;
 
 int main(int argc, char *argv[]) {
   XEvent ev;
-  unsigned int ui, nwins;
+  unsigned int i, nwins;
   Window dw, *wins;
   XWindowAttributes attr;
   struct sigaction qsa;
-  int i, dfd, di, sr;
+  int dfd, di, sr;
   fd_set fds, fdsr;
   for(i = 1; i < argc; i++) {
     if(strcmp(argv[i], "-defaults") == 0) {
@@ -62,13 +62,12 @@ int main(int argc, char *argv[]) {
   p_attr.background_pixel = ibg.pixel;
   p_attr.event_mask = SubstructureRedirectMask | SubstructureNotifyMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask | LeaveWindowMask | ExposureMask;
   button_current = root; // haxorish way to assure myself the window is not a button window
-  button_down = root;
   have_shape = XShapeQueryExtension(dpy, &shape_event, &di);
   XQueryTree(dpy, root, &dw, &dw, &wins, &nwins);
-  for(ui = 0; ui < nwins; ui++) {
-    XGetWindowAttributes(dpy, wins[ui], &attr);
+  for(i = 0; i < nwins; i++) {
+    XGetWindowAttributes(dpy, wins[i], &attr);
     if(!attr.override_redirect && attr.map_state == IsViewable)
-      add_client(wins[ui]);
+      add_client(wins[i]);
   }
   if(wins != NULL)
     XFree(wins);
@@ -94,7 +93,6 @@ void end(void) {
   while(cn) {
     if(clients[0]->flags & ICONIC)
       XMapWindow(dpy, clients[0]->window);
-    deparent_client(clients[0]);
     remove_client(clients[0]);
   }
   if(clients)

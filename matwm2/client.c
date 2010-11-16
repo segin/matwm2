@@ -68,7 +68,17 @@ void add_client(Window w) {
 
 void remove_client(client *c) {
   XEvent ev;
-  int i;
+  unsigned int i, nwins;
+  Window dw, *wins;
+  XQueryTree(dpy, c->parent, &dw, &dw, &wins, &nwins);
+  for(i = 0; i < nwins; i++)
+    if(wins[i] == c->window) {
+      XReparentWindow(dpy, c->window, root, c->x + gxo(c, 1), c->y + gyo(c, 1));
+      XSetWindowBorderWidth(dpy, c->window, c->oldbw);
+      XRemoveFromSaveSet(dpy, c->window);
+      XLowerWindow(dpy, c->window);
+      set_wm_state(c->window, WithdrawnState);
+    }
   if(button_current == c->button_iconify || button_current == c->button_expand || button_current == c->button_maximise || button_current == c->button_close)
     button_current = root;
   XDestroyWindow(dpy, c->parent);
@@ -87,13 +97,6 @@ void remove_client(client *c) {
   alloc_clients();
   if(evh == wlist_handle_event)
     wlist_update();
-}
-
-void deparent_client(client *c) {
-  XReparentWindow(dpy, c->window, root, c->x + gxo(c, 1), c->y + gyo(c, 1));
-  XSetWindowBorderWidth(dpy, c->window, c->oldbw);
-  XRemoveFromSaveSet(dpy, c->window);
-  XLowerWindow(dpy, c->window);
 }
 
 void draw_client(client *c) {

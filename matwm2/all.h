@@ -1,5 +1,6 @@
 // buttons.c
-extern Window button_current, button_down;
+extern Window button_current;
+extern int button_down;
 void buttons_create(client *c);
 void buttons_draw(client *c);
 int handle_button_event(XEvent ev);
@@ -9,7 +10,6 @@ extern client **clients, *current;
 extern int cn;
 void add_client(Window w);
 void remove_client(client *c);
-void deparent_client(client *c);
 void draw_client(client *c);
 void alloc_clients(void);
 int move(client *c, int x, int y);
