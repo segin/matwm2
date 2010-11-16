@@ -73,7 +73,7 @@ void get_mwm_hints(client *c) { /* read motif hints */
 		if(nir > 2) {
 			mwmhints = (MWMHints *) p; /* schould we pass &mwmhints directly to XGetWindowProperty, we break strict aliasing rules */
 			if(mwmhints->flags & MWM_HINTS_FUNCTIONS) {
-				c->flags ^= c->flags & (HAS_TITLE | HAS_BORDER | CAN_MOVE | CAN_RESIZE);
+				c->flags ^= c->flags & (CAN_MOVE | CAN_RESIZE);
 				if(mwmhints->functions & MWM_FUNC_ALL) /* this means reverse all bits */
 					mwmhints->functions = (MWM_FUNC_MOVE | MWM_FUNC_RESIZE) & (~mwmhints->functions);
 				if(mwmhints->functions & MWM_FUNC_MOVE)
@@ -82,12 +82,15 @@ void get_mwm_hints(client *c) { /* read motif hints */
 					c->flags |= CAN_RESIZE;
 			}
 			if(mwmhints->flags & MWM_HINTS_DECORATIONS) {
+				c->flags ^= c->flags & (HAS_TITLE | HAS_BORDER);
 				if(mwmhints->decorations & MWM_DECOR_ALL) /* equivalent of MWM_FUNC_ALL */
-					mwmhints->decorations = (MWM_DECOR_TITLE | MWM_DECOR_BORDER) & (~mwmhints->decorations);
+					mwmhints->decorations = (MWM_DECOR_TITLE | MWM_DECOR_BORDER | MWM_DECOR_RESIZEH) & (~mwmhints->decorations);
 				if(mwmhints->decorations & MWM_DECOR_TITLE)
 					c->flags |= HAS_TITLE;
 				if(mwmhints->decorations & MWM_DECOR_BORDER)
 					c->flags |= HAS_BORDER;
+				if(!(mwmhints->decorations & MWM_DECOR_RESIZEH))
+					c->flags ^= CAN_RESIZE & c->flags; /* remove CAN_RESIZE if it has been set */
 			}
 		}
 		XFree((void *) p);

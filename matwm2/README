@@ -4,7 +4,7 @@ It is written and maintained by Mattis Michel <sic_zer0@hotmail.com>, and distri
 To compile and install, review the paragraph the Makefile to specify the right folders to look for headers and libraries in and install to.
 Also you may want to change some options for compiling (like wheter to include debugging symbols, or to compile without using xext), look in the second paragraph in the Makefile for changeing those.
 After that run "make" and "make install" - if all goes well it schould then be compiled and installed.
-Default built-in configuration is in default_matwmrc if you would want to change it. Note that initialisation of most variables done in it is absolutely necessary for matwm2 to work propperly. After editing you schould run "make defcfg" to generate the code that will actually be compiled in.
+Default built-in configuration is in default_matwmrc. Note that initialisation of most variables done in it is absolutely necessary for matwm2 to work propperly. After editing you schould run "make defcfg" to generate the code that will actually be compiled in.
 
 Before usage and for further information, please consult the manual page (run "man matwm2" on a terminal, after it has been installed).
 

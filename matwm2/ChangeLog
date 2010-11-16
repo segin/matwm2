@@ -1,3 +1,8 @@
+0.0.93:
+	revised motif hints implementation once more (decoration hints schould be fixed now)
+	mid-sentence tabs in mwm_hints.h replaced by spaces, added comments
+	little correction in README to sound less stupid
+
 0.0.92:
 	makeheader now allows comments next to global variables - needed for client.c since 0.0.91
 	removed useless calculation (result wasn't used) in config.c
