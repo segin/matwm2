@@ -18,15 +18,20 @@ void handle_event(XEvent ev) {
       } else add_client(ev.xmaprequest.window);
       break;
     case DestroyNotify:
-      if(c < cn)
-        remove_client(c, 0);
+#ifdef DEBUG
+      if(c < cn && clients[c].window != ev.xdestroywindow.window)
+        printf("destroynotify (%s) && xany.window == parent - but window != xdestroywindow.window, Why is this? has x11 gone insane?\n", clients[c].name);
+#endif
+      if(c < cn && clients[c].window == ev.xdestroywindow.window)
+        remove_client(c, 2);
       break;
     case UnmapNotify:
-      if(c < cn)
-        if(clients[c].iconic != 1) {
-          remove_client(c, 1);
-        } else if(clients[c].iconic)
-          clients[c].iconic = 2;
+#ifdef DEBUG
+      if(c < cn && clients[c].window != ev.xunmap.window)
+        printf("unmapnotify (%s) && xany.window == parent - but window != xunmap.window, Why is this? has x11 gone insane?\n", clients[c].name);
+#endif
+      if(c < cn && clients[c].window == ev.xunmap.window)
+        remove_client(c, 1);
       break;
     case ConfigureRequest:
       for(i = 0; i < cn; i++)
@@ -50,7 +55,7 @@ void handle_event(XEvent ev) {
       for(i = 0; i < cn; i++)
         if(clients[i].window == ev.xproperty.window)
           break;
-      if(i < cn && ev.xproperty.atom == XA_WM_NAME) {
+     if(i < cn && ev.xproperty.atom == XA_WM_NAME) {
         if(clients[i].name)
           XFree(clients[i].name);
         XFetchName(dpy, clients[i].window, &clients[i].name);
@@ -85,7 +90,7 @@ void handle_event(XEvent ev) {
           restack_client(c, 1);
           drag(c, &ev.xbutton, 0);
         }
-        if(strcmp(buttonaction(c, ev.xbutton.button), "resize") == 0) {
+        if(strcmp(buttonaction(c, ev.xbutton.button), "resize") == 0 && clients[c].resize) {
           restack_client(c, 1);
           drag(c, &ev.xbutton, 1);
         }
@@ -134,17 +139,20 @@ void handle_event(XEvent ev) {
         maximise(current);
       }
       if(current < cn && iskey(key_bottomleft))
-        move(current, 0, display_height - (clients[current].height + (border_width * 2) + title(current)));
+        move(current, 0, display_height - (clients[current].height + (border(current) * 2) + title(current)));
       if(current < cn && iskey(key_bottomright))
-        move(current, display_width - (clients[current].width + (border_width * 2)), display_height - (clients[current].height + (border_width * 2) + title(current)));
+        move(current, display_width - (clients[current].width + (border(current) * 2)), display_height - (clients[current].height + (border(current) * 2) + title(current)));
       if(current < cn && iskey(key_topright))
-        move(current, display_width - (clients[current].width + (border_width * 2)), 0);
+        move(current, display_width - (clients[current].width + (border(current) * 2)), 0);
       if(current < cn && iskey(key_topleft))
         move(current, 0, 0);
       break;
     default:
-      if(c < cn && have_shape && ev.type == shape_event)
-        set_shape(c);
+      for(i = 0; i < cn; i++)
+        if(clients[i].window == ev.xany.window)
+          break;
+      if(i < cn && ev.type == shape_event)
+        set_shape(i);
       break;
   }
 }

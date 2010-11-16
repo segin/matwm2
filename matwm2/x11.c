@@ -63,11 +63,14 @@ void get_mwm_hints(int n) {
   MWMHints *mwmhints;
   clients[n].title = 1;
   clients[n].border = 1;
+  clients[n].resize = 1;
   if(XGetWindowProperty(dpy, clients[n].window, xa_motif_wm_hints, 0, sizeof(MWMHints), False, AnyPropertyType, &rt, &rf, &nir, &bar, (unsigned char **) &mwmhints) == Success && nir == 5) {
-    if(mwmhints->flags = MWM_HINTS_DECORATIONS) {
+    if(mwmhints->flags & MWM_HINTS_DECORATIONS && !(mwmhints->decorations & MWM_DECOR_ALL)) {
       clients[n].title = mwmhints->decorations & MWM_DECOR_BORDER;
       clients[n].border = mwmhints->decorations & MWM_DECOR_TITLE;
     }
+    if(mwmhints->flags & MWM_HINTS_FUNCTIONS)
+      clients[n].resize = mwmhints->functions & MWM_FUNC_RESIZE;
     XFree(mwmhints);
   }
 }

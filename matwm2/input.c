@@ -30,7 +30,8 @@ void drag(int n, XButtonEvent *be, int res) {
   }
   XGrabPointer(dpy, root, True, ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, None, 0, CurrentTime);
   while(1) {
-    XMaskEvent(dpy, PropertyChangeMask | SubstructureNotifyMask | SubstructureRedirectMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | ExposureMask | EnterWindowMask, &ev);
+//    XMaskEvent(dpy, PropertyChangeMask | SubstructureNotifyMask | SubstructureRedirectMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | ExposureMask | EnterWindowMask, &ev);
+    XNextEvent(dpy, &ev);
     if(ev.type == MotionNotify) {
       while(XCheckTypedEvent(dpy, MotionNotify, &ev));
       if(res) {
@@ -42,8 +43,14 @@ void drag(int n, XButtonEvent *be, int res) {
       continue;
     } else  {
       handle_event(ev);
-      if((ev.type == UnmapNotify && ev.xunmap.window == clients[n].window) || ev.type == KeyPress)
+      if((ev.type == UnmapNotify && ev.xunmap.window == clients[n].window) || (ev.type == DestroyNotify && ev.xdestroywindow.window == clients[n].window) || ev.type == KeyPress) {
+        while(1) {
+          XMaskEvent(dpy, ButtonReleaseMask, &ev);
+          if(ev.xbutton.button == be->button)
+            break;
+        }
         break;
+      }
     }
   }
   XUngrabPointer(dpy, CurrentTime);

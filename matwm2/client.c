@@ -1,5 +1,4 @@
 #include "matwm.h"
-#include <X11/extensions/shape.h>
 
 client *clients;
 int cn = 0, current = 0;
@@ -25,6 +24,7 @@ void add_client(Window w) {
   clients[cn].maximised = 0;
   XFetchName(dpy, w, &clients[cn].name);
   XSelectInput(dpy, w, PropertyChangeMask | EnterWindowMask);
+  XShapeSelectInput(dpy, w, ShapeNotifyMask);
   XSetWindowBorderWidth(dpy, w, 0);
   clients[cn].parent = XCreateWindow(dpy, root, clients[cn].x, clients[cn].y, (wm_state == IconicState) ? icon_width : (clients[cn].width + (border(cn) * 2)), ((wm_state == IconicState) ? title_height + 4 : (clients[cn].height + (border(cn) * 2) + title(cn))), 0,
                                      DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
@@ -48,7 +48,7 @@ void add_client(Window w) {
 void remove_client(int n, int fc) {
   XEvent ev;
   int i, iconic = clients[n].iconic;
-  if(XCheckTypedWindowEvent(dpy, clients[n].parent, DestroyNotify, &ev) == False) {
+  if(fc != 2 && XCheckTypedWindowEvent(dpy, clients[n].parent, DestroyNotify, &ev) == False) {
     if(fc)
       set_wm_state(clients[n].window, WithdrawnState);
     XReparentWindow(dpy, clients[n].window, root, clients[n].x + gxo(n, 1), clients[n].y + gyo(n, 1));
@@ -200,7 +200,7 @@ void maximise(int n) {
 
 void set_shape(int c) {
   int bounding_shaped, di;
-  if(XShapeQueryExtents(dpy, clients[cn - 1].window, &bounding_shaped, &di, &di, &di, &di, &di, &di, &di, &di, &di) && bounding_shaped)
-    XShapeCombineShape(dpy, clients[cn - 1].parent, ShapeBounding, border(cn - 1), border(cn - 1) + title(cn - 1), clients[cn - 1].window, ShapeBounding, ShapeSet);
+  if(XShapeQueryExtents(dpy, clients[c].window, &bounding_shaped, &di, &di, &di, &di, &di, &di, &di, &di, &di) && bounding_shaped)
+    XShapeCombineShape(dpy, clients[c].parent, ShapeBounding, border(c), border(c) + title(c), clients[c].window, ShapeBounding, ShapeSet);
 }
 

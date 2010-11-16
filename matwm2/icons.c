@@ -25,11 +25,13 @@ void restack_icons(int top) {
 }
 
 void iconify(int n) {
+  XEvent ev;
   set_wm_state(clients[n].window, IconicState);
   XUnmapWindow(dpy, clients[n].window);
   XResizeWindow(dpy, clients[n].parent, icon_width, title_height + 4);
   clients[n].iconic = 1;
   sort_icons();
+  while(!XCheckTypedWindowEvent(dpy, clients[n].parent, UnmapNotify, &ev));
 }
 
 void restore(int n) {
