@@ -1,3 +1,6 @@
+0.0.89:
+	useing rfork() with RFNOWAIT flag instead of vfork() to avoid creating a huge collection of zombie processes
+
 0.0.88:
 	avoid hang on iconifying of windows not visible because they are on another desktop (client_hide is only to be called for visible windows)
 

@@ -1,7 +1,7 @@
 #include "matwm.h"
 
 void spawn(char *cmd) {
-	if(vfork() == 0) {
+	if(rfork(RFPROC | RFNOWAIT) == 0) {
 		setsid();
 		if(dn)
 			setenv("DISPLAY", dn, 1);
