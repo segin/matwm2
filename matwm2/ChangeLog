@@ -452,3 +452,7 @@
 	same for Makefile (where apropriate), 1 tab instead of 2 for intendation
 	moveresize client window in client_update(), this fixes maximising/expanding/fullscreening openoffice.org and perhaps some other applications
 
+0.0.78:
+	fixed client_focus_first() on desktop change
+	fixed client_save() wich broke recently due to last changes in client_move()
+

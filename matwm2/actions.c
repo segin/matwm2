@@ -151,6 +151,8 @@ void client_iconify(client *c) {
 	c->flags |= ICONIC;
 	set_wm_state(c->window, IconicState);
 	client_hide(c);
+	if(!current)
+		client_focus_first();
 	if(c->desktop != desktop && c->desktop != STICKY)
 		XMapWindow(dpy, c->wlist_item);
 	for(i = client_number(stacking, c); i < cn - 1; i++)
@@ -182,14 +184,14 @@ void client_restore(client *c) {
 }
 
 void client_save(client *c) {
-	int x = c->x, y = c->y;
-	if(c->x >= display_width)
+	int x = client_x(c), y = client_y(c);
+	if(client_x(c) >= display_width)
 		x = display_width - client_width_total(c);
-	if(c->y >= display_height)
+	if(client_y(c) >= display_height)
 		y = display_height - client_height_total(c);
-	if(c->x + client_width_total(c) <= 0)
+	if(client_x(c) + client_width_total(c) <= 0)
 		x = 0;
-	if(c->y + client_height_total(c) <= 0)
+	if(client_y(c) + client_height_total(c) <= 0)
 		y = 0;
 	client_move(c, x, y);
 }

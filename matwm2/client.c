@@ -106,7 +106,7 @@ void client_hide(client *c) {
 	if(c == current) {
 		if(evh == drag_handle_event)
 			evh = drag_release_wait;
-		client_focus_first();
+		client_focus(NULL);
 	}
 
 }
@@ -265,7 +265,7 @@ void client_warp(client *c) {
 
 void client_focus_first(void) {
 	int i;
-	if(previous) {
+	if(previous && (previous->desktop == desktop || previous->desktop == STICKY)) {
 		client_focus(previous);
 		return;
 	}
