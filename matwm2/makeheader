@@ -1,0 +1,42 @@
+#!/usr/local/bin/perl -W
+use strict;
+open H, "> matwm.h";
+print H <<ENDTOP;
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <stdlib.h>
+
+#define MINSIZE 15
+
+// client structure
+typedef struct client {
+  Window window, parent;
+  int x, y, width, height;
+  int minimised, maximised;
+  XSizeHints normal_hints;
+  char *name;
+} client;
+
+ENDTOP
+opendir DIR, ".";
+my @dir = readdir DIR;
+closedir DIR;
+foreach(sort(@dir)) {
+  if(m/.c$/) {
+    print H "// $_\n";
+    open FILE, $_;
+    foreach(<FILE>) {
+      if(m/^(\w+\ [\*\w ,=]+);/) {
+        my $a = $1;
+        $a =~ s/\ *=.+//g;
+        print H "extern $a;\n";
+      } elsif(m/^(\w+\ \w+\(.*\))/) {
+        print H "$1;\n";
+      }
+    }
+    close FILE;
+    print H "\n";
+  }
+}
+close H;
+
