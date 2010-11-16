@@ -43,6 +43,7 @@ typedef struct {
 #define CAN_RESIZE			(1 << 14)
 #define NO_STRUT				(1 << 15)
 #define DONT_LIST				(1 << 16)
+#define RESTORE					(1 << 17)
 
 #define STICKY					-1
 #define ICONS						-2

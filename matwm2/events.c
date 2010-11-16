@@ -53,15 +53,13 @@ void handle_event(XEvent ev) {
 					wlist_item_draw(c);
 				return;
 			case ButtonPress:
-				if(click_focus || click_raise) {
-					XAllowEvents(dpy, ReplayPointer, CurrentTime);
-					if(click_focus && c != current)
-						client_focus(c);
-					if(ev.xbutton.window == c->window) {
-						if(click_raise)
-							client_raise(c);
-						return;
-					}
+				XAllowEvents(dpy, ReplayPointer, CurrentTime);
+				if(c != current)
+					client_focus(c);
+				if(ev.xbutton.window == c->window) {
+					if(click_raise)
+						client_raise(c);
+					return;
 				}
 				if(buttonaction(ev.xbutton.button) == BA_MOVE)
 					drag_start(MOVE, ev.xbutton.button, ev.xbutton.x_root, ev.xbutton.y_root);
@@ -212,8 +210,7 @@ void handle_event(XEvent ev) {
 			if(keyaction(ev) == KA_NEXT || keyaction(ev) == KA_PREV)
 				wlist_start(ev);
 			if(cn && keyaction(ev) == KA_ICONIFY_ALL)
-				for(i = 0; i < cn; i++)
-					client_iconify(clients[i]);
+				client_iconify_all();
 			if(keyaction(ev) == KA_EXEC)
 				spawn(keyarg(ev));
 			if(keyaction(ev) == KA_NEXT_DESKTOP && desktop < dc - 1)

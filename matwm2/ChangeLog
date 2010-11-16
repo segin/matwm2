@@ -1,3 +1,218 @@
+0.0.5: changelog was part of e-mail i sent to myself at each release from this one on to 0.0.49 when real changelog was introduced, recovered changelog from all those mails at version 0.0.66
+	done some bugfixes and cleaned code up a little
+	made draw_client() (formerly client_draw()) draw border to window frames
+
+0.0.6:
+	hopefully less foolish and agressive response to unmaprequests
+	changed focus behaviour -> if there are windows there shall be one focussed
+
+0.0.7:
+	reduced flicker considerably - draw_client() after each resize
+	move() and resize() dont act if client already has the requested size and drag only calls them for last motionnotify in que now
+	next() and prev() now have argument to set wether to move pointer towards newly focussed window
+
+0.0.8:
+	added taskbar / iconify thing
+	introduced new bugs
+	removed focus previous window on remove_client because it were crap
+	event loop modified
+	atoms now have xa_ prefix and wm_hints is used for other purpose
+	etc etc
+
+0.0.9:
+	major redesign - moved code around a lot hoping it would make more sence then
+	xerror handler now searches for client to wich resourceid belongs
+	fixed some bugs (including stupid mistake @ minimise thing)
+	maybe introduced new bugs because maties @ almost 40hrs of uptime
+
+0.0.10:
+	handles window state stuff better now
+	unmaps client window for iconifying and re-uses parent window as icon
+	bugfixes
+
+0.0.12:
+	fully configureable now
+
+0.0.13: mail was empty
+
+0.0.14:
+	fixed shift lock bug (keybinds did not work if it on)
+	made config thing little cleaner
+	etc
+
+0.0.15:
+	fixed bug in binding keys (now handles mappingnotify)
+
+0.0.16:
+	removed some plain stupidity - me tired head forgot somewhere in the past that several strings from default config (mouse button actions) compared with strcmp were NULL
+
+0.0.17:
+	xrm_getint() now works so border width etc can be set from configure file
+	gravity now works
+
+0.0.18:
+	focus behaviour fixed: enterwindow events on client window are now also handled
+	handles motif wm hints now, but work is to be done on that
+	shape extension things work now
+
+0.0.19:
+	major bugfix - no more dissapearing windows (cause identified but not understood - unmapnotifies when there is nothing unmapped, x are crazy?)
+	on destroynotify no longer trying to do stuff with window that is gone - still some misterious and less misterious badwindow errors possible but this is supposedly harmless tho i want it fixed (what if a new window with same id appears suddenly)
+	mwm hints fixed up mostly i hope
+
+0.0.20:
+	shape thing fixed, transient windows recognised etc - xmms and xine schould now really work
+
+0.0.21:
+	fixed mwm hints once more hopefully mplayer and xine now behave better
+
+0.0.22:
+	compiles on linusk now (no more strlcat cpy etc but strncat)
+	linusk also needed a header for uint32_t etc but they are no longer used as turns out motif wm hints are returned as long integers not 32 bit pieces as many code and manual for XGetWindowProperty suggest
+	speaking of wich, mwm hints got fixed up a little more - somehow xmms, xine and mplayer did fine before but how it are miracle
+	anyways i verified this by comparing the values matwm reads to xprop output and its behaviour to mwm's
+	this was not yet tested on 32bit platforms tho - but i am quite sure it will work there
+	but ftw @ fvwm's decorations.c using 'int' datatype for all values in mwmhints structure - evilwm and yeahwm use uint32_t i think, schould check that out
+
+0.0.23:
+	signal handling function rewritten to work with xorg 7.4 - maybe other little things too
+	configuration stuff for modifier keys improved a little
+	updated default key bindings to be a little sane
+	fixed bug concerning the maximalisation of windows without title bar
+
+0.0.24:
+	now uses total_width and total_height macros for a little cleaner code
+	window snapping is added (put "snap 0" in .matwmrc to disable)
+
+0.0.25:
+	forget to mention at .24 a licence was included and "snap 0" schould be "snap: 0"
+	added window snapping to the resize windows
+	doesnt re-use parent windows as icons anymore after all, this gives problems when matwm gets brutally murdered or would it segfault or anything concerning the placement of windows
+
+0.0.26:
+	fixed stupid bug with redrawing icons
+	changing resolution/size of root window doesnt fuck up anymore
+
+0.0.27:
+	fixed stupid thing i forgot when adding the new icon stuff
+	prolly forgot stuff i did too
+
+	as this release seems to be pretty stable next thing to to is rewrite the configuration stuff to break it again i gues
+
+0.0.28 & 0.0.29: one mail was about these two versions, yet included none
+	.28 -> latest version i had with taskbar, prolly includes bugfix but dont know exactly what
+	latest version now officialy has window list instead of taskbar, but maybe i revert this if it turns out to have problems too
+	also cleaned up the code a little, and button actions are now no longer strings
+	note that configuration stuff has changed a little since taskbar removal - the mouse buttons stuff
+
+0.0.30:
+	all clients are now pointers
+	windows are now sorted, and icons are separated in the window list
+	windows with no name are given a title
+	etc
+
+0.0.31:
+	new configuration thing (and erm can launch programs now)
+	maybe several bugfixes
+	prolly several bugs
+
+0.0.32:
+	cleaned up some code
+	fixed some bugs
+	added ignore_modifier option
+
+0.0.33:
+	new makefile - including clean target
+	fixed bugs introduced with pointer stuff @ maprequest and configurerequest handling - they sometimes acted faulty
+	misterious badwindow errors gone somehow
+	if current client is iconified, focus first client
+	if there are only iconic clients dont set offset for them
+	split off a deparent_client function from remove_client funtion, to make stuff less dirty (confusing fc argument, unnecesary if()'s)
+	understands -display and -defaults arguments now (first one is obvious, other one prints default configuration to stdout and exits)
+	perhaps bugfixes i forgot
+
+0.0.34:
+	abandon stupid objects stuff in makefile and add header, install and deinstall targets
+	fix pointer stupidity (@ config.c)
+	made read_file() work fox linusk too and add fix for in case no eof is read
+	add font boundary stuff for window list and set fixed as default font ("*" is no good at all)
+
+0.0.35:
+	fixed read_file() - add final zero if no EOF read or something like that, was long ago
+	fixed DestroyNotify handling - mapping a window and immediatly destroying it schould no longer bring trouble
+	erm duno what else its been long confusing time
+
+0.0.36:
+	doesnt let window list become wider then the screen now
+	added expand() function, and key action for it
+	renamed cmpmod to cmpmodmask
+	iconic, maximised, expanded and shaped members of client structure are now replaced by the bit mask in member called "state"
+
+0.0.37:
+	fixed calculation of other windows their height in expand()
+
+0.0.38:
+	window buttons implemented
+	expand function now makes sure the window isn't maximised
+
+0.0.39:
+	button parent window now acts like root window
+	client structure members "state", "title", "border" and "resize" are now replace by the bit mask "flags"
+	added "title" button action, wich toggles the title bar of a window on and off
+	buttons schould now be unmapped if the window has no title
+	fixed bit mask stupidity that made broke shaped windows totally & add_client now calls set_shape instead of doing the same as set_shape
+
+0.0.40:
+	minimise button can now change
+	no more inactive foregroundground on active background, but squares around buttons
+
+0.0.41:
+	buttons are now only activated when the mouse has not left them before releasing after its clicked
+	if -display used exec now puts DISPLAY evironment variable accordingly in spawn() function
+
+0.0.42:
+	rc file doesnt use ':' as separator anymore (just whitespace now)
+	"exec <command>" line in matwmrc file schould run <command> on startup
+	select() loop now makes more sence, and won't get cought in XEvent() blocking it because it assume data == event
+	any x errors occuring schould be history (new stupid ones introduced by buttons fixed, and also the old badwindow errors that happened because of mouse entering the parent window when a client window dissapeared triggered useless call to focus())
+
+0.0.43:
+	previous claim on x errors were a bit utopic, but remove_client() now does an XQueryTree to see if the window in it still exists and hopefully matwm doesnt try to mess around with destroyed windows that much anymore now
+	window buttons schould now act a bit nicer visually, as in when the mouse is clicked and dragged off the button and back on it the square indicating it is selected not (re)apearing whilst releasing the button would do nothing at all
+
+0.0.44:
+	fixed major bug in remove_client, that could induce segmentation faults (the loop to pull a client out of the array went one client too far)
+	fixed input focus not always updated when restoring iconified clients bug
+	check if client still has a window on most events exept destroynotify
+	made redrawing of buttons, and title more efficient
+	buttons dissapear if they dont fit on the titlebar anymore
+	makeheader is a shell script now (wich depends on sed)
+	dont need to unmap buttons when no titlebar on a window, so we don't do this anymore
+	cleaned up code a bit (better naming of functions etc)
+
+0.0.45:
+	client_focus() makes more sence - introduced client_set_bg() so it doesn't have the same stuff twice
+	fixed input focus stupidity with wlist_end() (introduced in .44 i think)
+	extra debugging stuff and other details
+	mwm hints fixed up once again, i broke it some time ago
+
+0.0.46:
+	move() foolish configurenotify sending of old coordinates fixed
+	default configuration has bindings for people with a windoze key now
+	adding a key to matwmrc leaves default key bindings intact now, they can be reset with the "resetkeys" command
+	also if a new key binding is added the last one set will be used instead of the first one now
+	moved a lot of functions from client to the new actions.c, including all content of icons.c to make stuff a little more organised, and isunmap() predicate placed in x11.c
+
+0.0.47:
+	faulty printf() call in xerrorhandler that caused segfaulting fixed
+	more checking if windows still exist and has_client() has been replaced by has_child() in x11.c (wich allows to do checking on any set of parent & child as opposed to a client structure)
+	don't warp to new windows when dragging or if window list open
+
+0.0.48: last entry that came from an email
+	added "iconify_all" key action (defaults to mod4-a and control-mod1-a)
+	dont stop looking for arguments after -display argument - have i been drunk?
+	graphics contexts initialization now smaller - half of it didn't really make sence (setting values to the default value, set a value and then set it again before use), maybe copied those lines from yeahwm
+
 0.0.49:
 	introduced changelog
 	new windows map under window list or window currently being dragged
@@ -147,9 +362,18 @@
 	listen to NET_WM_STRUT if no NET_WM_STRUT_PARTIAL is there
 
 0.0.66:
-	don't listen to NET_ACTIVE_WINDOW messages if source indication isn't 2
-	prevent focus stealing
+	prevent focus stealing - EWMH can still set other winows active then the one under the pointer, if this happens a click will fix that
 	support for click-to-focus and click-raise
 	minor changes and additions to the man page concerning the behaviour of the window list
 	when leaving window list, first focus warp the mouse to the new window, then umap the window list - avoiding eventual enter event etc for the window under the window list
+	fixed checking for modifiers keys left after key release in window list event handler
+	introduced README file
+	from now on MIT licence will be used
+	support for EWMH NET_SHOWING_DESKTOP mode, and modified iconify_all to do the same thing
+	moved sentence about iconifying windows to iconify part, it was wrongly placed with iconify_all description
+	if there is a current desktop defined by an EWMH hint, go there (greater then the number of desktops will be threated as the last desktop)
+	also clients that were on a desktop further then the last desktop will be put on the last one
+	found and fixed serious bug that would cause matwm to forget about restoring windows from the first desktop if quitting while on another
+	added info about how to exit matwm, and how it will restore windows at exit in the manual page
+	restored old (0.0.5 - 0.0.48) changelog from e-mails
 

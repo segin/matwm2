@@ -1,5 +1,7 @@
 #include "matwm.h"
 
+int all_iconic = 0;
+
 int client_move(client *c, int x, int y) {
 	if(x == c->x && y == c->y)
 		return 0;
@@ -181,6 +183,7 @@ void client_restore(client *c) {
 		XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
 	if(evh == wlist_handle_event)
 		wlist_update();
+	client_end_all_iconic();
 }
 
 void client_save(client *c) {
@@ -213,5 +216,31 @@ void client_to_border(client *c, char *a) {
 	}
 	client_move(c, x, y);
 	client_warp(c);
+}
+
+void client_iconify_all(void) {
+	int i;
+	if(all_iconic) {
+		for(i = 0; i < cn; i++)
+			if(clients[i]->flags & RESTORE) {
+				client_restore(clients[i]);
+				clients[i]->flags ^= RESTORE;
+			}
+	} else {
+		for(i = 0; i < cn; i++)
+			if(clients[i]->desktop != ICONS && !(clients[i]->flags & DONT_LIST)) {
+				client_iconify(clients[i]);
+				clients[i]->flags |= RESTORE;
+			} else clients[i]->flags ^= clients[i]->flags & RESTORE;
+		all_iconic = 1;
+	}
+	ewmh_update_showing_desktop();
+}
+
+void client_end_all_iconic(void) {
+	if(all_iconic) {
+		all_iconic = 0;
+		ewmh_update_showing_desktop();
+	}
 }
 

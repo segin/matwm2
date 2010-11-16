@@ -55,9 +55,9 @@ int wlist_handle_event(XEvent ev) {
 			XWarpPointer(dpy, None, current->wlist_item, 0, 0, 0, 0, wlist_width - 2, 3 + title_height);
 			break;
 		case KeyRelease:
-			mask = key_to_mask(ev.xkey.keycode);
+			mask = ev.xkey.state;
 			if(mask) {
-				mask ^= ev.xkey.state & mask;
+				mask ^= ev.xkey.state & key_to_mask(ev.xkey.keycode);
 				for(i = 0; i < keyn; i++)
 					if((keys[i].action == KA_NEXT || keys[i].action == KA_PREV) && cmpmodmask(keys[i].mask, mask))
 						break;

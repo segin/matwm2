@@ -9,7 +9,7 @@ matwm2 \- Window manager for X11
 .B matwm2
 is a simple window manager for X11. It features window frames with titlebar and buttons, configurable key bindings and mouse buttons, support for EWMH and motif hints, focus-follows-mouse and click-to-focus focus models and virtual desktops.
 .PP
-Explanition of the various options in the configuration file(s) below combined with the default configuration, schould give you an idea of how to use matwm2. Further just keep in mind there is no default built-in way of launching applications exept the ctrl-mod1-return key binding, wich spawns an xterm. Window borders have 4 buttons, wich do the same as the following key actions explained below (from left to right): "iconify", "expand", "maximise" and "close".
+Explanition of the various options in the configuration file(s) below combined with the default configuration, schould give you an idea of how to use matwm2. Further just keep in mind there is no default built-in way of launching applications exept the ctrl-mod1-return key binding, wich spawns an xterm. Window borders have 4 buttons, wich do the same as the following key actions explained below (from left to right): "iconify", "expand", "maximise" and "close". To exit matwm send it SIGINT (2) signal (in most terminals this can be done by pressing control-c). At exit matwm will place the windows back on the root window in stacking order, last desktop on the bottom and first desktop on top with exeption of the current desktop of wich its windows (and sticky windows shown on it) will be put on top.
 .SH OPTIONS
 .IP -display display
 Specify the X display to use.
@@ -65,7 +65,7 @@ Focus the next window in the stacking. Pressing a key bound to this or the "prev
 .IP "prev"
 Focus the previous window in the stacking.
 .IP "iconify"
-Iconify the current window (window will dissapear, but can be found in either a taskbar that complies with the EWMH specification or the window list that apears if one of the two functions above is called).
+Iconify the current window (window will dissapear, but can be found in either a taskbar that complies with the EWMH specification or the window list that apears if one of the two functions above is called). Iconified windows will be placed at the very bottom of the stack (so for icons top to bottom order in the window list complies with first to last window iconified).
 .IP "maximise [direction][...]"
 Maximise the current window, or revert a maximised window to its previous state. The optional argument [direction] can be h, v, l, r, d or u (respectively horizontal, vertical, left, right, up and down), or a combination of those to specify the action is to be comitted only in the specified direction(s).
 .IP "expand [direction][...]"
@@ -83,7 +83,7 @@ Toggle stay-below mode for the current window.
 .IP "title"
 Toggle display of title bar for the current window.
 .IP "iconify_all"
-Iconify all window. Iconified windows will be placed at the very bottom of the stack (so for icons top to bottom order in the window list complies with first to last window iconified).
+Iconify all windows. If no window is restored after last call to this function, the next call to it will restore the windows iconified with it. If your taskbar uses EWMH and has a "show desktop" button, that button will do the same as this function.
 .IP "next_desktop"
 Go to the next virtual desktop.
 .IP "prev_desktop"

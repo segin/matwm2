@@ -1,3 +1,6 @@
+// global variables from actions.c
+extern int all_iconic;
+
 // functions from actions.c
 int client_move(client *c, int x, int y);
 int client_resize(client *c, int width, int height);
@@ -12,6 +15,8 @@ void client_iconify(client *c);
 void client_restore(client *c);
 void client_save(client *c);
 void client_to_border(client *c, char *a);
+void client_iconify_all(void);
+void client_end_all_iconic(void);
 
 // global variables from buttons.c
 extern Window button_current;
@@ -104,6 +109,7 @@ void ewmh_update_state(client *c);
 void ewmh_update_stacking(void);
 void ewmh_update_clist(void);
 void ewmh_update_strut(void);
+void ewmh_update_showing_desktop(void);
 
 // functions from info.c
 int client_x(client *c);

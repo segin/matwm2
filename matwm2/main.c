@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
 void quit(void) {
 	int i, d;
 	d = ICONS;
-	while(d != 0) {
+	while(d != -1) {
 		if(d != desktop)
 			for(i = cn - 1; i >= 0; i--)
 				if(stacking[i]->desktop == d) {
@@ -107,7 +107,7 @@ void quit(void) {
 					XMapWindow(dpy, stacking[i]->window);
 				}
 		if(d == ICONS)
-			d = dc;
+			d = dc - 1;
 		else d--;
 	}
 	for(i = cn - 1; i >= 0; i--)

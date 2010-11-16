@@ -152,8 +152,7 @@ void client_grab_buttons(client *c) {
 	client_grab_button(c, Button3);
 	client_grab_button(c, Button4);
 	client_grab_button(c, Button5); 
-	if(click_focus || click_raise)
-		XGrabButton(dpy, AnyButton, AnyModifier, c->window, True, ButtonPressMask, GrabModeSync, GrabModeAsync, None, None);
+	XGrabButton(dpy, AnyButton, AnyModifier, c->window, True, ButtonPressMask, GrabModeSync, GrabModeAsync, None, None);
 }
 
 void client_draw_title(client *c) {

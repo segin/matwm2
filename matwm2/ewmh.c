@@ -4,6 +4,9 @@ Atom ewmh_atoms[EWMH_ATOM_COUNT];
 long ewmh_strut[4];
 
 void ewmh_initialize(void) {
+	Atom rt;
+	int rf;
+	unsigned long nir, bar, *d;
 	long vp[] = {0, 0};
 	ewmh_atoms[NET_SUPPORTED] = XInternAtom(dpy, "_NET_SUPPORTED", False);
 	ewmh_atoms[NET_SUPPORTING_WM_CHECK] = XInternAtom(dpy, "_NET_SUPPORTING_WM_CHECK", False);
@@ -44,6 +47,7 @@ void ewmh_initialize(void) {
 	ewmh_atoms[NET_WM_MOVERESIZE] = XInternAtom(dpy, "_NET_WM_MOVERESIZE", False);
 	ewmh_atoms[NET_FRAME_EXTENTS] = XInternAtom(dpy, "_NET_FRAME_EXTENTS", False);
 	ewmh_atoms[NET_REQUEST_FRAME_EXTENTS] = XInternAtom(dpy, "_NET_REQUEST_FRAME_EXTENTS", False);
+	ewmh_atoms[NET_SHOWING_DESKTOP] = XInternAtom(dpy, "_NET_SHOWING_DESKTOP", False);
 	XChangeProperty(dpy, root, ewmh_atoms[NET_SUPPORTED], XA_ATOM, 32, PropModeReplace, (unsigned char *) &ewmh_atoms, EWMH_ATOM_COUNT);
 	XChangeProperty(dpy, root, ewmh_atoms[NET_SUPPORTING_WM_CHECK], XA_WINDOW, 32, PropModeReplace, (unsigned char *) &wlist, 1);
 	XChangeProperty(dpy, wlist, ewmh_atoms[NET_SUPPORTING_WM_CHECK], XA_WINDOW, 32, PropModeReplace, (unsigned char *) &wlist, 1);
@@ -51,8 +55,19 @@ void ewmh_initialize(void) {
 	XChangeProperty(dpy, root, ewmh_atoms[NET_DESKTOP_VIEWPORT], XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &vp, 2);
 	XChangeProperty(dpy, root, ewmh_atoms[NET_NUMBER_OF_DESKTOPS], XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &dc, 1);
 	XDeleteProperty(dpy, root, ewmh_atoms[NET_DESKTOP_NAMES]);
+	if(XGetWindowProperty(dpy, root, ewmh_atoms[NET_CURRENT_DESKTOP], 0, 1, False, XA_CARDINAL, &rt, &rf, &nir, &bar, (unsigned char **) &d) == Success) {
+		if(nir) {
+			if(*d >= dc)
+				*d = dc - 1;
+			if(*d < 0)
+				*d = 0;
+			desktop_goto(*d);
+		}
+		XFree(d);
+	}
 	ewmh_set_desktop(desktop);
 	ewmh_update_geometry();
+	ewmh_update_showing_desktop();
 }
 
 int ewmh_handle_event(XEvent ev) {
@@ -79,7 +94,7 @@ int ewmh_handle_event(XEvent ev) {
 				return 1;
 			}
 			if(ev.xclient.message_type == ewmh_atoms[NET_ACTIVE_WINDOW]) {
-				if(c && ev.xclient.data.l[0] == 2) { // source indication must be 2, so it won't listen to stupid applications like firefox wanting to steal focus when in focus under mouse mode
+				if(c) {
 					if(c->desktop == ICONS) {
 						client_restore(c);
 						client_focus(c);
@@ -115,13 +130,15 @@ int ewmh_handle_event(XEvent ev) {
 			if(c && ev.xclient.message_type == ewmh_atoms[NET_WM_DESKTOP]) {
 				if(ev.xclient.data.l[0] == 0xffffffff)
 					client_to_desktop(c, STICKY);
-				else if(ev.xclient.data.l[0] >= 0 && ev.xclient.data.l[0] < dc)
-					client_to_desktop(c, ev.xclient.data.l[0]);
+				else if(ev.xclient.data.l[0] >= 0)
+					client_to_desktop(c, (ev.xclient.data.l[0] >= dc) ? ev.xclient.data.l[0] : dc - 1);
 			}
 			if(ev.xclient.message_type == ewmh_atoms[NET_REQUEST_FRAME_EXTENTS]) {
 				long e[] = {border_width, border_width, border_width + title_height, border_width};
 				XChangeProperty(dpy, ev.xclient.window, ewmh_atoms[NET_FRAME_EXTENTS], XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &e, 4);	
 			}
+			if(ev.xclient.message_type == ewmh_atoms[NET_SHOWING_DESKTOP])
+				client_iconify_all();
 			break;
 		case PropertyNotify:
 			if(ev.xproperty.atom == ewmh_atoms[NET_WM_STRUT_PARTIAL] || ev.xproperty.atom == ewmh_atoms[NET_WM_STRUT]) {
@@ -272,5 +289,9 @@ void ewmh_update_strut(void) {
 	workarea[2] = display_width - (ewmh_strut[0] + ewmh_strut[1]);
 	workarea[3] = display_height - (ewmh_strut[2] + ewmh_strut[3]);
 	XChangeProperty(dpy, root, ewmh_atoms[NET_WORKAREA], XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &workarea, 4);
+}
+
+void ewmh_update_showing_desktop(void) {
+	XChangeProperty(dpy, root, ewmh_atoms[NET_SHOWING_DESKTOP], XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &all_iconic, 1);
 }
 
