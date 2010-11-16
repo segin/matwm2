@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
 	wlist = XCreateWindow(dpy, root, 0, 0, 1, 1, 0,
 	                      DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
 	                      CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
-	p_attr.event_mask = SubstructureRedirectMask | SubstructureNotifyMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask | LeaveWindowMask | ExposureMask;
+	p_attr.event_mask = SubstructureRedirectMask |  SubstructureNotifyMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask | LeaveWindowMask | ExposureMask;
 	p_attr.background_pixel = ibg.pixel;
 #ifdef SHAPE
 	have_shape = XShapeQueryExtension(dpy, &shape_event, &di);

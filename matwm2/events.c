@@ -48,7 +48,7 @@ void handle_event(XEvent ev) {
 					client_iconify(c);
 				return;
 			case EnterNotify:
-				if(c != current && !(c->flags & CLICK_FOCUS) && !click_focus && ev.xcrossing.detail != NotifyInferior && (ev.xcrossing.window == c->parent || ev.xcrossing.window == c->wlist_item))
+				if(c != current && !(c->flags & CLICK_FOCUS) && !click_focus && ev.xcrossing.detail != NotifyInferior && (ev.xcrossing.window == c->parent || ev.xcrossing.window == c->wlist_item) && ev.xcrossing.send_event == False)
 					client_focus(c);
 				return;
 			case Expose:
@@ -165,8 +165,11 @@ void handle_event(XEvent ev) {
 		case MapRequest:
 			c = owner(ev.xmaprequest.window);
 			if(c) {
-				if(c->flags & ICONIC && has_child(c->parent, c->window))
+				if(c->flags & ICONIC && has_child(c->parent, c->window)) {
 					client_restore(c);
+					if(focus_new)
+						client_focus(c);
+				}
 			} else if(has_child(root, ev.xmaprequest.window))
 				client_add(ev.xmaprequest.window);
 			return;

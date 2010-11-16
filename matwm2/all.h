@@ -141,7 +141,7 @@ int client_height_total(client *c);
 int client_width_total_intern(client *c);
 int client_height_total_intern(client *c);
 int client_title_width(client *c);
-int client_title_y(client *c);
+int client_title_x(client *c);
 int client_visible(client *c);
 int client_layer(client *c);
 int client_number(client **array, client *c);

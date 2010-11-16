@@ -9,7 +9,7 @@ LDFLAGS   += -lXext # if shape support is disabled, this normally is no longer n
 #CFLAGS    += -DDEBUG -ggdb3 # -DDEBUG_EVENTS -DSYNC # for debugging
 CFLAGS    += -I$(XROOT)/include
 LDFLAGS   += -lX11 -L$(XROOT)/lib
-CFLAGS    += -DVERSION=\"0.0.89\"
+CFLAGS    += -DVERSION=\"0.0.90\"
 
 SRCFILES  := actions.c buttons.c client.c config.c drag.c events.c evn.c ewmh.c info.c input.c main.c misc.c vdesk.c wlist.c x11.c
 OBJFILES  := $(SRCFILES:.c=.o)
@@ -31,5 +31,5 @@ install: matwm2
 	install matwm2.1 $(MANPREFIX)/man/man1
 
 deinstall:
-	rm -f $(PREFIX)/bin/matwm2 $(MANPREFIX)/man/man1/matwm2.1* $(MANPREFIX)/man/cat1/matwm2.1*
+	$(RM) $(PREFIX)/bin/matwm2 $(MANPREFIX)/man/man1/matwm2.1* $(MANPREFIX)/man/cat1/matwm2.1*
 

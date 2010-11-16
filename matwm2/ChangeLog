@@ -1,3 +1,11 @@
+0.0.90:
+	deinstall target of Makefile now uses $(RM) too
+	iconic windows that are restored by a maprequest event also become focussed if focus_new is enabled
+	fixed focus_new refocussing the window under the mouse after a delay sometimes (happened with xterm if the mouse was over the title bar)
+	improved makeheader a bit, so it no longer fails due to the recent changes (added comments) in misc.c
+	client_title_y renamed to client_title_x
+	comments explaining the purpose of functions in evn.c and info.c
+
 0.0.89:
 	prevent collecting zombie children when spawning proceses
 	respect motif hints flags better

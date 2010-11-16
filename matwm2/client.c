@@ -189,7 +189,7 @@ void client_update_name(client *c) {
 	c->title_pixmap = XCreatePixmap(dpy, c->title, c->title_width, text_height, DefaultDepth(dpy, screen));
 	client_draw_title(c);
 	XSetWindowBackgroundPixmap(dpy, c->title, c->title_pixmap);
-	XMoveResizeWindow(dpy, c->title, client_title_y(c), border_width - 1, client_title_width(c), text_height);
+	XMoveResizeWindow(dpy, c->title, client_title_x(c), border_width - 1, client_title_width(c), text_height);
 }
 
 void client_set_bg(client *c, XColor color, XColor border) {
@@ -236,7 +236,7 @@ void client_update_pos(client *c) {
 void client_update_size(client *c) {
 	int width = client_width(c);
 	buttons_update(c);
-	XMoveResizeWindow(dpy, c->title, client_title_y(c), border_width - 1, client_title_width(c), text_height);
+	XMoveResizeWindow(dpy, c->title, client_title_x(c), border_width - 1, client_title_width(c), text_height);
 	XResizeWindow(dpy, c->parent, client_width_total_intern(c), client_height_total_intern(c));
 	XResizeWindow(dpy, c->window, width, client_height(c));
 	buttons_draw(c);
@@ -245,7 +245,7 @@ void client_update_size(client *c) {
 void client_update(client *c) {
 	int width = client_width(c);
 	buttons_update(c);
-	XMoveResizeWindow(dpy, c->title, client_title_y(c), border_width - 1, client_title_width(c), text_height);
+	XMoveResizeWindow(dpy, c->title, client_title_x(c), border_width - 1, client_title_width(c), text_height);
 	XMoveResizeWindow(dpy, c->parent, client_x(c), client_y(c), client_width_total_intern(c), client_height_total_intern(c));
 	XMoveResizeWindow(dpy, c->window, client_border_intern(c), client_border_intern(c) + client_title(c), width, client_height(c));
 	buttons_draw(c);
