@@ -115,3 +115,12 @@
 0.0.62:
 	update window list when clients iconified/restored/restacked
 
+0.0.63:
+	obey global configuration file /etc/matwmrc
+	separate bits for horizontal and vertical maximalisation
+	replaced client_maximise() and client_fullscreen() by client_toggle_state()
+	ewmh maximise message can now do separate horizontal and vertical maximalisation
+	added default key bindings for hoizontal and vertical maximise (using new h/v argument to maximise key action)
+	intendation now done with tabs instead of spaces
+	all horizontal/vertical stuff now also works for expand, and for both now l, r, t and b argument can be used to apply these actions in one of these directions
+

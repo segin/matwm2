@@ -5,9 +5,8 @@ void client_focus(client *c);
 void client_raise(client *c);
 void client_lower(client *c);
 void client_set_layer(client *c, int layer);
-void client_maximise(client *c);
-void client_fullscreen(client *c);
-void client_expand(client *c);
+void client_toggle_state(client *c, int state);
+void client_expand(client *c, int d);
 void client_toggle_title(client *c);
 void client_iconify(client *c);
 void client_restore(client *c);
@@ -124,7 +123,7 @@ client *owner(Window w);
 extern unsigned int mousemodmask, *mod_ignore;
 extern XModifierKeymap *modmap;
 extern keybind *keys;
-extern int keyn, nmod_ignore ;
+extern int keyn, nmod_ignore;
 
 // functions from input.c
 void key_bind(char *str);
