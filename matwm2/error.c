@@ -1,5 +1,4 @@
 #include "matwm.h"
-#include <stdio.h>
 
 int xerrorhandler(Display *display, XErrorEvent *xerror) {
 #ifdef DEBUG

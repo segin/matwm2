@@ -1,6 +1,5 @@
 #include "matwm.h"
 #include "defaults.h"
-#include <stdio.h>
 #include <X11/keysymdef.h>
 
 XColor bg, ibg;

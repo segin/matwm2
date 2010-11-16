@@ -1,6 +1,5 @@
 #include "matwm.h"
 #include <signal.h>
-#include <stdio.h>
 
 Display *dpy;
 int screen;

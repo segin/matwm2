@@ -8,7 +8,11 @@ void handle_event(XEvent ev) {
       break;
   switch(ev.type) {
     case MapRequest:
-      add_client(ev.xmaprequest.window);
+      for(i = 0; i < cn; i++)
+        if(clients[i].window == ev.xmaprequest.window)
+          break;
+      if(i == cn)
+        add_client(ev.xmaprequest.window, 1);
       break;
     case UnmapNotify:
       if(c < cn)
@@ -54,7 +58,7 @@ void handle_event(XEvent ev) {
     case KeyPress:
       if(ev.xkey.keycode == XKeysymToKeycode(dpy, XK_Tab))
         next();
-        break;
+      break;
   }
 }
 

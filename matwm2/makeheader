@@ -4,8 +4,11 @@ print H <<ENDTOP;
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #define MINSIZE 15
+
+#define DEBUG
 
 // client structure
 typedef struct client {

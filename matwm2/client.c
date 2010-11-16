@@ -1,11 +1,10 @@
 #include "matwm.h"
 #include <string.h>
-#include <stdio.h>
 
 client *clients;
 int cn = 0, current = 0;
 
-void add_client(Window w) {
+void add_client(Window w, int g) {
   XWindowAttributes attr;
   XSetWindowAttributes p_attr;
   XGetWindowAttributes(dpy, w, &attr);
@@ -23,7 +22,7 @@ void add_client(Window w) {
   p_attr.override_redirect = True;
   p_attr.background_pixel = ibg.pixel;
   p_attr.event_mask = SubstructureRedirectMask | SubstructureNotifyMask | ButtonPressMask | EnterWindowMask | ExposureMask;
-  clients[cn].parent = XCreateWindow(dpy, root, gx(cn), gy(cn), clients[cn].width + (border_width * 2), clients[cn].height + (border_width * 2) + title_height, 0,
+  clients[cn].parent = XCreateWindow(dpy, root, clients[cn].x - (g ? gxo(cn, 1) : 0), clients[cn].y - (g ? gyo(cn, 1) : 0), clients[cn].width + (border_width * 2), clients[cn].height + (border_width * 2) + title_height, 0,
                                      DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
                                      CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
   XAddToSaveSet(dpy, w);
@@ -53,6 +52,7 @@ void remove_client(int n) {
 void client_draw(int n) {
   if(clients[n].name)
     XDrawString(dpy, clients[n].parent, (n == current) ? gc : igc, border_width + font->max_bounds.lbearing, border_width + font->max_bounds.ascent, clients[n].name, strlen(clients[n].name));
+  XDrawRectangle(dpy, clients[n].parent, (n == current) ? gc : igc, 0, 0, clients[n].width + (border_width * 2), clients[n].height + (border_width * 2) + title_height);
 }
 
 void add_initial_clients(void) {
@@ -63,7 +63,7 @@ void add_initial_clients(void) {
   for(i = 0; i < nwins; i++) {
     XGetWindowAttributes(dpy, wins[i], &attr);
     if(!attr.override_redirect && attr.map_state == IsViewable)
-      add_client(wins[i]);
+      add_client(wins[i], 0);
   }
   XFree(wins);
 }
@@ -89,46 +89,38 @@ int has_protocol(Window w, Atom protocol) {
   return ret;
 }
 
-int gx(int c) {
-  int x = clients[c].x;
-  if(!(clients[c].normal_hints.flags & PWinGravity))
-    return x;
-  switch(clients[c].normal_hints.win_gravity) {
-    case StaticGravity:
-      x -= border_width;
-      break;
-    case NorthGravity:
-    case SouthGravity:
-    case CenterGravity:
-      x -= border_width + (clients[c].width / 2);
-      break;
-    case NorthEastGravity:
-    case EastGravity:
-    case SouthEastGravity:
-      x -= (border_width * 2) + clients[c].width;
-  }
-  return x;
+int gxo(int c, int i) {
+  if(clients[c].normal_hints.flags & PWinGravity)
+    switch(clients[c].normal_hints.win_gravity) {
+      case StaticGravity:
+        return border_width;
+      case NorthGravity:
+      case SouthGravity:
+      case CenterGravity:
+        return border_width + (i ? 0 : (clients[c].width / 2));
+      case NorthEastGravity:
+      case EastGravity:
+      case SouthEastGravity:
+        return (border_width * 2) + (i ? 0 : clients[c].width);
+    }
+  return 0;
 }
 
-int gy(int c) {
-  int y = clients[c].y;
-  if(!(clients[c].normal_hints.flags & PWinGravity))
-    return y;
-  switch(clients[c].normal_hints.win_gravity) {
-    case StaticGravity:
-      y -= border_width + title_height;
-      break;
-    case EastGravity:
-    case WestGravity:
-    case CenterGravity:
-      y -= border_width + ((title_height + clients[c].height) / 2);
-      break;
-    case SouthEastGravity:
-    case SouthGravity:
-    case SouthWestGravity:
-      y -= (border_width * 2) + title_height + clients[c].height;
-  }
-  return y;
+int gyo(int c, int i) {
+  if(clients[c].normal_hints.flags & PWinGravity)
+    switch(clients[c].normal_hints.win_gravity) {
+      case StaticGravity:
+        return border_width + title_height;
+      case EastGravity:
+      case WestGravity:
+      case CenterGravity:
+        return border_width + ((title_height + (i ? 0 : clients[c].height)) / 2);
+      case SouthEastGravity:
+      case SouthGravity:
+      case SouthWestGravity:
+        return (border_width * 2) + title_height + (i ? 0 : clients[c].height);
+    }
+  return 0;
 }
 
 void getnormalhints(int n) {
@@ -160,12 +152,9 @@ void set_wm_state(Window w, long state) {
 }
 
 void configure(int c, XConfigureRequestEvent *e) {
-#ifdef DEBUG
-  printf("configurerequest for %s: %i, %i, %i, %i\n", (c < cn) ? clients[c].name : "unmanaged window", e->x, e->y, e->width, e->height);
-#endif
   if(c < cn) {
-    move(c, (e->value_mask & CWX) ? e->x : clients[c].x, (e->value_mask & CWY) ? e->y : clients[c].y, 1);
     resize(c, (e->value_mask & CWWidth) ? e->width : clients[c].width, (e->value_mask & CWHeight) ? e->height : clients[c].height);
+    move(c, (e->value_mask & CWX) ? e->x - gxo(c, 0) : clients[c].x, (e->value_mask & CWY) ? e->y - gyo(c, 0) : clients[c].y);
   } else {
     XWindowChanges wc;
     wc.sibling = e->above;
@@ -191,8 +180,8 @@ void delete_window(int n) {
   } else XKillClient(dpy, clients[n].window);
 }
 
-void move(int n, int x, int y, int g) {
-  XMoveWindow(dpy, clients[n].parent, g ? gx(n) : x, g ? gy(n) : y);
+void move(int n, int x, int y) {
+  XMoveWindow(dpy, clients[n].parent, x, y);
   configurenotify(n);
   clients[n].x = x;
   clients[n].y = y;
@@ -229,7 +218,6 @@ void resize(int n, int width, int height) {
   XResizeWindow(dpy, clients[n].window, width, height);
   clients[n].width = width;
   clients[n].height = height;
-  configurenotify(n);
 }
 
 void focus(int n) {

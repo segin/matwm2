@@ -28,11 +28,11 @@ void drag(int n, XButtonEvent *be) {
   }
   XGrabPointer(dpy, root, True, ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, None, 0, CurrentTime);
   while(1) {
-    XMaskEvent(dpy, SubstructureNotifyMask | SubstructureRedirectMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | ExposureMask | EnterWindowMask, &ev);
+    XMaskEvent(dpy, PropertyChangeMask | SubstructureNotifyMask | SubstructureRedirectMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | ExposureMask | EnterWindowMask, &ev);
     if(ev.type == MotionNotify) {
       if(be->button == resize_button) {
         resize(n, ev.xmotion.x - xo,  ev.xmotion.y - yo);
-      } else move(n, ev.xmotion.x - be->x, ev.xmotion.y - be->y, 0);
+      } else move(n, ev.xmotion.x - be->x, ev.xmotion.y - be->y);
     } else if(ev.type == ButtonRelease && ev.xbutton.button == be->button) {
       break;
     } else if(ev.type == EnterNotify || ev.type == ButtonPress) {
