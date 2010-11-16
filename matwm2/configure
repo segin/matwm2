@@ -1,0 +1,183 @@
+#!/bin/sh
+
+# defaults
+default_prefix="/usr/local"
+default_manprefix="/usr/local"
+default_cc="cc"
+default_rm="rm -f"
+shape="yes"
+xft="yes"
+vfork="yes"
+
+# make sure a few variables are not set
+unset prefix
+unset manprefix
+unset cc
+unset rm
+
+# process command line arguments
+echo "processing command line arguments..."
+for opt in $*; do
+	case $opt in
+	--prefix=*)      prefix=`echo $opt | cut -d '=' -f 2`
+	                 echo "	prefix explicitly set to $prefix";;
+	--manprefix=*)   manprefix=`echo $opt | cut -d '=' -f 2`
+	                 echo "	man prefix explicitly set to $manprefix";;
+	--cc=*)          cc=`echo $opt | cut -d '=' -f 2`
+	                 echo "	compiler explicitly set to $cc";;
+	--rm=*)          rm=`echo $opt | cut -d '=' -f 2`
+	                 echo "	rm command explicitly set to $rm";;
+	--disable-shape) shape="no"
+	                 echo "	shaped windows support explicitly disabled";;
+	--disable-xft)   xft="no"
+	                 echo "	Xft support explicitly disabled";;
+	--disable-vfork) vfork="no"
+	                 echo "	use of vfork system call explicitly disabled";;
+	*)               echo "Usage: $0 [options]"
+	                 echo
+	                 echo "Options: (defaults between brackets)"
+	                 echo "	--prefix=[/usr/local]    Set the prefix in wich to install binaries"
+	                 echo "	--manprefix=[/usr/local] Set the prefix in wich to install manual pages"
+	                 echo "	--cc=[cc]                Set the compiler"
+	                 echo "	--rm=[rm -f]             Set the command to delete files"
+	                 echo "	--disable-shape          Disable support for shaped windows"
+	                 echo "	--disable-xft            Disable support for Xft"
+									 echo "	--disable-vfork          Disable use of the vfork() system call"
+	                 echo "	-h, --help               Print this message and exit"
+	                 echo
+	                 echo "Influential environment variables:"
+	                 echo "	PREFIX    Prefix for installing binaries"
+	                 echo "	MANPREFIX Prefix for installing man pages"
+	                 echo "	CC        Compiler"
+	                 echo "	RM        Command for deleting files"
+	                 echo
+	                 echo "Send comments, suggestions and bugs to Mattis Michel <sic_zer0@hotmail.com>"
+									 return 0
+	esac
+done
+
+# look for interesting environment variables
+echo "looking for environment variables..."
+if [ -z "$prefix" ]; then
+	if [ -n "$PREFIX" ]; then
+		prefix="$PREFIX"
+		echo "	default prefix overridden by environment variable \$PREFIX ($prefix)"
+	fi
+fi
+
+if [ -z "$manprefix" ]; then
+	if [ -n "$MANPREFIX" ]; then
+		manprefix="$MANPREFIX"
+		echo "	default man prefix overridden by environment variable \$MANPREFIX ($manprefix)"
+	fi
+fi
+
+if [ -z "$cc" ]; then
+	if [ -n "$CC" ]; then
+		cc="$CC"
+		echo "	default compiler overridden by environment variable \$CC ($cc)"
+	fi
+fi
+
+if [ -z "$rm" ]; then
+	if [ -n "$RM" ]; then
+		rm="$RM"
+		echo "	default rm command overridden by environment variable \$RM ($rm)"
+	fi
+fi
+
+# use the defaults for variables not set yet
+if [ -z "$prefix" ];    then prefix="$default_prefix"; fi
+if [ -z "$manprefix" ]; then manprefix="$default_manprefix"; fi
+if [ -z "$cc" ];        then cc="$default_cc"; fi
+if [ -z "$rm" ];        then rm="$default_rm"; fi
+
+# check if we have pkg-config
+echo -n "checking for pkg-config... "
+if which pkg-config 2>&1 > /dev/null; then
+	echo "ok"
+else
+	echo "not found"
+	echo "error: this script needs pkg-config"
+	return 1;
+fi
+
+# check what libraries exist
+echo -n "checking for Xlib... "
+if pkg-config --exists x11 2> /dev/null; then
+	echo "ok"
+else
+	echo "not found"
+	echo "error: we need Xlib" 1>&2
+	return 1
+fi
+
+if [ "$shape" = "yes" ]; then
+	echo -n "checking for Xext... "
+	if pkg-config --exists xext 2> /dev/null; then
+		echo "ok"
+	else
+		echo "not found, disabling shaped windows support"
+		shape="no"
+	fi
+fi
+
+if [ "$xft" = "yes" ]; then
+	echo -n "checking for Xft... "
+	if pkg-config --exists xft 2> /dev/null; then
+		echo "ok"
+	else
+		echo "not found, disabling Xft support"
+		xft="no"
+	fi
+fi
+
+# gather data from pkg-config etc
+echo -n "gathering information... "
+libraries="x11"
+unset defines
+
+if [ "$shape" = "yes" ]; then
+	libraries="$libraries xext"
+	defines="$defines -DUSE_SHAPE"
+fi
+
+if [ "$xft" = "yes" ]; then
+	libraries="$libraries xft"
+	defines="$defines -DUSE_XFT"
+fi
+
+if [ "$vfork" = "yes" ]; then
+	defines="$defines -DHAVE_VFORK"
+fi
+
+defines=`echo $defines` # this serves to strip whitespace
+
+cflags=`pkg-config --cflags $libraries`
+ldflags=`pkg-config --libs-only-L $libraries`
+libs=`pkg-config --libs-only-l $libraries`
+echo "done"
+
+# let the sedding begin
+echo -n "generating Makefile from Makefine.in... "
+sed -e "s#%PREFIX%#${prefix}#g"\
+    -e "s#%MANPREFIX%#${manprefix}#g"\
+    -e "s#%CC%#${cc}#g"\
+    -e "s#%RM%#${rm}#g"\
+    -e "s#%DEFINES%#${defines}#g"\
+    -e "s#%CFLAGS%#${cflags}#g"\
+    -e "s#%LDFLAGS%#${ldflags}#g"\
+    -e "s#%LIBS%#${libs}#g"\
+		Makefile.in > Makefile
+echo "done"
+
+# print summary of configuration done
+echo "summary:"
+echo "	prefix:                 $prefix"
+echo "	man prefix:             $manprefix"
+echo "	compiler:               $cc"
+echo "	rm command:             $rm"
+echo "	shaped windows support: $shape"
+echo "	Xft support:            $xft"
+echo "	vfork system call:      $vfork"
+

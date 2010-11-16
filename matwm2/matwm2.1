@@ -73,7 +73,9 @@ Snap windows together or to screen edges when they are [integer] pixels away fro
 .IP "desktops [integer]"
 Sets the amount of virtual desktops.
 .IP "exec [command]"
-Invokes "sh -c [command]".
+Invoke "sh -c [command]" when matwm2 starts. Doesn't override previous occurences of this command.
+.IP "exec_onload [command]"
+Invoke "sh -c [command]" whenever the configuration file it is in is read. This also can't be overriden.
 .IP "ignore_modifier [modifier key] [...]
 Ignore the state of specified modifier key(s). Set to "none" to disable.
 .IP "mouse_modifier [modifier key] [...]"
@@ -107,9 +109,7 @@ Binds the specified modifier and key combination to [key action]. Key names are 
 .PP
 Following is a list of possible key actions and their explanation.
 .IP "exec [command]"
-Invoke "sh -c [command]" when matwm2 starts. Doesn't override previous occurences of this command.
-.IP "exec_onload [command]"
-Invoke "sh -c [command]" whenever the configuration file it is in is read. This also can't be overriden.
+Invokes "sh -c [command]".
 .IP "next"
 Focus the next window in the stacking. Pressing a key bound to this or the "prev" action will show you a list with all currently visible and iconic windows, wich will dissapear when all modifiers of either key action are released. Afterwards the window selected will be raised. If it is off screen it will be brought back on screen, also the mouse will be warped to the bottom right corner of the window. Between the last normal window and the first iconic window there will be slightly more spacing, to clarify what windows are iconic. Items in this list can also be focussed with the mouse in the same way as windows.
 .IP "prev"

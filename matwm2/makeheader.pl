@@ -37,7 +37,7 @@ foreach(readdir DIR) {
 	my @gv;
 	foreach(@file) {
 		&chkifdef($_, \@gv);
-		if(s/^([\n\w]+\s+[\s\*\n\w\s\_\-\(\)\[\],=]+;).*$/$1/gi) {
+		if(s/^([\n\w]+\s+[\s\*\n\w\W\_\-\(\)\[\],=]+;).*$/$1/gi) {
 			s/\s*=.+?([,;])/$1/g;
 			push(@gv, "extern $_");
 		}

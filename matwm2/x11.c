@@ -1,16 +1,16 @@
 #include "matwm.h"
 
-int error_status = 0;
+int xerrorstatus = 0;
 
 int xerrorhandler(Display *display, XErrorEvent *xerror) { /* we set this as the X error handler in main() */
 	#ifdef DEBUG
 	client *c;
 	#endif
 	if(xerror->error_code == BadAccess && xerror->resourceid == root) {
-		if(!error_status) { /* if we are still doing X stuff before handling the data in qsfd the error might occur again */
-			fprintf(stderr,"error: root window at display %s is not available\n", XDisplayName(dn));
+		if(!xerrorstatus) { /* if we are still doing X stuff before handling the data in qsfd the error might occur again */
+			fprintf(stderr, NAME ": error: root window at display %s is not available\n", XDisplayName(dn));
 			qsfd_send(ERROR);
-			error_status++;
+			xerrorstatus++;
 		}
 	}
 	#ifdef DEBUG
@@ -18,8 +18,8 @@ int xerrorhandler(Display *display, XErrorEvent *xerror) { /* we set this as the
 		char ret[666];
 		XGetErrorText(xerror->display, xerror->error_code, ret, sizeof(ret));
 		c = owner(xerror->resourceid);
-		if(c) printf("%i (%s): x error: %s\n", (int) xerror->resourceid, c->name, ret);
-		else printf("%i: x error: %s\n", (int) xerror->resourceid, ret);
+		if(c) printf(NAME ": %i (%s): x error: %s\n", (int) xerror->resourceid, c->name, ret);
+		else printf(NAME ": %i: x error: %s\n", (int) xerror->resourceid, ret);
 	}
 	#endif
 	return 0;

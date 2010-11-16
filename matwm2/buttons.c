@@ -11,9 +11,7 @@ void buttons_create(client *c) {
 	c->button_parent_right = XCreateWindow(dpy, c->parent, 0, 0, 1, 1, 0,
 	                                       depth, CopyFromParent, visual,
 	                                       CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
-	c->buttons = (void *) malloc(sizeof(button) * (nbuttons_left + nbuttons_right));
-	if(!c->buttons)
-		error();
+	c->buttons = (void *) _malloc(sizeof(button) * (nbuttons_left + nbuttons_right));
 	c->nbuttons = 0;
 	c->buttons_left_width = 0;
 	c->buttons_right_width = 0;

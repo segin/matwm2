@@ -114,6 +114,7 @@ void client_add(Window w, bool mapped) {
 	}
 	if(!(new->flags & ICONIC)) /* client_visible isn't apropriate here (what if the window would be moved to another desktop later) */
 		client_over_fullscreen(new);
+	configurenotify(new); /* gvim compiled with with gtk and perhaps some other applications need this - yes, twice */
 	ewmh_update_desktop(new);
 	ewmh_update_allowed_actions(new);
 	ewmh_update_state(new);
@@ -174,7 +175,8 @@ void client_remove(client *c) {
 		client_focus_first();
 	}
 	free(c);
-	clients_alloc();
+	if(!clients_alloc())
+		return;
 	if(evh == wlist_handle_event)
 		wlist_update();
 	ewmh_update_clist();
@@ -346,22 +348,19 @@ void client_clear_state(client *c) { /* to revert a client to normal state (as o
 	}
 }
 
-void clients_alloc(void) { /* to make sure enough memory is allocated for cn clients */
+int clients_alloc(void) { /* to make sure enough memory is allocated for cn clients */
 	client **newptr;
 	if(!cn) {
 		free(clients);
 		free(stacking);
 		clients = NULL;
 		stacking = NULL;
-		return;
+		return 1;
 	}
-	newptr = (client **) realloc((void *) clients, cn * sizeof(client *));
-	if(!newptr)
-		error();
+	newptr = (client **) _realloc((void *) clients, cn * sizeof(client *));
 	clients = newptr;
-	newptr = (client **) realloc((void *) stacking, cn * sizeof(client *));
-	if(!newptr)
-		error();
+	newptr = (client **) _realloc((void *) stacking, cn * sizeof(client *));
 	stacking = newptr;
+	return 1;
 }
 

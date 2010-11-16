@@ -1,6 +1,6 @@
 #include "defcfg.h"
 
-char *def_cfg[DEF_CFG_LINES] = { /* we split up the default configuration into a lot of separate strings (one for each line) because ISO C90 forbids strings longer then 509 chars */
+char *def_cfg[DEF_CFG_LINES] = {
 	"background            darkred",
 	"inactive_background   dimgray",
 	"foreground            lightgray",

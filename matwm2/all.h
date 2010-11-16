@@ -4,7 +4,7 @@ extern int screen, depth, display_width, display_height, have_shape, shape_event
 extern Window root;
 extern Atom xa_wm_protocols, xa_wm_delete, xa_wm_state, xa_wm_change_state, xa_motif_wm_hints;
 extern XSetWindowAttributes p_attr;
-extern char *dn;
+extern char *dn, *perror_str;
 extern Colormap colormap;
 extern Visual *visual;
 
@@ -12,7 +12,6 @@ extern Visual *visual;
 int main(int argc, char *argv[]);
 void quit(void);
 void qsfd_send(char s);
-void error(void);
 void sighandler(int sig);
 
 /* global variables from wlist.c */
@@ -41,7 +40,7 @@ void handle_event(XEvent ev);
 /* global variables from config.c */
 extern XColor bg, ibg, fg, ifg, bfg, ibfg;
 extern GC gc, igc, bgc, ibgc;
-extern int border_spacing, border_width, button_spacing, wlist_margin, wlist_maxwidth, wlist_item_height, text_height, title_height, title_spacing, center_title, center_wlist_items, button_size, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first, *buttons_right, nbuttons_right, *buttons_left, nbuttons_left, doubleclick_time, double1, double2, double3, double4, double5, fullscreen_stacking, map_center;
+extern int border_spacing, border_width, button_spacing, wlist_margin, wlist_maxwidth, wlist_item_height, text_height, title_height, button_size, title_spacing, center_title, center_wlist_items, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first, *buttons_right, nbuttons_right, *buttons_left, nbuttons_left, doubleclick_time, double1, double2, double3, double4, double5, fullscreen_stacking, map_center;
 #ifdef USE_XFT
 extern XftFont *xftfont;
 extern XftColor xftfg, xftbg, xftifg, xftibg;
@@ -92,10 +91,10 @@ void client_update_layer(client *c, int prev);
 void client_warp(client *c);
 void client_focus_first(void);
 void client_clear_state(client *c);
-void clients_alloc(void);
+int clients_alloc(void);
 
 /* global variables from x11.c */
-extern int error_status;
+extern int xerrorstatus;
 
 /* functions from x11.c */
 int xerrorhandler(Display *display, XErrorEvent *xerror);
@@ -141,6 +140,8 @@ int read_file(char *path, char **buf);
 char *eat(char **str, char *until);
 void unescape(char *str);
 void *_malloc(size_t size);
+void *_realloc(void *ptr, size_t size);
+void error(void);
 
 /* global variables from buttons.c */
 extern button *button_current;

@@ -2,7 +2,7 @@
 
 XColor bg, ibg, fg, ifg, bfg, ibfg;
 GC gc, igc, bgc, ibgc;
-int border_spacing, border_width, button_spacing, wlist_margin, wlist_maxwidth, wlist_item_height, text_height, title_height, title_spacing, center_title, center_wlist_items, button_size, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first = 1, *buttons_right = NULL, nbuttons_right, *buttons_left = NULL, nbuttons_left, doubleclick_time, double1, double2, double3, double4, double5, fullscreen_stacking, map_center;
+int border_spacing, border_width, button_spacing, wlist_margin, wlist_maxwidth, wlist_item_height, text_height, title_height, button_size, title_spacing, center_title, center_wlist_items, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first = 1, *buttons_right = NULL, nbuttons_right = 0, *buttons_left = NULL, nbuttons_left = 0, doubleclick_time, double1, double2, double3, double4, double5, fullscreen_stacking, map_center;
 #ifdef USE_XFT
 XftFont *xftfont = NULL;
 XftColor xftfg, xftbg, xftifg, xftibg;
@@ -14,6 +14,7 @@ void cfg_read(int initial) {
 	char *home = getenv("HOME");
 	char *cfg, *cfgfn;
 	XGCValues gv;
+	int i, j;
 	/* read compiled-in default config */
 	cfg_parse_defaults(initial);
 	/* read global configuration file */
@@ -23,9 +24,12 @@ void cfg_read(int initial) {
 	}
 	/* read per-user configuration file */
 	if(home) {
-		cfgfn = (char *) malloc(strlen(home) + strlen(CFGFN) + 2);
-		sprintf(cfgfn, "%s/%s", home, CFGFN);
-		if(read_file(cfgfn, &cfg) > 0) {
+		i = strlen(home);
+		j = strlen(CFGFN);
+		cfgfn = (char *) _malloc(i + j + 2);
+		strncpy(cfgfn, home, i + 1);
+		strncat(cfgfn, "/" CFGFN, j + 1);
+		if((i = read_file(cfgfn, &cfg)) > 0) {
 			cfg_parse(cfg, initial);
 			free((void *) cfg);
 		}
@@ -37,8 +41,8 @@ void cfg_read(int initial) {
 	#else
 	if(!font) {
 	#endif
-		fprintf(stderr, "error: font not found\n");
-		qsfd_send(ERROR);
+		fprintf(stderr, NAME ": error: font not found\n");
+		exit(1);
 	}
 	/* set variables that depend on font dimensions */
 	#ifdef USE_XFT
@@ -111,7 +115,6 @@ void cfg_parse(char *cfg, int initial) {
 		}
 		cfg_set_opt(key, opt, initial);
 	}
-	first = 0;
 }
 
 void cfg_set_opt(char *key, char *value, int initial) {
@@ -259,12 +262,11 @@ void cfg_set_opt(char *key, char *value, int initial) {
 			mod_ignore = NULL;
 		}
 		while(value) {
-			mod_ignore = (unsigned int *) realloc((void *) mod_ignore, (nmod_ignore + nmod_ignore + 2) * sizeof(unsigned int));
-			if(!mod_ignore)
-				error();
+			mod_ignore = (unsigned int *) _realloc((void *) mod_ignore, (nmod_ignore + nmod_ignore + 1) * sizeof(unsigned int));
+			skiprealloc:
 			mod_ignore[nmod_ignore] = str_modifier(eat(&value, " \t"));
 			if(mod_ignore[nmod_ignore] == None)
-				continue;
+				goto skiprealloc;
 			for(i = 0; i < nmod_ignore; i++)
 				mod_ignore[nmod_ignore + 1 + i] = mod_ignore[i] | mod_ignore[nmod_ignore];
 			nmod_ignore += nmod_ignore + 1;
@@ -473,9 +475,7 @@ int str_wbutton(char *button) {
 void str_buttons(char *str, int **buttons, int *nbuttons) {
 	*nbuttons = 0;
 	while(str) {
-		*buttons = (int *) realloc((void *) *buttons, sizeof(int) * (*nbuttons + 1));
-		if(!buttons)
-			error();
+		*buttons = (int *) _realloc((void *) *buttons, sizeof(int) * (*nbuttons + 1));
 		(*buttons)[*nbuttons] = str_wbutton(eat(&str, " \t"));
 		if((*buttons)[*nbuttons] != B_NONE)
 			(*nbuttons)++;

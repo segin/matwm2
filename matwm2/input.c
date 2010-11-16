@@ -6,9 +6,7 @@ keybind *keys = NULL;
 int keyn = 0, nmod_ignore = 0;
 
 void keys_alloc(int n) {
-	keys = (keybind *) realloc((void *) keys, n * sizeof(keybind));
-	if(!keys)
-		error();
+	keys = (keybind *) _realloc((void *) keys, n * sizeof(keybind));
 }
 
 void key_bind(char *str) {

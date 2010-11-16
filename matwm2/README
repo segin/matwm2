@@ -1,10 +1,51 @@
-matwm2 is a simple window manager for X11. It features window frames with titlebar and buttons, configurable key bindings and mouse buttons, support for EWMH and motif hints, focus-follows-mouse and click-to-focus focus models and virtual desktops.
-It is written and maintained by Mattis Michel <sic_zer0@hotmail.com>, and distributed under the MIT licence (see: LICENCE file).
+                                  _                      ____
+                  _ __ ___   __ _| |___      ___ __ ___ |___ \
+                 | '_ ` _ \ / _` | __\ \ /\ / / '_ ` _ \  __) |
+                 | | | | | | (_| | |_ \ V  V /| | | | | |/ __/
+                 |_| |_| |_|\__,_|\__| \_/\_/ |_| |_| |_|_____|
+                            A window manager for X11
+                     By Mattis Michel <sic_zer0@hotmail.com>
+                             http://matwm.fbsd.in/
 
-To compile and install, review the paragraph the Makefile to specify the right folders to look for headers and libraries in and install to.
-Also you may want to change some options for compiling (like wheter to include debugging symbols, or to compile without using xext), look in the second paragraph in the Makefile for changeing those.
-After that run "make" and "make install" - if all goes well it schould then be compiled and installed.
-Default built-in configuration is in default_matwmrc. Note that initialisation of most variables done in it is absolutely necessary for matwm2 to work propperly. After editing you schould run "make defcfg" to generate the code that will actually be compiled in.
+INTRODUCTION
+  matwm2 is a simple window manager for X11.
+  It features window frames with titlebar and buttons, configurable key
+  bindings and mouse buttons, support for EWMH and motif hints,
+  focus-follows-mouse and click-to-focus focus models and virtual desktops.
 
-Before usage and for further information, please consult the manual page (run "man matwm2" on a terminal, after it has been installed).
+  matwm2 only depends on Xlib and libc, and schould compile on almost any
+  system that can run X11.
+  It has been reported to work on FreeBSD, Linux, OpenBSD, DragonflyBSD,
+  NetBSD, Interix and OpenSolaris (For FreeBSD and Linux it has been tested on
+  both x86 and x86_64 architecture and it has also been reported to work on ppc
+  Linux, all other operating systems were tested on x86. For x86_64 FreeBSD
+  both the clang and gcc compiler have been tested, for x86 Linux both gcc and
+  tcc have been tested, and for other platforms only gcc was tested yet).
+  If you have succesfully compiled and ran matwm2 on another operating system
+  (or with another compiler) or have problems getting matwm2 to work on your
+  system let me know.
+	
+  The latest version can be found on http://matwm.fbsd.in/.
+  Recent versions of matwm2 are distributed under the MIT licence, wich can be
+  found in the LICENCE file that schould be included with your copy of matwm2.
+
+INSTALLATION
+  Considering that you found this file, we assumed you already aquired a copy of
+  matwm2, and extracted the tarball.
+  Typically the first step in installation will be to run (from whitin the
+  directory containing the matwm2 source code - wich includes this file)
+  "./configure", or "./configure --help" to see what options can be set for the
+  configure script.
+  This script will attempt to generate a Makefile suitable to compile and
+  install matwm2 on your system, then summarize the information aquired to
+  accomplish this - if you do not agree with these values, refer to the output
+  of "./configure --help" for instructions on how to override them.
+  The next step will be to run "make" wich will then attempt to compile matwm,
+  and if all that went well you can then run "make install" (typically this has
+  to be done as root, unless you are installing to a prefix whitin the user's
+  home directory) to install matwm2.
+
+For further information and before using matwm2, refer to the man page (run
+"man matwm2" after install).
+Send comments, suggestions and bugs to Mattis Michel <sic_zer0@hotmail.com>
 

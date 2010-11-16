@@ -33,23 +33,24 @@
 #define GCFGFN "/etc/matwmrc" /* global configuration file */
 #define MINSIZE 5 /* minimum size of windows (for both x and y) */
 #define NO_TITLE "-" /* windows that have no title get this name */
+#define INSANE_CONFIG_FILE_SIZE (1024 * 1024) /* if a config file is bigger then this, we won't be surprised and quit if it can't be loaded to memory */
 
 typedef struct {
-        Window w;
-        int action;
+	Window w;
+	int action;
 } button;
 
 typedef struct {
-        Window      window, parent, title, wlist_item, button_parent_right, button_parent_left;
-        int         x, y, width, height, flags, layer, desktop, xo, yo, oldbw;
-        int         expand_x, expand_y, expand_width, expand_height, title_width, buttons_left_width, buttons_right_width, nbuttons;
-        Pixmap      title_pixmap;
+	Window      window, parent, title, wlist_item, button_parent_right, button_parent_left;
+	int         x, y, width, height, flags, layer, desktop, xo, yo, oldbw;
+	int         expand_x, expand_y, expand_width, expand_height, title_width, buttons_left_width, buttons_right_width, nbuttons;
+	Pixmap      title_pixmap;
 #ifdef USE_XFT
-        XftDraw     *title_draw, *wlist_draw;
+	XftDraw     *title_draw, *wlist_draw;
 #endif
-        XSizeHints  normal_hints;
-        char        *name;
-        button      *buttons;
+	XSizeHints  normal_hints;
+	char        *name;
+	button      *buttons;
 } client;
 
 #define ICONIC          (1 << 0) /* these bits are for the "flags" member of above structure */
@@ -79,81 +80,81 @@ typedef struct {
 #define STICKY          -1 /* special virtual desktop that is metaphoric for any virtual desktop */
 
 enum layers {
-        TOPMOST,
-        TOP,
-        NORMAL,
-        BOTTOM,
-        DESKTOP,
-        NLAYERS
+	TOPMOST,
+	TOP,
+	NORMAL,
+	BOTTOM,
+	DESKTOP,
+	NLAYERS
 };
 
 typedef struct {
-        KeySym sym;
-        KeyCode code;
-        unsigned int mask, action;
-        char *arg;
+	KeySym sym;
+	KeyCode code;
+	unsigned int mask, action;
+	char *arg;
 } keybind;
 
 enum { /* key actions */
-        KA_NONE,
-        KA_NEXT,
-        KA_PREV,
-        KA_ICONIFY,
-        KA_ICONIFY_ALL,
-        KA_MAXIMIZE,
-        KA_FULLSCREEN,
-        KA_EXPAND,
-        KA_CLOSE,
-        KA_TITLE,
-        KA_TO_BORDER,
-        KA_EXEC,
-        KA_NEXT_DESKTOP,
-        KA_PREV_DESKTOP,
-        KA_STICKY,
-        KA_ONTOP,
-        KA_BELOW,
-        KA_RAISE,
-        KA_LOWER
+	KA_NONE,
+	KA_NEXT,
+	KA_PREV,
+	KA_ICONIFY,
+	KA_ICONIFY_ALL,
+	KA_MAXIMIZE,
+	KA_FULLSCREEN,
+	KA_EXPAND,
+	KA_CLOSE,
+	KA_TITLE,
+	KA_TO_BORDER,
+	KA_EXEC,
+	KA_NEXT_DESKTOP,
+	KA_PREV_DESKTOP,
+	KA_STICKY,
+	KA_ONTOP,
+	KA_BELOW,
+	KA_RAISE,
+	KA_LOWER
 };
 
 enum { /* button actions */
-        BA_NONE,
-        BA_MOVE,
-        BA_RESIZE,
-        BA_RAISE,
-        BA_LOWER,
-        BA_MAXIMIZE,
-        BA_EXPAND,
-        BA_ICONIFY,
-        BA_CLOSE
+	BA_NONE,
+	BA_MOVE,
+	BA_RESIZE,
+	BA_RAISE,
+	BA_LOWER,
+	BA_MAXIMIZE,
+	BA_EXPAND,
+	BA_ICONIFY,
+	BA_CLOSE
 };
 
 enum { /* for drag() */
-        MOVE,
-        RESIZE
+	MOVE,
+	RESIZE
 };
 
 enum { /* for frame buttons */
-        B_NONE,
-        B_CLOSE,
-        B_MAXIMIZE,
-        B_EXPAND,
-        B_ICONIFY,
-        B_STICKY,
-        B_ONTOP,
-        B_BELOW
+	B_NONE,
+	B_CLOSE,
+	B_MAXIMIZE,
+	B_EXPAND,
+	B_ICONIFY,
+	B_STICKY,
+	B_ONTOP,
+	B_BELOW
 };
 
 enum { /* fullscreen_stacking modes */
-        FS_NORMAL,
-        FS_ONTOP,
-        FS_ALWAYS_ONTOP
+	FS_NORMAL,
+	FS_ONTOP,
+	FS_ALWAYS_ONTOP
 };
 
 enum { /* for sending to qsfd pipe */
-        QUIT,
-        ERROR,
-        REINIT
+	QUIT,
+	ERROR,
+	REINIT
 };
 
 typedef char bool;

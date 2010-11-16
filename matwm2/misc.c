@@ -1,19 +1,13 @@
 #include "matwm.h"
 
 void spawn(char *cmd) { /* run a command with sh -c */
-	int pid = vfork();
-	if(pid == 0) {
-		if(vfork() == 0) { /* we fork twice here to prevent leaving zombie processes around */
-			setsid();
-			if(dn)
-				setenv("DISPLAY", dn, 1);
-			execlp("sh", "sh", "-c", cmd, (char *) 0);
-		}
-		else
-			_exit(0);
+	if(vfork() == 0) {
+		setsid();
+		if(dn)
+			setenv("DISPLAY", dn, 1);
+		execlp("sh", "sh", "-c", cmd, (char *) 0);
+		_exit(0);
 	}
-	if(pid > 0)
-		wait(NULL);
 }
 
 int read_file(char *path, char **buf) { /* allocates memory at, and reads a file to *buf */
@@ -22,8 +16,13 @@ int read_file(char *path, char **buf) { /* allocates memory at, and reads a file
 	if(fd > 0) {
 		if(fstat(fd, &sb) == 0) {
 			*buf = (char *) malloc(sb.st_size + 1);
-			if(buf == NULL)
+			if(!*buf) {
+				if(sb.st_size > INSANE_CONFIG_FILE_SIZE) {
+					fprintf(stderr, NAME ": cannot allocate enough memory to load insanely big config file %s, skipping\n", path);
+					return -1;
+				}
 				error();
+			}
 			r = read(fd, (void *) *buf, sb.st_size);
 			if(r <= 0) {
 				free((void *) *buf);
@@ -81,9 +80,21 @@ void unescape(char *str) { /* to remove escape characters when we are no longer 
 }
 
 void *_malloc(size_t size) { /* malloc with error checking */
-	void *r = malloc(size);
-	if(!r)
+	void *ret = malloc(size);
+	if(!ret)
 		error();
-	return r;
+	return ret;
+}
+
+void *_realloc(void *ptr, size_t size) { /* realloc with error checking */
+	void *ret = realloc(ptr, size);
+	if(!ret)
+		error();
+	return ret;
+}
+
+void error(void) { /* for functions that set errno on error */
+	perror(perror_str);
+	exit(1);
 }
 

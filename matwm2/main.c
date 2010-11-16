@@ -5,17 +5,16 @@ int screen, depth, display_width, display_height, have_shape, shape_event, qsfd[
 Window root;
 Atom xa_wm_protocols, xa_wm_delete, xa_wm_state, xa_wm_change_state, xa_motif_wm_hints;
 XSetWindowAttributes p_attr;
-char *dn = NULL;
+char *dn = NULL, *perror_str = NAME ": error";
 Colormap colormap;
 Visual *visual;
 
 int main(int argc, char *argv[]) {
 	XEvent ev;
-	int i;
+	int i, dfd, sr;
 	unsigned int ui, nwins;
 	Window dw, *wins;
 	XWindowAttributes attr;
-	int dfd, sr;
 	#ifdef USE_SHAPE
 	int di;
 	#endif
@@ -30,46 +29,74 @@ int main(int argc, char *argv[]) {
 		}
 		if(strcmp(argv[i], "-version") == 0) {
 			printf(NAME " version " VERSION "\n"
-				"compiled "
-				#ifdef USE_SHAPE
-				"with"
-				#else
-				"without"
-				#endif
-				" shape extention support and "
+				"options set at compile time:\n"
+				"\tXft support: "
 				#ifdef USE_XFT
-				"with"
+				"enabled"
 				#else
-				"without"
+				"disabled"
 				#endif
-				" Xft support\n"
+				"\n\tshaped windows support: "
+				#ifdef USE_SHAPE
+				"enabled"
+				#else
+				"disabled"
+				#endif
+				"\n\tuse vfork system call: "
+				#ifdef HAVE_VFORK
+				"enabled"
+				#else
+				"disabled"
+				#endif
+				"\n\tdebugging output: "
+				#ifdef DEBUG
+				"enabled"
+				#else
+				"disabled"
+				#endif
+				"\n\tprint all received events: "
+				#ifdef DEBUG_EVENTS
+				"enabled"
+				#else
+				"disabled"
+				#endif
+				"\n\tsynchronise events: "
+				#ifdef SYNC
+				"enabled"
+				#else
+				"disabled"
+				#endif
+				"\n"
 			);
 			return 0;
 		}
 		if(strcmp(argv[i], "-display") == 0) {
 			if(i + 1 >= argc) {
-				fprintf(stderr, "error: argument -display needs an argument\n");
+				fprintf(stderr, NAME ": error: argument -display needs an argument\n");
 				return 1;
 			}
  			dn = argv[i + 1];
 			i++;
 			continue;
 		}
-		fprintf(stderr, "error: argument %s not recognised\n", argv[i]);
+		fprintf(stderr, NAME ": error: argument %s not recognised\n", argv[i]);
 		return 1;
 	}
 	/* setup signal handler etc */
+	if(pipe(qsfd) != 0) { /* we will use this pipe in the main loop, signal hander, etc */
+		perror(perror_str);
+		return 1;
+	}
 	atexit(&quit);
-	if(pipe(qsfd) != 0) /* we will use this pipe in the main loop, signal hander, etc */
-		error();
 	signal(SIGTERM, &sighandler);
 	signal(SIGINT, &sighandler);
 	signal(SIGHUP, &sighandler);
 	signal(SIGUSR1, &sighandler);
+	signal(SIGCHLD, &sighandler);
 	/* open connection with X and aquire some important info */
 	dpy = XOpenDisplay(dn); /* if dn is NULL, XOpenDisplay() schould use the DISPLAY environment variable instead */
 	if(!dpy) {
-		fprintf(stderr, "error: can't open display \"%s\"\n", XDisplayName(dn));
+		fprintf(stderr, NAME ": error: can't open display \"%s\"\n", XDisplayName(dn));
 		exit(1);
 	}
 	#ifdef SYNC
@@ -131,7 +158,7 @@ int main(int argc, char *argv[]) {
 					if(read(qsfd[0], &act, sizeof(act)) == sizeof(act)) {
 						if(act == REINIT)
 							cfg_reinitialize();
-						else exit((act == ERROR) ? 1 : 0);
+						else exit(0);
 					}
 			/* XPending will be called again next run of this loop so we just ignore its descriptor for now */
 		}
@@ -151,24 +178,9 @@ void quit(void) {
 				}
 		d--;
 	}
-	for(i = cn - 1; i >= 0; i--) /* on to of that go the currently visible ones */
+	for(i = cn - 1; i >= 0; i--) /* on top of that go the currently visible ones */
 		if(stacking[i]->desktop == desktop || stacking[i]->desktop == STICKY)
 			client_deparent(stacking[i]);
-	/* remove the client structures */
-	while(cn)
-		client_remove(stacking[cn - 1]);
-	/* free allocated data */
-	if(stacking)
-		free((void *) stacking);
-	if(clients)
-		free((void *) clients);
-	if(mod_ignore)
-		free((void *) mod_ignore);
-	if(buttons_left)
-		free((void *) buttons_left);
-	if(buttons_right)
-		free((void *) buttons_right);
-	keys_free();
 	if(dpy) { /* if we have a connection with X, close it */
 		XSetInputFocus(dpy, PointerRoot, RevertToPointerRoot, CurrentTime);
 		XCloseDisplay(dpy);
@@ -179,13 +191,13 @@ void qsfd_send(char s) { /* used to communicate with the main loop via our pipe 
 	write(qsfd[1], &s, sizeof(s));
 }
 
-void error(void) { /* for functions that set errno on errors */
-	perror("error");
-	qsfd_send(ERROR);
-}
-
 void sighandler(int sig) {
-	int act = QUIT;
+	char act = QUIT;
+	int status;
+	if(sig == SIGCHLD) {
+		waitpid(-1, &status, WNOHANG);
+		return;
+	}
 	if(sig == SIGUSR1)
 		act = REINIT;
 	qsfd_send(act);

@@ -50,6 +50,7 @@ void ewmh_initialize(void) {
 	ewmh_atoms[NET_FRAME_EXTENTS] = XInternAtom(dpy, "_NET_FRAME_EXTENTS", False);
 	ewmh_atoms[NET_REQUEST_FRAME_EXTENTS] = XInternAtom(dpy, "_NET_REQUEST_FRAME_EXTENTS", False);
 	ewmh_atoms[NET_SHOWING_DESKTOP] = XInternAtom(dpy, "_NET_SHOWING_DESKTOP", False);
+	ewmh_atoms[KDE_NET_WM_WINDOW_TYPE_OVERRIDE] = XInternAtom(dpy, "_KDE_NET_WM_WINDOW_TYPE_OVERRIDE", False);
 	XChangeProperty(dpy, root, ewmh_atoms[NET_SUPPORTED], XA_ATOM, 32, PropModeReplace, (unsigned char *) &ewmh_atoms, EWMH_ATOM_COUNT);
 	XChangeProperty(dpy, root, ewmh_atoms[NET_SUPPORTING_WM_CHECK], XA_WINDOW, 32, PropModeReplace, (unsigned char *) &wlist, 1);
 	XChangeProperty(dpy, wlist, ewmh_atoms[NET_SUPPORTING_WM_CHECK], XA_WINDOW, 32, PropModeReplace, (unsigned char *) &wlist, 1);
@@ -204,7 +205,7 @@ void ewmh_get_hints(client *c) {
 		XFree((void *) p);
 	}
 	if(XGetWindowProperty(dpy, c->window, ewmh_atoms[NET_WM_WINDOW_TYPE], 0, 1, False, XA_ATOM, &rt, &rf, &nir, &bar, (unsigned char **) &p) == Success) {
-		if(nir) {
+		while(nir) {
 			data = *(Atom *) p; /* if we would just pass &data to XGetWindowProperty we break strict aliasing rules */
 			if(data == ewmh_atoms[NET_WM_WINDOW_TYPE_DESKTOP]) {
 				c->flags ^= c->flags & (CAN_MOVE | CAN_RESIZE | HAS_BORDER | HAS_TITLE);
@@ -219,6 +220,10 @@ void ewmh_get_hints(client *c) {
 				if(taskbar_ontop)
 					c->layer = TOP;
 			}
+			if(data == ewmh_atoms[KDE_NET_WM_WINDOW_TYPE_OVERRIDE])
+				c->flags |= DONT_LIST;
+			data++;
+			nir--;
 		}
 		XFree((void *) p);
 	}
