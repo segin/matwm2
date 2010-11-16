@@ -95,15 +95,15 @@ int ewmh_handle_event(XEvent ev) {
 			}
 			if(ev.xclient.message_type == ewmh_atoms[NET_ACTIVE_WINDOW]) {
 				if(c) {
-					if(c->flags & ICONIC) {
+					if(c->flags & ICONIC)
 						client_restore(c);
-						client_focus(c);
-					} else {
+					else {
 						if(c->desktop != desktop && c->desktop != STICKY)
 							desktop_goto(c->desktop);
 						client_raise(c);
-						client_focus(c);
 					}
+					if(evh != wlist_handle_event)
+						client_focus(c);
 				}
 				return 1;
 			}

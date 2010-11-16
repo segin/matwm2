@@ -30,23 +30,47 @@ int read_file(char *path, char **buf) {
 
 char *eat(char **str, char *until) {
 	char *ret = NULL, *c;
+	int literal = 0;
 	while(1) {
 		if(!ret && (**str != ' ' && **str != '\t'))
 			ret = *str;
+		if(**str == '\\' && !literal) {
+			literal = 1;
+			(*str)++;
+			continue;
+		}
 		if(**str == 0) {
 			*str = NULL;
 			return ret;
 		}
-		c = until;
-		while(ret && *c) {
-			if(**str == *c || **str == 0) {
-				**str = 0;
-				(*str)++;
-				return ret;
+		if(literal)
+			literal = 0;
+		else {
+			c = until;
+			while(ret && *c) {
+  			if(**str == *c) {
+					**str = 0;
+					(*str)++;
+					return ret;
+				}
+				c++;
 			}
-			c++;
 		}
 		(*str)++;
 	}
+}
+
+void unescape(char *str) {
+	int i, j = 0, literal = 0;
+	for(i = 0; str[i] != 0; i++) {
+		if(j < i)
+			str[j] = str[i];
+		if(str[i] != '\\' || literal) {
+			j++;
+			if(literal)
+				literal = 0;
+		} else literal = 1;
+	}
+	str[j] = 0;
 }
 

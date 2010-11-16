@@ -18,12 +18,18 @@
 #define NAME "matwm2"
 
 typedef struct {
-	Window      window, parent, title, wlist_item, button_parent, button_iconify, button_maximize, button_expand, button_close;
+	Window w;
+	int action;
+} button;
+
+typedef struct {
+	Window      window, parent, title, wlist_item, button_parent_right, button_parent_left;
 	int         x, y, width, height, flags, layer, desktop, xo, yo, oldbw;
-	int         expand_x, expand_y, expand_width, expand_height, title_width;
+	int         expand_x, expand_y, expand_width, expand_height, title_width, buttons_left_width, buttons_right_width, nbuttons;
 	Pixmap      title_pixmap;
 	XSizeHints  normal_hints;
 	char        *name;
+	button      *buttons;
 } client;
 
 #define ICONIC          (1 << 0)
@@ -101,6 +107,14 @@ enum {
 enum {
 	MOVE,
 	RESIZE
+};
+
+enum {
+	B_CLOSE,
+	B_MAXIMIZE,
+	B_EXPAND,
+	B_ICONIFY,
+	B_NONE
 };
 
 #include "mwm_hints.h"

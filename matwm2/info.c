@@ -69,8 +69,18 @@ int client_height_total_intern(client *c) {
 }
 
 int client_title_width(client *c) {
-	int avail = client_width(c) - ((c->flags & HAS_BUTTONS) ? button_parent_width + 2 : 0);
+	int avail = client_width(c) - ((c->flags & HAS_BUTTONS) ? c->buttons_left_width + c->buttons_right_width : 0);
 	return (avail < c->title_width) ? avail : c->title_width;
+}
+
+int client_title_y(client *c) {
+	int center;
+	if(center_title) {
+		center = (client_border_intern(c) + ((c->flags & HAS_BUTTONS) ? c->buttons_left_width : 0) + ((client_width(c) - ((c->flags & HAS_BUTTONS) ? c->buttons_left_width + c->buttons_right_width : 0)) / 2)) - (c->title_width / 2);
+		if(center > border_width + ((c->flags & HAS_BUTTONS) ? c->buttons_left_width : 0) - 1)
+			return center;
+	}
+	return border_width + ((c->flags & HAS_BUTTONS) ? c->buttons_left_width : 0) - 1;
 }
 
 int client_visible(client *c) {
@@ -94,7 +104,7 @@ int client_number(client **array, client *c) {
 client *owner(Window w) {
 	int i;
 	for(i = 0; i < cn; i++)
-		if(clients[i]->parent == w || clients[i]->window == w || clients[i]->wlist_item == w || clients[i]->title == w || clients[i]->button_parent == w)
+		if(clients[i]->parent == w || clients[i]->window == w || clients[i]->wlist_item == w || clients[i]->title == w || clients[i]->button_parent_right == w || clients[i]->button_parent_left == w)
 			return clients[i];
 	return NULL;
 }

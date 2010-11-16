@@ -50,6 +50,7 @@ int main(int argc, char *argv[]) {
 	sigaction(SIGTERM, &qsa, NULL);
 	sigaction(SIGINT, &qsa, NULL);
 	sigaction(SIGHUP, &qsa, NULL);
+	sigaction(SIGUSR1, &qsa, NULL);
 #ifdef SYNC
 	XSynchronize(dpy, True);
 #endif
@@ -100,7 +101,7 @@ int main(int argc, char *argv[]) {
 			if(sr == -1 && errno != EINTR)
 				error();
 			if(sr && FD_ISSET(qsfd[0], &fdsr) && read(qsfd[0], &sig, sizeof(int)) == sizeof(int)) {
-				if(sig == SIGHUP)
+				if(sig == SIGUSR1)
 					cfg_reinitialize();
 				else exit(0);
 			}
@@ -130,6 +131,10 @@ void quit(void) {
 		free((void *) clients);
 	if(mod_ignore)
 		free((void *) mod_ignore);
+	if(buttons_left)
+		free((void *) buttons_left);
+	if(buttons_right)
+		free((void *) buttons_right);
 	keys_free();
 	XSetInputFocus(dpy, PointerRoot, RevertToPointerRoot, CurrentTime);
 	XCloseDisplay(dpy);

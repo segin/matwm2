@@ -21,13 +21,13 @@ void client_iconify_all(void);
 void client_end_all_iconic(void);
 
 /* global variables from buttons.c */
-extern Window button_current;
+extern button *button_current;
 extern int button_down;
 
 /* functions from buttons.c */
 void buttons_create(client *c);
 void buttons_draw(client *c);
-void button_draw(client *c, Window b);
+void button_draw(client *c, button *b);
 void buttons_update(client *c);
 int button_handle_event(XEvent ev);
 
@@ -60,7 +60,7 @@ void clients_alloc(void);
 /* global variables from config.c */
 extern XColor bg, ibg, fg, ifg;
 extern GC gc, igc, bgc, ibgc;
-extern int border_width, text_height, title_height, button_size, button_parent_width, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first;
+extern int border_width, text_height, title_height, title_spacing, center_title, center_wlist_items, button_size, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first, *buttons_right, nbuttons_right, *buttons_left, nbuttons_left;
 extern XFontStruct *font;
 extern char *no_title;
 
@@ -75,6 +75,8 @@ KeySym str_key(char **str, unsigned int *mask);
 unsigned int str_modifier(char *name);
 int str_buttonaction(char *str);
 int str_keyaction(char *str);
+int str_wbutton(char *button);
+void str_buttons(char *str, int **buttons, int *nbuttons);
 
 /* global variables from drag.c */
 extern int drag_mode, drag_button, drag_xo, drag_yo;
@@ -132,6 +134,7 @@ int client_height_total(client *c);
 int client_width_total_intern(client *c);
 int client_height_total_intern(client *c);
 int client_title_width(client *c);
+int client_title_y(client *c);
 int client_visible(client *c);
 int client_layer(client *c);
 int client_number(client **array, client *c);
@@ -178,6 +181,7 @@ void qsh(int sig);
 void spawn(char *cmd);
 int read_file(char *path, char **buf);
 char *eat(char **str, char *until);
+void unescape(char *str);
 
 /* global variables from vdesk.c */
 extern int desktop;

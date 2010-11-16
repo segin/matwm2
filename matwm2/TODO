@@ -1,7 +1,7 @@
-function for moving windows to against the next window border found
 a way to see state of windows for the user (sticky, ontop/below)
+double click buttonactions
 xinerama support
-make window buttons configureable
-site, evt new name
 -- if above done and stable, release 0.1.0
-
+menus (maybe)
+taskbar
+-- 0.2.0

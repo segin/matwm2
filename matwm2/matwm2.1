@@ -9,7 +9,9 @@ matwm2 \- Window manager for X11
 .B matwm2
 is a simple window manager for X11. It features window frames with titlebar and buttons, configurable key bindings and mouse buttons, support for EWMH and motif hints, focus-follows-mouse and click-to-focus focus models and virtual desktops.
 .PP
-Window borders have 4 buttons, wich do the same as the following key actions explained below (from left to right): "iconify", "expand", "maximise" and "close". To exit matwm2 send it SIGINT signal. At exit matwm2 will place the windows back on the root window in stacking order, iconic windows on the bottom, above that the windows from all inactive desktops in reverse order and then above those the windows from the current desktop and sticky windows shown on it. If matwm2 receives a SIGHUP signal it will reload all configuration files. When a focussed window dissapears the window that was focussed before will be focused (unless the "click_focus" option is set to "false" and the cursor is above another window due to the window dissapearing), and if no previous window is there (if it has dissapeared for example) then the topmost window will be focused.
+To exit matwm2 send it SIGINT signal. At exit matwm2 will place the windows back on the root window in stacking order, iconic windows on the bottom, above that the windows from all inactive desktops in reverse order and then above those the windows from the current desktop and sticky windows shown on it. If matwm2 receives a SIGUSR1 signal it will reload all configuration files.
+.PP
+When a focussed window dissapears the window that was focussed before will be focused (unless the "click_focus" option is set to "false" and the cursor is above another window due to the window dissapearing), and if no previous window is there (if it has dissapeared for example) then the topmost window will be focused.
 .PP
 Further, explanition of the various options in the configuration file(s) below combined with the default configuration, schould give you an idea of how to use matwm2. Just keep in mind there is no default built-in way of launching applications exept the ctrl-mod1-return key binding, wich spawns an xterm.
 .SH OPTIONS
@@ -25,7 +27,9 @@ System wide configuration file.
 .IP $HOME/.matwmrc
 Per user configuration file.
 .PP
-Both of these config files share the same format, and can be considered a list of "commands" that may or may not have arguments, separated by spaces. The commands themselves are separated by newlines. If matwm2 encounters a '#' character in one of these files, the rest of the line is ignored. Any value set last overrides previous values for the setting, matwm2 reads the default configuration first, after that it reads the global configuration file and last the the user's personal configuration file (if these exist).
+Both of these config files share the same format, and can be considered a list of "commands" that may or may not have arguments, separated by spaces. The commands themselves are separated by newlines. If matwm2 encounters a '#' character in one of these files, the rest of the line is ignored. To use a literal '#' you can precede it with the escape character '\\', and for a literal '\\', "\\\\" will do.
+.PP
+Any value set last overrides previous values for the setting, matwm2 reads the default configuration first, after that it reads the global configuration file and last the the user's personal configuration file (if these exist).
 .PP
 Following is a list of possible commands for matwm2 configuration files and their explanation. Valid modifier keys are "shift", "lock", "control" and "mod1" to "mod5" (see: output of xmodmap).
 .IP "background [X11 color name]"
@@ -41,7 +45,9 @@ Sets the font used for drawing text.
 .IP "button[1-5] [button action]"
 Sets the function mouse buttons have on window borders. Possible button actions are "move", "resize", "raise", "lower" and "none". "move" and "resize" raise the window and let the user drag it to resize or move it while the mouse button is held down. Moving windows over the right or left screen edge can be used to move them to the next desktop (at the right) or previous desktop (at the left). The "raise" and "lower" action send the window to the top or bottom of the stack respectively.
 .IP "border_width [integer]"
-Sets the width of window borders to [integer] pixels.
+Sets the width of window borders to [integer] pixels. Has to be 1 or greater.
+.IP "title_spacing [integer]"
+Sets how much space there is to be between the bottom of the title text and the actual client window. Also has a minimum of 1 pixel.
 .IP "snap [integer]"
 Snap windows together or to screen edges when they are [integer] pixels away from eachother, set to 0 to disable snapping.
 .IP "desktops [integer]"
@@ -59,7 +65,15 @@ Sets the focus model, if set to "true" matwm2 will focus windows when they are c
 .IP "click_raise [boolean]"
 If set to "true" windows will be risen when they (meaning the window itself, not its frame) are clicked, if set to "false" this behavior is disabled.
 .IP "focus_new [boolean]"
-If set to "true" new windows will be focussed when they appear and accordingly a value of "false" disables this behaviour.
+If set to "true" new windows will be focussed when they appear and accordingly a value of "false" disables this behaviour. If you are dragging a window or in window list mode at the time of the window apearing the new window shall not be focussed even with this option set to "true".
+.IP "center_title [boolean]"
+If set to "true" the title of windows will apear in the center of the titlebar, if set to "false" it will be at the left.
+.IP "center_wlist_items [boolean]"
+If set to "true" all titles in the window list are centered, if set to "false" they are aligned at the left.
+.IP "buttons_left [button] [...]"
+Set a list of buttons (from left to right) to show at the left of the title of windows. Possible buttons are "iconify", "expand", "maximize" and "close", they do the same as the key actions with the same names described below. Can be set to "none" if you want no buttons there.
+.IP "buttons_right [button] [...]"
+Same as the "buttons_left" option but for buttons at the right of the titlebar.
 .IP "taskbar_ontop"
 If set to "true" taskbar windows that use EWMH hints will be kept ontop, if set to "false" windows can cover them.
 .IP "resetkeys"
@@ -78,9 +92,9 @@ Focus the next window in the stacking. Pressing a key bound to this or the "prev
 Focus the previous window in the stacking.
 .IP "iconify"
 Iconify the current window (window will dissapear, but can be found in either a taskbar that complies with the EWMH specification, or the window list that apears if one of the two functions above is called). Iconified windows will be placed at the very bottom of the stack (so for icons top to bottom order in the window list complies with first to last window iconified).
-.IP "maximise [direction][...]"
+.IP "maximise [direction] [...]"
 Maximise the current window, or revert a maximised window to its previous state. The optional argument [direction] can be h, v, l, r, d or u (respectively horizontal, vertical, left, right, up and down), or a combination of those to specify the action is to be comitted only in the specified direction(s).
-.IP "expand [direction][...]"
+.IP "expand [direction] [...]"
 This function serves to grow a window in size as much as is possible without overlapping any more windows then are currently already overlapped by it. The [direction] argument does exactly what is does for the maximise key action. By default it calculates available horizontal space first, to make it calculate vertical space first you can add and a to the direction argument.
 .IP "fullscreen"
 Make the current window apear fullscreen, or revert a fullscreen window to its previous state.
@@ -100,7 +114,7 @@ Iconify all windows. If no iconic windows are restored after the last call to th
 Go to the next virtual desktop.
 .IP "prev_desktop"
 Go to the previous virtual desktop.
-.IP "to_border [border][...]"
+.IP "to_border [border] [...]"
 Move the current window to a border or corner of the screen, argument is one or more of l, r, t and b (left, right, top and bottom respectively).
 .IP "raise"
 Raise the current window to the top of the stack.

@@ -4,21 +4,26 @@ inactive_background   dimgray\n\
 foreground            lightgray\n\
 inactive_foreground   darkgray\n\
 font                  fixed\n\
+border_width          4\n\
+title_spacing         2\n\
+buttons_left          none\n\
+buttons_right         iconify expand maximize close\n\
+center_title          false\n\
+center_wlist_items		false\n\
+desktops              4\n\
+snap                  5\n\
+taskbar_ontop         false\n\
+focus_new             false\n\
+click_focus           false\n\
+click_raise           false\n\
 button1               move\n\
 button2               none\n\
 button3               resize\n\
 button4               raise\n\
 button5               lower\n\
-border_width          4\n\
-snap                  5\n\
-desktops              4\n\
-ignore_modifier       mod2 lock\n\
 mouse_modifier        mod1\n\
 no_snap_modifier      shift\n\
-click_focus           false\n\
-click_raise           false\n\
-focus_new             false\n\
-taskbar_ontop         false\n\
+ignore_modifier       mod2 lock\n\
 key                   mod1 Tab                next\n\
 key                   mod1 shift Tab          prev\n\
 key                   control mod1 s          iconify\n\

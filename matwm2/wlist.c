@@ -26,6 +26,7 @@ void wlist_end(int err) {
 		else
 			client_raise(current);
 		client_warp(current);
+		XSetInputFocus(dpy, current->window, RevertToPointerRoot, CurrentTime);
 	}
 	XUnmapWindow(dpy, wlist);
 }
@@ -112,6 +113,6 @@ int wlist_update(void) {
 
 void wlist_item_draw(client *c) {
 	if(c->name)
-		XDrawString(dpy, c->wlist_item, (c == current) ? gc : igc, 2, 2 + font->max_bounds.ascent, c->name, strlen(c->name));
+		XDrawString(dpy, c->wlist_item, (c == current) ? gc : igc, center_wlist_items ? (wlist_width / 2) - c->title_width / 2 : 2, 2 + font->max_bounds.ascent, c->name, strlen(c->name));
 }
 

@@ -1,3 +1,26 @@
+0.0.82:
+	added title_spacing option to set amount of space between title and client window
+	re-ordered things in default configuration
+	removed unnecessary assertion in eat()
+	apearantly title_width schould be one pixel bigger then XTextWidth() returns, corrected this
+	configuration file supports escape codes now (this turned out to be useful as X color names can be html style hex colors prepended with #)
+	updated the man page about the about two new features, divided it into more paragraphs to be readable by humans too and made a few corrections
+	small edit to comment in makefile
+	eat for space first in cfg_parse as this is a bit more efficient with default, and supossedly most configurations
+	removed a few old plans from changelog, don't like it anymore
+	added center_title option to make title centered and updated manual about it
+	added some things to TODO list
+	don't focus windows automatically if in drag or window list mode, updated manual about this behaviour
+	client_focus doesn't set previous anymore when trying to focus a window with DONT_FOCUS bit set
+	input focus set only at end of window list
+	SIGHUP for config reload replaced with SIGUSR1 as using SIGHUP turns out to be a dumb idea
+	update buttons before title in client_update()
+	buttons_update() also handles position of right buttons parent window
+	buttons can now be configured with buttons_left and buttons_right option, updated man about this
+	don't call buttons_update() from client_add() as buttons_create() already calls it now
+	do not focus windows that apear iconic when focus_new is enabled
+	added center_wlist_items option to set text alignment of the window list, also updated man for this
+
 0.0.81:
 	"maximise" schould be "maximize", replaced it everywhere
 	fixed Makefile: has propper depends now, compile objects separately, etc - with thanks to segin

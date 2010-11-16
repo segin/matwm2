@@ -50,10 +50,10 @@ void client_resize(client *c, int width, int height) {
 
 void client_focus(client *c) {
 	client *prev = current;
+	if((c && c->flags & DONT_FOCUS) || evh == drag_handle_event)
+		return;
 	if(current && !(current->flags & ICONIC))
 		previous = current;
-	if(c && c->flags & DONT_FOCUS)
-		return;
 	current = c;
 	if(prev)
 		client_set_bg(prev, ibg, ifg);
@@ -61,7 +61,7 @@ void client_focus(client *c) {
 		XSetInputFocus(dpy, PointerRoot, RevertToPointerRoot, CurrentTime);
 	} else {
 		client_set_bg(c, bg, fg);
-		if((c->desktop == desktop || c->desktop == STICKY) && isviewable(c->window))
+		if((c->desktop == desktop || c->desktop == STICKY) && isviewable(c->window) && evh != wlist_handle_event)
 			XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
 	}
 	ewmh_set_active(c);

@@ -2,7 +2,7 @@
 
 XColor bg, ibg, fg, ifg;
 GC gc, igc, bgc, ibgc;
-int border_width, text_height, title_height, button_size, button_parent_width, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first = 1;
+int border_width, text_height, title_height, title_spacing, center_title, center_wlist_items, button_size, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first = 1, *buttons_right = NULL, nbuttons_right, *buttons_left = NULL, nbuttons_left;
 XFontStruct *font = NULL;
 char *no_title = NO_TITLE;
 
@@ -35,9 +35,9 @@ void cfg_read(int initial) {
 	}
 	keys_update();
 	text_height = font->max_bounds.ascent + font->max_bounds.descent;
-	title_height = text_height + 2;
+	title_height = text_height + title_spacing;
 	button_size = text_height - ((text_height % 2) ? 0 : 1);
-	button_parent_width = (button_size * 4) + 6;
+	nbuttons_left + nbuttons_right;
 	gv.line_width = 1;
 	gv.font = font->fid;
 	gv.foreground = fg.pixel;
@@ -56,7 +56,8 @@ void cfg_parse(char *cfg, int initial) {
 	while(cfg) {
 		opt = eat(&cfg, "\n");
 		opt = eat(&opt, "#");
-		key = eat(&opt, "\t ");
+  	unescape(opt);
+		key = eat(&opt, " \t");
 		if(opt) {
 			while(*opt == ' ' || *opt == '\t')
 				opt++;
@@ -103,6 +104,11 @@ void cfg_set_opt(char *key, char *value, int initial) {
 		if(i > 0)
 		  border_width = i;
 	}
+	if(strcmp(key, "title_spacing") == 0) {
+		i = strtol(value, NULL, 0);
+		if(i > 0)
+			title_spacing = i;
+	}
 	if(strcmp(key, "snap") == 0)
 		snapat = strtol(value, NULL, 0);
 	if(strcmp(key, "desktops") == 0) {
@@ -128,6 +134,10 @@ void cfg_set_opt(char *key, char *value, int initial) {
 		str_bool(value, &focus_new);
 	if(strcmp(key, "taskbar_ontop") == 0)
 		str_bool(value, &taskbar_ontop);
+	if(strcmp(key, "center_title") == 0)
+		str_bool(value, &center_title);
+	if(strcmp(key, "center_wlist_items") == 0)
+		str_bool(value, &center_wlist_items);
 	if(strcmp(key, "mouse_modifier") == 0)
 		str_key(&value, &mousemodmask);
 	if(strcmp(key, "no_snap_modifier") == 0)
@@ -150,6 +160,10 @@ void cfg_set_opt(char *key, char *value, int initial) {
 			nmod_ignore += nmod_ignore + 1;
 		}
 	}
+	if(strcmp(key, "buttons_left") == 0)
+		str_buttons(value, &buttons_left, &nbuttons_left);
+	if(strcmp(key, "buttons_right") == 0)
+		str_buttons(value, &buttons_right, &nbuttons_right);
 }
 
 void cfg_reinitialize(void) {
@@ -161,14 +175,12 @@ void cfg_reinitialize(void) {
 	keys_free();
 	cfg_read(0);
 	for(i = 0; i < cn; i++) {
+		XDestroyWindow(dpy, clients[i]->button_parent_left);
+		XDestroyWindow(dpy, clients[i]->button_parent_right);
+		free((void *) clients[i]->buttons);
+		buttons_create(clients[i]);
 		client_update(clients[i]);
-		XMoveWindow(dpy, clients[i]->title, border_width - 1, border_width - 1);
 		client_update_name(clients[i]);
-		XResizeWindow(dpy, clients[i]->button_parent, button_parent_width, button_size);
-		XResizeWindow(dpy, clients[i]->button_iconify, button_size, button_size);
-		XMoveResizeWindow(dpy, clients[i]->button_expand, button_size + 2, 0, button_size, button_size);
-		XMoveResizeWindow(dpy, clients[i]->button_maximize, (button_size + 2) * 2, 0, button_size, button_size);
-		XMoveResizeWindow(dpy, clients[i]->button_close, (button_size + 2) * 3, 0, button_size, button_size);
 		(clients[i] == current) ? client_set_bg(clients[i], bg, fg) : client_set_bg(clients[i], ibg, ifg);
 		if(clients[i]->flags & IS_TASKBAR)
 			client_set_layer(clients[i], taskbar_ontop ? TOP : NORMAL);
@@ -279,5 +291,29 @@ int str_keyaction(char *str) {
 	if(strcmp(str, "lower") == 0)
 		return KA_LOWER;
 	return KA_NONE;
+}
+
+int str_wbutton(char *button) {
+	if(strcmp(button, "close") == 0)
+		return B_CLOSE;
+	if(strcmp(button, "maximize") == 0)
+		return B_MAXIMIZE;
+	if(strcmp(button, "expand") == 0)
+		return B_EXPAND;
+	if(strcmp(button, "iconify") == 0)
+		return B_ICONIFY;
+	return B_NONE;
+}
+
+void str_buttons(char *str, int **buttons, int *nbuttons) {
+	*nbuttons = 0;
+	while(str) {
+		*buttons = (int *) realloc((void *) *buttons, sizeof(int) * (*nbuttons + 1));
+		if(!buttons)
+			error();
+		(*buttons)[*nbuttons] = str_wbutton(eat(&str, " \t"));
+		if((*buttons)[*nbuttons] != B_NONE)
+			(*nbuttons)++;
+	}
 }
 
