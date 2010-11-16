@@ -2,7 +2,7 @@
 
 XColor bg, ibg, fg, ifg;
 GC gc, igc, bgc, ibgc;
-int border_width, text_height, title_height, button_parent_width, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first = 0;
+int border_width, text_height, title_height, button_size, button_parent_width, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first = 1;
 XFontStruct *font = NULL;
 char *no_title = NO_TITLE;
 
@@ -36,7 +36,8 @@ void cfg_read(int initial) {
 	keys_update();
 	text_height = font->max_bounds.ascent + font->max_bounds.descent;
 	title_height = text_height + 2;
-	button_parent_width = (text_height * 4) + 6;
+	button_size = text_height - ((text_height % 2) ? 0 : 1);
+	button_parent_width = (button_size * 4) + 6;
 	gv.line_width = 1;
 	gv.font = font->fid;
 	gv.foreground = fg.pixel;
@@ -106,7 +107,7 @@ void cfg_set_opt(char *key, char *value, int initial) {
 		snapat = strtol(value, NULL, 0);
 	if(strcmp(key, "desktops") == 0) {
 		i = strtol(value, NULL, 0);
-		if(i > STICKY)
+		if(i > 0)
 			dc = i;
 	}
 	if(strcmp(key, "button1") == 0)
@@ -153,21 +154,36 @@ void cfg_set_opt(char *key, char *value, int initial) {
 
 void cfg_reinitialize(void) {
 	int i;
+	XFreeGC(dpy, gc);
+	XFreeGC(dpy, igc);
+	XFreeGC(dpy, bgc);
+	XFreeGC(dpy, ibgc);
+	keys_free();
+	cfg_read(0);
 	for(i = 0; i < cn; i++) {
 		client_update(clients[i]);
+		XMoveWindow(dpy, clients[i]->title, border_width - 1, border_width - 1);
+		client_update_name(clients[i]);
+		XResizeWindow(dpy, clients[i]->button_parent, button_parent_width, button_size);
+		XResizeWindow(dpy, clients[i]->button_iconify, button_size, button_size);
+		XMoveResizeWindow(dpy, clients[i]->button_expand, button_size + 2, 0, button_size, button_size);
+		XMoveResizeWindow(dpy, clients[i]->button_maximize, (button_size + 2) * 2, 0, button_size, button_size);
+		XMoveResizeWindow(dpy, clients[i]->button_close, (button_size + 2) * 3, 0, button_size, button_size);
 		(clients[i] == current) ? client_set_bg(clients[i], bg, fg) : client_set_bg(clients[i], ibg, ifg);
 		if(clients[i]->flags & IS_TASKBAR)
 			client_set_layer(clients[i], taskbar_ontop ? TOP : NORMAL);
-		XMoveWindow(dpy, clients[i]->title, border_width - 1, border_width - 1);
 		XUngrabButton(dpy, AnyButton, AnyModifier, clients[i]->parent);
 		client_grab_buttons(clients[i]);
+		ewmh_update_extents(clients[i]);
 	}
+	ewmh_update_number_of_desktops();
 }
 
 void str_color(char *str, XColor *c) {
 	XColor newcolor, dummy;
-	if(!first && XAllocNamedColor(dpy, DefaultColormap(dpy, screen), str, &newcolor, &dummy)) {
-		XFreeColors(dpy, colormap, &c->pixel, 1, 0);
+	if(XAllocNamedColor(dpy, DefaultColormap(dpy, screen), str, &newcolor, &dummy)) {
+		if(!first)
+			XFreeColors(dpy, colormap, &c->pixel, 1, 0);
 		*c = newcolor;
 	}
 }

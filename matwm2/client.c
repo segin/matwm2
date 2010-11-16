@@ -40,14 +40,14 @@ void client_add(Window w) {
 #endif
 	XSetWindowBorderWidth(dpy, w, 0);
 	new->parent = XCreateWindow(dpy, root, client_x(new), client_y(new), client_width_total_intern(new), client_height_total_intern(new), (new->flags & HAS_BORDER) ? 1 : 0,
-															DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
-															CWOverrideRedirect | CWBackPixel | CWBorderPixel | CWEventMask, &p_attr);
+	                            DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
+	                            CWOverrideRedirect | CWBackPixel | CWBorderPixel | CWEventMask, &p_attr);
 	new->title = XCreateWindow(dpy, new->parent, border_width - 1, border_width - 1, 1, 1, 0,
-														 DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
-														 CWOverrideRedirect | CWEventMask, &p_attr);
+	                           DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
+	                           CWOverrideRedirect | CWEventMask, &p_attr);
 	new->wlist_item = XCreateWindow(dpy, wlist, 0, 0, 1, 1, 0,
-																	DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
-																	CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
+	                                DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
+	                                CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
 	XFetchName(dpy, w, &new->name);
 	client_update_name(new);
 	buttons_create(new);
@@ -57,7 +57,7 @@ void client_add(Window w) {
 	if(!(new->flags & DONT_LIST))
 		XMapWindow(dpy, new->wlist_item);
 	XAddToSaveSet(dpy, w);
-	XReparentWindow(dpy, w, new->parent, client_border_intern(new), client_border_intern(new) + client_title(new));
+  XReparentWindow(dpy, w, new->parent, client_border_intern(new), client_border_intern(new) + client_title(new));
 	if(new->flags & FULLSCREEN || new->flags & MAXIMIZED_L || new->flags & MAXIMIZED_R || new->flags & MAXIMIZED_T || new->flags & MAXIMIZED_B)
 		client_update_size(new);
 	else
@@ -88,6 +88,7 @@ void client_add(Window w) {
 	ewmh_update_allowed_actions(new);
 	ewmh_update_state(new);
 	ewmh_update_extents(new);
+	ewmh_update_clist();
 }
 
 void client_show(client *c) {
@@ -108,7 +109,6 @@ void client_hide(client *c) {
 			evh = drag_release_wait;
 		client_focus(NULL);
 	}
-
 }
 
 void client_deparent(client *c) {
@@ -144,6 +144,7 @@ void client_remove(client *c) {
 	clients_alloc();
 	if(evh == wlist_handle_event)
 		wlist_update();
+	ewmh_update_clist();
 }
 
 void client_grab_button(client *c, int button) {

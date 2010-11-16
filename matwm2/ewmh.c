@@ -53,7 +53,6 @@ void ewmh_initialize(void) {
 	XChangeProperty(dpy, wlist, ewmh_atoms[NET_SUPPORTING_WM_CHECK], XA_WINDOW, 32, PropModeReplace, (unsigned char *) &wlist, 1);
 	XChangeProperty(dpy, wlist, ewmh_atoms[NET_WM_NAME], XA_STRING, 8, PropModeReplace, (unsigned char *) NAME, strlen(NAME));
 	XChangeProperty(dpy, root, ewmh_atoms[NET_DESKTOP_VIEWPORT], XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &vp, 2);
-	XChangeProperty(dpy, root, ewmh_atoms[NET_NUMBER_OF_DESKTOPS], XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &dc, 1);
 	XDeleteProperty(dpy, root, ewmh_atoms[NET_DESKTOP_NAMES]);
 	if(XGetWindowProperty(dpy, root, ewmh_atoms[NET_CURRENT_DESKTOP], 0, 1, False, XA_CARDINAL, &rt, &rf, &nir, &bar, (unsigned char **) &d) == Success) {
 		if(nir) {
@@ -65,6 +64,7 @@ void ewmh_initialize(void) {
 		}
 		XFree((void *) d);
 	}
+	ewmh_update_number_of_desktops();
 	ewmh_set_desktop(desktop);
 	ewmh_update_geometry();
 	ewmh_update_showing_desktop();
@@ -200,6 +200,10 @@ void ewmh_update_extents(client *c) {
 void ewmh_update_geometry(void) {
 	long ds[] = {display_width, display_height};
 	XChangeProperty(dpy, root, ewmh_atoms[NET_DESKTOP_GEOMETRY], XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &ds, 2);
+}
+
+void ewmh_update_number_of_desktops(void) {
+	XChangeProperty(dpy, root, ewmh_atoms[NET_NUMBER_OF_DESKTOPS], XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &dc, 1);
 }
 
 void ewmh_update_desktop(client *c) {

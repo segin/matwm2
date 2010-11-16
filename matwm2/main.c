@@ -21,6 +21,10 @@ int main(int argc, char *argv[]) {
 			printf(DEF_CFG);
 			return 0;
 		}
+		if(strcmp(argv[i], "-version") == 0) {
+			printf("%s version %s\n", NAME, VERSION);
+			return 0;
+		}
 		if(strcmp(argv[i], "-display") == 0 && i + 1 < argc) {
 			dn = argv[i + 1];
 			i++;
@@ -64,8 +68,8 @@ int main(int argc, char *argv[]) {
 	p_attr.border_pixel = ifg.pixel;
 	p_attr.event_mask = ExposureMask;
 	wlist = XCreateWindow(dpy, root, 0, 0, 1, 1, 0,
-												DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
-												CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
+	                      DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
+	                      CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
 	p_attr.event_mask = SubstructureRedirectMask | SubstructureNotifyMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask | LeaveWindowMask | ExposureMask;
 	p_attr.background_pixel = ibg.pixel;
 #ifdef SHAPE
@@ -95,12 +99,11 @@ int main(int argc, char *argv[]) {
 			sr = select((qsfd[0] < dfd ? dfd : qsfd[0]) + 1, &fdsr, (fd_set *) NULL, (fd_set *) NULL, (struct timeval *) NULL);
 			if(sr == -1 && errno != EINTR)
 				error();
-			if(sr && FD_ISSET(qsfd[0], &fdsr) && read(qsfd[0], &sig, sizeof(int)) == sizeof(int))
-				if(sig == SIGHUP) {
-					keys_free();
-					cfg_read(0);
+			if(sr && FD_ISSET(qsfd[0], &fdsr) && read(qsfd[0], &sig, sizeof(int)) == sizeof(int)) {
+				if(sig == SIGHUP)
 					cfg_reinitialize();
-				} else exit(0);
+				else exit(0);
+			}
 		}
 }
 

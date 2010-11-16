@@ -60,7 +60,7 @@ void clients_alloc(void);
 /* global variables from config.c */
 extern XColor bg, ibg, fg, ifg;
 extern GC gc, igc, bgc, ibgc;
-extern int border_width, text_height, title_height, button_parent_width, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first;
+extern int border_width, text_height, title_height, button_size, button_parent_width, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first;
 extern XFontStruct *font;
 extern char *no_title;
 
@@ -108,6 +108,7 @@ int ewmh_handle_event(XEvent ev);
 int ewmh_get_hints(client *c);
 void ewmh_update_extents(client *c);
 void ewmh_update_geometry(void);
+void ewmh_update_number_of_desktops(void);
 void ewmh_update_desktop(client *c);
 void ewmh_set_desktop(int d);
 void ewmh_set_active(client *c);

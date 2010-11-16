@@ -8,6 +8,23 @@
 	added exec_onload command to run things from configuration file whenever it is loaded (exec commands will only be executed when matwm starts)
 	updated manual about new functions and added some details about configuration behaviour
 	reversed order of ChangeLog, and fixed typo in 0.0.52 entry in it
+	** pre1 release
+	replaces some tabs by spaces in matwm.h, main.c, client.c and buttons.c
+	removed comma at end of enum statement for key actions
+	check if desktop count is more then 0 in config, instead of greater then STICKY
+	update _NET_NUMBER_OF_DESKTOPS on configuration reload
+	update buttons size and position, and title window size on config reload
+	added -version argument - /me must not forget to edit makefile to set the version before release now
+	remove plan for shade function from TODO as i don't like the idea anymore
+	same for reloading config on change plans
+	first initialized as 1 instead of 0, solves BadAccess errors and lack of sence
+	free GCs propperly on config reload
+	moved some stuff from main loop over to cfg_reinitialize()
+	button size now separated from text_height, and compensated to draw expand button correctly if text_height is even
+	iconify button now fixed size, so it doesn't fuck up if font size changes
+	Button3 can also be used for window buttons, some left handed people might like this
+	moved 2 calls to ewmh_update_clist() from event loop to client_add() and client_remove()
+	removed a newline in client_hide that schouldn't be there
 
 0.0.80:
 	don't try to expand to directions already expanded to

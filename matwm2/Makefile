@@ -9,6 +9,7 @@ LDFLAGS   += -lXext # if shape support is disabled, this is no longer necessary 
 #CFLAGS    += -DDEBUG -ggdb3 # -DDEBUG_EVENTS -DSYNC # for debugging
 CFLAGS    += -I$(XROOT)/include
 LDFLAGS   += -lX11 -L$(XROOT)/lib
+CFLAGS    += -DVERSION=\"0.0.81\"
 
 SRCFILES  := actions.c buttons.c client.c config.c drag.c events.c evn.c ewmh.c info.c input.c main.c misc.c vdesk.c wlist.c x11.c
 OBJFILES  := $(SRCFILES:.c=.o)

@@ -168,17 +168,13 @@ void handle_event(XEvent ev) {
 			if(c) {
 				if(c->flags & ICONIC && has_child(c->parent, c->window))
 					client_restore(c);
-			} else if(has_child(root, ev.xmaprequest.window)) {
+			} else if(has_child(root, ev.xmaprequest.window))
 				client_add(ev.xmaprequest.window);
-				ewmh_update_clist();
-			}
 			return;
 		case DestroyNotify:
 			c = owner(ev.xdestroywindow.window);
-			if(c && c->window == ev.xdestroywindow.window) {
+			if(c && c->window == ev.xdestroywindow.window)
 				client_remove(c);
-				ewmh_update_clist();
-			}
 			return;
 		case ConfigureRequest:
 			c = owner(ev.xconfigurerequest.window);

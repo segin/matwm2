@@ -18,39 +18,39 @@
 #define NAME "matwm2"
 
 typedef struct {
-	Window			window, parent, title, wlist_item, button_parent, button_iconify, button_maximize, button_expand, button_close;
-	int					x, y, width, height, flags, layer, desktop, xo, yo, oldbw;
-	int					expand_x, expand_y, expand_width, expand_height, title_width;
-	Pixmap			title_pixmap;
-	XSizeHints	normal_hints;
-	char				*name;
+	Window      window, parent, title, wlist_item, button_parent, button_iconify, button_maximize, button_expand, button_close;
+	int         x, y, width, height, flags, layer, desktop, xo, yo, oldbw;
+	int         expand_x, expand_y, expand_width, expand_height, title_width;
+	Pixmap      title_pixmap;
+	XSizeHints  normal_hints;
+	char        *name;
 } client;
 
-#define ICONIC					(1 << 0)
-#define MAXIMIZED_L			(1 << 1)
-#define MAXIMIZED_R			(1 << 2)
-#define MAXIMIZED_T			(1 << 3)
-#define MAXIMIZED_B			(1 << 4)
-#define EXPANDED_L			(1 << 5)
-#define EXPANDED_R			(1 << 6)
-#define EXPANDED_T			(1 << 7)
-#define EXPANDED_B			(1 << 8)
-#define FULLSCREEN			(1 << 9)
-#define SHAPED					(1 << 10)
-#define HAS_TITLE				(1 << 11)
-#define HAS_BORDER			(1 << 12)
-#define HAS_BUTTONS			(1 << 13)
-#define CAN_MOVE				(1 << 14)
-#define CAN_RESIZE			(1 << 15)
-#define NO_STRUT				(1 << 16)
-#define DONT_LIST				(1 << 17)
-#define RESTORE					(1 << 18)
-#define DONT_FOCUS			(1 << 19)
-#define CLICK_FOCUS			(1 << 20)
-#define DESKTOP_LOCKED	(1 << 21)
-#define IS_TASKBAR			(1 << 22)
+#define ICONIC          (1 << 0)
+#define MAXIMIZED_L     (1 << 1)
+#define MAXIMIZED_R     (1 << 2)
+#define MAXIMIZED_T     (1 << 3)
+#define MAXIMIZED_B     (1 << 4)
+#define EXPANDED_L      (1 << 5)
+#define EXPANDED_R      (1 << 6)
+#define EXPANDED_T      (1 << 7)
+#define EXPANDED_B      (1 << 8)
+#define FULLSCREEN      (1 << 9)
+#define SHAPED          (1 << 10)
+#define HAS_TITLE       (1 << 11)
+#define HAS_BORDER      (1 << 12)
+#define HAS_BUTTONS     (1 << 13)
+#define CAN_MOVE        (1 << 14)
+#define CAN_RESIZE      (1 << 15)
+#define NO_STRUT        (1 << 16)
+#define DONT_LIST       (1 << 17)
+#define RESTORE         (1 << 18)
+#define DONT_FOCUS      (1 << 19)
+#define CLICK_FOCUS     (1 << 20)
+#define DESKTOP_LOCKED  (1 << 21)
+#define IS_TASKBAR      (1 << 22)
 
-#define STICKY					-1
+#define STICKY          -1
 
 enum layers {
 	TOPMOST,
@@ -87,7 +87,7 @@ enum {
 	KA_ONTOP,
 	KA_BELOW,
 	KA_RAISE,
-	KA_LOWER,
+	KA_LOWER
 };
 
 enum {
