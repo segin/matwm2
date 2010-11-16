@@ -59,7 +59,7 @@ void handle_event(XEvent ev) {
         if(clients[i].name)
           XFree(clients[i].name);
         XFetchName(dpy, clients[i].window, &clients[i].name);
-        XClearWindow(dpy, clients[i].parent);
+        XClearWindow(dpy, clients[i].iconic ? clients[i].icon : clients[i].parent);
         draw_client(i);
       }
       if(ev.xproperty.atom == XA_WM_NORMAL_HINTS && i < cn)
@@ -147,6 +147,13 @@ void handle_event(XEvent ev) {
         move(current, display_width - total_width(current), 0);
       if(current < cn && iskey(key_topleft))
         move(current, 0, 0);
+      break;
+    case ConfigureNotify:
+      if(root == ev.xconfigure.window) {
+        display_width = ev.xconfigure.width;
+        display_height = ev.xconfigure.height;
+        sort_icons();
+      }
       break;
     default:
       for(i = 0; i < cn; i++)

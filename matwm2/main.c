@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
   sigaction(SIGINT, &qsa, NULL);
   sigaction(SIGHUP, &qsa, NULL);
   XSetErrorHandler(&xerrorhandler);
-  XSelectInput(dpy, root, SubstructureRedirectMask | SubstructureNotifyMask);
+  XSelectInput(dpy, root, StructureNotifyMask | SubstructureRedirectMask | SubstructureNotifyMask);
   xa_wm_protocols = XInternAtom(dpy, "WM_PROTOCOLS", False);
   xa_wm_delete = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
   xa_wm_state = XInternAtom(dpy, "WM_STATE", False);
