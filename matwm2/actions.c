@@ -72,7 +72,8 @@ void client_raise(client *c) {
 	for(i = client_number(stacking, c); i > 0 && (client_layer(stacking[i - 1]) >= client_layer(c) || stacking[i - 1]->flags & ICONIC || (fullscreen_stacking == FS_ONTOP && c->flags & FULLSCREEN && c->layer <= NORMAL)); i--)
 		stacking[i] = stacking[i - 1];
 	stacking[i] = c;
-	client_over_fullscreen(c);
+	client_over_fullscreen(c); /* fullscreen windows can go above always-on-top windows, but we can also go above them with the help of this function */
+	/* above function calls clients_apply_stacking(), so we are done */
 }
 
 void client_lower(client *c) {
@@ -83,7 +84,7 @@ void client_lower(client *c) {
 	clients_apply_stacking();
 }
 
-void client_over_fullscreen(client *c) {
+void client_over_fullscreen(client *c) { /* help a window getting above fullscreen windows by lowering it until it is under always-on-top windows */
 	int i, j, cc = client_number(stacking, c);
 	if(fullscreen_stacking != FS_ONTOP)
 		return;
@@ -107,7 +108,7 @@ void client_fullscreen(client *c) {
 	  client_update_layer(current, TOP);
 }
 
-void client_set_layer(client *c, int layer) {
+void client_set_layer(client *c, int layer) { /* for making windows always-on-top, always-below, etc */
 	int i, prev = client_layer(c);
 	c->layer = layer;
 	if(client_layer(c) != prev)
@@ -117,7 +118,7 @@ void client_set_layer(client *c, int layer) {
 			button_draw(c, &c->buttons[i]);
 }
 
-void client_toggle_state(client *c, int state) {
+void client_toggle_state(client *c, int state) { /* used directly only for maximizing, client_fullscreen also calls this  */
 	if(!(c->flags & CAN_MOVE) || !(c->flags & CAN_RESIZE))
 		return;
 	if((c->flags & state) == state)
@@ -130,7 +131,7 @@ void client_toggle_state(client *c, int state) {
 	ewmh_update_state(c);
 }
 
-void client_expand_x(client *c, int d, int first) {
+void client_expand_x(client *c, int d, int first) { /* calculate horizontal dimensions for expanding */
 	int i;
 	for(i = 0; i < cn; i++) {
 		if(!client_visible(clients[i]) || (first ? c->y : c->expand_y) >= client_y(clients[i]) + client_height_total(clients[i]) || (first ? c->y + client_height_total(c) : c->expand_height) <= client_y(clients[i]))
@@ -142,7 +143,7 @@ void client_expand_x(client *c, int d, int first) {
 	}
 }
 
-void client_expand_y(client *c, int d, int first) {
+void client_expand_y(client *c, int d, int first) {  /* calculate vertical dimensions for expanding */
 	int i;
 	for(i = 0; i < cn; i++) {
 		if(!client_visible(clients[i]) || (first ? c->x : c->expand_x) >= client_x(clients[i]) + client_width_total(clients[i]) || (first ? c->x + client_width_total(c) : c->expand_width) <= client_x(clients[i]))
@@ -154,7 +155,7 @@ void client_expand_y(client *c, int d, int first) {
 	}
 }
 
-void client_expand(client *c, int d, int a) {
+void client_expand(client *c, int d, int a) { /* see expand key action in the manual page for explanation of what this does */
 	int i;
 	if(!(c->flags & CAN_MOVE) || !(c->flags & CAN_RESIZE))
 		return;
@@ -181,20 +182,24 @@ void client_expand(client *c, int d, int a) {
 	client_update(c);
 }
 
-void client_toggle_title(client *c) {
+void client_toggle_title(client *c) { /* hide or unhide title bar */
 	c->flags ^= HAS_TITLE;
 	client_update_title(c);
 }
 
 void client_iconify(client *c) {
 	int i;
+	XEvent ev;
 	if(c->flags & ICONIC || c->flags & DONT_LIST)
 		return;
 	nicons++;
 	c->flags |= ICONIC;
 	set_wm_state(c->window, IconicState);
-	if(c->desktop == desktop || c->desktop == STICKY)
+	if(c->desktop == desktop || c->desktop == STICKY) {
 		client_hide(c);
+		XUnmapWindow(dpy, c->window); /* window needs to be unmapped so it can send maprequest to de-iconify itself */
+		XIfEvent(dpy, &ev, &isunmap, (XPointer) &c->window); /* catch the UnmapNotify event so matwm doesn't think the client is gone */
+	}
 	if(!current)
 		client_focus_first();
 	if(c->desktop != desktop && c->desktop != STICKY)
@@ -207,11 +212,12 @@ void client_iconify(client *c) {
 		wlist_update();
 }
 
-void client_restore(client *c) {
+void client_restore(client *c) { /* restores iconic client */
 	int i;
 	if(!(c->flags & ICONIC))
 		return;
 	nicons--;
+	XMapWindow(dpy, c->window);
 	client_show(c);
 	if(c->desktop != STICKY && c->desktop != desktop) {
 		c->desktop = desktop;
@@ -227,7 +233,7 @@ void client_restore(client *c) {
 	client_end_all_iconic();
 }
 
-void client_save(client *c) {
+void client_save(client *c) { /* bring a moved off-screen window back to the screen */
 	int x = client_x(c), y = client_y(c);
 	if(client_x(c) >= display_width)
 		x = display_width - client_width_total(c);
@@ -260,7 +266,7 @@ void client_to_border(client *c, char *a) {
 	client_warp(c);
 }
 
-void client_iconify_all(void) {
+void client_iconify_all(void) { /* iconify all windows, to be eventually restored afterwards by calling this function again */
 	int i;
 	if(all_iconic) {
 		for(i = 0; i < cn; i++)
@@ -280,14 +286,14 @@ void client_iconify_all(void) {
 	ewmh_update_showing_desktop();
 }
 
-void client_end_all_iconic(void) {
+void client_end_all_iconic(void) { /* to exit state induced by above function without restoring all windows */
 	if(all_iconic) {
 		all_iconic = 0;
 		ewmh_update_showing_desktop();
 	}
 }
 
-void client_handle_button(client *c, XEvent ev, int d) {
+void client_handle_button(client *c, XEvent ev, int d) { /* for when a mouse button is clicked or doubleclicked on a window */
 	int action = buttonaction(ev.xbutton.button, d);
 	if(!(c->flags & DONT_FOCUS)) {
 		if(action == BA_MOVE)

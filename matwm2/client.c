@@ -72,8 +72,10 @@ void client_add(Window w) {
 		stacking[i] = new;
 		if(evh == drag_handle_event)
 			client_raise(current);
-		if(new->desktop == desktop || new->desktop == STICKY)
+		if(new->desktop == desktop || new->desktop == STICKY) {
+			XMapWindow(dpy, new->window);
 			client_show(new);
+		}
 	} else {
 		stacking[cn - 1] = new;
 		nicons++;
@@ -100,16 +102,12 @@ void client_add(Window w) {
 }
 
 void client_show(client *c) {
-	XMapWindow(dpy, c->window);
 	XMapWindow(dpy, c->parent);
 	clients_apply_stacking();
 }
 
 void client_hide(client *c) {
-	XEvent ev;
 	XUnmapWindow(dpy, c->parent);
-	XUnmapWindow(dpy, c->window);
-	XIfEvent(dpy, &ev, &isunmap, (XPointer) &c->window);
 	if(c == previous)
 		previous = NULL;
 	if(c == current) {

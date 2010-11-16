@@ -1,3 +1,7 @@
+0.0.91:
+	added comments in actions.c
+	only unmap frame window when hiding, but not iconifying window - apearantly some applications did not like the previous behaviour
+
 0.0.90:
 	deinstall target of Makefile now uses $(RM) too
 	iconic windows that are restored by a maprequest event also become focussed if focus_new is enabled
