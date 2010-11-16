@@ -2,7 +2,8 @@
 
 XColor bg, ibg, fg, ifg, bfg, ibfg;
 GC gc, igc, bgc, ibgc;
-int border_spacing, border_width, button_spacing, wlist_margin, wlist_maxwidth, wlist_item_height, text_height, title_height, button_size, title_spacing, center_title, center_wlist_items, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first = 1, *buttons_right = NULL, nbuttons_right = 0, *buttons_left = NULL, nbuttons_left = 0, doubleclick_time, double1, double2, double3, double4, double5, fullscreen_stacking, map_center;
+int border_spacing, border_width, button_spacing, wlist_margin, wlist_maxwidth, wlist_item_height, text_height, title_height, button_size, title_spacing, snapat, button1, button2, button3, button4, button5, dc, first = 1, *buttons_right = NULL, nbuttons_right = 0, *buttons_left = NULL, nbuttons_left = 0, doubleclick_time, double1, double2, double3, double4, double5, fullscreen_stacking, ewmh_screen;
+bool center_title, center_wlist_items, click_focus, click_raise, focus_new, taskbar_ontop, map_center, drag_warp, allow_focus_stealing;
 #ifdef USE_XFT
 XftFont *xftfont = NULL;
 XftColor xftfg, xftbg, xftifg, xftibg;
@@ -215,6 +216,11 @@ void cfg_set_opt(char *key, char *value, int initial) {
 		if(i > 0)
 			dc = i;
 	}
+	if(strcmp(key, "ewmh_screen") == 0) {
+		i = strtol(value, NULL, 0);
+		if(i > 0)
+			ewmh_screen = i;
+	}
 	if(strcmp(key, "button1") == 0)
 		button1 = str_buttonaction(value);
 	if(strcmp(key, "button2") == 0)
@@ -251,6 +257,10 @@ void cfg_set_opt(char *key, char *value, int initial) {
 		str_bool(value, &center_wlist_items);
 	if(strcmp(key, "map_center") == 0)
 		str_bool(value, &map_center);
+	if(strcmp(key, "drag_warp") == 0)
+		str_bool(value, &drag_warp);
+	if(strcmp(key, "allow_focus_stealing") == 0)
+		str_bool(value, &allow_focus_stealing);
 	if(strcmp(key, "mouse_modifier") == 0)
 		str_key(&value, &mousemodmask);
 	if(strcmp(key, "no_snap_modifier") == 0)
@@ -323,6 +333,8 @@ void cfg_reinitialize(void) {
 		ewmh_update_extents(clients[i]);
 	}
 	ewmh_update_number_of_desktops();
+	ewmh_update_geometry();
+	ewmh_update_strut();
 }
 
 void str_color(char *str, XColor *c) {
@@ -344,11 +356,11 @@ void set_xft_color(XftColor *xftcolor, XColor xcolor) {
 }
 #endif
 
-void str_bool(char *str, int *b) {
+void str_bool(char *str, bool *b) {
 	if(strcmp(str, "false") == 0)
-		*b = 0;
+		*b = false;
 	if(strcmp(str, "true") == 0)
-		*b = 1;
+		*b = true;
 }
 
 void str_fsstacking(char *str, int *s) {

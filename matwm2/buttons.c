@@ -108,7 +108,7 @@ void buttons_update(client *c) { /* maps the buttons if the window has no button
 	XMoveWindow(dpy, c->button_parent_right, client_width(c) + border_spacing - c->buttons_right_width, border_spacing);
 }
 
-int button_handle_event(XEvent ev) {
+bool button_handle_event(XEvent ev) {
 	int i, j;
 	client *c = NULL;
 	button *b = NULL;
@@ -119,29 +119,29 @@ int button_handle_event(XEvent ev) {
 			b = &clients[i]->buttons[j];
 		}
 	if(!c || !has_child(c->parent, c->window))
-		return 0;
+		return false;
 	switch(ev.type) {
 		case Expose:
 			button_draw(c, b);
-			return 1;
+			return true;
 		case EnterNotify:
 			if(button_down) {
 				button_down = 2;
-				return 1;
+				return true;
 			}
 			button_current = b;
 			button_draw(c, b);
-			return 1;
+			return true;
 		case LeaveNotify:
 			if(button_down == 2)
 				button_down = 1;
 			button_current = NULL;
 			button_draw(c, b);
-			return 1;
+			return true;
 		case ButtonPress:
 			if(ev.xbutton.button == Button1 || ev.xbutton.button == Button3)
 				button_down = 1;
-			return 1;
+			return true;
 		case ButtonRelease:
 			if(ev.xbutton.button == Button1 || ev.xbutton.button == Button3) {
 				if(button_current == b) {
@@ -166,8 +166,8 @@ int button_handle_event(XEvent ev) {
 				}
 				button_down = 0;
 			}
-			return 1;
+			return true;
 	}
-	return 0;
+	return false;
 }
 

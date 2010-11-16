@@ -11,6 +11,7 @@ title_spacing         2
 button_spacing        2
 wlist_margin          2
 wlist_maxwidth        0
+ewmh_screen           0
 buttons_left          sticky ontop
 buttons_right         iconify expand maximize close
 center_title          false
@@ -23,6 +24,8 @@ fullscreen_stacking   ontop
 click_focus           false
 click_raise           false
 map_center            false
+drag_warp             true
+allow_focus_stealing  true
 button1               move
 button2               none
 button3               resize

@@ -1,7 +1,7 @@
 #include "matwm.h"
 
 Display *dpy = NULL;
-int screen, depth, display_width, display_height, have_shape, shape_event, qsfd[2];
+int screen, depth, have_shape, shape_event, qsfd[2];
 Window root;
 Atom xa_wm_protocols, xa_wm_delete, xa_wm_state, xa_wm_change_state, xa_motif_wm_hints;
 XSetWindowAttributes p_attr;
@@ -83,10 +83,8 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 	/* setup signal handler etc */
-	if(pipe(qsfd) != 0) { /* we will use this pipe in the main loop, signal hander, etc */
-		perror(perror_str);
-		return 1;
-	}
+	if(pipe(qsfd) != 0) /* we will use this pipe in the main loop, signal hander, etc */
+		error();
 	atexit(&quit);
 	signal(SIGTERM, &sighandler);
 	signal(SIGINT, &sighandler);
@@ -108,14 +106,12 @@ int main(int argc, char *argv[]) {
 	depth = DefaultDepth(dpy, screen);
 	visual = DefaultVisual(dpy, screen);
 	XSetErrorHandler(&xerrorhandler); /* set up error handler - to be found in x11.c */
-	XSelectInput(dpy, root, StructureNotifyMask | SubstructureRedirectMask | SubstructureNotifyMask); /* only one application can select these, this will error if another window manager is running */
+	XSelectInput(dpy, root, StructureNotifyMask | SubstructureRedirectMask | SubstructureNotifyMask | FocusChangeMask); /* some of this events can only be selected by one application, this will error if another window manager is running */
 	xa_wm_protocols = XInternAtom(dpy, "WM_PROTOCOLS", False);
 	xa_wm_delete = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
 	xa_wm_state = XInternAtom(dpy, "WM_STATE", False);
 	xa_wm_change_state = XInternAtom(dpy, "WM_CHANGE_STATE", False);
 	xa_motif_wm_hints = XInternAtom(dpy, "_MOTIF_WM_HINTS", False);
-	display_width = XDisplayWidth(dpy, screen);
-	display_height = XDisplayHeight(dpy, screen);
 	cfg_read(1); /* read configuration - see config.c */
 	p_attr.override_redirect = True;
 	p_attr.background_pixel = fg.pixel;
@@ -130,6 +126,8 @@ int main(int argc, char *argv[]) {
 	have_shape = XShapeQueryExtension(dpy, &shape_event, &di);
 	#endif
 	ewmh_initialize();
+	screens_get();
+	ewmh_update();
 	XSetInputFocus(dpy, PointerRoot, RevertToPointerRoot, CurrentTime); /* set input focus to the root window */
 	XQueryTree(dpy, root, &dw, &dw, &wins, &nwins); /* look for windows already present */
 	for(ui = 0; ui < nwins; ui++) {

@@ -32,8 +32,8 @@ void drag_end(void) {
 	evh = NULL;
 }
 
-int drag_handle_event(XEvent ev) {
-	int x, y;
+bool drag_handle_event(XEvent ev) {
+	int x, y, left = screens_leftmost(), right = screens_rightmost();
 	if(current)
 		if(has_child(current->parent, current->window) || ev.type == UnmapNotify || ev.type == DestroyNotify || ev.type == ButtonRelease)
 			switch(ev.type) {
@@ -45,25 +45,25 @@ int drag_handle_event(XEvent ev) {
 						if(nosnapmodmask && ev.xmotion.state & nosnapmodmask)
 							client_resize(current, x - drag_xo, y - drag_yo);
 						else client_resize(current, snaph(current, x, snapv(current, x, y)) - drag_xo, snapv(current, snaph(current, x, y), y) - drag_yo);
-					} else if(ev.xmotion.x == display_width - 1 && desktop < dc - 1) {
-						client_move(current, -(drag_xo + 1), ev.xmotion.y - drag_yo);
+					} else if(drag_warp && ev.xmotion.x == right - 1 && desktop < dc - 1) {
+						client_move(current, left - (drag_xo + 1), ev.xmotion.y - drag_yo);
 						XWarpPointer(dpy, None, root, 0, 0, 0, 0, 1, ev.xmotion.y);
 						desktop_goto(desktop + 1);
-					} else if(ev.xmotion.x == 0 && desktop > 0) {
-						client_move(current, display_width - (drag_xo + 2), ev.xmotion.y - drag_yo);
-						XWarpPointer(dpy, None, root, 0, 0, 0, 0, display_width - 2, ev.xmotion.y);
+					} else if(drag_warp && ev.xmotion.x == left && desktop > 0) {
+						client_move(current, right - (drag_xo + 2), ev.xmotion.y - drag_yo);
+						XWarpPointer(dpy, None, root, 0, 0, 0, 0, right - 2, ev.xmotion.y);
 						desktop_goto(desktop - 1);
 					} else if(nosnapmodmask && ev.xmotion.state & nosnapmodmask)
 						client_move(current, ev.xmotion.x - drag_xo, ev.xmotion.y - drag_yo);
 					else client_move(current, snapx(current, ev.xmotion.x - drag_xo, snapy(current, ev.xmotion.x - drag_xo, ev.xmotion.y - drag_yo)), snapy(current, snapx(current, ev.xmotion.x - drag_xo, ev.xmotion.y - drag_yo), ev.xmotion.y - drag_yo));
-					return 1;
+					return true;
 				case ButtonRelease:
 					if(ev.xbutton.button == drag_button || drag_button == AnyButton)
 						drag_end();
-					return 1;
+					return true;
 				case EnterNotify:
 				case ButtonPress:
-					return 1;
+					return true;
 				case UnmapNotify:
 					if(current->window == ev.xunmap.window)
 						evh = drag_release_wait;
@@ -72,23 +72,26 @@ int drag_handle_event(XEvent ev) {
 					if(current->window == ev.xdestroywindow.window)
 						evh = drag_release_wait;
 			}
-	return 0;
+	return false;
 }
 
-int drag_release_wait(XEvent ev) {
+bool drag_release_wait(XEvent ev) {
 	if(ev.type == ButtonRelease && (ev.xbutton.button == drag_button || drag_button == AnyButton)) {
 		drag_end();
-		return 1;
+		return true;
 	}
-	return 0;
+	return false;
 }
 
 int snapx(client *c, int nx, int ny) {
-	int i;
-	if(nx < 0 + snapat && nx > 0 - snapat)
-		return 0;
-	if(nx < (display_width - client_width_total(c)) + snapat && nx > (display_width - client_width_total(c)) - snapat)
-		return display_width - client_width_total(c);
+	int i, right;
+	for(i = 0; i < nscreens; i++) {
+		if(nx < screens[i].x + snapat && nx > screens[i].x - snapat)
+			return screens[i].x;
+		right = screens[i].x + screens[i].width;
+		if(nx < (right - client_width_total(c)) + snapat && nx > (right - client_width_total(c)) - snapat)
+			return right - client_width_total(c);
+	}
 	for(i = 0; i < cn; i++) {
 		if(clients[i] == c || !client_visible(clients[i]) || ny + client_height_total(c) < client_y(clients[i]) || ny > client_y(clients[i]) + client_height_total(clients[i]))
 			continue;
@@ -105,11 +108,14 @@ int snapx(client *c, int nx, int ny) {
 }
 
 int snapy(client *c, int nx, int ny) {
-	int i;
-	if(ny < 0 + snapat && ny > 0 - snapat)
-		return 0;
-	if(ny < (display_height - client_height_total(c)) + snapat && ny > (display_height - client_height_total(c)) - snapat)
-		return display_height - client_height_total(c);
+	int i, bottom;
+	for(i = 0; i < nscreens; i++) {
+		if(ny < screens[i].y + snapat && ny > screens[i].y - snapat)
+			return 0;
+		bottom = screens[i].y + screens[i].height;
+		if(ny < (bottom - client_height_total(c)) + snapat && ny > (bottom - client_height_total(c)) - snapat)
+			return bottom - client_height_total(c);
+	}
 	for(i = 0; i < cn; i++) {
 		if(clients[i] == c || !client_visible(clients[i]) || nx + client_width_total(c) < client_x(clients[i]) || nx > client_x(clients[i]) + client_width_total(clients[i]))
 			continue;
@@ -126,9 +132,12 @@ int snapy(client *c, int nx, int ny) {
 }
 
 int snaph(client *c, int nx, int ny) {
-	int i;
-	if(nx < display_width + snapat && nx > display_width - snapat)
-		return display_width;
+	int i, right;
+	for(i = 0; i < nscreens; i++) {
+		right = screens[i].x + screens[i].width;
+		if(nx < right + snapat && nx > right - snapat)
+			return right;
+	}
 	for(i = 0; i < cn; i++) {
 		if(clients[i] == c || (clients[i]->desktop != STICKY && clients[i]->desktop != desktop) || ny < client_y(clients[i]) || c->y > client_y(clients[i]) + client_height_total(clients[i]) || clients[i]->flags & ICONIC)
 			continue;
@@ -141,9 +150,12 @@ int snaph(client *c, int nx, int ny) {
 }
 
 int snapv(client *c, int nx, int ny) {
-	int i;
-	if(ny < display_height + snapat && ny > display_height - snapat)
-		return display_height;
+	int i, bottom;
+	for(i = 0; i < nscreens; i++) {
+		bottom = screens[i].y + screens[i].height;
+		if(ny < bottom + snapat && ny > bottom - snapat)
+			return bottom;
+	}
 	for(i = 0; i < cn; i++) {
 		if(clients[i] == c ||	(clients[i]->desktop != STICKY && clients[i]->desktop != desktop) || nx < client_x(clients[i]) || c->x > client_x(clients[i]) + client_width_total(clients[i]) || clients[i]->flags & ICONIC)
 			continue;

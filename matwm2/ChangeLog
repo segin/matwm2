@@ -1,3 +1,27 @@
+0.0.100:
+	wrapped all screen dimensions stuff, so multiple screens can be used
+	initial xinerama support
+	don't calculate workarea dimensions 4 times to set them 4 times in ewmh.c
+	removed a few misplaced tabs from configure script
+	first argument of expand() is now bool instead of int
+	event handlers return bool instead of int
+	update window list before mapping it
+	added drag_warp option to disable warping desktops while dragging
+	boolean options in config.c now use bool datatype too
+	don't strut _KDE_NET_WM_WINDOW_TYPE_OVERRIDE windows
+	ewmh_initialize() split up in ewmh_initialize() and ewmh_update()
+	update windows when strutting changes
+	remove frame around fullscreen windows so fullscreen doesn't look odd with xinerama setups
+	client_expand()'s a argument is now bool instead of int
+	allow overrideredirect windows to take focus
+	use error() for pipe() errors too
+	follow focus where application try to set it
+	added allow_focus_stealing option (setting it false makes focus policy more strict, like it used to be)
+	set input focus to None while in window list modus
+	added comment about _NET_WM_STRUT_PARTIAL not being fully supported to BUGS
+	ewmh_screen option to set where the desktop windows and such go on xinerama setups
+	updated README and manual page about new features
+
 0.0.99:
 	using pid_t instead of int for pid in spawn()
 	passing a propper adress to wait() instead of NULL in spawn()

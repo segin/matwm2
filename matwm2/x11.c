@@ -156,9 +156,9 @@ int gxo(client *c, bool initial) { /* returns offset for horizontal window gravi
 			case NorthEastGravity:
 			case EastGravity:
 			case SouthEastGravity:
-				return ((client_border(c) * 2) + (initial ? -(c->oldbw * 2) : c->width)) + ((c->flags & NO_STRUT) ? 0 : ewmh_strut[1]);
+				return ((client_border(c) * 2) + (initial ? -(c->oldbw * 2) : c->width)) + ((c->flags & NO_STRUT) ? 0 : screens[c->screen].ewmh_strut[1]);
 		}
-	return ((c->flags & NO_STRUT) ? 0 : -ewmh_strut[0]);
+	return ((c->flags & NO_STRUT) ? 0 : -screens[c->screen].ewmh_strut[0]);
 }
 
 int gyo(client *c, bool initial) { /* returns offset for vertical window gravity */
@@ -173,9 +173,9 @@ int gyo(client *c, bool initial) { /* returns offset for vertical window gravity
 			case SouthEastGravity:
 			case SouthGravity:
 			case SouthWestGravity:
-				return ((client_border(c) * 2) + client_title(c) + (initial ? -(c->oldbw * 2) : c->height)) + ((c->flags & NO_STRUT) ? 0 : ewmh_strut[3]);
+				return ((client_border(c) * 2) + client_title(c) + (initial ? -(c->oldbw * 2) : c->height)) + ((c->flags & NO_STRUT) ? 0 : screens[c->screen].ewmh_strut[3]);
 		}
-	return ((c->flags & NO_STRUT) ? 0 : -ewmh_strut[2]);
+	return ((c->flags & NO_STRUT) ? 0 : -screens[c->screen].ewmh_strut[2]);
 }
 
 int has_child(Window parent, Window child) { /* checks if child is a child of parent */

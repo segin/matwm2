@@ -2,9 +2,9 @@
 
 int client_x(client *c) { /* returns the horizontal position of a window's frame */
 	if(c->flags & FULLSCREEN)
-		return -client_border(c);
+		return screens[c->screen].x - client_border(c);
 	if(c->flags & MAXIMIZED_L)
-		return ewmh_strut[0];
+		return screens[c->screen].x + screens[c->screen].ewmh_strut[0];
 	if(c->flags & EXPANDED_L)
 		return c->expand_x;
 	return c->x;
@@ -12,9 +12,9 @@ int client_x(client *c) { /* returns the horizontal position of a window's frame
 
 int client_y(client *c) { /* returns the vertical position of a window's frame */
 	if(c->flags & FULLSCREEN)
-		return -(client_border(c) + client_title(c));
+		return screens[c->screen].y - (client_border(c) + client_title(c));
 	if(c->flags & MAXIMIZED_T)
-		return ewmh_strut[2];
+		return screens[c->screen].y + screens[c->screen].ewmh_strut[2];
 	if(c->flags & EXPANDED_T)
 		return c->expand_y;
 	return c->y;
@@ -22,9 +22,9 @@ int client_y(client *c) { /* returns the vertical position of a window's frame *
 
 int client_width(client *c) { /* returns the width of a client (excluding the frame) */
 	if(c->flags & FULLSCREEN)
-		return display_width;
+		return screens[c->screen].width;
 	if(c->flags & MAXIMIZED_R)
-		return display_width - ((client_border(c) * 2) + ewmh_strut[1] + client_x(c));
+		return screens[c->screen].width - ((client_border(c) * 2) + screens[c->screen].ewmh_strut[1] + (client_x(c) - screens[c->screen].x));
 	if(c->flags & EXPANDED_R)
 		return c->expand_width;
 	return c->width;
@@ -32,23 +32,29 @@ int client_width(client *c) { /* returns the width of a client (excluding the fr
 
 int client_height(client *c) {  /* returns the height of a client (excluding the frame) */
 	if(c->flags & FULLSCREEN)
-		return display_height;
+		return screens[c->screen].height;
 	if(c->flags & MAXIMIZED_B)
-		return display_height - ((client_border(c) * 2) + client_title(c) + ewmh_strut[3] + client_y(c));
+		return screens[c->screen].height - ((client_border(c) * 2) + client_title(c) + screens[c->screen].ewmh_strut[3] + (client_y(c) - screens[c->screen].y));
 	if(c->flags & EXPANDED_B)
 		return c->expand_height;
 	return c->height;
 }
 
 int client_border(client *c) { /* returns the total width of a client's border (including the border placed around the parent window by X) */
+	if(c->flags & FULLSCREEN)
+		return 0;
 	return (!(c->flags & SHAPED) && c->flags & HAS_BORDER) ? border_spacing + border_width : 0;
 }
 
 int client_border_intern(client *c) { /* returns the width of a client's border (excluding the border placed around the parent window by X) */
+	if(c->flags & FULLSCREEN)
+		return 0;
 	return (!(c->flags & SHAPED) && c->flags & HAS_BORDER) ? border_spacing : 0;
 }
 
 int client_title(client *c) { /* returns the height of a client's title bar (border not included) */
+	if(c->flags & FULLSCREEN)
+		return 0;
 	return (!(c->flags & SHAPED) && c->flags & HAS_TITLE && c->flags & HAS_BORDER) ? title_height : 0;
 }
 

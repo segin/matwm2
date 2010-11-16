@@ -1,7 +1,7 @@
 #include "matwm.h"
 
 Window wlist;
-int wlist_width;
+int wlist_width, wlist_screen;
 client *client_before_wlist;
 
 void wlist_start(XEvent ev) {
@@ -9,10 +9,14 @@ void wlist_start(XEvent ev) {
 		return;
 	if(!wlist_update())
 		return;
-	XMapRaised(dpy, wlist);
+	screens_update_current();
+	wlist_screen = cs;
 	XGrabKeyboard(dpy, root, True, GrabModeAsync, GrabModeAsync, CurrentTime);
+	XSetInputFocus(dpy, None, RevertToPointerRoot, CurrentTime);
 	evh = wlist_handle_event;
 	client_before_wlist = current;
+	wlist_update();
+	XMapRaised(dpy, wlist);
 	handle_event(ev);
 }
 
@@ -49,16 +53,16 @@ client *wlist_prev(void) {
 	return stacking[i];
 }
 
-int wlist_handle_event(XEvent ev) {
+bool wlist_handle_event(XEvent ev) {
 	int mask, i;
 	client *c;
 	switch(ev.type) {
 		case KeyPress:
 			i = keyaction(ev);
 			if(i == KA_NEXT) {
-				client_focus(wlist_next());
+				client_focus(wlist_next(), false);
 			} else if(i == KA_PREV) {
-				client_focus(wlist_prev());
+				client_focus(wlist_prev(), false);
 			} else break;
 			XWarpPointer(dpy, None, current->wlist_item, 0, 0, 0, 0, wlist_width - 2, wlist_item_height - 1);
 			break;
@@ -77,15 +81,15 @@ int wlist_handle_event(XEvent ev) {
 			if(click_focus) {
 				c = owner(ev.xbutton.window);
 				if(c)
-					client_focus(c);
+					client_focus(c, false);
 			}
 			break;
 		case ButtonRelease:
 			break;
 		default:
-			return 0;
+			return false;
 	}
-	return 1;
+	return true;
 }
 
 int wlist_update(void) {
@@ -101,8 +105,8 @@ int wlist_update(void) {
 		wlist_end(1);
 		return 0;
 	}
-	if(wlist_width > display_width)
-		wlist_width = display_width;
+	if(wlist_width > screens[wlist_screen].width)
+		wlist_width = screens[wlist_screen].width;
 	if(wlist_maxwidth && wlist_width > wlist_maxwidth + 2) /* add two because this specifies maximum width of items, not the list */
 		wlist_width = wlist_maxwidth + 2;
 	for(i = 0; i < cn; i++) {
@@ -113,7 +117,7 @@ int wlist_update(void) {
 			wlist_height += wlist_item_height + 1;
 		}
 	}
-	XMoveResizeWindow(dpy, wlist, (display_width / 2) - (wlist_width / 2), (display_height / 2) - (wlist_height / 2), wlist_width, wlist_height);
+	XMoveResizeWindow(dpy, wlist, screens[wlist_screen].x + ((screens[wlist_screen].width / 2) - (wlist_width / 2)), screens[wlist_screen].y + ((screens[wlist_screen].height / 2) - (wlist_height / 2)), wlist_width, wlist_height);
 	return 1;
 }
 

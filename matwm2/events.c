@@ -1,6 +1,6 @@
 #include "matwm.h"
 
-int (*evh)(XEvent) = NULL;
+bool (*evh)(XEvent) = NULL;
 Time lastclick = 0;
 unsigned int lastbutton = None;
 client *lastclick_client = NULL;
@@ -13,7 +13,7 @@ void handle_event(XEvent ev) {
 	if(c) printf("%i (%s): %s\n", ev.xany.window, c->name, event_name(ev));
 	else printf("%i: %s\n", ev.xany.window, event_name(ev));
 	#endif
-	if((evh && evh(ev)) || button_handle_event(ev) || ewmh_handle_event(ev))
+	if((evh && evh(ev)) || button_handle_event(ev) || ewmh_handle_event(ev) || screens_handle_event(ev))
 		return;
 	if(c) {
 		if(!has_child(c->parent, c->window) && ev.type != DestroyNotify && ev.type != UnmapNotify)
@@ -55,7 +55,7 @@ void handle_event(XEvent ev) {
 				return;
 			case EnterNotify:
 				if(c != current && !(c->flags & CLICK_FOCUS) && !click_focus && ev.xcrossing.detail != NotifyInferior && (ev.xcrossing.window == c->parent || ev.xcrossing.window == c->wlist_item) && ev.xcrossing.send_event == False)
-					client_focus(c);
+					client_focus(c, true);
 				return;
 			case Expose:
 				if(ev.xexpose.count == 0 && evh == wlist_handle_event && c && ev.xexpose.window == c->wlist_item)
@@ -71,7 +71,7 @@ void handle_event(XEvent ev) {
 					lastbutton = ev.xbutton.button;
 				}
 				if(c != current)
-					client_focus(c);
+					client_focus(c, true);
 				if(ev.xbutton.window == c->window) {
 					if(click_raise)
 						client_raise(c);
@@ -79,9 +79,17 @@ void handle_event(XEvent ev) {
 				}
 				client_handle_button(c, ev, false);
 				return;
+			case FocusIn:
+				if(allow_focus_stealing && c != current && ev.xfocus.mode != NotifyGrab && ev.xfocus.mode != NotifyUngrab)
+					client_focus(c, false);
+				return;
 			case FocusOut:
-				if(c == current && ev.xfocus.mode != NotifyGrab)
-					XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
+				if(c == current && ev.xfocus.mode != NotifyGrab && ev.xfocus.mode != NotifyUngrab) {
+					if(allow_focus_stealing && ev.xfocus.detail != NotifyPointer)
+						client_focus(NULL, false);
+					else
+						XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
+				}
 				return;
 			#ifdef USE_SHAPE
 			default:
@@ -132,7 +140,7 @@ void handle_event(XEvent ev) {
 					if(*a == 'd')
 						i |= EXPANDED_B;
 					if(*a == 'a')
-						j = 1;
+						j = true;
 					a++;
 				}
 				client_expand(current, i ? i : (EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B), j);
@@ -174,7 +182,7 @@ void handle_event(XEvent ev) {
 				if(c->flags & ICONIC && has_child(c->parent, c->window)) {
 					client_restore(c);
 					if(focus_new)
-						client_focus(c);
+						client_focus(c, true);
 				}
 			} else if(has_child(root, ev.xmaprequest.window))
 				client_add(ev.xmaprequest.window, false);
@@ -239,17 +247,9 @@ void handle_event(XEvent ev) {
 						desktop_goto(desktop - 1);
 			}
 			return;
-		case ConfigureNotify:
-			if(root == ev.xconfigure.window) {
-				display_width = ev.xconfigure.width;
-				display_height = ev.xconfigure.height;
-				if(evh == wlist_handle_event)
-					wlist_update();
-				ewmh_update_geometry();
-				for(i = 0; i < cn; i++)
-					client_update_size(clients[i]);
-			}
-			return;
+		case FocusIn:
+			if(current && ev.xfocus.window == root && ev.xfocus.mode != NotifyGrab && ev.xfocus.mode != NotifyUngrab)
+				XSetInputFocus(dpy, current->window, RevertToPointerRoot, CurrentTime);
 	}
 }
 

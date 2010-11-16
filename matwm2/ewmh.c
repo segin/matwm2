@@ -1,7 +1,6 @@
 #include "matwm.h"
 
 Atom ewmh_atoms[EWMH_ATOM_COUNT];
-long ewmh_strut[4];
 
 void ewmh_initialize(void) {
 	Atom rt;
@@ -68,13 +67,16 @@ void ewmh_initialize(void) {
 		}
 		XFree((void *) p);
 	}
+}
+
+void ewmh_update(void) {
 	ewmh_update_number_of_desktops();
 	ewmh_set_desktop(desktop);
 	ewmh_update_geometry();
 	ewmh_update_showing_desktop();
 }
 
-int ewmh_handle_event(XEvent ev) {
+bool ewmh_handle_event(XEvent ev) {
 	client *c;
 	int i, j, xo, yo;
 	long extents[4];
@@ -84,23 +86,23 @@ int ewmh_handle_event(XEvent ev) {
 			if(ev.xclient.message_type == ewmh_atoms[NET_WM_MOVERESIZE]) {
 				if(c) {
 					if(ev.xclient.data.l[2] == NET_WM_MOVERESIZE_MOVE || ev.xclient.data.l[2] == NET_WM_MOVERESIZE_MOVE_KEYBOARD) {
-						client_focus(c);
+						client_focus(c, true);
 						xo = client_width_total_intern(c) / 2;
 						yo = client_height_total_intern(c) / 2;
 						XWarpPointer(dpy, None, c->parent, 0, 0, 0, 0, xo, yo);
 						drag_start(MOVE, AnyButton, client_x(c) + xo, client_y(c) + yo);
 					}
 					if(ev.xclient.data.l[2] == NET_WM_MOVERESIZE_SIZE_BOTTOMRIGHT || ev.xclient.data.l[2] == NET_WM_MOVERESIZE_SIZE_KEYBOARD) {
-						client_focus(c);
+						client_focus(c, true);
 						drag_start(RESIZE, AnyButton, ev.xclient.data.l[0], ev.xclient.data.l[1]);
 					}
 				}
-				return 1;
+				return true;
 			}
 			if(ev.xclient.message_type == ewmh_atoms[NET_CLOSE_WINDOW]) {
 				if(c)
 					delete_window(c);
-				return 1;
+				return true;
 			}
 			if(ev.xclient.message_type == ewmh_atoms[NET_ACTIVE_WINDOW]) {
 				if(c) {
@@ -112,16 +114,16 @@ int ewmh_handle_event(XEvent ev) {
 						client_raise(c);
 					}
 					if(evh != wlist_handle_event)
-						client_focus(c);
+						client_focus(c, true);
 				}
-				return 1;
+				return true;
 			}
 			if(ev.xclient.message_type == ewmh_atoms[NET_RESTACK_WINDOW]) {
 				if(c && ev.xclient.data.l[1] == None)
 					client_raise(c);
 				/* schould also add code for handling this when a sibling window is passed */
 				/* but we schould find/create a way to test this first */
-				return 1;
+				return true;
 			}
 			if(ev.xclient.message_type == ewmh_atoms[NET_WM_STATE]) {
 				if(c) {
@@ -140,17 +142,17 @@ int ewmh_handle_event(XEvent ev) {
 						client_set_layer(c, (c->layer == TOP) ? NORMAL : TOP);
 					if(((Atom) ev.xclient.data.l[1]) == ewmh_atoms[NET_WM_STATE_BELOW])
 						client_set_layer(c, (c->layer == BOTTOM) ? NORMAL : BOTTOM);
-					return 1;
+					return true;
 				}
 			}
 			if(ev.xclient.message_type == ewmh_atoms[NET_CURRENT_DESKTOP]) {
 				desktop_goto(ev.xclient.data.l[0]);
-				return 1;
+				return true;
 			}
 			if(ev.xclient.message_type == ewmh_atoms[NET_WM_DESKTOP]) {
 				if(c && ev.xclient.data.l[0] >= STICKY)
 					client_to_desktop(c, (ev.xclient.data.l[0] <= dc) ? ev.xclient.data.l[0] : dc - 1);
-				return 1;
+				return true;
 			}
 			if(ev.xclient.message_type == ewmh_atoms[NET_REQUEST_FRAME_EXTENTS]) {
 				extents[0] = border_width;
@@ -158,21 +160,21 @@ int ewmh_handle_event(XEvent ev) {
 				extents[2] = border_width + title_height;
 				extents[3] = border_width;
 				XChangeProperty(dpy, ev.xclient.window, ewmh_atoms[NET_FRAME_EXTENTS], XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &extents, 4);	
-				return 1;
+				return true;
 			}
 			if(ev.xclient.message_type == ewmh_atoms[NET_SHOWING_DESKTOP]) {
 				client_iconify_all();
-				return 1;
+				return true;
 			}
 			break;
 		case PropertyNotify:
 			if(ev.xproperty.atom == ewmh_atoms[NET_WM_STRUT_PARTIAL] || ev.xproperty.atom == ewmh_atoms[NET_WM_STRUT]) {
 				ewmh_update_strut();
-				return 1;
+				return true;
 			}
 			break;
 		}
-	return 0;
+	return false;
 }
 
 void ewmh_get_hints(client *c) {
@@ -221,7 +223,7 @@ void ewmh_get_hints(client *c) {
 					c->layer = TOP;
 			}
 			if(data == ewmh_atoms[KDE_NET_WM_WINDOW_TYPE_OVERRIDE])
-				c->flags |= DONT_LIST;
+				c->flags |= DONT_LIST | NO_STRUT;
 			data++;
 			nir--;
 		}
@@ -240,8 +242,9 @@ void ewmh_update_extents(client *c) {
 
 void ewmh_update_geometry(void) {
 	long ds[2];
-	ds[0] = display_width;
-	ds[1] = display_height;
+	int scr = (ewmh_screen < nscreens) ? ewmh_screen : nscreens - 1;
+	ds[0] = screens[scr].width - screens[scr].x;
+	ds[1] = screens[scr].height - screens[scr].y;
 	XChangeProperty(dpy, root, ewmh_atoms[NET_DESKTOP_GEOMETRY], XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &ds, 2);
 }
 
@@ -324,40 +327,49 @@ void ewmh_update_clist(void) {
 
 void ewmh_update_strut(void) {
 	Atom rt;
-	int i, rf;
+	int i, j, rf, scr;
 	unsigned long nir, bar;
 	long workarea[16], *data;
 	unsigned char *p;
-	for(i = 0; i < 4; i++)
-		ewmh_strut[i] = 0;
+	for(i = 0; i < nscreens; i++)
+		for(j = 0; j < 4; j++)
+			screens[i].ewmh_strut[j] = 0;
 	for(i = 0; i < cn; i++) {
+		client_update_screen(clients[i]);
 		if(XGetWindowProperty(dpy, clients[i]->window, ewmh_atoms[NET_WM_STRUT_PARTIAL], 0, 4, False, XA_CARDINAL, &rt, &rf, &nir, &bar, (unsigned char **) &p) != Success || nir < 4)
 			if(XGetWindowProperty(dpy, clients[i]->window, ewmh_atoms[NET_WM_STRUT], 0, 4, False, XA_CARDINAL, &rt, &rf, &nir, &bar, (unsigned char **) &p) != Success || nir < 4)
 				continue;
 		data = (long *) p;
-		ewmh_strut[0] += data[0];
-		ewmh_strut[1] += data[1];
-		ewmh_strut[2] += data[2];
-		ewmh_strut[3] += data[3];
+		if(data[0])
+			screens[clients[i]->screen].ewmh_strut[0] += data[0] - (screens_leftmost() + screens[clients[i]->screen].x);
+		if(data[1])
+			screens[clients[i]->screen].ewmh_strut[1] += data[1] - (screens_rightmost() - (screens[clients[i]->screen].x + screens[clients[i]->screen].width));
+		if(data[2])
+			screens[clients[i]->screen].ewmh_strut[2] += data[2] - (screens_topmost() + screens[clients[i]->screen].y);
+		if(data[3])
+			screens[clients[i]->screen].ewmh_strut[3] += data[3] - (screens_bottom() - (screens[clients[i]->screen].y + screens[clients[i]->screen].height));
 		XFree((void *) p);
 	}
-	workarea[0] = ewmh_strut[0];
-	workarea[1] = ewmh_strut[2];
-	workarea[2] = display_width - (ewmh_strut[0] + ewmh_strut[1]);
-	workarea[3] = display_height - (ewmh_strut[2] + ewmh_strut[3]);
-	workarea[4] = ewmh_strut[0]; /* why 4 times? ask gnome developpers, this is the only way nautilus will listen to it */
-	workarea[5] = ewmh_strut[2];
-	workarea[6] = display_width - (ewmh_strut[0] + ewmh_strut[1]);
-	workarea[7] = display_height - (ewmh_strut[2] + ewmh_strut[3]);
-	workarea[8] = ewmh_strut[0];
-	workarea[9] = ewmh_strut[2];
-	workarea[10] = display_width - (ewmh_strut[0] + ewmh_strut[1]);
-	workarea[11] = display_height - (ewmh_strut[2] + ewmh_strut[3]);
-	workarea[12] = ewmh_strut[0];
-	workarea[13] = ewmh_strut[2];
-	workarea[14] = display_width - (ewmh_strut[0] + ewmh_strut[1]);
-	workarea[15] = display_height - (ewmh_strut[2] + ewmh_strut[3]);
+	scr = (ewmh_screen < nscreens) ? ewmh_screen : nscreens - 1;
+	workarea[0] = screens[scr].x + screens[scr].ewmh_strut[0];
+	workarea[1] = screens[scr].x + screens[scr].ewmh_strut[2];
+	workarea[2] = (screens[scr].width - screens[scr].x) - (screens[scr].ewmh_strut[0] + screens[scr].ewmh_strut[1]);
+	workarea[3] = (screens[scr].height - screens[scr].y) - (screens[scr].ewmh_strut[2] + screens[scr].ewmh_strut[3]);
+	workarea[4] = workarea[0]; /* why 4 times? ask gnome developpers, this is the only way nautilus will listen to it */
+	workarea[5] = workarea[1];
+	workarea[6] = workarea[2];
+	workarea[7] = workarea[3];
+	workarea[8] = workarea[0];
+	workarea[9] = workarea[1];
+	workarea[10] = workarea[2];
+	workarea[11] = workarea[3];
+	workarea[12] = workarea[0];
+	workarea[13] = workarea[1];
+	workarea[14] = workarea[2];
+	workarea[15] = workarea[3];
 	XChangeProperty(dpy, root, ewmh_atoms[NET_WORKAREA], XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &workarea, sizeof(workarea) / sizeof(long));
+	for(i = 0; i < cn; i++)
+		client_update(clients[i]);
 }
 
 void ewmh_update_showing_desktop(void) {

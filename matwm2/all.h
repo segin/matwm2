@@ -1,6 +1,6 @@
 /* global variables from main.c */
 extern Display *dpy;
-extern int screen, depth, display_width, display_height, have_shape, shape_event, qsfd[2];
+extern int screen, depth, have_shape, shape_event, qsfd[2];
 extern Window root;
 extern Atom xa_wm_protocols, xa_wm_delete, xa_wm_state, xa_wm_change_state, xa_motif_wm_hints;
 extern XSetWindowAttributes p_attr;
@@ -16,7 +16,7 @@ void sighandler(int sig);
 
 /* global variables from wlist.c */
 extern Window wlist;
-extern int wlist_width;
+extern int wlist_width, wlist_screen;
 extern client *client_before_wlist;
 
 /* functions from wlist.c */
@@ -24,12 +24,12 @@ void wlist_start(XEvent ev);
 void wlist_end(int err);
 client *wlist_next(void);
 client *wlist_prev(void);
-int wlist_handle_event(XEvent ev);
+bool wlist_handle_event(XEvent ev);
 int wlist_update(void);
 void wlist_item_draw(client *c);
 
 /* global variables from events.c */
-extern int (*evh)(XEvent);
+extern bool (*evh)(XEvent);
 extern Time lastclick;
 extern unsigned int lastbutton;
 extern client *lastclick_client;
@@ -40,7 +40,8 @@ void handle_event(XEvent ev);
 /* global variables from config.c */
 extern XColor bg, ibg, fg, ifg, bfg, ibfg;
 extern GC gc, igc, bgc, ibgc;
-extern int border_spacing, border_width, button_spacing, wlist_margin, wlist_maxwidth, wlist_item_height, text_height, title_height, button_size, title_spacing, center_title, center_wlist_items, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first, *buttons_right, nbuttons_right, *buttons_left, nbuttons_left, doubleclick_time, double1, double2, double3, double4, double5, fullscreen_stacking, map_center;
+extern int border_spacing, border_width, button_spacing, wlist_margin, wlist_maxwidth, wlist_item_height, text_height, title_height, button_size, title_spacing, snapat, button1, button2, button3, button4, button5, dc, first, *buttons_right, nbuttons_right, *buttons_left, nbuttons_left, doubleclick_time, double1, double2, double3, double4, double5, fullscreen_stacking, ewmh_screen;
+extern bool center_title, center_wlist_items, click_focus, click_raise, focus_new, taskbar_ontop, map_center, drag_warp, allow_focus_stealing;
 #ifdef USE_XFT
 extern XftFont *xftfont;
 extern XftColor xftfg, xftbg, xftifg, xftibg;
@@ -58,7 +59,7 @@ void str_color(char *str, XColor *c);
 #ifdef USE_XFT
 void set_xft_color(XftColor *xftcolor, XColor xcolor);
 #endif
-void str_bool(char *str, int *b);
+void str_bool(char *str, bool *b);
 void str_fsstacking(char *str, int *s);
 KeySym str_key(char **str, unsigned int *mask);
 unsigned int str_modifier(char *name);
@@ -122,8 +123,8 @@ extern unsigned int drag_button;
 /* functions from drag.c */
 void drag_start(int mode, int button, int x, int y);
 void drag_end(void);
-int drag_handle_event(XEvent ev);
-int drag_release_wait(XEvent ev);
+bool drag_handle_event(XEvent ev);
+bool drag_release_wait(XEvent ev);
 int snapx(client *c, int nx, int ny);
 int snapy(client *c, int nx, int ny);
 int snaph(client *c, int nx, int ny);
@@ -152,7 +153,7 @@ void buttons_create(client *c);
 void buttons_draw(client *c);
 void button_draw(client *c, button *b);
 void buttons_update(client *c);
-int button_handle_event(XEvent ev);
+bool button_handle_event(XEvent ev);
 
 /* global variables from actions.c */
 extern int all_iconic;
@@ -160,7 +161,7 @@ extern int all_iconic;
 /* functions from actions.c */
 void client_move(client *c, int x, int y);
 void client_resize(client *c, int width, int height);
-void client_focus(client *c);
+void client_focus(client *c, bool set_input_focus);
 void client_raise(client *c);
 void client_lower(client *c);
 void client_over_fullscreen(client *c);
@@ -168,8 +169,8 @@ void client_fullscreen(client *c);
 void client_set_layer(client *c, int layer);
 void client_toggle_state(client *c, int state);
 void client_expand_x(client *c, int d, int first);
-void client_expand_y(client *c, int d, int first);
-void client_expand(client *c, int d, int a);
+void client_expand_y(client *c, int d, bool first);
+void client_expand(client *c, int d, bool a);
 void client_toggle_title(client *c);
 void client_iconify(client *c);
 void client_restore(client *c);
@@ -181,11 +182,11 @@ void client_handle_button(client *c, XEvent ev, bool is_double);
 
 /* global variables from ewmh.c */
 extern Atom ewmh_atoms[EWMH_ATOM_COUNT];
-extern long ewmh_strut[4];
 
 /* functions from ewmh.c */
 void ewmh_initialize(void);
-int ewmh_handle_event(XEvent ev);
+void ewmh_update(void);
+bool ewmh_handle_event(XEvent ev);
 void ewmh_get_hints(client *c);
 void ewmh_update_extents(client *c);
 void ewmh_update_geometry(void);
@@ -247,4 +248,19 @@ int key_to_mask(KeyCode key);
 void button_grab(Window w, unsigned int button, unsigned int modmask, unsigned int event_mask);
 void button_ungrab(Window w, unsigned int button, unsigned int modmask);
 int cmpmodmask(int m1, int m2);
+
+/* global variables from screens.c */
+extern screen_dimensions *screens;
+extern int nscreens, cs;
+
+/* functions from screens.c */
+bool screens_handle_event(XEvent ev);
+void screens_get(void);
+void screens_update_current(void);
+int intersect(int base_start, int base_len, int start, int len);
+void client_update_screen(client *c);
+int screens_leftmost(void);
+int screens_rightmost(void);
+int screens_topmost(void);
+int screens_bottom(void);
 

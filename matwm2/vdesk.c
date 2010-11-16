@@ -32,7 +32,7 @@ void client_to_desktop(client *c, int d) {
 		if(!current)
 			for(i = 0; i < cn; i++)
 				if(stacking[i] != c && (stacking[i]->desktop == desktop || stacking[i]->desktop == STICKY)) {
-					client_focus(stacking[i]);
+					client_focus(stacking[i], true);
 					break;
 				}
 	}

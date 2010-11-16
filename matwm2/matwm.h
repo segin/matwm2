@@ -7,6 +7,9 @@
 #ifdef USE_SHAPE
 #include <X11/extensions/shape.h>
 #endif
+#ifdef USE_XINERAMA
+#include<X11/extensions/Xinerama.h>
+#endif
 #ifdef USE_XFT
 #include <X11/Xft/Xft.h>
 #endif
@@ -42,7 +45,7 @@ typedef struct {
 
 typedef struct {
 	Window      window, parent, title, wlist_item, button_parent_right, button_parent_left;
-	int         x, y, width, height, flags, layer, desktop, xo, yo, oldbw;
+	int         x, y, width, height, flags, layer, desktop, xo, yo, oldbw, screen;
 	int         expand_x, expand_y, expand_width, expand_height, title_width, buttons_left_width, buttons_right_width, nbuttons;
 	Pixmap      title_pixmap;
 #ifdef USE_XFT
@@ -162,6 +165,7 @@ enum { false, true };
 
 #include "mwm_hints.h"
 #include "ewmh.h"
+#include "screens.h"
 #include "defcfg.h"
 #include "all.h"
 #endif /* __MATWM_H__ */

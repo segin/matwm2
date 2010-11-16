@@ -6,6 +6,7 @@ default_manprefix="/usr/local"
 default_cc="cc"
 default_rm="rm -f"
 shape="yes"
+xinerama="yes"
 xft="yes"
 vfork="yes"
 
@@ -19,40 +20,43 @@ unset rm
 echo "processing command line arguments..."
 for opt in $*; do
 	case $opt in
-	--prefix=*)      prefix=`echo $opt | cut -d '=' -f 2`
-	                 echo "	prefix explicitly set to $prefix";;
-	--manprefix=*)   manprefix=`echo $opt | cut -d '=' -f 2`
-	                 echo "	man prefix explicitly set to $manprefix";;
-	--cc=*)          cc=`echo $opt | cut -d '=' -f 2`
-	                 echo "	compiler explicitly set to $cc";;
-	--rm=*)          rm=`echo $opt | cut -d '=' -f 2`
-	                 echo "	rm command explicitly set to $rm";;
-	--disable-shape) shape="no"
-	                 echo "	shaped windows support explicitly disabled";;
-	--disable-xft)   xft="no"
-	                 echo "	Xft support explicitly disabled";;
-	--disable-vfork) vfork="no"
-	                 echo "	use of vfork system call explicitly disabled";;
-	*)               echo "Usage: $0 [options]"
-	                 echo
-	                 echo "Options: (defaults between brackets)"
-	                 echo "	--prefix=[/usr/local]    Set the prefix in wich to install binaries"
-	                 echo "	--manprefix=[/usr/local] Set the prefix in wich to install manual pages"
-	                 echo "	--cc=[cc]                Set the compiler"
-	                 echo "	--rm=[rm -f]             Set the command to delete files"
-	                 echo "	--disable-shape          Disable support for shaped windows"
-	                 echo "	--disable-xft            Disable support for Xft"
-									 echo "	--disable-vfork          Disable use of the vfork() system call"
-	                 echo "	-h, --help               Print this message and exit"
-	                 echo
-	                 echo "Influential environment variables:"
-	                 echo "	PREFIX    Prefix for installing binaries"
-	                 echo "	MANPREFIX Prefix for installing man pages"
-	                 echo "	CC        Compiler"
-	                 echo "	RM        Command for deleting files"
-	                 echo
-	                 echo "Send comments, suggestions and bugs to Mattis Michel <sic_zer0@hotmail.com>"
-									 return 0
+	--prefix=*)         prefix=`echo $opt | cut -d '=' -f 2`
+	                    echo "	prefix explicitly set to $prefix";;
+	--manprefix=*)      manprefix=`echo $opt | cut -d '=' -f 2`
+	                    echo "	man prefix explicitly set to $manprefix";;
+	--cc=*)             cc=`echo $opt | cut -d '=' -f 2`
+	                    echo "	compiler explicitly set to $cc";;
+	--rm=*)             rm=`echo $opt | cut -d '=' -f 2`
+	                    echo "	rm command explicitly set to $rm";;
+	--disable-shape)    shape="no"
+	                    echo "	shaped windows support explicitly disabled";;
+	--disable-xinerama) xinerama="no"
+	                    echo "	xinerama support explicitly disabled";;
+	--disable-xft)      xft="no"
+	                    echo "	Xft support explicitly disabled";;
+	--disable-vfork)    vfork="no"
+	                    echo "	use of vfork system call explicitly disabled";;
+	*)                  echo "Usage: $0 [options]"
+	                    echo
+	                    echo "Options: (defaults between brackets)"
+	                    echo "	--prefix=[/usr/local]    Set the prefix in wich to install binaries"
+	                    echo "	--manprefix=[/usr/local] Set the prefix in wich to install manual pages"
+	                    echo "	--cc=[cc]                Set the compiler"
+	                    echo "	--rm=[rm -f]             Set the command to delete files"
+	                    echo "	--disable-shape          Disable support for shaped windows"
+	                    echo "	--disable-xinerama       Disable support for xinerama"
+	                    echo "	--disable-xft            Disable support for Xft"
+	                    echo "	--disable-vfork          Disable use of the vfork() system call"
+	                    echo "	-h, --help               Print this message and exit"
+	                    echo
+	                    echo "Influential environment variables:"
+	                    echo "	PREFIX    Prefix for installing binaries"
+	                    echo "	MANPREFIX Prefix for installing man pages"
+	                    echo "	CC        Compiler"
+	                    echo "	RM        Command for deleting files"
+	                    echo
+	                    echo "Send comments, suggestions and bugs to Mattis Michel <sic_zer0@hotmail.com>"
+	                    return 0
 	esac
 done
 
@@ -122,6 +126,16 @@ if [ "$shape" = "yes" ]; then
 	fi
 fi
 
+if [ "$xinerama" = "yes" ]; then
+	echo -n "checking for Xinerama... "
+	if pkg-config --exists xinerama 2> /dev/null; then
+		echo "ok"
+	else
+		echo "not found, disabling xinerama support"
+		xinerama="no"
+	fi
+fi
+
 if [ "$xft" = "yes" ]; then
 	echo -n "checking for Xft... "
 	if pkg-config --exists xft 2> /dev/null; then
@@ -140,6 +154,11 @@ unset defines
 if [ "$shape" = "yes" ]; then
 	libraries="$libraries xext"
 	defines="$defines -DUSE_SHAPE"
+fi
+
+if [ "$xinerama" = "yes" ]; then
+	libraries="$libraries xinerama"
+	defines="$defines -DUSE_XINERAMA"
 fi
 
 if [ "$xft" = "yes" ]; then
@@ -178,6 +197,7 @@ echo "	man prefix:             $manprefix"
 echo "	compiler:               $cc"
 echo "	rm command:             $rm"
 echo "	shaped windows support: $shape"
+echo "	xinerama support:       $xinerama"
 echo "	Xft support:            $xft"
 echo "	vfork system call:      $vfork"
 

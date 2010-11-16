@@ -1,4 +1,4 @@
-.TH matwm2 1 "Januari 6, 2009" "" ""
+.TH matwm2 1 "Januari 18, 2009" "" ""
 .SH NAME
 matwm2 \- Window manager for X11
 .SH SYNOPSIS
@@ -11,7 +11,7 @@ matwm2 \- Window manager for X11
 .B matwm2 \-version
 .SH DESCRIPTION
 .B matwm2
-is a simple window manager for X11. It features window frames with titlebar and buttons, configurable key bindings and mouse buttons, support for EWMH and motif hints, focus-follows-mouse and click-to-focus focus models and virtual desktops.
+is a simple window manager for X11. It features window frames with titlebar and buttons, configurable key bindings and mouse buttons, support for EWMH and motif hints, focus-follows-mouse and click-to-focus focus models, virtual desktops, Xft fonts and xinerama support.
 .PP
 To exit matwm2 send it SIGINT signal. At exit matwm2 will place the windows back on the root window in stacking order, iconic windows on the bottom, above that the windows from all inactive desktops in reverse order and then above those the windows from the current desktop and sticky windows shown on it. If matwm2 receives a SIGUSR1 signal it will reload all configuration files.
 .PP
@@ -94,14 +94,20 @@ If set to "true" the title of windows will apear in the center of the titlebar, 
 If set to "true" all titles in the window list are centered, if set to "false" they are aligned at the left.
 .IP "map_center [boolean]"
 If set to "true" new windows will appear centered (unless they have a predefined position set). If set to "false" the windows will not be moved before mapping.
+.IP "drag_warp [boolean]"
+If set to "true" moving a window over the right edge of the desktop will move it to the left of the next virtual desktop and vice versa.
 .IP "buttons_left [button] [...]"
 Set a list of buttons (from left to right) to show at the left of the title of windows. Possible buttons are "iconify", "expand", "maximize", "close", "sticky", "ontop" and "below", they do the same as the key actions with the same names described below. Can be set to "none" if you want no buttons there. Buttons can be clicked with either the first (left) or the third (right) mouse button.
 .IP "buttons_right [button] [...]"
 Same as the "buttons_left" option but for buttons at the right of the titlebar.
 .IP "taskbar_ontop"
 If set to "true" taskbar windows that use EWMH hints will be kept ontop, if set to "false" windows can cover them.
+.IP "ewmh_screen [integer]"
+Set the screen (in xinerama setups) to wich desktop windows etc go to [integer] (screens are in the order X11 places them).
 .IP "fullscreen_stacking [stacking mode]"
 If set to "normal" fullscreen windows behave like other windows in terms of stacking, when this is set to "ontop" they can raise over always-on-top windows and if set to "always_ontop" fullscreened windows are always on top and new windows will not be focussed if theres a fullscreen window above them. 
+.IP "allow_focus_stealing"
+If set to "false" matwm will confine input focus to the window you manually focussed (with exeption windows that use EWMH to focus windows, and newly mapped windows if focus_new is set to "true").
 .IP "resetkeys"
 Remove all previously defined key bindings from memory.
 .IP "key [modifier key] [...] [X11 key name] [key action]"

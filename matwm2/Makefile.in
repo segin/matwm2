@@ -8,11 +8,11 @@ RM         = %RM%
 #CFLAGS   += -DDEBUG_EVENTS -DSYNC
 #CFLAGS    += -Wall -Wextra -Wno-unused-parameter
 
-CFLAGS    += -DVERSION="\"0.0.99\"" %DEFINES% %CFLAGS%
+CFLAGS    += -DVERSION="\"0.1.0pre1\"" %DEFINES% %CFLAGS%
 LDFLAGS   += %LDFLAGS%
 LIBS      += %LIBS%
 
-OBJFILES  = actions.o buttons.o client.o config.o defcfg.o drag.o events.o evn.o ewmh.o info.o input.o main.o misc.o vdesk.o wlist.o x11.o
+OBJFILES  = actions.o buttons.o client.o config.o defcfg.o drag.o events.o evn.o ewmh.o info.o input.o main.o misc.o screens.o vdesk.o wlist.o x11.o
 
 all: matwm2
 

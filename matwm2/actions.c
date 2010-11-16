@@ -48,7 +48,7 @@ void client_resize(client *c, int width, int height) {
 	return;
 }
 
-void client_focus(client *c) {
+void client_focus(client *c, bool set_input_focus) {
 	client *prev = current;
 	if(c)
 		if(c->flags & DONT_FOCUS)
@@ -61,13 +61,12 @@ void client_focus(client *c) {
 	current = c;
 	if(prev)
 		client_set_bg(prev, ibg, ibfg);
-	if(!c) {
-		XSetInputFocus(dpy, PointerRoot, RevertToPointerRoot, CurrentTime);
-	} else {
+	if(c) {
 		client_set_bg(c, bg, bfg);
-		if((c->desktop == desktop || c->desktop == STICKY) && isviewable(c->window) && evh != wlist_handle_event)
+		if((c->desktop == desktop || c->desktop == STICKY) && isviewable(c->window) && evh != wlist_handle_event && set_input_focus)
 			XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
-	}
+	} else if(set_input_focus)
+		XSetInputFocus(dpy, PointerRoot, RevertToPointerRoot, CurrentTime);
 	ewmh_set_active(c);
 }
 
@@ -125,6 +124,7 @@ void client_set_layer(client *c, int layer) { /* for making windows always-on-to
 void client_toggle_state(client *c, int state) { /* used directly only for maximizing, client_fullscreen also calls this  */
 	if(!(c->flags & CAN_MOVE) || !(c->flags & CAN_RESIZE))
 		return;
+	client_update_screen(c);
 	if((c->flags & state) == state)
 		c->flags ^= state;
 	else {
@@ -136,7 +136,7 @@ void client_toggle_state(client *c, int state) { /* used directly only for maxim
 }
 
 void client_expand_x(client *c, int d, int first) { /* calculate horizontal dimensions for expanding */
-	int i;
+	int i, right;
 	for(i = 0; i < cn; i++) {
 		if(!client_visible(clients[i]) || (first ? c->y : c->expand_y) >= client_y(clients[i]) + client_height_total(clients[i]) || (first ? c->y + client_height_total(c) : c->expand_height) <= client_y(clients[i]))
 			continue;
@@ -145,10 +145,17 @@ void client_expand_x(client *c, int d, int first) { /* calculate horizontal dime
 		if(d & EXPANDED_R && client_x(clients[i]) >= c->x + (c->width + (client_border(c) * 2)) && client_x(clients[i]) < c->expand_width)
 			c->expand_width = client_x(clients[i]);
 	}
+	for(i = 0; i < nscreens; i++) {
+		if(d & EXPANDED_L && screens[i].x <= c->x && screens[i].x > c->expand_x)
+			c->expand_x = screens[i].x;
+		right = screens[i].x + screens[i].width;
+		if(d & EXPANDED_R && right >= c->x + (c->width + (client_border(c) * 2)) && right < c->expand_width)
+			c->expand_width = right;
+	}
 }
 
-void client_expand_y(client *c, int d, int first) {  /* calculate vertical dimensions for expanding */
-	int i;
+void client_expand_y(client *c, int d, bool first) {  /* calculate vertical dimensions for expanding */
+	int i, bottom;
 	for(i = 0; i < cn; i++) {
 		if(!client_visible(clients[i]) || (first ? c->x : c->expand_x) >= client_x(clients[i]) + client_width_total(clients[i]) || (first ? c->x + client_width_total(c) : c->expand_width) <= client_x(clients[i]))
 			continue;
@@ -157,9 +164,16 @@ void client_expand_y(client *c, int d, int first) {  /* calculate vertical dimen
 		if(d & EXPANDED_B && client_y(clients[i]) >= c->y + (c->height + (client_border(c) * 2) + client_title(c)) && client_y(clients[i]) < c->expand_height)
 			c->expand_height = client_y(clients[i]);
 	}
+	for(i = 0; i < nscreens; i++) {
+		if(d & EXPANDED_T && screens[i].y <= c->y && screens[i].y > c->expand_y)
+			c->expand_y = screens[i].y;
+		bottom = screens[i].y + screens[i].height;
+		if(d & EXPANDED_B && bottom >= c->y + (c->height + (client_border(c) * 2) + client_title(c)) && bottom < c->expand_height)
+			c->expand_height = bottom;
+	}
 }
 
-void client_expand(client *c, int d, int a) { /* see expand key action in the manual page for explanation of what this does */
+void client_expand(client *c, int d, bool a) { /* see expand key action in the manual page for explanation of what this does */
 	if(!(c->flags & CAN_MOVE) || !(c->flags & CAN_RESIZE))
 		return;
 	if((c->flags & d) == d) {
@@ -168,16 +182,17 @@ void client_expand(client *c, int d, int a) { /* see expand key action in the ma
 		return;
 	}
 	d ^= (d & c->flags);
-	c->expand_x = (d & EXPANDED_L) ? 0 : client_x(c);
-	c->expand_y = (d & EXPANDED_T) ? 0 : client_y(c);
-	c->expand_width = (d & EXPANDED_R) ? display_width : (client_x(c) + client_width_total(c));
-	c->expand_height = (d & EXPANDED_B) ? display_height : (client_y(c) + client_height_total(c));
+	client_update_screen(c);
+	c->expand_x = (d & EXPANDED_L) ? screens[c->screen].x : client_x(c);
+	c->expand_y = (d & EXPANDED_T) ? screens[c->screen].y : client_y(c);
+	c->expand_width = (d & EXPANDED_R) ? screens[c->screen].x + screens[c->screen].width : (client_x(c) + client_width_total(c));
+	c->expand_height = (d & EXPANDED_B) ? screens[c->screen].y + screens[c->screen].height : (client_y(c) + client_height_total(c));
 	if(a) {
-		client_expand_y(c, d, 1);
-		client_expand_x(c, d, 0);
+		client_expand_y(c, d, true);
+		client_expand_x(c, d, false);
 	} else {
-		client_expand_x(c, d, 1);
-		client_expand_y(c, d, 0);
+		client_expand_x(c, d, true);
+		client_expand_y(c, d, false);
 	}
 	c->expand_width -= c->expand_x + (client_border(c) * 2);
 	c->expand_height -= c->expand_y + (client_border(c) * 2) + client_title(c);
@@ -236,31 +251,32 @@ void client_restore(client *c) { /* restores iconic client */
 }
 
 void client_save(client *c) { /* bring a moved off-screen window back to the screen */
-	int x = client_x(c), y = client_y(c);
-	if(client_x(c) >= display_width)
-		x = display_width - client_width_total(c);
-	if(client_y(c) >= display_height)
-		y = display_height - client_height_total(c);
-	if(client_x(c) + client_width_total(c) <= 0)
-		x = 0;
-	if(client_y(c) + client_height_total(c) <= 0)
-		y = 0;
-	client_move(c, x, y);
+	bool lost = true;
+	int i, x = client_x(c), y = client_y(c);
+	int right = x + client_width_total(c), bottom = client_height_total(c);
+	for(i = 0; i < nscreens; i++)
+		if(x < screens[i].x + screens[i].width && y < screens[i].y + screens[i].width && right > screens[i].x && bottom > screens[i].y)
+			lost = false;
+	if(lost) {
+		screens_update_current();
+		client_move(c, screens[cs].x, screens[cs].y);
+	}
 }
 
 void client_to_border(client *c, char *a) {
 	int x = client_x(c), y = client_y(c);
 	if(!(c->flags & CAN_MOVE))
 		return;
+	client_update_screen(c);
 	while(a && *a) {
 		if(*a == 'l')
-			x = ewmh_strut[0];
+			x = screens[c->screen].x + screens[c->screen].ewmh_strut[0];
 		if(*a == 'r')
-			x = display_width - (client_width_total(c) + ewmh_strut[1]);
+			x = (screens[c->screen].x + screens[c->screen].width) - (client_width_total(c) + screens[c->screen].ewmh_strut[1]);
 		if(*a == 't')
-			y = ewmh_strut[2];
+			y = screens[c->screen].y + screens[c->screen].ewmh_strut[2];
 		if(*a == 'b')
-			y = display_height - (client_height_total(c) + ewmh_strut[3]);
+			y = (screens[c->screen].y + screens[c->screen].height) - (client_height_total(c) + screens[c->screen].ewmh_strut[3]);
 		a++;
 	}
 	client_move(c, x, y);
@@ -306,7 +322,7 @@ void client_handle_button(client *c, XEvent ev, bool is_double) { /* for when a 
 	if(action == BA_MAXIMIZE)
 		client_toggle_state(c, MAXIMIZED_L | MAXIMIZED_R | MAXIMIZED_T | MAXIMIZED_B);
 	if(action == BA_EXPAND)
-		client_expand(c, EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B, 0);
+		client_expand(c, EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B, false);
 	if(action == BA_ICONIFY)
 		client_iconify(c);
 	if(action == BA_CLOSE)

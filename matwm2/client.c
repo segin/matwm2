@@ -37,14 +37,17 @@ void client_add(Window w, bool mapped) {
 	get_normal_hints(new);
 	get_mwm_hints(new);
 	ewmh_get_hints(new);
-	/* continue filling up structure - gxo and gyo need the hints to be read */
+	/* continue filling up structure - gxo and gyo need the hints to be read, and the screen to be set */
+	new->x = attr.x; /* and client_update_screen() needs these */
+	new->y = attr.y;
+	client_update_screen(new);
 	new->xo = gxo(new, true);
 	new->yo = gyo(new, true);
-	new->x = attr.x - new->xo;
-	new->y = attr.y - new->yo;
+	new->x -= new->xo;
+	new->y -= new->yo;
 	if(!mapped && map_center && !(new->normal_hints.flags & USPosition) && !(new->normal_hints.flags & PPosition)) {
-		new->x = (display_width / 2) - (new->width / 2);
-		new->y = (display_height / 2) - (new->height / 2);
+		new->x = screens[cs].x + ((screens[cs].width / 2) - (new->width / 2));
+		new->y = screens[cs].y + ((screens[cs].height / 2) - (new->height / 2));
 	}
 	XFetchName(dpy, w, &new->name);
 	/* create the parent window */
@@ -110,7 +113,7 @@ void client_add(Window w, bool mapped) {
 					break;
 		/* if i now is > 0 theres a fullscreen window we cannot go above obstructing the new window so we omit focus_new behaviour */
 		if(((focus_new && !i) || !current) && client_visible(new))
-			client_focus(new);
+			client_focus(new, true);
 	}
 	if(!(new->flags & ICONIC)) /* client_visible isn't apropriate here (what if the window would be moved to another desktop later) */
 		client_over_fullscreen(new);
@@ -134,7 +137,7 @@ void client_hide(client *c) {
 	if(c == current) {
 		if(evh == drag_handle_event)
 			evh = drag_release_wait;
-		client_focus(NULL);
+		client_focus(NULL, true);
 	}
 }
 
@@ -325,16 +328,16 @@ void client_warp(client *c) { /* moves the pointer to a client */
 void client_focus_first(void) { /* to be called when focus window is lost */
 	int i;
 	if(previous && (previous->desktop == desktop || previous->desktop == STICKY)) {
-		client_focus(previous);
+		client_focus(previous, true);
 		return;
 	}
 	for(i = 0; i < cn; i++)
 		if(client_visible(stacking[i]) && !(stacking[i]->flags & DONT_FOCUS)) {
-			client_focus(stacking[i]);
+			client_focus(stacking[i], true);
 			break;
 		}
 	if(i == cn)
-		client_focus(NULL);
+		client_focus(NULL, true);
 }
 
 void client_clear_state(client *c) { /* to revert a client to normal state (as opposed to maximised, expanded or fullscreened) without restoring its previous dimensions */
@@ -346,6 +349,7 @@ void client_clear_state(client *c) { /* to revert a client to normal state (as o
 		c->flags ^= c->flags & (MAXIMIZED_L | MAXIMIZED_R | MAXIMIZED_T | MAXIMIZED_B | EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B | FULLSCREEN);
 		ewmh_update_state(c);
 	}
+	client_update(c); /* needed for restoring the border and title of ex-fullscreen windows */
 }
 
 int clients_alloc(void) { /* to make sure enough memory is allocated for cn clients */
