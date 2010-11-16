@@ -75,3 +75,7 @@
 	set wlist_with to initial value from wlist_update() instead of wlist_start (this makes way more sence i think)
 	weird window list behaviour introduced with 0.0.55 fixed
 
+0.0.57:
+	virtual desktops
+	_NET_REQUEST_FRAME_EXTENTS and _NET_FRAME_EXTENTS, hopefully handled and set in the right way
+

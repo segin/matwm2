@@ -19,7 +19,7 @@ void handle_event(XEvent ev) {
     case MapRequest:
       c = owner(ev.xmaprequest.window);
       if(c) {
-        if(c->flags & ICONIC && has_child(c->parent, c->window))
+        if(c->desktop == ICONS && has_child(c->parent, c->window))
           client_restore(c);
       } else if(has_child(root, ev.xmaprequest.window)) {
         client_add(ev.xmaprequest.window);
@@ -151,6 +151,10 @@ void handle_event(XEvent ev) {
           client_iconify(clients[i]);
       if(keyaction(ev) == KA_EXEC)
         spawn(keyarg(ev));
+      if(keyaction(ev) == KA_NEXT_DESKTOP && desktop < dc - 1)
+        desktop_goto(desktop + 1);
+      if(keyaction(ev) == KA_PREV_DESKTOP && desktop > 0)
+        desktop_goto(desktop - 1);
       break;
     case ConfigureNotify:
       if(root == ev.xconfigure.window) {

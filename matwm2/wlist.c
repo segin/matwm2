@@ -4,23 +4,22 @@ Window wlist;
 int wlist_width;
 
 void wlist_start(XEvent ev) {
-  if(evh || !cn)
+  if(evh || !cn || !wlist_update())
     return;
-  wlist_update();
   XMapRaised(dpy, wlist);
   XGrabKeyboard(dpy, root, True, GrabModeAsync, GrabModeAsync, CurrentTime);
   evh = wlist_handle_event;
   handle_event(ev);
 }
 
-void wlist_end(void) {
+void wlist_end(int err) {
   XUngrabKeyboard(dpy, CurrentTime);
   XUnmapWindow(dpy, wlist);
   evh = NULL;
-  if(!current)
+  if(!current || err)
     return;
   client_save(current);
-  if(current->flags & ICONIC)
+  if(current->desktop == ICONS)
     client_restore(current);
   else
     client_raise(current);
@@ -29,7 +28,7 @@ void wlist_end(void) {
 
 client *wlist_next(void) {
   int i = current ? client_number(stacking, current) + 1 : 0;
-  for(i = (i < cn) ? i : 0; stacking[i]->flags & DONT_LIST; i++)
+  for(i = (i < cn) ? i : 0; stacking[i]->flags & DONT_LIST || !(stacking[i]->desktop == desktop || stacking[i]->desktop == ICONS || stacking[i]->desktop == STICKY); i++)
     if(i >= cn - 1)
       i = -1;
   return stacking[i];
@@ -37,7 +36,7 @@ client *wlist_next(void) {
 
 client *wlist_prev(void) {
   int i = current ? client_number(stacking, current) - 1 : cn - 1;
-  for(i = (i >= 0) ? i : cn - 1; stacking[i]->flags & DONT_LIST; i--)
+  for(i = (i >= 0) ? i : cn - 1; stacking[i]->flags & DONT_LIST || !(stacking[i]->desktop == desktop || stacking[i]->desktop == ICONS || stacking[i]->desktop == STICKY); i--)
     if(i <= 0)
       i = cn - 1;
   return stacking[i];
@@ -62,7 +61,7 @@ int wlist_handle_event(XEvent ev) {
           if((keys[i].action == KA_NEXT || keys[i].action == KA_PREV) && cmpmodmask(keys[i].mask, mask))
             break;
         if(i == keyn)
-          wlist_end();
+          wlist_end(0);
       }
     case ButtonPress:
     case ButtonRelease:
@@ -73,27 +72,30 @@ int wlist_handle_event(XEvent ev) {
   return 1;
 }
 
-void wlist_update(void) {
+int wlist_update(void) {
   int i, nc = 0, offset = 1, nl = 0;
   wlist_width = 3;
   for(i = 0; i < cn; i++)
-    if(!(stacking[i]->flags & DONT_LIST)) {
+    if(!(stacking[i]->flags & DONT_LIST) && (stacking[i]->desktop == desktop || stacking[i]->desktop == ICONS || stacking[i]->desktop == STICKY)) {
       if(stacking[i]->title_width + 6 > wlist_width)
         wlist_width = stacking[i]->title_width + 6;
     } else nl++;
-  if(nl == cn)
-    wlist_end();
+  if(nl == cn) {
+    wlist_end(1);
+    return 0;
+  }
   if(wlist_width > display_width)
     wlist_width = display_width;
   for(i = 0; i < cn; i++) {
     if(i == cn - nicons)
       offset = 2;
-    if(!(stacking[i]->flags & DONT_LIST)) {
+    if(!(stacking[i]->flags & DONT_LIST) && (stacking[i]->desktop == desktop || stacking[i]->desktop == ICONS || stacking[i]->desktop == STICKY)) {
       XMoveResizeWindow(dpy, stacking[i]->wlist_item, 1, offset + ((title_height + 5) * nc), wlist_width - 2, title_height + 4);
       nc++;
     }
   }
   XMoveResizeWindow(dpy, wlist, (display_width / 2) - (wlist_width / 2), (display_height / 2) - (1 + ((title_height + 5) * nc) / 2), wlist_width, offset + ((title_height + 5) * nc));
+  return 1;
 }
 
 void wlist_item_draw(client *c) {

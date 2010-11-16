@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
 
 void end(void) {
   while(cn) {
-    if(stacking[cn - 1]->flags & ICONIC)
+    if(stacking[cn - 1]->desktop != desktop)
       XMapWindow(dpy, stacking[cn - 1]->window);
     client_deparent(stacking[cn - 1]);
     client_remove(stacking[cn - 1]);

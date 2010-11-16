@@ -20,6 +20,7 @@ void client_add(Window w) {
   new->window = w;
   new->flags = HAS_TITLE | HAS_BORDER | HAS_BUTTONS | CAN_MOVE | CAN_RESIZE;
   new->layer = NORMAL;
+  new->desktop = desktop;
   if(have_shape && XShapeQueryExtents(dpy, new->window, &bounding_shaped, &di, &di, &dui, &dui, &di, &di, &di, &dui, &dui) && bounding_shaped)
     new->flags |= SHAPED;
   get_normal_hints(new);
@@ -30,7 +31,7 @@ void client_add(Window w) {
   new->x = attr.x - new->xo;
   new->y = attr.y - new->yo;
   if(wm_state == IconicState)
-    new->flags |= ICONIC;
+    new->desktop = ICONS;
   XSelectInput(dpy, w, PropertyChangeMask | EnterWindowMask);
   XShapeSelectInput(dpy, w, ShapeNotifyMask);
   XSetWindowBorderWidth(dpy, w, 0);
@@ -60,15 +61,13 @@ void client_add(Window w) {
   set_shape(new);
   cn++;
   clients_alloc();
-  if(!(new->flags & ICONIC) || new->flags & DONT_LIST) {
-    for(i = cn - 1; i > 0 && (stacking[i - 1]->flags & ICONIC || stacking[i - 1]->layer >= new->layer); i--)
+  if(new->desktop != ICONS) {
+    for(i = cn - 1; i > 0 && (stacking[i - 1]->desktop == ICONS || stacking[i - 1]->layer >= new->layer); i--)
       stacking[i] = stacking[i - 1];
     stacking[i] = new;
-    clients_apply_stacking();
     if(evh == drag_handle_event)
       client_raise(current);
-    XMapRaised(dpy, w);
-    XMapWindow(dpy, new->parent);
+    client_show(new);
   } else {
     stacking[cn - 1] = new;
     nicons++;
@@ -78,9 +77,25 @@ void client_add(Window w) {
     client_focus(new);
   if(evh == wlist_handle_event)
     wlist_update();
-  ewmh_set_desktop(new, 0);
+  ewmh_update_desktop(new);
   ewmh_update_allowed_actions(new);
   ewmh_update_state(new);
+  ewmh_update_extents(new);
+}
+
+void client_show(client *c) {
+  XMapWindow(dpy, c->window);
+  XMapWindow(dpy, c->parent);
+  clients_apply_stacking();
+}
+
+void client_hide(client *c) {
+  XEvent ev;
+  XUnmapWindow(dpy, c->parent);
+  XUnmapWindow(dpy, c->window);
+  XIfEvent(dpy, &ev, &isunmap, (XPointer) &c->window);
+  if(current == c && evh == drag_handle_event)
+    evh = drag_release_wait;
 }
 
 void client_deparent(client *c) {
@@ -92,7 +107,7 @@ void client_deparent(client *c) {
 void client_remove(client *c) {
   XEvent ev;
   int i;
-  if(c->flags & ICONIC)
+  if(c->desktop == ICONS)
     nicons--;
   if(button_current == c->button_iconify || button_current == c->button_expand || button_current == c->button_maximise || button_current == c->button_close)
     button_current = None;
@@ -107,8 +122,9 @@ void client_remove(client *c) {
   cn--;
   if(c == current) {
     current = NULL;
-    if(cn)
-      client_focus(stacking[0]);
+    for(i = 0; i < cn; i++)
+      if(stacking[i]->desktop == desktop || stacking[i]->desktop == STICKY)
+        client_focus(stacking[i]);
   }
   XFreePixmap(dpy, c->title_pixmap);
   free(c);
@@ -155,7 +171,7 @@ void client_set_bg(client *c, XColor color, XColor border) {
   XSetWindowBackground(dpy, c->button_maximise, color.pixel);
   XSetWindowBackground(dpy, c->button_close, color.pixel);
   XSetWindowBackground(dpy, c->wlist_item, color.pixel);
-  if(!(c->flags & ICONIC)) {
+  if(c->desktop == desktop) {
     XClearWindow(dpy, c->parent);
     XClearWindow(dpy, c->title);
     XClearWindow(dpy, c->button_parent);
@@ -172,7 +188,7 @@ void clients_apply_stacking(void) {
   int i = 0;
   Window wins[cn + 1];
   wins[0] = wlist;
-  for(i = 0; i < cn && !(stacking[i]->flags & ICONIC); i++)
+  for(i = 0; i < cn && stacking[i]->desktop != ICONS; i++)
     wins[i + 1] = stacking[i]->parent;
   XRestackWindows(dpy, wins, i + 1);
   ewmh_update_stacking();
@@ -206,6 +222,7 @@ void client_update(client *c) {
 void client_update_title(client *c) {
   XMoveWindow(dpy, c->window, client_border_intern(c), client_border_intern(c) + client_title(c));
   client_update_size(c);
+  ewmh_update_extents(c);
 }
 
 void client_warp(client *c) {

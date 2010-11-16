@@ -29,6 +29,8 @@ extern int cn, nicons;
 
 // functions from client.c
 void client_add(Window w);
+void client_show(client *c);
+void client_hide(client *c);
 void client_deparent(client *c);
 void client_remove(client *c);
 void client_grab_button(client *c, int button);
@@ -47,7 +49,7 @@ void clients_alloc(void);
 // global variables from config.c
 extern XColor bg, ibg, fg, ifg;
 extern GC gc, igc, bgc, ibgc;
-extern int border_width, text_height, title_height, button_parent_width, snapat, button1, button2, button3, button4, button5;
+extern int border_width, text_height, title_height, button_parent_width, snapat, button1, button2, button3, button4, button5, dc;
 extern XFontStruct *font;
 extern char *no_title;
 
@@ -90,8 +92,10 @@ extern long ewmh_strut[4];
 void ewmh_initialize(void);
 int ewmh_handle_event(XEvent ev);
 int get_ewmh_hints(client *c);
+void ewmh_update_extents(client *c);
 void ewmh_update_geometry(void);
-void ewmh_set_desktop(client *c, long desktop);
+void ewmh_update_desktop(client *c);
+void ewmh_set_desktop(int d);
 void ewmh_set_active(client *c);
 void ewmh_update_allowed_actions(client *c);
 void ewmh_update_state(client *c);
@@ -154,17 +158,24 @@ void spawn(char *cmd);
 int read_file(char *path, char **buf);
 char *eat(char **str, char *until);
 
+// global variables from vdesk.c
+extern int desktop;
+
+// functions from vdesk.c
+void desktop_goto(int d);
+void client_to_desktop(client *c, int d);
+
 // global variables from wlist.c
 extern Window wlist;
 extern int wlist_width;
 
 // functions from wlist.c
 void wlist_start(XEvent ev);
-void wlist_end(void);
+void wlist_end(int err);
 client *wlist_next(void);
 client *wlist_prev(void);
 int wlist_handle_event(XEvent ev);
-void wlist_update(void);
+int wlist_update(void);
 void wlist_item_draw(client *c);
 
 // functions from x11.c

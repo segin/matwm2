@@ -2,7 +2,7 @@
 
 XColor bg, ibg, fg, ifg;
 GC gc, igc, bgc, ibgc;
-int border_width, text_height, title_height, button_parent_width, snapat, button1, button2, button3, button4, button5;
+int border_width, text_height, title_height, button_parent_width, snapat, button1, button2, button3, button4, button5, dc;
 XFontStruct *font;
 char *no_title = NO_TITLE;
 
@@ -84,6 +84,8 @@ void cfg_set_opt(char *key, char *value) {
     border_width = strtol(value, NULL, 0);
   if(strcmp(key, "snap") == 0)
     snapat = strtol(value, NULL, 0);
+  if(strcmp(key, "desktops") == 0)
+    dc = strtol(value, NULL, 0);
   if(strcmp(key, "button1") == 0)
     button1 = str_buttonaction(value);
   if(strcmp(key, "button2") == 0)
@@ -183,6 +185,10 @@ int str_keyaction(char *str) {
     return KA_CLOSE;
   if(strcmp(str, "exec") == 0)
     return KA_EXEC;
+  if(strcmp(str, "next_desktop") == 0)
+    return KA_NEXT_DESKTOP;
+  if(strcmp(str, "prev_desktop") == 0)
+    return KA_PREV_DESKTOP;
   return KA_NONE;
 }
 

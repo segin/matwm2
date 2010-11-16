@@ -11,6 +11,7 @@ button4               raise\n\
 button5               lower\n\
 border_width          4\n\
 snap                  5\n\
+desktops              4\n\
 ignore_modifier       mod2 lock\n\
 mouse_modifier        mod1\n\
 key                   mod1 Tab                next\n\
@@ -26,6 +27,8 @@ key                   control mod1 u          topright\n\
 key                   control mod1 b          bottomleft\n\
 key                   control mod1 n          bottomright\n\
 key                   control mod1 a          iconify_all\n\
+key                   control mod1 Right      next_desktop\n\
+key                   control mod1 Left       prev_desktop\n\
 key                   control mod1 Return     exec xterm\n\
 key                   mod4 q                  close\n\
 key                   mod4 s                  iconify\n\
@@ -37,7 +40,9 @@ key                   mod4 y                  topleft\n\
 key                   mod4 u                  topright\n\
 key                   mod4 b                  bottomleft\n\
 key                   mod4 n                  bottomright\n\
-key                   mod4 a                  iconify_all\n"
+key                   mod4 a                  iconify_all\n\
+key                   mod4 Right              next_desktop\n\
+key                   mod4 Left               prev_desktop\n"
 
 #define MINSIZE                 5
 #define CFGFN                   ".matwmrc"

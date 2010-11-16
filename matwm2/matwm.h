@@ -19,14 +19,13 @@
 
 typedef struct {
   Window        window, parent, title, wlist_item, button_parent, button_iconify, button_maximise, button_expand, button_close;
-  int           x, y, width, height, flags, layer, xo, yo, oldbw;
+  int           x, y, width, height, flags, layer, desktop, xo, yo, oldbw;
   int           expand_x, expand_y, expand_width, expand_height, title_width;
   Pixmap        title_pixmap;
   XSizeHints    normal_hints;
   char          *name;
 } client;
 
-#define ICONIC          (1 << 0)
 #define MAXIMISED       (1 << 1)
 #define EXPANDED        (1 << 2)
 #define FULLSCREEN      (1 << 3)
@@ -38,6 +37,9 @@ typedef struct {
 #define CAN_RESIZE      (1 << 9)
 #define NO_STRUT        (1 << 10)
 #define DONT_LIST       (1 << 11)
+
+#define ICONS           -1
+#define STICKY          -2
 
 enum layers {
   TOPMOST,
@@ -70,7 +72,9 @@ enum {
   KA_TOPRIGHT,
   KA_BOTTOMRIGHT,
   KA_BOTTOMLEFT,
-  KA_EXEC
+  KA_EXEC,
+  KA_NEXT_DESKTOP,
+  KA_PREV_DESKTOP
 };
 
 enum {

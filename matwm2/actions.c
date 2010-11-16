@@ -62,7 +62,7 @@ void client_focus(client *c) {
   if(prev)
     client_set_bg(prev, ibg, ifg);
   client_set_bg(c, bg, fg);
-  if(!(c->flags & ICONIC) && isviewable(c->window))
+  if(c->desktop == desktop || c->desktop == STICKY && isviewable(c->window))
     XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
   ewmh_set_active(c);
 }
@@ -77,7 +77,7 @@ void client_raise(client *c) {
 
 void client_lower(client *c) {
   int i;
-  for(i = client_number(stacking, c); i < cn - 1 && stacking[i + 1]->layer <= c->layer && !(stacking[i + 1]->flags & ICONIC); i++)
+  for(i = client_number(stacking, c); i < cn - 1 && stacking[i + 1]->layer <= c->layer && stacking[i + 1]->desktop != ICONS; i++)
     stacking[i] = stacking[i + 1];
   stacking[i] = c;
   clients_apply_stacking();
@@ -123,7 +123,7 @@ void client_expand(client *c) {
   c->expand_width = display_width;
   c->expand_height = display_height;
   for(i = 0; i < cn; i++) {
-    if(clients[i]->flags & ICONIC || c->y >= client_y(clients[i]) + client_height_total(clients[i]) || c->y + (c->height + (client_border(c) * 2) + client_title(c)) <= client_y(clients[i]))
+    if((clients[i]->desktop != STICKY && clients[i]->desktop != desktop) || c->y >= client_y(clients[i]) + client_height_total(clients[i]) || c->y + (c->height + (client_border(c) * 2) + client_title(c)) <= client_y(clients[i]))
       continue;
     if(client_x(clients[i]) + client_width_total(clients[i]) <= c->x && client_x(clients[i]) + client_width_total(clients[i]) > c->expand_x)
       c->expand_x = client_x(clients[i]) + client_width_total(clients[i]);
@@ -131,7 +131,7 @@ void client_expand(client *c) {
       c->expand_width = client_x(clients[i]);
   }
   for(i = 0; i < cn; i++) {
-    if(clients[i]->flags & ICONIC || c->expand_x >= client_x(clients[i]) + client_width_total(clients[i]) || c->expand_width <= client_x(clients[i]))
+    if((clients[i]->desktop != STICKY && clients[i]->desktop != desktop) || c->expand_x >= client_x(clients[i]) + client_width_total(clients[i]) || c->expand_width <= client_x(clients[i]))
       continue;
     if(client_y(clients[i]) + client_height_total(clients[i]) <= c->y && client_y(clients[i]) + client_height_total(clients[i]) > c->expand_y)
       c->expand_y = client_y(clients[i]) + client_height_total(clients[i]);
@@ -151,34 +151,27 @@ void client_toggle_title(client *c) {
 
 void client_iconify(client *c) {
   int i;
-  XEvent ev;
-  if(c->flags & ICONIC || c->flags & DONT_LIST)
+  if(c->desktop == ICONS || c->flags & DONT_LIST)
     return;
   nicons++;
   set_wm_state(c->window, IconicState);
-  XUnmapWindow(dpy, c->parent);
-  XUnmapWindow(dpy, c->window);
-  XMapWindow(dpy, c->wlist_item);
-  c->flags |= ICONIC;
-  XIfEvent(dpy, &ev, &isunmap, (XPointer) &c->window);
-  if(current == c && evh == drag_handle_event)
-    evh = drag_release_wait;
+  client_to_desktop(c, ICONS);
   for(i = client_number(stacking, c); i < cn - 1; i++)
     stacking[i] = stacking[i + 1];
   stacking[cn - 1] = c;
-  client_focus(stacking[0]);
+  for(i = 0; i < cn; i++)
+    if(stacking[i]->desktop == desktop || stacking[i]->desktop == STICKY)
+      client_focus(stacking[i]);  
   ewmh_update_stacking();
 }
 
 void client_restore(client *c) {
   int i;
-  if(!(c->flags & ICONIC) || c->flags & DONT_LIST)
+  if(c->desktop != ICONS)
     return;
   nicons--;
-  c->flags ^= ICONIC;
+  client_to_desktop(c, desktop);
   client_raise(c);
-  XMapWindow(dpy, c->parent);
-  XMapWindow(dpy, c->window);
   set_wm_state(c->window, NormalState);
   if(c == current)
     XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
