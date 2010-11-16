@@ -387,4 +387,5 @@
 	don't go to sticky desktop if EWMH hint activates a sticky window
 	update ewmh desktop of icons restored to another desktop
 	if no windows are hidden for it still exit showing desktop mode
+	get_ewmh_hints() renamed to ewmh_get_hints()
 

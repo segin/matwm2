@@ -98,7 +98,7 @@ extern long ewmh_strut[4];
 // functions from ewmh.c
 void ewmh_initialize(void);
 int ewmh_handle_event(XEvent ev);
-int get_ewmh_hints(client *c);
+int ewmh_get_hints(client *c);
 void ewmh_update_extents(client *c);
 void ewmh_update_geometry(void);
 void ewmh_update_desktop(client *c);

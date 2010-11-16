@@ -130,7 +130,7 @@ void client_expand(client *c, int d) {
 	c->expand_width = (d & EXPANDED_R) ? display_width : (client_x(c) + client_width_total(c));
 	c->expand_height = (d & EXPANDED_B) ? display_height : (client_y(c) + client_height_total(c));
 	for(i = 0; i < cn; i++) {
-		if((clients[i]->desktop != STICKY && clients[i]->desktop != desktop) || c->y >= client_y(clients[i]) + client_height_total(clients[i]) || c->y + (c->height + (client_border(c) * 2) + client_title(c)) <= client_y(clients[i]))
+		if((clients[i]->desktop != STICKY && clients[i]->desktop != desktop) || c->y >= client_y(clients[i]) + client_height_total(clients[i]) || c->y + (c->height + (client_border(c) * 2) + client_title(c)) <= client_y(clients[i]) || clients[i]->flags & ICONIC)
 			continue;
 		if(d & EXPANDED_L && client_x(clients[i]) + client_width_total(clients[i]) <= c->x && client_x(clients[i]) + client_width_total(clients[i]) > c->expand_x)
 			c->expand_x = client_x(clients[i]) + client_width_total(clients[i]);
@@ -138,7 +138,7 @@ void client_expand(client *c, int d) {
 			c->expand_width = client_x(clients[i]);
 	}
 	for(i = 0; i < cn; i++) {
-		if((clients[i]->desktop != STICKY && clients[i]->desktop != desktop) || c->expand_x >= client_x(clients[i]) + client_width_total(clients[i]) || c->expand_width <= client_x(clients[i]))
+		if((clients[i]->desktop != STICKY && clients[i]->desktop != desktop) || c->expand_x >= client_x(clients[i]) + client_width_total(clients[i]) || c->expand_width <= client_x(clients[i]) || clients[i]->flags & ICONIC)
 			continue;
 		if(d & EXPANDED_T && client_y(clients[i]) + client_height_total(clients[i]) <= c->y && client_y(clients[i]) + client_height_total(clients[i]) > c->expand_y)
 			c->expand_y = client_y(clients[i]) + client_height_total(clients[i]);
@@ -180,7 +180,7 @@ void client_restore(client *c) {
 		return;
 	nicons--;
 	client_show(c);
-	if(c->desktop != STICKY || c->desktop != desktop) {
+	if(c->desktop != STICKY && c->desktop != desktop) {
 		c->desktop = desktop;
 		ewmh_update_desktop(c);
 	}

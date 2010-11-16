@@ -27,7 +27,7 @@ void client_add(Window w) {
 #endif
 	get_normal_hints(new);
 	get_mwm_hints(new);
-	get_ewmh_hints(new);
+	ewmh_get_hints(new);
 	new->xo = gxo(new, 1);
 	new->yo = gyo(new, 1);
 	new->x = attr.x - new->xo;

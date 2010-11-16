@@ -147,7 +147,7 @@ int ewmh_handle_event(XEvent ev) {
 	return 0;
 }
 
-int get_ewmh_hints(client *c) {
+int ewmh_get_hints(client *c) {
 	Atom rt, *data;
 	int rf;
 	long nir, bar, *d;
