@@ -122,7 +122,7 @@ void client_toggle_state(client *c, int state) { /* used directly only for maxim
 
 void client_expand_x(client *c, int d, int first) { /* calculate horizontal dimensions for expanding */
 	int i, right, client_right;
-	client_right = c->x + client_width_total(c);
+	client_right = c->x + c->width + ((c->flags & HAS_BORDER) ? (border_width + border_spacing) * 2 : 0); /* we don't any of the functions from info.c because they report dimensions specific to the state of the window */
 	for(i = 0; i < cn; i++) {
 		if(!client_visible(clients[i]) || (first ? c->y : c->expand_y) >= client_y(clients[i]) + client_height_total(clients[i]) || (first ? c->y + client_height_total(c) : c->expand_height) <= client_y(clients[i]))
 			continue;
@@ -148,7 +148,7 @@ void client_expand_x(client *c, int d, int first) { /* calculate horizontal dime
 
 void client_expand_y(client *c, int d, int first) { /* calculate horizontal dimensions for expanding */
 	int i, bottom, client_bottom;
-	client_bottom = c->y + client_height_total(c);
+	client_bottom = c->y + c->height + ((c->flags & HAS_BORDER) ? (border_width + border_spacing) * 2 : 0) + ((c->flags & HAS_TITLE) ? title_height : 0);
 	for(i = 0; i < cn; i++) {
 		if(!client_visible(clients[i]) || (first ? c->x : c->expand_x) >= client_x(clients[i]) + client_width_total(clients[i]) || (first ? c->x + client_width_total(c) : c->expand_width) <= client_x(clients[i]))
 			continue;
@@ -173,6 +173,7 @@ void client_expand_y(client *c, int d, int first) { /* calculate horizontal dime
 }
 
 void client_expand(client *c, int d, bool a) { /* see expand key action in the manual page for explanation of what this does */
+	int borders = ((c->flags & HAS_BORDER) ? (border_width + border_spacing) * 2 : 0), borders_and_title = borders + ((c->flags & HAS_TITLE) ? title_height : 0); /* don't use client_border() etc, they depend on state */
 	if(!(c->flags & CAN_MOVE) || !(c->flags & CAN_RESIZE))
 		return;
 	if((c->flags & d) == d) {
@@ -182,10 +183,10 @@ void client_expand(client *c, int d, bool a) { /* see expand key action in the m
 	}
 	d ^= (d & c->flags);
 	client_update_screen(c);
-	c->expand_x = (d & EXPANDED_L) ? screens[c->screen].x : client_x(c);
-	c->expand_y = (d & EXPANDED_T) ? screens[c->screen].y : client_y(c);
-	c->expand_width = (d & EXPANDED_R) ? screens[c->screen].x + screens[c->screen].width : (client_x(c) + client_width_total(c));
-	c->expand_height = (d & EXPANDED_B) ? screens[c->screen].y + screens[c->screen].height : (client_y(c) + client_height_total(c));
+	c->expand_x = (d & EXPANDED_L) ? screens[c->screen].x : c->x;
+	c->expand_y = (d & EXPANDED_T) ? screens[c->screen].y : c->y;
+	c->expand_width = (d & EXPANDED_R) ? screens[c->screen].x + screens[c->screen].width : (c->x + c->width + borders);
+	c->expand_height = (d & EXPANDED_B) ? screens[c->screen].y + screens[c->screen].height : (c->y + c->height + borders_and_title);
 	if(a) {
 		client_expand_y(c, d, true);
 		client_expand_x(c, d, false);
@@ -193,8 +194,8 @@ void client_expand(client *c, int d, bool a) { /* see expand key action in the m
 		client_expand_x(c, d, true);
 		client_expand_y(c, d, false);
 	}
-	c->expand_width -= c->expand_x + (client_border(c) * 2);
-	c->expand_height -= c->expand_y + (client_border(c) * 2) + client_title(c);
+	c->expand_width -= c->expand_x + borders;
+	c->expand_height -= c->expand_y + borders_and_title;
 	c->flags |= d;
 	client_update(c);
 }

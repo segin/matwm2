@@ -41,15 +41,11 @@ void buttons_create(client *c) {
 	}
 	c->buttons_right_width -= button_spacing;
 	c->buttons_left_width -= button_spacing;
-	buttons_update(c);
-	if(c->buttons_left_width) {
+	if(c->buttons_left_width)
 		XResizeWindow(dpy, c->button_parent_left, c->buttons_left_width, button_size);
-		XMapWindow(dpy, c->button_parent_left);
-	}
-	if(c->buttons_right_width) {
+	if(c->buttons_right_width)
 		XResizeWindow(dpy, c->button_parent_right, c->buttons_right_width, button_size);
-		XMapWindow(dpy, c->button_parent_right);
-	}
+	buttons_update(c);
 }
 
 void buttons_draw(client *c) {
@@ -98,14 +94,18 @@ void button_draw(client *c, button *b) {
 }
 
 void buttons_update(client *c) { /* maps the buttons if the window has no buttons and schould have buttons and vice versa */
-	if(c->flags & HAS_BUTTONS && c->width <= (c->buttons_left_width ? c->buttons_left_width + button_spacing : 0) + (c->buttons_right_width ? c->buttons_right_width + button_spacing : 0)) {
+	if(c->flags & HAS_BUTTONS && client_width(c) <= (c->buttons_left_width ? c->buttons_left_width + button_spacing : 0) + (c->buttons_right_width ? c->buttons_right_width + button_spacing : 0)) {
 		c->flags ^= HAS_BUTTONS;
-		XUnmapWindow(dpy, c->button_parent_left);
-		XUnmapWindow(dpy, c->button_parent_right);
-	} else if(!(c->flags & HAS_BUTTONS) && c->width > (c->buttons_left_width ? c->buttons_left_width + button_spacing : 0) + (c->buttons_right_width ? c->buttons_right_width + button_spacing : 0)) {
+		if(c->buttons_left_width)
+			XUnmapWindow(dpy, c->button_parent_left);
+		if(c->buttons_right_width)
+			XUnmapWindow(dpy, c->button_parent_right);
+	} else if(!(c->flags & HAS_BUTTONS) && client_width(c) > (c->buttons_left_width ? c->buttons_left_width + button_spacing : 0) + (c->buttons_right_width ? c->buttons_right_width + button_spacing : 0)) {
 		c->flags |= HAS_BUTTONS;
-		XMapWindow(dpy, c->button_parent_left);
-		XMapWindow(dpy, c->button_parent_right);
+		if(c->buttons_left_width)
+			XMapWindow(dpy, c->button_parent_left);
+		if(c->buttons_right_width)
+			XMapWindow(dpy, c->button_parent_right);
 	}
 	XMoveWindow(dpy, c->button_parent_right, client_width(c) + border_spacing - c->buttons_right_width, border_spacing);
 }

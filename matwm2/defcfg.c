@@ -31,6 +31,7 @@ char *def_cfg[DEF_CFG_LINES] = {
 	"allow_focus_stealing     true",
 	"correct_center           true",
 	"correct_center_unmanaged true",
+	"correct_center_separate  false",
 	"click_root               true",
 	"button1                  move",
 	"button2                  none",

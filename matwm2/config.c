@@ -3,7 +3,7 @@
 XColor bg, ibg, fg, ifg, bfg, ibfg;
 GC gc, igc, bgc, ibgc;
 int border_spacing, border_width, button_spacing, wlist_margin, wlist_maxwidth, wlist_item_height, text_height, title_height, button_size, title_spacing, snapat, dc, first = 1, *buttons_right = NULL, nbuttons_right = 0, *buttons_left = NULL, nbuttons_left = 0, doubleclick_time, fullscreen_stacking, ewmh_screen;
-bool center_title, center_wlist_items, click_focus, click_raise, focus_new, taskbar_ontop, map_center, drag_warp, allow_focus_stealing, correct_center, correct_center_unmanaged, click_root;
+bool center_title, center_wlist_items, click_focus, click_raise, focus_new, taskbar_ontop, map_center, drag_warp, allow_focus_stealing, correct_center, correct_center_unmanaged, correct_center_separate, click_root;
 action *button1 = NULL, *button2 = NULL, *button3 = NULL, *button4 = NULL, *button5 = NULL, *double1 = NULL, *double2 = NULL, *double3 = NULL, *double4 = NULL, *double5 = NULL;
 action *root_button1 = NULL, *root_button2 = NULL, *root_button3 = NULL, *root_button4 = NULL, *root_button5 = NULL, *root_double1 = NULL, *root_double2 = NULL, *root_double3 = NULL, *root_double4 = NULL, *root_double5 = NULL;
 #ifdef USE_XFT
@@ -287,6 +287,8 @@ void cfg_set_opt(char *key, char *value, int initial) {
 		str_bool(value, &correct_center);
 	if(strcmp(key, "correct_center_unmanaged") == 0)
 		str_bool(value, &correct_center_unmanaged);
+	if(strcmp(key, "correct_center_separate") == 0)
+		str_bool(value, &correct_center_separate);
 	if(strcmp(key, "click_root") == 0)
 		str_bool(value, &click_root);
 	if(strcmp(key, "mouse_modifier") == 0)
@@ -346,6 +348,7 @@ void cfg_reinitialize(void) {
 		XDestroyWindow(dpy, clients[i]->button_parent_left);
 		XDestroyWindow(dpy, clients[i]->button_parent_right);
 		free((void *) clients[i]->buttons);
+		clients[i]->flags ^= clients[i]->flags & HAS_BUTTONS;
 		buttons_create(clients[i]); /* buttons are now on top of the client window */
 		XRaiseWindow(dpy, clients[i]->window); /* hence this line */
 		client_update(clients[i]);
@@ -436,9 +439,9 @@ unsigned int str_modifier(char *name) {
 }
 
 void str_action(char *str, action **ret) {
+	char *act = eat(&str, " \t");
 	free(*ret);
 	*ret = _malloc(sizeof(action));
-	char *act = eat(&str, " \t");
 	if(strcmp(act, "next") == 0)
 		(*ret)->code = A_NEXT;
 	else if(strcmp(act, "prev") == 0)

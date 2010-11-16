@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
 				#else
 				"disabled"
 				#endif
-				"\n\tprint all received events: "
+				"\n\tdebugging output about events: "
 				#ifdef DEBUG_EVENTS
 				"enabled"
 				#else

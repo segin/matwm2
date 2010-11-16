@@ -140,19 +140,20 @@ int screens_bottom(void) { /* returns the lowest bottom coordinate of all screen
 
 bool screens_correct_center(int *x, int *y, int *width, int *height) { /* for windows that try to place windows centered without knowing there are multiple screens */
 	bool ret = false;
-	int min, max, ref;
+	int min_x, max_x, ref_x;
+	int min_y, max_y, ref_y;
 	screens_update_current();
-	min = *x + (*width / 2) - 2;
-	max = min + 4;
-	ref = (screens_rightmost() - screens_leftmost()) / 2;
-	if(*width < screens[cs].width && ref > min && ref < max) {
+	min_x = *x + (*width / 2) - 2;
+	max_x = min_x + 4;
+	ref_x = (screens_rightmost() - screens_leftmost()) / 2;
+	min_y = *y + (*height / 2) - 2;
+	max_y = min_y + 4;
+	ref_y = (screens_bottom() - screens_topmost()) / 2;
+	if(*width < screens[cs].width && ref_x > min_x && ref_x < max_x && (correct_center_separate || (*height < screens[cs].height && ref_y > min_y && ref_y < max_y))) {
 		*x = screens[cs].x + ((screens[cs].width / 2) - (*width / 2));
 		ret = true;
 	}
-	min = *y + (*height / 2) - 1;
-	max = min + 2;
-	ref = (screens_bottom() - screens_topmost()) / 2;
-	if(*height < screens[cs].height && ref > min && ref < max) {
+	if(*height < screens[cs].height && ref_y > min_y && ref_y < max_y && (correct_center_separate || ret)) {
 		*y = screens[cs].y + ((screens[cs].height / 2) - (*height / 2));
 		ret = true;
 	}

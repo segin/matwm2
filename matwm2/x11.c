@@ -35,7 +35,8 @@ bool select_root_events(void) {
 
 void get_normal_hints(client *c) { /* read normal size hints */
 	long sr;
-	XGetWMNormalHints(dpy, c->window, &c->normal_hints, &sr);
+	if(!XGetWMNormalHints(dpy, c->window, &c->normal_hints, &sr))
+		c->normal_hints.flags = 0;
 	if(c->normal_hints.flags & PMinSize && c->normal_hints.flags & PMaxSize && c->normal_hints.min_width == c->normal_hints.max_width && c->normal_hints.min_height == c->normal_hints.max_height)
 		c->flags ^= c->flags & CAN_RESIZE; /* min and max size are equal, so the window can't be resized */
 }

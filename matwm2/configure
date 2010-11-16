@@ -199,11 +199,15 @@ if [ "$debug" = "yes" ]; then
 	defines="$defines -DDEBUG"
 fi
 
-defines=`echo $defines` # this serves to strip whitespace
-
 cflags=`pkg-config --cflags $libraries`
 ldflags=`pkg-config --libs-only-L $libraries`
 libs=`pkg-config --libs-only-l $libraries`
+
+defines=`echo $defines` # this serves to strip whitespace
+cflags=`echo $cflags`
+ldflags=`echo $ldflags`
+libs=`echo $libs`
+
 echo "done"
 
 # let the sedding begin

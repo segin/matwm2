@@ -41,7 +41,7 @@ void handle_event(XEvent *ev);
 extern XColor bg, ibg, fg, ifg, bfg, ibfg;
 extern GC gc, igc, bgc, ibgc;
 extern int border_spacing, border_width, button_spacing, wlist_margin, wlist_maxwidth, wlist_item_height, text_height, title_height, button_size, title_spacing, snapat, dc, first, *buttons_right, nbuttons_right, *buttons_left, nbuttons_left, doubleclick_time, fullscreen_stacking, ewmh_screen;
-extern bool center_title, center_wlist_items, click_focus, click_raise, focus_new, taskbar_ontop, map_center, drag_warp, allow_focus_stealing, correct_center, correct_center_unmanaged, click_root;
+extern bool center_title, center_wlist_items, click_focus, click_raise, focus_new, taskbar_ontop, map_center, drag_warp, allow_focus_stealing, correct_center, correct_center_unmanaged, correct_center_separate, click_root;
 extern action *button1, *button2, *button3, *button4, *button5, *double1, *double2, *double3, *double4, *double5;
 extern action *root_button1, *root_button2, *root_button3, *root_button4, *root_button5, *root_double1, *root_double2, *root_double3, *root_double4, *root_double5;
 #ifdef USE_XFT

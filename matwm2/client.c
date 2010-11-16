@@ -25,7 +25,7 @@ void client_add(Window w, bool mapped) {
 	new->oldbw = attr.border_width;
 	new->layer = NORMAL;
 	new->desktop = desktop;
-	new->flags = HAS_TITLE | HAS_BORDER | HAS_BUTTONS | CAN_MOVE | CAN_RESIZE;
+	new->flags = HAS_TITLE | HAS_BORDER | CAN_MOVE | CAN_RESIZE;
 	if(wm_state == IconicState)
 		new->flags |= ICONIC;
 	#ifdef USE_SHAPE

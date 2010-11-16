@@ -1,3 +1,16 @@
+0.1.1:
+	fixed expanding while window maximised/fullscreen
+	strip whitespace from cflags etc in configure script
+	fixed buttons_create(), calls buttons_update() after calculating button parent sizes and doesn't map the button parents (buttons_update() schould do that)
+	don't set HAS_BUTTONS in client_add(), this is up to buttons_update()
+	fixed windows without WM_NORMAL_HINTS property behaving inapropriately
+	s/print all events/debugging output about events/g in -version output
+	makedefcfg.pl handles double quotes and backslashes propperly now (it escapes them)
+	act variable defined at top of str_action() instead of in the middle somewhere, len variable used there instead of calling strlen() twice
+	added correct_center_separate option to select wheter to correct x and y axis separately or not (defaults to false)
+	corrected calculation of min and max vertical coördinates in screens_correct_center()
+	moved declaration of act to the top of str_action() in config.c
+
 0.1.0:
 	wrapped all screen dimensions stuff, so multiple screens can be used
 	initial xinerama support

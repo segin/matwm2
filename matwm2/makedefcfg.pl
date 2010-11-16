@@ -24,6 +24,7 @@ char *def_cfg[DEF_CFG_LINES] = {
 DEF_END
 foreach(@lines) {
   chomp;
+	s/(["\\])/\\$1/g;
 	print DEF "\t\"$_\",\n";
 }
 print DEF "};\n";
