@@ -96,6 +96,13 @@ void handle_event(XEvent ev) {
         } else if(clients[c].iconic && strcmp(buttonaction(c, ev.xbutton.button), "restore") == 0)
           restore(c);
       break;
+    case MappingNotify:
+      if(ev.xmapping.request != MappingPointer) {
+        XUngrabKeyboard(dpy, CurrentTime);
+        XRefreshKeyboardMapping(&ev.xmapping);
+        mapkeys();
+      }
+      break;
     case KeyPress:
       if(current < cn && iskey(key_close))
         delete_window(current);

@@ -2,11 +2,11 @@
 
 XColor bg, ibg, fg, ifg;
 int border_width, title_height, hmaxicons, icon_width;
-unsigned int mousemodmask;
 char *cbutton1, *cbutton2, *cbutton3, *cbutton4, *cbutton5, *ibutton1, *ibutton2, *ibutton3, *ibutton4, *ibutton5;
 key key_next, key_prev, key_next_icon, key_prev_icon, key_iconify, key_maximise, key_close, key_bottomleft, key_bottomright, key_topleft, key_topright;
 XFontStruct *font;
 GC gc, igc;
+XrmDatabase cfg = NULL;
 
 char *xrm_getstr(XrmDatabase db, char *opt_name, char *def) {
   char *type;
@@ -60,14 +60,6 @@ char *buttonaction(int n, int button) {
   return None;
 }
 
-int getmodifier(KeyCode key) {
-  int i;
-  for(i = 0; i < 8; i++)
-    if(modmap->modifiermap[modmap->max_keypermod * i] == key)
-      return (1 << i);
-  return 0;
-}
-
 KeyCode string_to_key(char *str, int *mask) {
   int p = 0, l = 0, len = strlen(str), mod;
   char t[len + 1];
@@ -96,7 +88,6 @@ void config_read(void) {
   char *home = getenv("HOME");
   int cfglen = home ? strlen(home) + strlen(CFGFN) + 2 : 0;
   char cfgfn[cfglen];
-  XrmDatabase cfg = NULL;
   XrmInitialize();
   if(home) {
     strlcpy(cfgfn, home, cfglen);
@@ -114,20 +105,9 @@ void config_read(void) {
   ibutton3 = xrm_getstr(cfg, "icon_button3", DEF_IBUTTON3);
   ibutton4 = xrm_getstr(cfg, "icon_button4", DEF_IBUTTON4);
   ibutton5 = xrm_getstr(cfg, "icon_button5", DEF_IBUTTON5);
+  mapkeys();
   border_width = xrm_getint(cfg, "border_width", DEF_BW);
   hmaxicons = xrm_getint(cfg, "icons_per_line", DEF_H_ICON_COUNT);
-  string_to_key(xrm_getstr(cfg, "mouse_modifier", DEF_MOUSEMOD), &mousemodmask);
-  key_next = xrm_getkey(cfg, "key_next", DEF_KEY_NEXT);
-  key_prev = xrm_getkey(cfg, "key_prev", DEF_KEY_PREV);
-  key_next_icon = xrm_getkey(cfg, "key_next_icon", DEF_KEY_NEXT_ICON);
-  key_prev_icon = xrm_getkey(cfg, "key_prev_icon", DEF_KEY_PREV_ICON);
-  key_iconify = xrm_getkey(cfg, "key_iconify", DEF_KEY_ICONIFY);
-  key_close = xrm_getkey(cfg, "key_close", DEF_KEY_CLOSE);
-  key_maximise = xrm_getkey(cfg, "key_maximise", DEF_KEY_MAXIMISE);
-  key_bottomleft = xrm_getkey(cfg, "key_bottomleft", DEF_KEY_BOTTOMLEFT);
-  key_bottomright = xrm_getkey(cfg, "key_bottomright", DEF_KEY_BOTTOMRIGHT);
-  key_topleft = xrm_getkey(cfg, "key_topleft", DEF_KEY_TOPLEFT);
-  key_topright = xrm_getkey(cfg, "key_topright", DEF_KEY_TOPRIGHT);
   XAllocNamedColor(dpy, DefaultColormap(dpy, screen), xrm_getstr(cfg, "active.background", DEF_BG), &bg, &dummy);
   XAllocNamedColor(dpy, DefaultColormap(dpy, screen), xrm_getstr(cfg, "inactive.background", DEF_IBG), &ibg, &dummy);
   XAllocNamedColor(dpy, DefaultColormap(dpy, screen), xrm_getstr(cfg, "active.foreground", DEF_FG), &fg, &dummy);

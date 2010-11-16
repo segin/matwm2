@@ -3,10 +3,9 @@
 Display *dpy;
 int screen, display_width, display_height;
 Window root;
-unsigned int numlockmask = 0;
+
 Atom xa_wm_protocols, xa_wm_delete, xa_wm_state, xa_wm_change_state;
 XSetWindowAttributes p_attr;
-XModifierKeymap *modmap;
 
 void open_display(char *display) {
   struct sigaction qsa;
@@ -52,10 +51,6 @@ int main(int argc, char *argv[]) {
   xa_wm_delete = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
   xa_wm_state = XInternAtom(dpy, "WM_STATE", False);
   xa_wm_change_state = XInternAtom(dpy, "WM_CHANGE_STATE", False);
-  modmap = XGetModifierMapping(dpy);
-  for(i = 0; i < 8; i++)
-    if(modmap->modifiermap[modmap->max_keypermod * i] == XKeysymToKeycode(dpy, XK_Num_Lock))
-      numlockmask = (1 << i);
   display_width = XDisplayWidth(dpy, screen);
   display_height = XDisplayHeight(dpy, screen);
   config_read();
