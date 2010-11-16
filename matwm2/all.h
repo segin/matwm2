@@ -20,15 +20,15 @@ extern XColor bg, ibg, fg, ifg;
 extern int border_width, title_height, hmaxicons, icon_width;
 extern unsigned int mousemodmask;
 extern char *cbutton1, *cbutton2, *cbutton3, *cbutton4, *cbutton5, *ibutton1, *ibutton2, *ibutton3, *ibutton4, *ibutton5;
-extern KeySym key_next, key_prev, key_next_icon, key_prev_icon, key_iconify, key_maximise, key_close;
-extern int modmask_next, modmask_prev, modmask_next_icon, modmask_prev_icon, modmask_iconify, modmask_maximise, modmask_close;
+extern key key_next, key_prev, key_next_icon, key_prev_icon, key_iconify, key_maximise, key_close, key_bottomleft, key_bottomright, key_topleft, key_topright;
 extern XFontStruct *font;
 extern GC gc, igc;
 char *xrm_getstr(XrmDatabase db, char *opt_name, char *def);
+key xrm_getkey(XrmDatabase db, char *opt_name, char *def);
 int xrm_getint(XrmDatabase db, char *opt_name, int def);
 char *buttonaction(int n, int button);
-int keycode_to_modmask(KeyCode key);
-KeySym string_to_key(char *str, int *mask);
+int getmodifier(KeyCode key);
+KeyCode string_to_key(char *str, int *mask);
 void config_read(void);
 
 // events.c
@@ -42,7 +42,7 @@ void iconify(int n);
 void restore(int n);
 
 // input.c
-void grab_keysym(Window w, int modmask, KeySym key);
+void grab_key(Window w, int modmask, KeyCode key);
 void grab_button(Window w, unsigned int button, unsigned int modmask, unsigned int event_mask);
 void drag(int n, XButtonEvent *be, int res);
 

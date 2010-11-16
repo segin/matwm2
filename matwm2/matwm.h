@@ -8,13 +8,17 @@
 #include <stdio.h>
 #include <string.h>
 
-// client structure
 typedef struct client {
   Window window, parent;
   int x, y, width, height, oldbw, iconic, maximised, prev_x, prev_y, prev_width, prev_height;
   XSizeHints normal_hints;
   char *name;
 } client;
+
+typedef struct key {
+  KeyCode code;
+  int mask;
+} key;
 
 #include "defaults.h"
 #include "all.h"

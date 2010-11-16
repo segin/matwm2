@@ -1,11 +1,11 @@
 #include "matwm.h"
 
-void grab_keysym(Window w, int modmask, KeySym key) {
-  XGrabKey(dpy, XKeysymToKeycode(dpy, key), modmask, w, True, GrabModeAsync, GrabModeAsync);
-  XGrabKey(dpy, XKeysymToKeycode(dpy, key), LockMask | modmask, w, True, GrabModeAsync, GrabModeAsync);
+void grab_key(Window w, int modmask, KeyCode key) {
+  XGrabKey(dpy, key, modmask, w, True, GrabModeAsync, GrabModeAsync);
+  XGrabKey(dpy, key, LockMask | modmask, w, True, GrabModeAsync, GrabModeAsync);
   if(numlockmask) {
-    XGrabKey(dpy, XKeysymToKeycode(dpy, key), numlockmask | modmask, w, True, GrabModeAsync, GrabModeAsync);
-    XGrabKey(dpy, XKeysymToKeycode(dpy, key), numlockmask | LockMask | modmask, w, True, GrabModeAsync, GrabModeAsync);
+    XGrabKey(dpy, key, numlockmask | modmask, w, True, GrabModeAsync, GrabModeAsync);
+    XGrabKey(dpy, key, numlockmask | LockMask | modmask, w, True, GrabModeAsync, GrabModeAsync);
   }
 }
 

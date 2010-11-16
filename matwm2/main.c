@@ -56,12 +56,12 @@ int main(int argc, char *argv[]) {
   for(i = 0; i < 8; i++)
     if(modmap->modifiermap[modmap->max_keypermod * i] == XKeysymToKeycode(dpy, XK_Num_Lock))
       numlockmask = (1 << i);
+  display_width = XDisplayWidth(dpy, screen);
+  display_height = XDisplayHeight(dpy, screen);
   config_read();
   p_attr.override_redirect = True;
   p_attr.background_pixel = ibg.pixel;
   p_attr.event_mask = SubstructureRedirectMask | SubstructureNotifyMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask | ExposureMask;
-  display_width = XDisplayWidth(dpy, screen);
-  display_height = XDisplayHeight(dpy, screen);
   XQueryTree(dpy, root, &dw1, &dw2, &wins, &nwins);
   for(i = 0; i < nwins; i++) {
     XGetWindowAttributes(dpy, wins[i], &attr);

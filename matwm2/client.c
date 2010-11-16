@@ -34,8 +34,8 @@ void add_client(Window w, int new) {
   cn++;
   if(wm_state != IconicState) {
     XMapWindow(dpy, w);
-    XRaiseWindow(dpy, w);
-  } sort_icons();
+    XRaiseWindow(dpy, clients[cn - 1].parent);
+  } else sort_icons();
   XMapWindow(dpy, clients[cn - 1].parent);
   if(current >= cn - 1)
     focus(cn - 1);
@@ -172,6 +172,7 @@ void prev(int iconic, int warp) {
 }
 
 void restack_client(int n, int top) {
+  int i;
   top ? XRaiseWindow(dpy, clients[n].parent) : XLowerWindow(dpy, clients[n].parent);
   restack_icons(0);
 }

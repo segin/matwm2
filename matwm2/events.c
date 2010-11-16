@@ -1,7 +1,6 @@
 #include "matwm.h"
 
-#define iskey(modmask, key)\
-  ((ev.xkey.state == modmask || ev.xkey.state == (modmask | numlockmask)) && ev.xkey.keycode == XKeysymToKeycode(dpy, key))
+#define iskey(k) ((ev.xkey.state == k.mask || ev.xkey.state == (k.mask | numlockmask) || ev.xkey.state == (k.mask | LockMask) || ev.xkey.state == (k.mask | LockMask | numlockmask)) && ev.xkey.keycode == k.code)
 
 void handle_event(XEvent ev) {
   int c, i;
@@ -98,31 +97,39 @@ void handle_event(XEvent ev) {
           restore(c);
       break;
     case KeyPress:
-      if(current < cn && iskey(modmask_close, key_close))
+      if(current < cn && iskey(key_close))
         delete_window(current);
-      if(iskey(modmask_next, key_next))
+      if(iskey(key_next))
         next(0, 1);
-      if(iskey(modmask_prev, key_prev))
+      if(iskey(key_prev))
         prev(0, 1);
-      if(iskey(modmask_next_icon, key_next_icon)) {
+      if(iskey(key_next_icon)) {
         next(1, 1);
         restack_icons(1);
       }
-      if(iskey(modmask_prev_icon, key_prev_icon)) {
+      if(iskey(key_prev_icon)) {
         prev(1, 1);
         restack_icons(1);
       }
-      if(current < cn && iskey(modmask_iconify, key_iconify)) {
+      if(current < cn && iskey(key_iconify)) {
         icons_ontop = 0;
         clients[current].iconic ? restore(current) : iconify(current);
         if(!clients[current].iconic)
           XWarpPointer(dpy, None, clients[current].parent, 0, 0, 0, 0, clients[current].width + border_width,  clients[current].height + border_width + title_height);
       }
-      if(current < cn && iskey(modmask_maximise, key_maximise)) {
+      if(current < cn && iskey(key_maximise)) {
         if(clients[current].iconic)
           restore(current);
         maximise(current);
       }
+      if(current < cn && iskey(key_bottomleft))
+        move(current, 0, display_height - (clients[current].height + (border_width * 2) + title_height));
+      if(current < cn && iskey(key_bottomright))
+        move(current, display_width - (clients[current].width + (border_width * 2)), display_height - (clients[current].height + (border_width * 2) + title_height));
+      if(current < cn && iskey(key_topright))
+        move(current, display_width - (clients[current].width + (border_width * 2)), 0);
+      if(current < cn && iskey(key_topleft))
+        move(current, 0, 0);
       break;
   }
 }
