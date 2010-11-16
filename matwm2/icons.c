@@ -24,13 +24,6 @@ void restack_icons(int top) {
   icons_ontop = top;
 }
 
-void draw_icon(int n) {
-  if(clients[n].name)
-    XDrawString(dpy, clients[n].parent, (n == current) ? gc : igc, 2 + font->max_bounds.lbearing, 2 + font->max_bounds.ascent, clients[n].name, strlen(clients[n].name));
-  XDrawRectangle(dpy, clients[n].parent, (n == current) ? gc : igc, 0, 0, icon_width - 1, title_height + 3);
-  XClearArea(dpy, clients[n].parent, icon_width - 3, 2, 2, title_height, False);
-}
-
 void iconify(int n) {
   set_wm_state(clients[n].window, IconicState);
   XUnmapWindow(dpy, clients[n].window);

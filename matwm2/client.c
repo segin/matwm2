@@ -19,6 +19,7 @@ void add_client(Window w, int new) {
   clients[cn].oldbw = attr.border_width;
   clients[cn].window = w;
   clients[cn].iconic = (wm_state == IconicState) ? 1 : 0;
+  clients[cn].maximised = 0;
   XFetchName(dpy, w, &clients[cn].name);
   getnormalhints(cn);
   XSelectInput(dpy, w, PropertyChangeMask);
@@ -62,9 +63,9 @@ void remove_client(int n, int fc) {
 
 void draw_client(int n) {
   if(clients[n].name)
-    XDrawString(dpy, clients[n].parent, (n == current) ? gc : igc, border_width + font->max_bounds.lbearing, border_width + font->max_bounds.ascent, clients[n].name, strlen(clients[n].name));
-  XDrawRectangle(dpy, clients[n].parent, (n == current) ? gc : igc, 0, 0, clients[n].width + (border_width * 2) - 1, clients[n].height + (border_width * 2) + title_height - 1);
-  XClearArea(dpy, clients[n].parent, clients[n].width + border_width - 1, border_width, border_width, title_height, False);
+    XDrawString(dpy, clients[n].parent, (n == current) ? gc : igc, (clients[n].iconic ? 2 : border_width) + font->max_bounds.lbearing, (clients[n].iconic ? 2 : border_width) + font->max_bounds.ascent, clients[n].name, strlen(clients[n].name));
+  XDrawRectangle(dpy, clients[n].parent, (n == current) ? gc : igc, 0, 0, (clients[n].iconic ? icon_width : (clients[n].width + (border_width * 2))) - 1, (clients[n].iconic ? 4 : (clients[n].height + (border_width * 2))) + title_height - 1);
+  XClearArea(dpy, clients[n].parent, clients[n].iconic ? icon_width - 3 : (clients[n].width + border_width - 1), (clients[n].iconic ? 2 : border_width), clients[n].iconic ? 2 : border_width, title_height, False);
 }
 
 void alloc_clients(void) {
@@ -79,6 +80,7 @@ void alloc_clients(void) {
 void move(int n, int x, int y) {
   if(x == clients[n].x && y == clients[n].y)
     return;
+  clients[n].maximised = 0;
   if(!clients[n].iconic)
     XMoveWindow(dpy, clients[n].parent, x, y);
   configurenotify(n);
@@ -115,6 +117,7 @@ void resize(int n, int width, int height) {
     height = MINSIZE;
   if(width == clients[n].width && height == clients[n].height)
     return;
+  clients[n].maximised = 0;
   if(!clients[n].iconic)
     XResizeWindow(dpy, clients[n].parent, width + (border_width * 2), height + (border_width * 2) + title_height);
   XResizeWindow(dpy, clients[n].window, width, height);
@@ -129,7 +132,7 @@ void focus(int n) {
   while(i < cn) {
     XSetWindowBackground(dpy, clients[i].parent, i == n ? bg.pixel : ibg.pixel);
     XClearWindow(dpy, clients[i].parent);
-    clients[i].iconic ? draw_icon(i) : draw_client(i);
+    draw_client(i);
     i = (i != n) ? n : cn;
   }
   if(!clients[n].iconic)
@@ -168,8 +171,25 @@ void prev(int iconic, int warp) {
   }
 }
 
-void restack_client(int c, int top) {
-  top ? XRaiseWindow(dpy, clients[c].parent) : XLowerWindow(dpy, clients[c].parent);
+void restack_client(int n, int top) {
+  top ? XRaiseWindow(dpy, clients[n].parent) : XLowerWindow(dpy, clients[n].parent);
   restack_icons(0);
+}
+
+void maximise(int n) {
+  if(clients[n].maximised) {
+    clients[n].maximised = 0;
+    move(n, clients[n].prev_x, clients[n].prev_y);
+    resize(n, clients[n].prev_width, clients[n].prev_height);
+    return;
+  }
+  clients[n].prev_x = clients[n].x;
+  clients[n].prev_y = clients[n].y;
+  clients[n].prev_width = clients[n].width;
+  clients[n].prev_height = clients[n].height;
+  restack_client(current, 1);
+  move(n, 0, 0);
+  resize(n, display_width - (border_width * 2), display_height - ((border_width * 2) + title_height));
+  clients[n].maximised = 1;
 }
 

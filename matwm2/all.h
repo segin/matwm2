@@ -12,7 +12,8 @@ void resize(int n, int width, int height);
 void focus(int n);
 void next(int iconic, int warp);
 void prev(int iconic, int warp);
-void restack_client(int c, int top);
+void restack_client(int n, int top);
+void maximise(int n);
 
 // config.c
 extern XColor bg, ibg, fg, ifg;
@@ -37,7 +38,6 @@ void handle_event(XEvent ev);
 extern int icons_ontop;
 void sort_icons(void);
 void restack_icons(int top);
-void draw_icon(int n);
 void iconify(int n);
 void restore(int n);
 
@@ -48,7 +48,7 @@ void drag(int n, XButtonEvent *be, int res);
 
 // main.c
 extern Display *dpy;
-extern int screen, display_height;
+extern int screen, display_width, display_height;
 extern Window root;
 extern unsigned int numlockmask;
 extern Atom xa_wm_protocols, xa_wm_delete, xa_wm_state, xa_wm_change_state;

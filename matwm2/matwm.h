@@ -11,7 +11,7 @@
 // client structure
 typedef struct client {
   Window window, parent;
-  int x, y, width, height, oldbw, iconic;
+  int x, y, width, height, oldbw, iconic, maximised, prev_x, prev_y, prev_width, prev_height;
   XSizeHints normal_hints;
   char *name;
 } client;

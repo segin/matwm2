@@ -56,7 +56,7 @@ void handle_event(XEvent ev) {
           XFree(clients[i].name);
         XFetchName(dpy, clients[i].window, &clients[i].name);
         XClearWindow(dpy, clients[i].parent);
-        clients[i].iconic ? draw_icon(i) : draw_client(i);
+        draw_client(i);
       }
       if(ev.xproperty.atom == XA_WM_NORMAL_HINTS && i < cn)
         getnormalhints(i);
@@ -74,7 +74,7 @@ void handle_event(XEvent ev) {
       break;
     case Expose:
       if(c < cn && ev.xexpose.count == 0)
-        clients[c].iconic ? draw_icon(c) : draw_client(c);
+        draw_client(c);
       break;
     case ButtonPress:
       if(c < cn && !clients[c].iconic) {
@@ -117,6 +117,11 @@ void handle_event(XEvent ev) {
         clients[current].iconic ? restore(current) : iconify(current);
         if(!clients[current].iconic)
           XWarpPointer(dpy, None, clients[current].parent, 0, 0, 0, 0, clients[current].width + border_width,  clients[current].height + border_width + title_height);
+      }
+      if(current < cn && iskey(modmask_maximise, key_maximise)) {
+        if(clients[current].iconic)
+          restore(current);
+        maximise(current);
       }
       break;
   }

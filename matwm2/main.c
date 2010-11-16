@@ -1,7 +1,7 @@
 #include "matwm.h"
 
 Display *dpy;
-int screen, display_height;
+int screen, display_width, display_height;
 Window root;
 unsigned int numlockmask = 0;
 Atom xa_wm_protocols, xa_wm_delete, xa_wm_state, xa_wm_change_state;
@@ -60,6 +60,7 @@ int main(int argc, char *argv[]) {
   p_attr.override_redirect = True;
   p_attr.background_pixel = ibg.pixel;
   p_attr.event_mask = SubstructureRedirectMask | SubstructureNotifyMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask | ExposureMask;
+  display_width = XDisplayWidth(dpy, screen);
   display_height = XDisplayHeight(dpy, screen);
   XQueryTree(dpy, root, &dw1, &dw2, &wins, &nwins);
   for(i = 0; i < nwins; i++) {

@@ -38,10 +38,11 @@ void drag(int n, XButtonEvent *be, int res) {
       break;
     } else if(ev.type == EnterNotify || ev.type == ButtonPress) {
       continue;
-    } else if(ev.type == UnmapNotify && ev.xunmap.window == clients[n].window) {
-      remove_client(n, 1);
-      break;
-    } else handle_event(ev);
+    } else  {
+      handle_event(ev);
+      if((ev.type == UnmapNotify && ev.xunmap.window == clients[n].window) || ev.type == KeyPress)
+        break;
+    }
   }
   XUngrabPointer(dpy, CurrentTime);
 }

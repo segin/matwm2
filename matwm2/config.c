@@ -122,12 +122,14 @@ void config_read(void) {
   key_prev_icon = string_to_key(xrm_getstr(cfg, "key_prev_icon", DEF_KEY_PREV_ICON), &modmask_prev_icon);
   key_iconify = string_to_key(xrm_getstr(cfg, "key_iconify", DEF_KEY_ICONIFY), &modmask_iconify);
   key_close = string_to_key(xrm_getstr(cfg, "key_close", DEF_KEY_CLOSE), &modmask_close);
+  key_maximise = string_to_key(xrm_getstr(cfg, "key_maximise", DEF_KEY_MAXIMISE), &modmask_maximise);
   grab_keysym(root, modmask_next, key_next);
   grab_keysym(root, modmask_prev, key_prev);
   grab_keysym(root, modmask_next_icon, key_next_icon);
   grab_keysym(root, modmask_prev_icon, key_prev_icon);
   grab_keysym(root, modmask_iconify, key_iconify);
   grab_keysym(root, modmask_close, key_close);
+  grab_keysym(root, modmask_maximise, key_maximise);
   XAllocNamedColor(dpy, DefaultColormap(dpy, screen), bgc, &bg, &dummy);
   XAllocNamedColor(dpy, DefaultColormap(dpy, screen), ibgc, &ibg, &dummy);
   XAllocNamedColor(dpy, DefaultColormap(dpy, screen), fgc, &fg, &dummy);
