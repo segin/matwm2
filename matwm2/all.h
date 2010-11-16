@@ -2,9 +2,9 @@
 extern client **clients, *current;
 extern int cn;
 void add_client(Window w);
-void remove_client(client *c, int fc);
+void remove_client(client *c);
+void deparent_client(client *c);
 void draw_client(client *c);
-void draw_icon(client *c);
 void alloc_clients(void);
 void move(client *c, int x, int y);
 void resize(client *c, int width, int height);
@@ -21,6 +21,7 @@ extern XColor bg, ibg, fg, ifg;
 extern GC gc, igc;
 extern int border_width, title_height, snapat, button1, button2, button3, button4, button5;
 extern XFontStruct *font;
+extern char *no_title;
 void cfg_read(void);
 void cfg_parse(char *cfg);
 void cfg_set_opt(char *key, char *value);
@@ -28,8 +29,6 @@ KeySym str_key(char **str, unsigned int *mask);
 unsigned int str_modifier(char *name);
 int str_buttonaction(char *str);
 int str_keyaction(char *str);
-int read_file(char *path, char **buf);
-char *eat(char **str, char *until);
 
 // drag.c
 extern XButtonEvent be;
@@ -44,7 +43,7 @@ int snaph(client *c, int nx, int ny);
 int snapv(client *c, int nx, int ny);
 
 // events.c
-extern int (*evh)();
+extern int (*evh)(XEvent);
 void handle_event(XEvent ev);
 
 // icons.c
@@ -63,7 +62,7 @@ void ungrab_keys(void);
 void free_keys(void);
 int buttonaction(int button);
 int keyaction(XEvent ev);
-keybind *evkey(XEvent ev);
+char *keyarg(XEvent ev);
 int key_to_mask(KeyCode key);
 void grab_key(keybind key);
 void ungrab_key(keybind key);
@@ -76,10 +75,16 @@ extern int screen, display_width, display_height, have_shape, shape_event, qsfd[
 extern Window root;
 extern Atom xa_wm_protocols, xa_wm_delete, xa_wm_state, xa_wm_change_state, xa_motif_wm_hints;
 extern XSetWindowAttributes p_attr;
+extern char *dn;
 int main(int argc, char *argv[]);
 void end(void);
 void error(void);
 void qsh(int sig);
+
+// misc.c
+void spawn(char *cmd);
+int read_file(char *path, char **buf);
+char *eat(char **str, char *until);
 
 // wlist.c
 extern Window wlist;
@@ -88,6 +93,7 @@ void wlist_start(XEvent ev);
 void wlist_end(void);
 int wlist_handle_event(XEvent ev);
 void wlist_update(void);
+void wlist_item_draw(client *c);
 
 // x11.c
 int xerrorhandler(Display *display, XErrorEvent *xerror);
@@ -100,8 +106,8 @@ void get_mwm_hints(client *c);
 void configurenotify(client *c);
 int has_protocol(Window w, Atom protocol);
 void delete_window(client *c);
-int gxo(client *c, int i);
-int gyo(client *c, int i);
+int gxo(client *c, int initial);
+int gyo(client *c, int initial);
 
 // xev.c
 char *event_name(XEvent ev);

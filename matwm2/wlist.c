@@ -32,12 +32,12 @@ int wlist_handle_event(XEvent ev) {
       } else if(keyaction(ev) == KA_PREV) {
         focus((client_number(current) > 0) ? clients[client_number(current) - 1] : clients[cn - 1]);
       } else break;
-      XWarpPointer(dpy, None, current->icon, 0, 0, 0, 0, wlist_width - 2, 3 + title_height);
+      XWarpPointer(dpy, None, current->wlist_item, 0, 0, 0, 0, wlist_width - 2, 3 + title_height);
       break;
     case KeyRelease:
       mask = key_to_mask(ev.xkey.keycode);
       if(mask) {
-        mask = rmbit(ev.xkey.state, mask);
+        mask ^= ev.xkey.state & mask;
         for(i = 0; i < keyn; i++)
           if((keys[i].action == KA_NEXT || keys[i].action == KA_PREV) && cmpmask(keys[i].mask, mask))
             break;
@@ -64,11 +64,16 @@ void wlist_update(void) {
         wlist_width = tl;
     }
   for(i = 0; i < cn; i++) {
-    if(clients[i]->iconic)
+    if(!clients[0]->iconic && clients[i]->iconic)
       offset = 2;
-    XMoveResizeWindow(dpy, clients[i]->icon, 1, offset + ((title_height + 5) * nc), wlist_width - 2, title_height + 4);
+    XMoveResizeWindow(dpy, clients[i]->wlist_item, 1, offset + ((title_height + 5) * nc), wlist_width - 2, title_height + 4);
     nc++;
   }
   XMoveResizeWindow(dpy, wlist, (display_width / 2) - (wlist_width / 2), (display_height / 2) - (1 + ((title_height + 5) * cn) / 2), wlist_width, offset + ((title_height + 5) * cn));
+}
+
+void wlist_item_draw(client *c) {
+  if(c->name)
+    XDrawString(dpy, c->wlist_item, (c == current) ? gc : igc, 2 + font->max_bounds.lbearing, 2 + font->max_bounds.ascent, c->name, strlen(c->name));
 }
 

@@ -6,6 +6,7 @@ int cn = 0;
 void add_client(Window w) {
   XWindowAttributes attr;
   int i, di, bounding_shaped, wm_state = get_wm_state(w);
+  unsigned int dui;
   client *new = (client *) malloc(sizeof(client));
   XGetWindowAttributes(dpy, w, &attr);
   if(wm_state == WithdrawnState) {
@@ -17,7 +18,7 @@ void add_client(Window w) {
   new->oldbw = attr.border_width;
   new->window = w;
   if(have_shape)
-    new->shaped = XShapeQueryExtents(dpy, new->window, &bounding_shaped, &di, &di, &di, &di, &di, &di, &di, &di, &di) && bounding_shaped;
+    new->shaped = XShapeQueryExtents(dpy, new->window, &bounding_shaped, &di, &di, &dui, &dui, &di, &di, &di, &dui, &dui) && bounding_shaped;
   else new->shaped = 0;
   getnormalhints(new);
   get_mwm_hints(new);
@@ -27,14 +28,14 @@ void add_client(Window w) {
   new->maximised = 0;
   XFetchName(dpy, w, &new->name);
   if(!new->name)
-    new->name = NO_TITLE;
+    new->name = no_title;
   XSelectInput(dpy, w, PropertyChangeMask | EnterWindowMask);
   XShapeSelectInput(dpy, w, ShapeNotifyMask);
   XSetWindowBorderWidth(dpy, w, 0);
   new->parent = XCreateWindow(dpy, root, new->x, new->y, total_width(new), total_height(new), 0,
                               DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
                               CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
-  new->icon = XCreateWindow(dpy, wlist, 0, 0, 1, 1, 0,
+  new->wlist_item = XCreateWindow(dpy, wlist, 0, 0, 1, 1, 0,
                             DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
                             CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
   XAddToSaveSet(dpy, w);
@@ -52,27 +53,19 @@ void add_client(Window w) {
       clients[i] = clients[i - 1];
     clients[0] = new;
   } else clients[cn - 1] = new;
-  XMapWindow(dpy, new->icon);
+  XMapWindow(dpy, new->wlist_item);
   if(!current)
     focus(new);
   if(evh == wlist_handle_event)
     wlist_update();
 }
 
-void remove_client(client *c, int fc) {
+void remove_client(client *c) {
   XEvent ev;
   int i;
-  if(fc != 2 && XCheckTypedWindowEvent(dpy, c->parent, DestroyNotify, &ev) == False) {
-    if(fc)
-      set_wm_state(c->window, WithdrawnState);
-    XReparentWindow(dpy, c->window, root, c->x + gxo(c, 1), c->y + gyo(c, 1));
-    XSetWindowBorderWidth(dpy, c->window, c->oldbw);
-    XRemoveFromSaveSet(dpy, c->window);
-    XLowerWindow(dpy, c->window);
-  }
   XDestroyWindow(dpy, c->parent);
-  XDestroyWindow(dpy, c->icon);
-  if(c->name != NO_TITLE)
+  XDestroyWindow(dpy, c->wlist_item);
+  if(c->name != no_title)
     XFree(c->name);
   for(i = client_number(c); i < cn; i++)
     clients[i] = clients[i + 1];
@@ -88,6 +81,13 @@ void remove_client(client *c, int fc) {
     wlist_update();
 }
 
+void deparent_client(client *c) {
+  XReparentWindow(dpy, c->window, root, c->x + gxo(c, 1), c->y + gyo(c, 1));
+  XSetWindowBorderWidth(dpy, c->window, c->oldbw);
+  XRemoveFromSaveSet(dpy, c->window);
+  XLowerWindow(dpy, c->window);
+}
+
 void draw_client(client *c) {
   if(c->name && title(c)) {
     XDrawString(dpy, c->parent, (c == current) ? gc : igc, border_width + font->max_bounds.lbearing, border_width + font->max_bounds.ascent, c->name, strlen(c->name));
@@ -95,11 +95,6 @@ void draw_client(client *c) {
   }
   if(border(c))
     XDrawRectangle(dpy, c->parent, (c == current) ? gc : igc, 0, 0, c->width + (border_width * 2) - 1, c->height + (border_width * 2) + title(c) - 1);
-}
-
-void draw_icon(client *c) {
-  if(c->name)
-    XDrawString(dpy, c->icon, (c == current) ? gc : igc, 2 + font->max_bounds.lbearing, 2 + font->max_bounds.ascent, c->name, strlen(c->name));
 }
 
 void alloc_clients(void) {
@@ -157,25 +152,31 @@ void resize(client *c, int width, int height) {
 }
 
 void focus(client *c) {
-  if(current) {
-    XSetWindowBackground(dpy, current->parent, ibg.pixel);
-    XSetWindowBackground(dpy, current->icon, ibg.pixel);
-    if(!current->iconic)
-      XClearWindow(dpy, current->parent);
-    XClearWindow(dpy, current->icon);
-    draw_client(current);
-    draw_icon(current);
+  client *prev = current;
+  current = c;
+  if(prev) {
+    XSetWindowBackground(dpy, prev->parent, ibg.pixel);
+    XSetWindowBackground(dpy, prev->wlist_item, ibg.pixel);
+    if(!prev->iconic) {
+      XClearWindow(dpy, prev->parent);
+      draw_client(prev);
+    }
+    if(evh == wlist_handle_event) {
+      XClearWindow(dpy, prev->wlist_item);
+      wlist_item_draw(prev);
+    }
   }
   XSetWindowBackground(dpy, c->parent, bg.pixel);
-  XSetWindowBackground(dpy, c->icon, bg.pixel);
-  if(!c->iconic)
+  XSetWindowBackground(dpy, c->wlist_item, bg.pixel);
+  if(!c->iconic) {
     XClearWindow(dpy, c->parent);
-  XClearWindow(dpy, c->icon);
-  draw_client(c);
-  draw_icon(c);
-  if(!c->iconic)
+    draw_client(c);
     XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
-  current = c;
+  }
+  if(evh == wlist_handle_event) {
+    XClearWindow(dpy, c->wlist_item);
+    wlist_item_draw(c);
+  }
 }
 
 void raise_client(client *c) {
@@ -212,7 +213,6 @@ void maximise(client *c) {
 }
 
 void set_shape(client *c) {
-  int bounding_shaped, di;
   if(c->shaped)
     XShapeCombineShape(dpy, c->parent, ShapeBounding, border(c), border(c) + title(c), c->window, ShapeBounding, ShapeSet);
 }
@@ -221,13 +221,14 @@ int client_number(client *c) {
   int i;
   for(i = 0; i < cn; i++)
     if(clients[i] == c)
-      return i;
+      break;
+  return i;
 }
 
 client *owner(Window w) {
   int i;
   for(i = 0; i < cn; i++)
-    if(clients[i]->parent == w || clients[i]->window == w || clients[i]->icon == w)
+    if(clients[i]->parent == w || clients[i]->window == w || clients[i]->wlist_item == w)
       return clients[i];
   return NULL;
 }

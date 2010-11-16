@@ -5,18 +5,31 @@ int screen, display_width, display_height, have_shape, shape_event, qsfd[2];
 Window root;
 Atom xa_wm_protocols, xa_wm_delete, xa_wm_state, xa_wm_change_state, xa_motif_wm_hints;
 XSetWindowAttributes p_attr;
+char *dn = NULL;
 
 int main(int argc, char *argv[]) {
   XEvent ev;
-  unsigned int nwins;
+  unsigned int ui, nwins;
   Window dw, *wins;
   XWindowAttributes attr;
   struct sigaction qsa;
-  int dfd, i, di, sr;
+  int i, dfd, di, sr;
   fd_set fds, fdsr;
-  dpy = XOpenDisplay(NULL);
+  for(i = 1; i < argc; i++) {
+    if(strcmp(argv[i], "-defaults") == 0) {
+      printf(DEF_CFG);
+      return 0;
+    }
+    if(strcmp(argv[i], "-display") == 0 && i + 1 < argc) {
+      dn = argv[i + 1];
+      break;
+    }
+    fprintf(stderr, "error: argument %s not recognised\n", argv[i]);
+    return 1;
+  }
+  dpy = XOpenDisplay(dn);
   if(!dpy) {
-    fprintf(stderr, "error: can't open display \"%s\"\n", XDisplayName(NULL));
+    fprintf(stderr, "error: can't open display \"%s\"\n", XDisplayName(dn));
     exit(1);
   }
   screen = DefaultScreen(dpy);
@@ -50,10 +63,10 @@ int main(int argc, char *argv[]) {
   p_attr.event_mask = SubstructureRedirectMask | SubstructureNotifyMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask | ExposureMask;
   have_shape = XShapeQueryExtension(dpy, &shape_event, &di);
   XQueryTree(dpy, root, &dw, &dw, &wins, &nwins);
-  for(i = 0; i < nwins; i++) {
-    XGetWindowAttributes(dpy, wins[i], &attr);
+  for(ui = 0; ui < nwins; ui++) {
+    XGetWindowAttributes(dpy, wins[ui], &attr);
     if(!attr.override_redirect && attr.map_state == IsViewable)
-      add_client(wins[i]);
+      add_client(wins[ui]);
   }
   if(wins != NULL)
     XFree(wins);
@@ -81,7 +94,8 @@ void end(void) {
   while(cn) {
     if(clients[0]->iconic)
       XMapWindow(dpy, clients[0]->window);
-    remove_client(clients[0], 0);
+    deparent_client(clients[0]);
+    remove_client(clients[0]);
   }
   if(clients)
     free((void *) clients);

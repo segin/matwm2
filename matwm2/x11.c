@@ -1,20 +1,14 @@
 #include "matwm.h"
 
 int xerrorhandler(Display *display, XErrorEvent *xerror) {
+  if(display) {};
 #ifdef DEBUG
-  int i;
   char ret[666];
   XGetErrorText(xerror->display, xerror->error_code, ret, 666);
-/*  for(i = 0; i < cn; i++)
-    if(clients[i]->window == xerror->resourceid)
-      printf("client window of %s: ", clients[i]->name);
-  for(i = 0; i < cn; i++)
-    if(clients[i]->parent == xerror->resourceid)
-      printf("parent window of %s: ", clients[i]->name);*/
   printf("x error: %s\n", ret);
 #endif
   if(xerror->error_code == BadAccess && xerror->resourceid == root) {
-    fprintf(stderr,"error: root window at display %s is not available\n", XDisplayName(0));
+    fprintf(stderr,"error: root window at display %s is not available\n", XDisplayName(dn));
     exit(1);
   }
   return 0;
@@ -73,11 +67,13 @@ void get_mwm_hints(client *c) {
   Atom rt;
   int rf;
   unsigned long nir, bar;
+  unsigned char *prop;
   MWMHints *mwmhints;
   c->title = 1;
   c->border = 1;
   c->resize = 1;
-  if(XGetWindowProperty(dpy, c->window, xa_motif_wm_hints, 0, 3, False, AnyPropertyType, &rt, &rf, &nir, &bar, (unsigned char **) &mwmhints) == Success && nir > 2) {
+  if(XGetWindowProperty(dpy, c->window, xa_motif_wm_hints, 0, 3, False, AnyPropertyType, &rt, &rf, &nir, &bar, (unsigned char **) &prop) == Success && nir > 2) {
+    mwmhints = (MWMHints *) prop;
     if(mwmhints->flags & MWM_HINTS_DECORATIONS) {
       if(mwmhints->decorations & MWM_DECOR_ALL) {
         mwmhints->decorations &= ~MWM_DECOR_ALL;
@@ -132,7 +128,7 @@ void delete_window(client *c) {
   } else XKillClient(dpy, c->window);
 }
 
-int gxo(client *c, int i) {
+int gxo(client *c, int initial) {
   if(c->normal_hints.flags & PWinGravity)
     switch(c->normal_hints.win_gravity) {
       case StaticGravity:
@@ -140,16 +136,16 @@ int gxo(client *c, int i) {
       case NorthGravity:
       case SouthGravity:
       case CenterGravity:
-        return border(c) + (i ? -c->oldbw : (c->width / 2));
+        return border(c) + (initial ? -c->oldbw : (c->width / 2));
       case NorthEastGravity:
       case EastGravity:
       case SouthEastGravity:
-        return (border(c) * 2) + (i ? -c->oldbw * 2 : c->width);
+        return (border(c) * 2) + (initial ? -c->oldbw * 2 : c->width);
     }
   return 0;
 }
 
-int gyo(client *c, int i) {
+int gyo(client *c, int initial) {
   if(c->normal_hints.flags & PWinGravity)
     switch(c->normal_hints.win_gravity) {
       case StaticGravity:
@@ -157,11 +153,11 @@ int gyo(client *c, int i) {
       case EastGravity:
       case WestGravity:
       case CenterGravity:
-        return border(c) + ((title(c) + (i ? -c->oldbw : c->height)) / 2);
+        return border(c) + ((title(c) + (initial ? -c->oldbw : c->height)) / 2);
       case SouthEastGravity:
       case SouthGravity:
       case SouthWestGravity:
-        return (border(c) * 2) + title(c) + (i ? -c->oldbw * 2 : c->height);
+        return (border(c) * 2) + title(c) + (initial ? -c->oldbw * 2 : c->height);
     }
   return 0;
 }

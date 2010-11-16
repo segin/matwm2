@@ -1,6 +1,6 @@
 #include "matwm.h"
 
-int (*evh)() = NULL;
+int (*evh)(XEvent) = NULL;
 
 void handle_event(XEvent ev) {
   client *c = owner(ev.xany.window);
@@ -9,6 +9,7 @@ void handle_event(XEvent ev) {
     return;
   switch(ev.type) {
     case MapRequest:
+      c = owner(ev.xmaprequest.window);
       if(c) {
         if(c->iconic)
           restore(c);
@@ -16,13 +17,19 @@ void handle_event(XEvent ev) {
       break;
     case DestroyNotify:
       if(c && c->window == ev.xdestroywindow.window)
-        remove_client(c, 2);
-        break;
+        remove_client(c);
+      break;
     case UnmapNotify:
-      if(c && c->window == ev.xunmap.window)
-        remove_client(c, 1);
-        break;
+      if(c && c->window == ev.xunmap.window) {
+        if(XCheckTypedWindowEvent(dpy, c->parent, DestroyNotify, &ev) == False) {
+          deparent_client(c);
+          set_wm_state(c->window, WithdrawnState);
+        }
+        remove_client(c);
+      }
+      break;
     case ConfigureRequest:
+      c = owner(ev.xconfigurerequest.window);
       if(c) {
         resize(c, (ev.xconfigurerequest.value_mask & CWWidth) ? ev.xconfigurerequest.width : c->width, (ev.xconfigurerequest.value_mask & CWHeight) ? ev.xconfigurerequest.height : c->height);
         move(c, (ev.xconfigurerequest.value_mask & CWX) ? ev.xconfigurerequest.x - gxo(c, 0) : c->x, (ev.xconfigurerequest.value_mask & CWY) ? ev.xconfigurerequest.y - gyo(c, 0) : c->y);
@@ -39,13 +46,15 @@ void handle_event(XEvent ev) {
       break;
     case PropertyNotify:
      if(c && ev.xproperty.atom == XA_WM_NAME) {
-        if(c->name != NO_TITLE)
+        if(c->name != no_title)
           XFree(c->name);
         XFetchName(dpy, c->window, &c->name);
         XClearWindow(dpy, c->parent);
-        XClearWindow(dpy, c->icon);
         draw_client(c);
-        draw_icon(c);
+        if(evh == wlist_handle_event) {
+          XClearWindow(dpy, c->wlist_item);
+          wlist_item_draw(c);
+        }
       }
       if(ev.xproperty.atom == XA_WM_NORMAL_HINTS && c)
         getnormalhints(c);
@@ -67,8 +76,8 @@ void handle_event(XEvent ev) {
       if(ev.xexpose.count == 0) {
         if(c && ev.xexpose.window == c->parent)
           draw_client(c);
-        if(evh == wlist_handle_event && c && ev.xexpose.window == c->icon)
-          draw_icon(c);
+        if(evh == wlist_handle_event && c && ev.xexpose.window == c->wlist_item)
+          wlist_item_draw(c);
       }
       break;
     case ButtonPress:
@@ -108,11 +117,7 @@ void handle_event(XEvent ev) {
       if(current && keyaction(ev) == KA_TOPLEFT)
         move(current, 0, 0);
       if(keyaction(ev) == KA_EXEC)
-        if(vfork() == 0) {
-          setsid();
-          execlp("sh", "sh", "-c", evkey(ev)->arg, (char *) 0);
-          _exit(1);
-        }
+        spawn(keyarg(ev));
       break;
     case ConfigureNotify:
       if(root == ev.xconfigure.window) {

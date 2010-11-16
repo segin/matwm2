@@ -37,27 +37,19 @@ int drag_handle_event(XEvent ev) {
     case ButtonPress:
       return 1;
     case UnmapNotify:
-      if(current->window == ev.xunmap.window) {
-        remove_client(current, 1);
-        drag_end();
+      if(current->window == ev.xunmap.window)
         evh = drag_release_wait;
-        return 1;
-      }
       break;
     case DestroyNotify:
-      if(current->window == ev.xdestroywindow.window) {
-        remove_client(current, 2);
-        drag_end();
+      if(current->window == ev.xdestroywindow.window)
         evh = drag_release_wait;
-        return 1;
-      }
   }
   return 0;
 }
 
 int drag_release_wait(XEvent ev) {
   if(ev.type == ButtonRelease && ev.xbutton.button == be.button) {
-    evh = NULL;
+    drag_end();
     return 1;
   }
   return 0;

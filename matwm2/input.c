@@ -72,12 +72,12 @@ int keyaction(XEvent ev) {
   return KA_NONE;
 }
 
-keybind *evkey(XEvent ev) {
+char *keyarg(XEvent ev) {
   int i;
   for(i = 0; i < keyn; i++)
-    if(keys[i].code == ev.xkey.keycode && cmpmask(keys[i].mask, ev.xkey.state))
-      return &keys[i];
-  return NULL;
+    if(keys[i].code == ev.xkey.keycode && cmpmask(keys[i].mask, ev.xkey.state) && keys[i].arg)
+      return keys[i].arg;
+  return "";
 }
 
 int key_to_mask(KeyCode key) {

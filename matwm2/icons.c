@@ -12,9 +12,9 @@ void iconify(client *c) {
   if(c->iconic)
     return;
   set_wm_state(c->window, IconicState);
-  XUnmapWindow(dpy, c->window);
   XUnmapWindow(dpy, c->parent);
-  XMapWindow(dpy, c->icon);
+  XUnmapWindow(dpy, c->window);
+  XMapWindow(dpy, c->wlist_item);
   c->iconic = 1;
   XIfEvent(dpy, &ev, &isunmap, (XPointer) &c->window);
   for(i = client_number(c); i < cn - 1; i++)

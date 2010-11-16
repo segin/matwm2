@@ -4,11 +4,12 @@ XColor bg, ibg, fg, ifg;
 GC gc, igc;
 int border_width, title_height, snapat, button1, button2, button3, button4, button5;
 XFontStruct *font;
+char *no_title = NO_TITLE;
 
 void cfg_read(void) {
   char *home = getenv("HOME");
   int cfglen = home ? strlen(home) + strlen(CFGFN) + 2 : 0;
-  char cfgfn[cfglen], *cfg;
+  char *cfg, *cfgfn = (char *) malloc(cfglen);
   XGCValues gv;
   cfg = (char *) malloc(strlen(DEF_CFG));
   strncpy(cfg, DEF_CFG, strlen(DEF_CFG));
@@ -23,6 +24,7 @@ void cfg_read(void) {
       free((void *) cfg);
     }
   }
+  free((void *) cfgfn);
   update_keys();
   title_height = font->max_bounds.ascent + font->max_bounds.descent + 2;
   gv.function = GXinvert;
@@ -171,44 +173,5 @@ int str_keyaction(char *str) {
   if(strcmp(str, "exec") == 0)
     return KA_EXEC;
   return KA_NONE;
-}
-
-int read_file(char *path, char **buf) {
-  struct stat sb;
-  int r = 0, fd = open(path, O_RDONLY | O_EXLOCK);
-  if(fd > 0) {
-    if(fstat(fd, &sb) == 0) {
-      *buf = (char *) malloc(sb.st_size);
-      if(buf == NULL)
-        error();
-      r = read(fd, (void *) *buf, sb.st_size);
-      if(r <= 0)
-        free((void *) *buf);
-    }
-    close(fd);
-  }
-  return r;
-}
-
-char *eat(char **str, char *until) {
-  char *ret = NULL, *c;
-  while(1) {
-    if(!ret && (**str != ' ' && **str != '\t'))
-      ret = *str;
-    if(**str == 0) {
-      *str = NULL;
-      return ret;
-    }
-    c = until;
-    while(*c) {
-      if(ret && (**str == *c || **str == 0)) {
-        **str = 0;
-        (*str)++;
-        return ret;
-      }
-      c++;
-    }
-    (*str)++;
-  }
 }
 

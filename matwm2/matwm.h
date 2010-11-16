@@ -16,7 +16,7 @@
 #include <errno.h>
 
 typedef struct {
-  Window        window, parent, icon;
+  Window        window, parent, wlist_item;
   int           x, y, width, height, iconic, maximised;
   int           oldbw, prev_x, prev_y, prev_width, prev_height;
   int           title, border, resize, shaped;
@@ -27,7 +27,7 @@ typedef struct {
 typedef struct {
   KeySym sym;
   KeyCode code;
-  int mask, action;
+  unsigned int mask, action;
   char *arg;
 } keybind;
 
@@ -39,7 +39,6 @@ enum {BA_NONE, BA_MOVE, BA_RESIZE, BA_RAISE, BA_LOWER};
 #define total_width(c)  (c->width + (border(c) * 2))
 #define total_height(c) (c->height + (border(c) * 2) + title(c))
 #define warp()          XWarpPointer(dpy, None, current->parent, 0, 0, 0, 0, current->width + (border(current) ? border_width : -1), (current->height + (border(current) ? border_width : -1)) + title(current));
-#define rmbit(m, b)     (m ^ (m & b))
 
 #include "mwm_hints.h"
 #include "defaults.h"
