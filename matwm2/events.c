@@ -68,8 +68,9 @@ void handle_event(XEvent *ev) {
 					printf(NAME ": handling ClientMessage event\n\twindow: 0x%X (%s)\n", (unsigned int) c->window, c->name);
 					#endif
 					client_iconify(c);
+					return;
 				}
-				return;
+				break; /* we might later need this event */
 			case EnterNotify:
 				if(c != current && !(c->flags & CLICK_FOCUS) && !click_focus && ev->xcrossing.mode != NotifyGrab && ev->xcrossing.mode != NotifyUngrab && ev->xcrossing.detail != NotifyInferior && (ev->xcrossing.window == c->parent || ev->xcrossing.window == c->wlist_item) && ev->xcrossing.send_event == False) {
 					#ifdef DEBUG_EVENTS
@@ -207,7 +208,7 @@ void handle_event(XEvent *ev) {
 				#endif
 				window_correct_center(ev->xmap.window);
 			}
-			break;
+			return;
 		case MappingNotify:
 			if(ev->xmapping.request != MappingPointer) {
 				#ifdef DEBUG_EVENTS
@@ -242,5 +243,20 @@ void handle_event(XEvent *ev) {
 			lastbutton = ev->xbutton.button;
 			client_action(current, root_buttonaction(ev->xbutton.button, false), ev);
 			return;
+		case ClientMessage:
+			if(ev->xclient.message_type == xa_internal_message) {
+				if(((Atom) ev->xclient.data.l[0]) == xa_quit) {
+					#ifdef DEBUG
+					printf(NAME ": handle_event(): quit message received\n");
+					#endif
+					exit(0);
+				}
+				if(((Atom) ev->xclient.data.l[0]) == xa_reinit) {
+					#ifdef DEBUG
+					printf(NAME ": handle_event(): reinitialize message received\n");
+					#endif
+					cfg_reinitialize();
+				}
+			}
 	}
 }

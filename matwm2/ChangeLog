@@ -9,6 +9,22 @@
 	added support for WM_TAKE_FOCUS protocol - fixes focussing jedit and probally a lot of other (java and perhaps non-java) applications
 	check if the pointer just dropped into another window on client_focus_first
 	ignore FocusIn on root window - FocusOut with NotifyAncestor detail will do instead
+	**pre1 release
+	return instead of break on receiving MapNotify
+	use X11 client messages instead of pipe
+	updated manual about lesser required system calls + small correction
+	di no longer only declared it when USE_SHAPE is defined, we use it too otherwise
+	added --cflags --ldflags --libs and --force-* flags to configure script so you can specify compiler and linker flags manually
+	print the names of libraries the way they are passed to pkg-config in configure script
+	moved unset stuff down in configurescript for better structure
+	don't print usage on invalid argument
+	a lot of small changes like ${opt} instead of $opt etc in configure script
+	configure script listens to CFLAGS, DEFINES, LDFLAGS and LIBS environment variables
+	initialize CFLAGS, LDFLAGS and LIBS with = instead of += in Makefile
+	updated README about command line arguments required to configure for minix
+	added dot after last sentence of README
+	configure script now tries to choose compiler and linker flags itself if pkg-config can't, and has --disable-pkg-conf option now
+	added quit key action
 
 0.1.1:
 	fixed expanding while window maximised/fullscreen

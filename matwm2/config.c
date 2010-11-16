@@ -482,6 +482,8 @@ void str_action(char *str, action **ret) {
 		(*ret)->code = A_MOVE;
 	else if(strcmp(act, "resize") == 0)
 		(*ret)->code = A_RESIZE;
+	else if(strcmp(act, "quit") == 0)
+		(*ret)->code = A_QUIT;
 	else {
 		free(*ret);
 		*ret = NULL;

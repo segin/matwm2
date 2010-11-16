@@ -464,5 +464,8 @@ void client_action(client *c, action *act, XEvent *ev) {
 			if(desktop > 0)
 				desktop_goto(desktop - 1);
 			return;
+		case A_QUIT:
+			exit(1);
+			return;
 	}
 }

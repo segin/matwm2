@@ -10,27 +10,159 @@ xinerama="yes"
 xft="yes"
 vfork="yes"
 debug="no"
+forcex11="no"
+forceshape="no"
+forcexinerama="no"
+forcexft="no"
+forceall="no"
+pkgconfig="yes"
 
-# make sure a few variables are not set
-unset prefix
-unset mandir
-unset cc
-unset rm
+# for libsearch() and headsearch()
+searchpath="/usr /usr/local /usr/X11R6 /usr/X11R7"
+hsearchpath="include include/freetype2"
+lsuffixes=".a .so"
+
+libinfo() {
+	case $1 in
+		x11) echo "X11";;
+		xext) echo "Xext";;
+		xinerama) echo "Xinerama";;
+		xft) echo "Xft Xrender fontconfig freetype";;
+	esac
+}
+
+headinfo() {
+	case $1 in
+		x11) echo "X11/Xlib.h";;
+		xext) echo "X11/extensions/shape.h";;
+		xinerama) echo "X11/extensions/Xinerama.h";;
+		xft) echo "X11/Xft/Xft.h freetype/config/ftheader.h";;
+		xproto) echo "X11/Xproto.h";;
+	esac
+}
+
+# used in libsearch and headsearch()
+remove_duplicates() {
+	unset rd_result
+	for item1 in $*; do
+		dupli="no"
+		for item2 in $rd_result; do
+			if [ "$item1" = "$item2" ]; then
+				dupli="yes"
+			fi
+		done
+		if [ "$dupli" = "no" ]; then
+			rd_result="${rd_result} ${item1}"
+		fi
+	done
+	echo $rd_result
+}
+
+# function that tries to automatically figure ldflags
+libsearch() {
+	unset result
+	for libname in $*; do
+		for lib in `libinfo $libname`; do
+			for dir in $searchpath; do
+				for suffix in $lsuffixes; do
+					if [ -e "${dir}/lib/lib${lib}${suffix}" ]; then
+						result="${result} -L${dir}/lib"
+						break
+					fi
+				done
+			done
+		done
+	done
+	echo `remove_duplicates $result`
+}
+
+# same for cflags
+headsearch() {
+	unset result
+	found="no"
+	for libname in $*; do
+		for head in `headinfo $libname`; do
+			for dir in $searchpath; do
+				for sub in $hsearchpath; do
+					if [ -e "${dir}/${sub}/${head}" ]; then
+						result="${result} -I${dir}/${sub}"
+						found="yes"
+						break
+					fi
+				done
+				if [ "$found" = "yes" ]; then
+					found="no"
+					break
+				fi
+			done
+		done
+	done
+	echo `remove_duplicates $result`
+}
+
+# our very own pkg-config alternative that calls pkg-config instead would it happen to be enabled
+matwmconfig() {
+	if [ "$pkgconfig" = "yes" ]; then
+		if pkg-config $* 2> /dev/null; then
+			return
+		fi
+	fi
+	mode=$1
+	shift
+	case $mode in
+		--exists)      if [ -n "`headsearch $*`" ]; then
+		                 return 0
+		               else
+		                 return 1
+		               fi;;
+		--cflags)      result=`headsearch $*`;;
+		--libs-only-L) result=`libsearch $*`;;
+	esac
+	if [ "$mode" = "--libs-only-l" ]; then
+		unset libs
+		for libname in $*; do
+			libs="${libs} `libinfo ${libname}`";
+		done
+		unset result
+		for lib in $libs; do
+			result="$result -l$lib"
+		done
+	fi
+	if [ -n "$result" ]; then
+		echo $result
+	else
+		return 1
+	fi
+}
 
 # function to print usage instructions
 usage() {
-	echo "Usage: $0 [options]"
+	echo "Usage: ${0} [options]"
 	echo
 	echo "Options: (defaults between brackets)"
 	echo "	--prefix=[/usr/local]    Set the prefix in wich to install binaries"
 	echo "	--mandir=[/usr/local]    Set which directory to install manual pages in"
 	echo "	--cc=[cc]                Set the compiler"
 	echo "	--rm=[rm -f]             Set the command to delete files"
-	echo "	--disable-shape          Disable support for shaped windows"
+	echo
+	echo "	--cflags                 Set extra compiler flags"
+	echo "	--ldflags                Set extra library search path flags"
+	echo "	--libs                   Set extra library flags"
+	echo
+	echo "	--disable-shape          Disable support for shaped windows (and use of xext)"
 	echo "	--disable-xinerama       Disable support for xinerama"
 	echo "	--disable-xft            Disable support for Xft"
 	echo "	--disable-vfork          Disable use of the vfork() system call"
 	echo "	--enable-debug           Enable debugging output"
+	echo
+	echo "	--disable-pkg-conf       Disable use of pkg-config"
+	echo
+	echo "	--force-x11              Assume compiler and linker flags manually set for x11"
+	echo "	--force-shape            Same as above but for xext"
+	echo "	--force-xinerama         The same again, for xinerama"
+	echo "	--force-xft              And for xft"
+	echo "	--force-all              Assume all flags needed are manually specified"
+	echo
 	echo "	-h, --help               Print this message and exit"
 	echo
 	echo "Influential environment variables:"
@@ -38,22 +170,46 @@ usage() {
 	echo "	MANDIR    Directory for installing man pages"
 	echo "	CC        Compiler"
 	echo "	RM        Command for deleting files"
+	echo "	CFLAGS    Extra compiler flags"
+	echo "	DEFINES   Extra defines"
+	echo "	LDFLAGS   Extra linker directory flags"
+	echo "	LIBS      Extra library flags"
 	echo
-	echo "Send comments, suggestions and bugs to Mattis Michel <sic_zer0@hotmail.com>"
+	echo "note: If you use any of the --force-* flags, you will likely need to manually specify cflags, ldflags and libs."
+	echo
+	echo "Send comments, suggestions and bugs to Mattis Michel <sic_zer0@hotmail.com>."
 }
+
+# make sure a few variables are not set
+unset prefix
+unset mandir
+unset cc
+unset rm
+unset cflags
+unset ldflags
+unset libs
+unset defines
 
 # process command line arguments
 echo "processing command line arguments..."
 for opt in $*; do
 	case $opt in
-	--prefix=*)         prefix=`echo $opt | cut -d '=' -f 2`
+	--prefix=*)         prefix=`echo ${opt} | cut -d '=' -f 2`
 	                    echo "	prefix explicitly set to $prefix";;
-	--mandir=*)         mandir=`echo $opt | cut -d '=' -f 2`
+	--mandir=*)         mandir=`echo ${opt} | cut -d '=' -f 2`
 	                    echo "	man directory explicitly set to $mandir";;
-	--cc=*)             cc=`echo $opt | cut -d '=' -f 2`
+	--cc=*)             cc=`echo ${opt} | cut -d '=' -f 2`
 	                    echo "	compiler explicitly set to $cc";;
-	--rm=*)             rm=`echo $opt | cut -d '=' -f 2`
+	--rm=*)             rm=`echo ${opt} | cut -d '=' -f 2`
 	                    echo "	rm command explicitly set to $rm";;
+	--cflags=*)         cflags="${cflags} `echo ${opt} | cut -d '=' -f 2`"
+	                    echo "	extra cflags set to '$cflags'";;
+	--defines=*)        defines="${defines} `echo ${opt} | cut -d '=' -f 2`"
+	                    echo "	extra defines set to '$defines'";;
+	--ldflags=*)        ldflags="${ldflags} `echo ${opt} | cut -d '=' -f 2`"
+	                    echo "	extra ldflags set to '$ldflags'";;
+	--libs=*)           libs="${libs} `echo ${opt} | cut -d '=' -f 2`"
+	                    echo "	extra -l flags set to '$libs'";;
 	--disable-shape)    shape="no"
 	                    echo "	shaped windows support explicitly disabled";;
 	--disable-xinerama) xinerama="no"
@@ -64,12 +220,24 @@ for opt in $*; do
 	                    echo "	use of vfork system call explicitly disabled";;
 	--enable-debug)     debug="yes"
 	                    echo "	debugging output enabled explicitly";;
+	--disable-pkg-conf) pkgconfig="no"
+	                    echo "	use of pkg-config disabled";;
+	--force-x11)        forcex11="yes"
+	                    echo "	use of pkg-config for x11 overridden";;
+	--force-shape)      forceshape="yes"
+	                    echo "	use of pkg-config for xext overridden";;
+	--force-xinerama)   forcexinerama="yes"
+	                    echo "	use of pkg-config for xinerama overridden";;
+	--force-xft)        forcexinerama="yes"
+	                    echo "	use of pkg-config for xft overridden";;
+	--force-all)        forceall="yes"
+	                    echo "	all use of pkg-config disabled";;
 	-h)                 usage
 	                    exit;;
 	--help)             usage
 	                    exit;;
 	*)                  echo "	error: invalid argument \"$opt\""
-	                    usage
+	                    echo "	run '${0} --help' for more info"
 											exit 1;;
 	esac
 done
@@ -100,8 +268,28 @@ fi
 if [ -z "$rm" ]; then
 	if [ -n "$RM" ]; then
 		rm="$RM"
-		echo "	default rm command overridden by environment variable \$RM ($rm)"
+		echo "	default rm command overridden by environment variable \$RM (${rm})"
 	fi
+fi
+
+if [ -n "$CFLAGS" ]; then
+	cflags="${cflags} ${CFLAGS}"
+	echo "	added extra compiler flags from environment variable \$CFLAGS (${CFLAGS})"
+fi
+
+if [ -n "$DEFINES" ]; then
+	defines="${defines} ${DEFINES}"
+	echo "	added extra defines from environment variable \$DEFINES (${DEFINES})"
+fi
+
+if [ -n "$LDFLAGS" ]; then
+	ldflags="${ldflags} ${LDFLAGS}"
+	echo "	added extra library dir flags from environment variable \$LDFLAGS (${LDFLAGS})"
+fi
+
+if [ -n "$LIBS" ]; then
+	libs="${libs} ${LIBS}"
+	echo "	added extra linker flags from environment variable \$LIBS (${LIBS})"
 fi
 
 # use the defaults for variables not set yet
@@ -110,59 +298,66 @@ if [ -z "$mandir" ];    then mandir="$default_mandir"; fi
 if [ -z "$cc" ];        then cc="$default_cc"; fi
 if [ -z "$rm" ];        then rm="$default_rm"; fi
 
-# check if we have pkg-config
-echo -n "checking for pkg-config... "
-if which pkg-config 2>&1 > /dev/null; then
-	echo "ok"
-else
-	echo "not found"
-	echo "error: this script needs pkg-config"
-	exit 1
-fi
-
-# check what libraries exist
-echo -n "checking for Xlib... "
-if pkg-config --exists x11 2> /dev/null; then
-	echo "ok"
-else
-	echo "not found"
-	echo "error: we need Xlib" 1>&2
-	exit 1
-fi
-
-if [ "$shape" = "yes" ]; then
-	echo -n "checking for Xext (for shaped windows support)... "
-	if pkg-config --exists xext 2> /dev/null; then
-		echo "ok"
-	else
-		echo "not found, disabling shaped windows support"
-		shape="no"
+if [ "$forceall" = "no" ]; then
+	# check if we have pkg-config
+	if [ "pkgconfig" = "yes" ]; then
+		echo -n "checking for pkg-config... "
+		if which pkg-config 2>&1 > /dev/null; then
+			echo "ok"
+		else
+			echo "not found"
+			echo "disabling use of pkg-config"
+			pkgconfig="no"
+			exit 1
+		fi
 	fi
-fi
 
-if [ "$xinerama" = "yes" ]; then
-	echo -n "checking for Xinerama... "
-	if pkg-config --exists xinerama 2> /dev/null; then
-		echo "ok"
-	else
-		echo "not found, disabling xinerama support"
-		xinerama="no"
+	# check what libraries exist
+	if [ "$forcex11" = "no" ]; then
+		echo -n "checking for x11... "
+		if matwmconfig --exists x11; then
+			echo "ok"
+		else
+			echo "not found"
+			echo "error: we need x11" 1>&2
+			exit 1
+		fi
 	fi
-fi
 
-if [ "$xft" = "yes" ]; then
-	echo -n "checking for Xft... "
-	if pkg-config --exists xft 2> /dev/null; then
-		echo "ok"
-	else
-		echo "not found, disabling Xft support"
-		xft="no"
+	if [ "$shape" = "yes" ] && [ "$forceshape" = "no" ]; then
+		echo -n "checking for xext (for shaped windows support)... "
+		if matwmconfig --exists xext; then
+			echo "ok"
+		else
+			echo "not found, disabling shaped windows support"
+			shape="no"
+		fi
+	fi
+
+	if [ "$xinerama" = "yes" ] && [ "$forcexinerama" = "no" ]; then
+		echo -n "checking for xinerama... "
+		if matwmconfig --exists xinerama; then
+			echo "ok"
+		else
+			echo "not found, disabling xinerama support"
+			xinerama="no"
+		fi
+	fi
+
+	if [ "$xft" = "yes" ] && [ "$forcexft" = "no" ]; then
+		echo -n "checking for xft... "
+		if matwmconfig --exists xft; then
+			echo "ok"
+		else
+			echo "not found, disabling Xft support"
+			xft="no"
+		fi
 	fi
 fi
 
 if [ "$debug" = "yes" ]; then
 	echo -n "checking for X protocol headers (for debugging output)... "
-	if pkg-config --exists xproto 2> /dev/null; then
+	if matwmconfig --exists xproto; then
 		echo "ok"
 	else
 		echo "not found, disabling debugging output"
@@ -172,21 +367,30 @@ fi
 
 # gather data from pkg-config etc
 echo -n "gathering information... "
-libraries="x11"
-unset defines
+unset libraries
+
+if [ "$forcex11" = "no" ]; then
+	libraries="x11"
+fi
 
 if [ "$shape" = "yes" ]; then
-	libraries="$libraries xext"
+	if [ "$forceshape" = "no" ]; then
+		libraries="$libraries xext"
+	fi
 	defines="$defines -DUSE_SHAPE"
 fi
 
 if [ "$xinerama" = "yes" ]; then
-	libraries="$libraries xinerama"
+	if [ "$forcexinerama" = "no" ]; then
+		libraries="$libraries xinerama"
+	fi
 	defines="$defines -DUSE_XINERAMA"
 fi
 
 if [ "$xft" = "yes" ]; then
-	libraries="$libraries xft"
+	if [ "$forcexft" = "no" ]; then
+		libraries="$libraries xft"
+	fi
 	defines="$defines -DUSE_XFT"
 fi
 
@@ -199,9 +403,9 @@ if [ "$debug" = "yes" ]; then
 	defines="$defines -DDEBUG"
 fi
 
-cflags=`pkg-config --cflags $libraries`
-ldflags=`pkg-config --libs-only-L $libraries`
-libs=`pkg-config --libs-only-l $libraries`
+cflags="$cflags `matwmconfig --cflags $libraries`"
+ldflags="$ldflags `matwmconfig --libs-only-L $libraries`"
+libs="$libs `matwmconfig --libs-only-l $libraries`"
 
 defines=`echo $defines` # this serves to strip whitespace
 cflags=`echo $cflags`

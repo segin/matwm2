@@ -1,20 +1,15 @@
 #include "matwm.h"
 #include <signal.h> /* for signal() */
-#include <sys/select.h> /* for select() */
-#include <errno.h> /* for checking select() errors */
-/* for read() and write() */
-#include <sys/uio.h>
-#include <unistd.h>
-#include <sys/types.h> /* for waitpid(), read() and write() */
 /* for waitpid */
+#include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/time.h>
 #include <sys/resource.h>
 
 Display *dpy = NULL;
-int screen, depth, have_shape, shape_event, qsfd[2];
+int screen, depth, have_shape, shape_event;
 Window root;
-Atom xa_wm_protocols, xa_wm_delete, xa_wm_take_focus, xa_wm_state, xa_wm_change_state, xa_motif_wm_hints;
+Atom xa_wm_protocols, xa_wm_delete, xa_wm_take_focus, xa_wm_state, xa_wm_change_state, xa_motif_wm_hints, xa_internal_message, xa_quit, xa_reinit;
 XSetWindowAttributes p_attr;
 char *dn = NULL, *perror_str = NAME ": error";
 Colormap colormap;
@@ -22,15 +17,10 @@ Visual *visual;
 
 int main(int argc, char *argv[]) {
 	XEvent ev;
-	int i, dfd, sr;
+	int i, di;
 	unsigned int ui, nwins;
 	Window w, dw, *wins;
 	XWindowAttributes attr;
-	#ifdef USE_SHAPE
-	int di;
-	#endif
-	fd_set fds, fdsr;
-	char act;
 	client *c;
 	/* parse command line arguments */
 	for(i = 1; i < argc; i++) {
@@ -94,15 +84,6 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, NAME ": error: argument %s not recognised\n", argv[i]);
 		return 1;
 	}
-	/* setup signal handler etc */
-	if(pipe(qsfd) != 0) /* we will use this pipe in the main loop, signal hander, etc */
-		error();
-	atexit(&quit);
-	signal(SIGTERM, &sighandler);
-	signal(SIGINT, &sighandler);
-	signal(SIGHUP, &sighandler);
-	signal(SIGUSR1, &sighandler);
-	signal(SIGCHLD, &sighandler);
 	/* open connection with X and aquire some important info */
 	dpy = XOpenDisplay(dn); /* if dn is NULL, XOpenDisplay() schould use the DISPLAY environment variable instead */
 	if(!dpy) {
@@ -124,6 +105,10 @@ int main(int argc, char *argv[]) {
 	xa_wm_state = XInternAtom(dpy, "WM_STATE", False);
 	xa_wm_change_state = XInternAtom(dpy, "WM_CHANGE_STATE", False);
 	xa_motif_wm_hints = XInternAtom(dpy, "_MOTIF_WM_HINTS", False);
+	xa_internal_message = XInternAtom(dpy, XA_INTERNAL_MESSAGE, False);
+	xa_quit = XInternAtom(dpy, XA_QUIT, False);
+	xa_reinit = XInternAtom(dpy, XA_REINIT, False);
+	/* load configuration etc */
 	ewmh_initialize();
 	screens_get(); /* we need atoms from above XInternAtom() and ewmh_initialize() calls for this */
 	cfg_read(1); /* read configuration - see config.c */
@@ -140,6 +125,13 @@ int main(int argc, char *argv[]) {
 	                      CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
 	/* set attributes for further use */
 	p_attr.background_pixel = ibg.pixel;
+	/* setup signal handler etc */
+	atexit(&quit);
+	signal(SIGTERM, &sighandler);
+	signal(SIGINT, &sighandler);
+	signal(SIGHUP, &sighandler);
+	signal(SIGUSR1, &sighandler);
+	signal(SIGCHLD, &sighandler);
 	/* update EWMH hints */
 	ewmh_update(); /* for this we need wlist to be there and configuration to be read */
 	#ifdef USE_SHAPE
@@ -174,35 +166,19 @@ int main(int argc, char *argv[]) {
 	while(XCheckMaskEvent(dpy, FocusChangeMask | EnterWindowMask, &ev));
 	/* update EWMH client stuff */
 	ewmh_update_clist();
-	/* initialize file descriptor set for select() */
-	dfd = ConnectionNumber(dpy); /* gets the file descriptor Xlib uses to communicate with the server */
-	FD_ZERO(&fds);
-	FD_SET(qsfd[0], &fds);
-	FD_SET(dfd, &fds);
 	/* our main loop */
-	while(1)
-		if(XPending(dpy)) { /* check if there are X events pending */
-			XNextEvent(dpy, &ev);
-			handle_event(&ev);
-		} else { /* no X events are pending do select() on X file descriptor and our pipe */
-			fdsr = fds; /* reset fdsr */
-			sr = select(((qsfd[0] < dfd) ? dfd : qsfd[0]) + 1, &fdsr, (fd_set *) NULL, (fd_set *) NULL, (struct timeval *) NULL);
-			if(sr == -1 && errno != EINTR) /* we ignore EINTR - it will happen when we get a signal */
-				error();
-			if(sr > 0)
-				if(FD_ISSET(qsfd[0], &fdsr)) /* we got data in our pipe */
-					if(read(qsfd[0], &act, sizeof(act)) == sizeof(act)) {
-						if(act == REINIT)
-							cfg_reinitialize();
-						else exit(0);
-					}
-			/* XPending will be called again next run of this loop so we just ignore its descriptor for now */
-		}
+	while(1) {
+		XNextEvent(dpy, &ev);
+		handle_event(&ev);
+	}
 }
 
 void quit(void) {
 	int d, i;
 	d = dc;
+	#ifdef DEBUG
+	fprintf(stderr, NAME ": quit(): quitting...\n");
+	#endif
 	/* put windows back on the root window */
 	while(d != -1) {
 		if(d != desktop) /* first windows we don't see */
@@ -223,18 +199,32 @@ void quit(void) {
 	}
 }
 
-void qsfd_send(char s) { /* used to communicate with the main loop via our pipe */
-	write(qsfd[1], &s, sizeof(s));
-}
-
 void sighandler(int sig) {
-	char act = QUIT;
+	XEvent ev;
+	Window sh_root;
+	Display *sh_display;
 	int status;
 	if(sig == SIGCHLD) {
 		waitpid(-1, &status, WNOHANG);
 		return;
 	}
-	if(sig == SIGUSR1)
-		act = REINIT;
-	qsfd_send(act);
+	sh_display = XOpenDisplay(dn); /* we can't use our other display, cause we are very probally in the middle of a XNextEvent() call */
+	if(!sh_display) {
+		fprintf(stderr, NAME ": sighandler(): error: can't open display \"%s\"\n", XDisplayName(dn));
+		fprintf(stderr, "\tsomething went horribly wrong, if you are trying to quit: use SIGKILL instead\n");
+		return;
+	}
+	sh_root = RootWindow(sh_display, DefaultScreen(sh_display));
+	ev.type = ClientMessage;
+	ev.xclient.window = wlist;
+	ev.xclient.message_type = XInternAtom(sh_display, XA_INTERNAL_MESSAGE, False);
+	ev.xclient.format = 32;
+	ev.xclient.data.l[0] = XInternAtom(sh_display, (sig == SIGUSR1) ? XA_REINIT : XA_QUIT, False);
+	XSendEvent(sh_display, wlist, False, NoEventMask, &ev);
+	XFlush(sh_display);
+	XSync(sh_display, False);
+	XCloseDisplay(sh_display);
+	#ifdef DEBUG
+	printf(NAME ": sighandler(): quit message sent\n");
+	#endif
 }

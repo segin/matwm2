@@ -114,7 +114,8 @@ enum { /* action codes */
 	A_RAISE,
 	A_LOWER,
 	A_MOVE,
-	A_RESIZE
+	A_RESIZE,
+	A_QUIT
 };
 
 enum { /* for frame buttons */
@@ -134,10 +135,9 @@ enum { /* fullscreen_stacking modes */
 	FS_ALWAYS_ONTOP
 };
 
-enum { /* for sending to qsfd pipe */
-	QUIT,
-	REINIT
-};
+#define XA_INTERNAL_MESSAGE "_MATWM_INTERNAL_MESSAGE"
+#define XA_QUIT "_MATWM_QUIT"
+#define XA_REINIT "_MATWM_REINIT"
 
 #include "mwm_hints.h"
 #include "ewmh.h"

@@ -10,22 +10,29 @@
 INTRODUCTION
   matwm2 is a simple window manager for X11.
   It features window frames with titlebar and buttons, configurable key
-	bindings and mouse buttons, support for EWMH and motif hints,
-	focus-follows-mouse and click-to-focus focus models, virtual desktops, Xft
-	fonts and xinerama support.
+  bindings and mouse buttons, support for EWMH and motif hints,
+  focus-follows-mouse and click-to-focus focus models, virtual desktops, Xft
+  fonts and xinerama support.
 
-  matwm2 only depends on Xlib and libc, and schould compile on almost any
-  system that can run X11.
-  It has been reported to work on FreeBSD, Linux, OpenBSD, DragonflyBSD,
-  NetBSD, Interix and OpenSolaris (For FreeBSD and Linux it has been tested on
-  both x86 and x86_64 architecture and it has also been reported to work on
-	32-bit PowerPC Linux, all other operating systems were tested on x86. For
-	x86_64 FreeBSD both the clang and gcc compiler have been tested, for x86
-	Linux both gcc and  tcc have been tested, and for other platforms only gcc
-	was tested yet). If you have succesfully compiled and ran matwm2 on another
-	operating system (or with another compiler) or have problems getting matwm2	to
-	work on your system let me know.
-	
+  It is written in C, it is mostly valid ISO C90 but uses several libc functions
+  and system calls not specified by the ISO C90 standard (setenv(), waitpid(),
+  and either vfork() or fork() (these are specified by the POSIX.1-2001	standard
+	) - forgive me if i forgot one).
+
+  To compile matwm you need an implementation of sh that can run my configure
+  script, pkg-config, Xlib, a working C compiler that and whatever
+  implementation of libc that provides all of the functions matwm needs.
+
+  matwm2 has been succesfully compiled and tested on FreeBSD, Linux, OpenBSD,
+  DragonflyBSD, NetBSD, Interix, Minix and OpenSolaris (For FreeBSD and Linux
+  it has been tested on both x86 and x86_64 architecture and it has also been
+  reported to work on 32-bit PowerPC Linux, all other operating systems were
+  tested on x86. For x86_64 FreeBSD both the clang and gcc compiler have been
+  tested, for x86 Linux both gcc and tcc have been tested, on minix only ACK
+  was testedand for other platforms only gcc was tested yet). If you have
+  succesfully compiled and ran it on another operating system (or with another
+  compiler) or have problems getting it to work on your system let me know.
+
   The latest version can be found on http://matwm.fbsd.in/.
   Recent versions of matwm2 are distributed under the MIT licence, wich can be
   found in the LICENCE file that schould be included with your copy of matwm2.
@@ -41,6 +48,8 @@ INSTALLATION
   install matwm2 on your system, then summarize the information aquired to
   accomplish this - if you do not agree with these values, refer to the output
   of "./configure --help" for instructions on how to override them.
+  On minix (and perhaps other operating systems) you will need to add the
+  following arguments: "--disable-vfork" and "--defines=-D_POSIX_SOURCE".
   The next step will be to run "make" wich will then attempt to compile matwm,
   and if all that went well you can then run "make install" (typically this has
   to be done as root, unless you are installing to a prefix whitin the user's
@@ -48,4 +57,4 @@ INSTALLATION
 
 For further information and before using matwm2, refer to the man page (run
 "man matwm2" after install).
-Send comments, suggestions and bugs to Mattis Michel <sic_zer0@hotmail.com>
+Send comments, suggestions and bugs to Mattis Michel <sic_zer0@hotmail.com>.
