@@ -99,10 +99,10 @@ void configurenotify(client *c)
 	ce.type = ConfigureNotify;
 	ce.event = c->window;
 	ce.window = c->window;
-	ce.x = c->x + client_border(c);
-	ce.y = c->y + client_border(c) + client_title(c);
-	ce.width = c->width;
-	ce.height = c->height;
+	ce.x = client_x(c) + client_border(c);
+	ce.y = client_y(c) + client_border(c) + client_title(c);
+	ce.width = client_width(c);
+	ce.height = client_height(c);
 	ce.border_width = 0;
 	ce.above = None;
 	ce.override_redirect = 0;

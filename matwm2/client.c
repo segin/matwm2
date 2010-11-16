@@ -235,7 +235,7 @@ void client_update(client *c) {
 	XMoveWindow(dpy, c->button_parent, (width + border_width - 1) - button_parent_width, border_width - 1);
 	XResizeWindow(dpy, c->title, client_title_width(c), text_height);
 	XMoveResizeWindow(dpy, c->parent, client_x(c), client_y(c), client_width_total_intern(c), client_height_total_intern(c));
-	XResizeWindow(dpy, c->window, width, client_height(c));
+	XMoveResizeWindow(dpy, c->window, client_border_intern(c), client_border_intern(c) + client_title(c), width, client_height(c));
 	buttons_update(c);
 	buttons_draw(c);
 }
@@ -279,8 +279,12 @@ void client_focus_first(void) {
 }
 
 void client_clear_state(client *c) {
+	c->x = client_x(c);
+	c->y = client_y(c);
+	c->width = client_width(c);
+	c->height = client_height(c);
 	if(c->flags & (MAXIMISED_L | MAXIMISED_R | MAXIMISED_T | MAXIMISED_B | EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B | FULLSCREEN)) {
-		c->flags ^= current->flags & (MAXIMISED_L | MAXIMISED_R | MAXIMISED_T | MAXIMISED_B | EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B | FULLSCREEN);
+		c->flags ^= c->flags & (MAXIMISED_L | MAXIMISED_R | MAXIMISED_T | MAXIMISED_B | EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B | FULLSCREEN);
 		ewmh_update_state(c);
 	}
 }

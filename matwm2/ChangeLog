@@ -442,3 +442,13 @@
 	allocate the right amount of memory in read_file() (was 1 byte too short)
 	check if not trying to free a NULL pointer in key_bind()
 
+0.0.76:
+	configurenotify() uses functions from info.c to send data now - it used the client structure directly wich made it send faulty values
+	client_move() and client_resize() also use the right functions to check if something has really changed
+	client_clear_state() now sets x, y, width and height members of client structure as it schould and no more using current client instead of the one passed
+
+0.0.77:
+	only spaces in default config, no tabs (they fuck up if tabstop is different then mine)
+	same for Makefile (where apropriate), 1 tab instead of 2 for intendation
+	moveresize client window in client_update(), this fixes maximising/expanding/fullscreening openoffice.org and perhaps some other applications
+

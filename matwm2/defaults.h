@@ -14,11 +14,11 @@ snap                  5\n\
 desktops              4\n\
 ignore_modifier       mod2 lock\n\
 mouse_modifier        mod1\n\
-no_snap_modifier			shift\n\
-click_focus						false\n\
-click_raise						false\n\
-focus_new							false\n\
-taskbar_ontop					false\n\
+no_snap_modifier      shift\n\
+click_focus           false\n\
+click_raise           false\n\
+focus_new             false\n\
+taskbar_ontop         false\n\
 key                   mod1 Tab                next\n\
 key                   mod1 shift Tab          prev\n\
 key                   control mod1 s          iconify\n\
@@ -65,6 +65,6 @@ key                   mod4 Left               prev_desktop\n"
 
 #define MINSIZE                 5
 #define CFGFN                   ".matwmrc"
-#define GCFGFN									"/etc/matwmrc"
+#define GCFGFN                  "/etc/matwmrc"
 #define NO_TITLE                "-"
 

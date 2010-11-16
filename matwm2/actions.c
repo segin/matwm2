@@ -3,11 +3,9 @@
 int all_iconic = 0;
 
 void client_move(client *c, int x, int y) {
-	if(x == c->x && y == c->y)
+	if(x == client_x(c) && y == client_y(c))
 		return;
 	client_clear_state(c);
-	c->width = client_width(c);
-	c->height = client_height(c);
 	c->x = x;
 	c->y = y;
 	client_update_pos(c);
@@ -15,9 +13,6 @@ void client_move(client *c, int x, int y) {
 }
 
 void client_resize(client *c, int width, int height) {
-	c->x = client_x(c);
-	c->y = client_y(c);
-	client_clear_state(c);
 	if(c->normal_hints.flags & PResizeInc) {
 		width -= (width - ((c->normal_hints.flags & PBaseSize) ? c->normal_hints.base_width : 0)) % c->normal_hints.width_inc;
 		height -= (height - ((c->normal_hints.flags & PBaseSize) ? c->normal_hints.base_height : 0)) % c->normal_hints.height_inc;
@@ -44,8 +39,9 @@ void client_resize(client *c, int width, int height) {
 		width = MINSIZE;
 	if(height < MINSIZE)
 		height = MINSIZE;
-	if(width == c->width && height == c->height)
+	if(width == client_width(c) && height == client_height(c))
 		return;
+	client_clear_state(c);
 	c->width = width;
 	c->height = height;
 	client_update_size(c);
