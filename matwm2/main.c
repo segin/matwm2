@@ -1,9 +1,8 @@
 #include "matwm.h"
-#include <signal.h>
 
 Display *dpy;
-int screen, taskbar_visible = 0;
-Window root, taskbar;
+int screen, display_height;
+Window root;
 unsigned int numlockmask = 0;
 Atom xa_wm_protocols, xa_wm_delete, xa_wm_state;
 XSetWindowAttributes p_attr;
@@ -40,7 +39,9 @@ void quit(int sig) {
 int main(int argc, char *argv[]) {
   XEvent ev;
   XModifierKeymap *modmap;
-  int i;
+  unsigned int i, nwins;
+  Window dw1, dw2, *wins;
+  XWindowAttributes attr;
   open_display(0);
   XSetErrorHandler(&xerrorhandler);
   XSelectInput(dpy, root, SubstructureRedirectMask | SubstructureNotifyMask);
@@ -53,14 +54,17 @@ int main(int argc, char *argv[]) {
       numlockmask = (1 << i);
   config_read();
   p_attr.override_redirect = True;
-  p_attr.background_pixel = ifg.pixel;
-  p_attr.event_mask = SubstructureRedirectMask | SubstructureNotifyMask | ButtonReleaseMask | ExposureMask;
-  taskbar = XCreateWindow(dpy, root, 0, 0, 1, 1, 0,
-                          DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
-                          CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
-  p_attr.event_mask = SubstructureRedirectMask | SubstructureNotifyMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask | ExposureMask;
   p_attr.background_pixel = ibg.pixel;
-  add_initial_clients();
+  p_attr.event_mask = SubstructureRedirectMask | SubstructureNotifyMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask | ExposureMask;
+  display_height = XDisplayHeight(dpy, screen);
+  XQueryTree(dpy, root, &dw1, &dw2, &wins, &nwins);
+  for(i = 0; i < nwins; i++) {
+    XGetWindowAttributes(dpy, wins[i], &attr);
+    if(!attr.override_redirect && attr.map_state == IsViewable)
+      add_client(wins[i], 0);
+  }
+  if(wins != NULL)
+    XFree(wins);
   while(1) {
     XNextEvent(dpy, &ev);
     handle_event(ev);

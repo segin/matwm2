@@ -1,5 +1,9 @@
+CC = cc
 XROOT = /usr/X11R6
+CFLAGS = -lX11 -I$(XROOT)/include -L$(XROOT)/lib
+CFLAGS += -DDEBUG
+
 all:
 	perl makeheader
-	cc -lX11 -I$(XROOT)/include -L$(XROOT)/lib *.c -o matwm2
+	$(CC) $(CFLAGS) *.c -o matwm2
 

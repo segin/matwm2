@@ -8,10 +8,11 @@
 #define DEF_RESIZE_BTN          Button3
 #define DEF_RAISE_BTN           Button4
 #define DEF_LOWER_BTN           Button5
-#define DEF_TB_RAISE_BTN        Button4
-#define DEF_TB_LOWER_BTN        Button5
-#define DEF_TB_RESTORE_BTN      Button1
+#define DEF_ICON_RAISE_BTN      Button4
+#define DEF_ICON_LOWER_BTN      Button5
+#define DEF_ICON_RESTORE_BTN    Button1
 #define DEF_MOUSEMOD            Mod1Mask
 #define DEF_BW                  4
-#define DEF_TB_WIDTH            6
+#define DEF_H_ICON_COUNT        6
+#define MINSIZE                 15
 

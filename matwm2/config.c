@@ -1,10 +1,8 @@
 #include "matwm.h"
-#include "defaults.h"
-#include <X11/keysymdef.h>
 
 XColor bg, ibg, fg, ifg;
-int border_width, title_height, taskbar_width, taskbutton_width;
-unsigned int mousemodmask, move_button, resize_button, raise_button, lower_button, tb_raise_button, tb_lower_button, tb_restore_button;
+int border_width, title_height, hmaxicons, icon_width;
+unsigned int mousemodmask, move_button, resize_button, raise_button, lower_button, icon_raise_button, icon_lower_button, icon_restore_button;
 XFontStruct *font;
 GC gc, igc;
 
@@ -22,9 +20,9 @@ void config_read(void) {
   resize_button = DEF_RESIZE_BTN;
   raise_button = DEF_RAISE_BTN;
   lower_button = DEF_LOWER_BTN;
-  tb_raise_button = DEF_TB_RAISE_BTN;
-  tb_lower_button = DEF_TB_LOWER_BTN;
-  tb_restore_button = DEF_TB_RESTORE_BTN;
+  icon_raise_button = DEF_ICON_RAISE_BTN;
+  icon_lower_button = DEF_ICON_LOWER_BTN;
+  icon_restore_button = DEF_ICON_RESTORE_BTN;
   font = XLoadQueryFont(dpy, DEF_FONT);
   if(!font) {
     fprintf(stderr, "error: font not found\n");
@@ -44,7 +42,7 @@ void config_read(void) {
   grab_keysym(root, Mod1Mask, XK_Tab);
   grab_keysym(root, Mod1Mask, XK_a);
   grab_keysym(root, Mod1Mask, XK_s);
-  taskbar_width = DEF_TB_WIDTH;
-  taskbutton_width = (XDisplayWidth(dpy, screen) - ((taskbar_width + 1) * 2)) / taskbar_width;
+  hmaxicons = DEF_H_ICON_COUNT;
+  icon_width = (XDisplayWidth(dpy, screen) - (hmaxicons - 1)) / hmaxicons;
 }
 
