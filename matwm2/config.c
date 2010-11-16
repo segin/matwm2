@@ -2,7 +2,7 @@
 
 XColor bg, ibg, fg, ifg;
 GC gc, igc, bgc, ibgc;
-int border_width, text_height, title_height, button_parent_width, snapat, button1, button2, button3, button4, button5, dc;
+int border_width, text_height, title_height, button_parent_width, snapat, button1, button2, button3, button4, button5, dc, click_focus, click_raise;
 XFontStruct *font;
 char *no_title = NO_TITLE;
 
@@ -100,6 +100,10 @@ void cfg_set_opt(char *key, char *value) {
 		button4 = str_buttonaction(value);
 	if(strcmp(key, "button5") == 0)
 		button5 = str_buttonaction(value);
+	if(strcmp(key, "click_focus") == 0)
+		str_bool(value, &click_focus);
+	if(strcmp(key, "click_raise") == 0)
+		str_bool(value, &click_raise);
 	if(strcmp(key, "mouse_modifier") == 0)
 		str_key(&value, &mousemodmask);
 	if(strcmp(key, "ignore_modifier") == 0)
@@ -112,6 +116,13 @@ void cfg_set_opt(char *key, char *value) {
 				mod_ignore[nmod_ignore + 1 + i] = mod_ignore[i] | mod_ignore[nmod_ignore];
 			nmod_ignore += nmod_ignore + 1;
 		}
+}
+
+void str_bool(char *str, int *b) {
+	if(strcmp(str, "false") == 0)
+		*b = 0;
+	if(strcmp(str, "true") == 0)
+		*b = 1;
 }
 
 KeySym str_key(char **str, unsigned int *mask) {

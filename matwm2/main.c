@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
 	p_attr.override_redirect = True;
 	p_attr.background_pixel = fg.pixel;
 	p_attr.border_pixel = ifg.pixel;
-	p_attr.event_mask = ExposureMask | KeyReleaseMask;
+	p_attr.event_mask = ExposureMask;
 	wlist = XCreateWindow(dpy, root, 0, 0, 1, 1, 0,
 												DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
 												CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);

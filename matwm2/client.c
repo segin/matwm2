@@ -32,7 +32,7 @@ void client_add(Window w) {
 	new->y = attr.y - new->yo;
 	if(wm_state == IconicState)
 		new->desktop = ICONS;
-	XSelectInput(dpy, w, PropertyChangeMask | EnterWindowMask);
+	XSelectInput(dpy, w, PropertyChangeMask | EnterWindowMask | FocusChangeMask);
 	XShapeSelectInput(dpy, w, ShapeNotifyMask);
 	XSetWindowBorderWidth(dpy, w, 0);
 	new->parent = XCreateWindow(dpy, root, client_x(new), client_y(new), client_width_total_intern(new), client_height_total_intern(new), (new->flags & HAS_BORDER) ? 1 : 0,
@@ -74,7 +74,7 @@ void client_add(Window w) {
 		nicons++;
 	}
 	clients[cn - 1] = new;
-	if(!current)
+	if(!current || click_focus)
 		client_focus(new);
 	if(evh == wlist_handle_event)
 		wlist_update();
@@ -152,6 +152,8 @@ void client_grab_buttons(client *c) {
 	client_grab_button(c, Button3);
 	client_grab_button(c, Button4);
 	client_grab_button(c, Button5); 
+	if(click_focus || click_raise)
+		XGrabButton(dpy, AnyButton, AnyModifier, c->window, True, ButtonPressMask, GrabModeSync, GrabModeAsync, None, None);
 }
 
 void client_draw_title(client *c) {

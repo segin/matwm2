@@ -14,16 +14,16 @@ void wlist_start(XEvent ev) {
 
 void wlist_end(int err) {
 	XUngrabKeyboard(dpy, CurrentTime);
-	XUnmapWindow(dpy, wlist);
 	evh = NULL;
-	if(!current || err)
-		return;
-	client_save(current);
-	if(current->desktop == ICONS)
-		client_restore(current);
-	else
-		client_raise(current);
-	client_warp(current);
+	if(current && !err) {
+		client_save(current);
+		if(current->desktop == ICONS)
+			client_restore(current);
+		else
+			client_raise(current);
+		client_warp(current);
+	}
+	XUnmapWindow(dpy, wlist);
 }
 
 client *wlist_next(void) {
@@ -44,6 +44,7 @@ client *wlist_prev(void) {
 
 int wlist_handle_event(XEvent ev) {
 	int mask, i;
+	client *c;
 	switch(ev.type) {
 		case KeyPress:
 			if(keyaction(ev) == KA_NEXT) {
@@ -63,7 +64,14 @@ int wlist_handle_event(XEvent ev) {
 				if(i == keyn)
 					wlist_end(0);
 			}
+			break;
 		case ButtonPress:
+			if(click_focus) {
+				c = owner(ev.xbutton.window);
+				if(c)
+					client_focus(c);
+			}
+			break;
 		case ButtonRelease:
 			break;
 		default:

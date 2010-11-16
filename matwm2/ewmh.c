@@ -79,7 +79,7 @@ int ewmh_handle_event(XEvent ev) {
 				return 1;
 			}
 			if(ev.xclient.message_type == ewmh_atoms[NET_ACTIVE_WINDOW]) {
-				if(c) {
+				if(c && ev.xclient.data.l[0] == 2) { // source indication must be 2, so it won't listen to stupid applications like firefox wanting to steal focus when in focus under mouse mode
 					if(c->desktop == ICONS) {
 						client_restore(c);
 						client_focus(c);

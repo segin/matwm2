@@ -146,3 +146,10 @@
 	DONT_LIST flag will also be respected for EWMH client list
 	listen to NET_WM_STRUT if no NET_WM_STRUT_PARTIAL is there
 
+0.0.66:
+	don't listen to NET_ACTIVE_WINDOW messages if source indication isn't 2
+	prevent focus stealing
+	support for click-to-focus and click-raise
+	minor changes and additions to the man page concerning the behaviour of the window list
+	when leaving window list, first focus warp the mouse to the new window, then umap the window list - avoiding eventual enter event etc for the window under the window list
+

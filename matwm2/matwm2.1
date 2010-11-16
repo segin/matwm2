@@ -1,4 +1,4 @@
-.TH matwm2 1 "September 24, 2009" "" ""
+.TH matwm2 1 "September 30, 2009" "" ""
 .SH NAME
 matwm2 \- Window manager for X11
 .SH SYNOPSIS
@@ -7,9 +7,9 @@ matwm2 \- Window manager for X11
 .B ] [ \-defaults ]
 .SH DESCRIPTION
 .B matwm2
-is a simple window manager for X11. It features window frames with titlebar and buttons, configurable key bindings and mouse buttons, support for EWMH and motif hints and virtual desktops.
+is a simple window manager for X11. It features window frames with titlebar and buttons, configurable key bindings and mouse buttons, support for EWMH and motif hints, focus-follows-mouse and click-to-focus focus models and virtual desktops.
 .PP
-Explanition of the various options in the configuration file(s) below combined with the default configuration, schould give you an idea of how to use matwm2. Further just keep in mind there is no default built-in way of launching applications exept the ctrl-mod1-return key binding, wich spawns an xterm. Window borders have 4 buttons, wich do the same as the following key actions explained below (from left to right): "iconify", "expand", "maximise" and "close". Windows can be focussed by moving the mouse cursor over them.
+Explanition of the various options in the configuration file(s) below combined with the default configuration, schould give you an idea of how to use matwm2. Further just keep in mind there is no default built-in way of launching applications exept the ctrl-mod1-return key binding, wich spawns an xterm. Window borders have 4 buttons, wich do the same as the following key actions explained below (from left to right): "iconify", "expand", "maximise" and "close".
 .SH OPTIONS
 .IP -display display
 Specify the X display to use.
@@ -21,7 +21,7 @@ System wide configuration file.
 .IP $HOME/.matwmrc
 Per user configuration file.
 .PP
-Both of these config files share the same format, and can be considered a list of "commands" that may or may not have arguments, separated by spaces. The commands themselves are separated by newlines.
+Both of these config files share the same format, and can be considered a list of "commands" that may or may not have arguments, separated by spaces. The commands themselves are separated by newlines. If matwm2 encounters a '#' character in one of these files, the rest of the line is ignored.
 .PP
 Following is a list of possible commands for matwm configuration files and their explanation. Valid modifier keys are "shift", "lock", "control" and "mod1" to "mod5" (see: output of xmodmap).
 .IP "background [X11 color name]"
@@ -48,6 +48,10 @@ Invokes "sh -c [command]".
 Ignore the state of specified modifier key(s).
 .IP "mouse_modifier [modifier key] [...]"
 If specified modifier key(s) are down, user can use the same button actions as set for the window frame in the client window itself.
+.IP "click_focus [boolean]"
+Sets the focus model, if set to "true" matwm2 will focus windows when they are clicked. If set to "false" windows will be focussed when the mouse cursor moves over them.
+.IP "click_raise [boolean]"
+If set to "true" windows will be risen when they (meaning the window itself, not its frame) are clicked, if set to "false" this behavior is disabled.
 .IP "resetkeys"
 Remove all previously defined key bindings from memory.
 .IP "key [modifier key] [...] [X11 key name] [key action]"
@@ -57,7 +61,7 @@ Following is a list of possible key actions and their explanation.
 .IP "exec [command]"
 Invokes "sh -c [command]".
 .IP "next"
-Focus the next window in the stacking. Pressing a key bound to this or the "prev" action will show you a list with all currently visible and all iconic windows, wich will dissapear when all modifiers of either key action are released, afterwards the window selected will be raised. If it is off screen it will be brought back on screen, also the mouse will be warped to the bottom right corner of the window.
+Focus the next window in the stacking. Pressing a key bound to this or the "prev" action will show you a list with all currently visible and iconic windows, wich will dissapear when all modifiers of either key action are released. Afterwards the window selected will be raised. If it is off screen it will be brought back on screen, also the mouse will be warped to the bottom right corner of the window. Between the last normal window and the first iconic window there will be slightly more spacing, to clarify what windows are iconic. Items in this list can also be focussed with the mouse in the same way as windows.
 .IP "prev"
 Focus the previous window in the stacking.
 .IP "iconify"
@@ -79,7 +83,7 @@ Toggle stay-below mode for the current window.
 .IP "title"
 Toggle display of title bar for the current window.
 .IP "iconify_all"
-Iconify all window.
+Iconify all window. Iconified windows will be placed at the very bottom of the stack (so for icons top to bottom order in the window list complies with first to last window iconified).
 .IP "next_desktop"
 Go to the next virtual desktop.
 .IP "prev_desktop"

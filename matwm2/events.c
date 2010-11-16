@@ -45,7 +45,7 @@ void handle_event(XEvent ev) {
 					client_iconify(c);
 				return;
 			case EnterNotify:
-				if(c != current)
+				if(c != current && !click_focus)
 					client_focus(c);
 				return;
 			case Expose:
@@ -53,6 +53,16 @@ void handle_event(XEvent ev) {
 					wlist_item_draw(c);
 				return;
 			case ButtonPress:
+				if(click_focus || click_raise) {
+					XAllowEvents(dpy, ReplayPointer, CurrentTime);
+					if(click_focus && c != current)
+						client_focus(c);
+					if(ev.xbutton.window == c->window) {
+						if(click_raise)
+							client_raise(c);
+						return;
+					}
+				}
 				if(buttonaction(ev.xbutton.button) == BA_MOVE)
 					drag_start(MOVE, ev.xbutton.button, ev.xbutton.x_root, ev.xbutton.y_root);
 				if(buttonaction(ev.xbutton.button) == BA_RESIZE)
@@ -63,6 +73,10 @@ void handle_event(XEvent ev) {
 					client_raise(c);
 				if(buttonaction(ev.xbutton.button) == BA_LOWER)
 					client_lower(c);
+				return;
+			case FocusOut:
+				if(c == current && ev.xfocus.mode != NotifyGrab)
+					XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
 				return;
 			default:
 				if(ev.type == shape_event) {

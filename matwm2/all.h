@@ -50,7 +50,7 @@ void clients_alloc(void);
 // global variables from config.c
 extern XColor bg, ibg, fg, ifg;
 extern GC gc, igc, bgc, ibgc;
-extern int border_width, text_height, title_height, button_parent_width, snapat, button1, button2, button3, button4, button5, dc;
+extern int border_width, text_height, title_height, button_parent_width, snapat, button1, button2, button3, button4, button5, dc, click_focus, click_raise;
 extern XFontStruct *font;
 extern char *no_title;
 
@@ -58,6 +58,7 @@ extern char *no_title;
 void cfg_read(void);
 void cfg_parse(char *cfg);
 void cfg_set_opt(char *key, char *value);
+void str_bool(char *str, int *b);
 KeySym str_key(char **str, unsigned int *mask);
 unsigned int str_modifier(char *name);
 int str_buttonaction(char *str);
