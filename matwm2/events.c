@@ -64,6 +64,11 @@ void handle_event(XEvent ev) {
       }
       if(ev.xproperty.atom == XA_WM_NORMAL_HINTS && i < cn)
         getnormalhints(i);
+      if(ev.xproperty.atom == xa_motif_wm_hints && i < cn) {
+        get_mwm_hints(i);
+        XMoveWindow(dpy, clients[i].window, border(cn), border(cn) + title(cn));
+        XResizeWindow(dpy, clients[i].parent, (clients[i].iconic && !clients[i].transient) ? icon_width : (clients[i].width + (border(i) * 2)), (clients[i].iconic && !clients[cn].transient) ? title_height + 4 : (clients[i].height + (border(i) * 2) + title(i)));
+      }
       break;
     case ClientMessage:
       for(i = 0; i < cn; i++)
@@ -86,14 +91,10 @@ void handle_event(XEvent ev) {
       break;
     case ButtonPress:
       if(c < cn && !clients[c].iconic) {
-        if(strcmp(buttonaction(c, ev.xbutton.button), "move") == 0) {
-          restack_client(c, 1);
+        if(strcmp(buttonaction(c, ev.xbutton.button), "move") == 0)
           drag(&ev.xbutton, 0);
-        }
-        if(strcmp(buttonaction(c, ev.xbutton.button), "resize") == 0 && clients[c].resize) {
-          restack_client(c, 1);
+        if(strcmp(buttonaction(c, ev.xbutton.button), "resize") == 0 && clients[c].resize)
           drag(&ev.xbutton, 1);
-        }
       }
       break;
     case ButtonRelease:

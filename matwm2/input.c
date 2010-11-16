@@ -23,6 +23,7 @@ void grab_button(Window w, unsigned int button, unsigned int modmask, unsigned i
 void drag(XButtonEvent *be, int res) {
   int xo, yo;
   XEvent ev;
+  restack_client(current, 1);
   if(res) {
     warp();
     xo = clients[current].x + border(current);
