@@ -462,3 +462,7 @@
 	edited Makefile and README slightly to be more clear
 	added argument for expand to make it calculate vertical space first instead of horizontal space and default keybinding for it, updated manual about this too
 
+0.0.80:
+	don't try to expand to directions already expanded to
+	removed obsolete variable undermouse in client.c
+

@@ -136,6 +136,7 @@ void client_expand(client *c, int d, int a) {
 		client_update(c);
 		return;
 	}
+	d ^= (d & c->flags);
 	c->expand_x = (d & EXPANDED_L) ? 0 : client_x(c);
 	c->expand_y = (d & EXPANDED_T) ? 0 : client_y(c);
 	c->expand_width = (d & EXPANDED_R) ? display_width : (client_x(c) + client_width_total(c));

@@ -32,7 +32,7 @@ void buttons_update(client *c);
 int button_handle_event(XEvent ev);
 
 // global variables from client.c
-extern client **clients, **stacking, *current, *previous, *undermouse;
+extern client **clients, **stacking, *current, *previous;
 extern int cn, nicons;
 
 // functions from client.c

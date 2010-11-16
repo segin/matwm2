@@ -1,6 +1,6 @@
 #include "matwm.h"
 
-client **clients = NULL, **stacking = NULL, *current = NULL, *previous = NULL, *undermouse = NULL;
+client **clients = NULL, **stacking = NULL, *current = NULL, *previous = NULL;
 int cn = 0, nicons = 0;
 
 void client_add(Window w) {
