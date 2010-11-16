@@ -13,7 +13,7 @@ foreach(sort(@dir)) {
         $a =~ s/\s*=.+?(,)/$1/g;
         $a =~ s/\s*=.+$//g;
         print H "extern $a;\n";
-      } elsif(m/^(\w+\ \**\w+\(.*\))/) {
+      } elsif(m/^(\w[\s\w]+?\s+?\**\w+\(.*\))/) {
         print H "$1;\n";
       }
     }

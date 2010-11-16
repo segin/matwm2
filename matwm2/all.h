@@ -19,25 +19,21 @@ client *owner(Window w);
 // config.c
 extern XColor bg, ibg, fg, ifg;
 extern GC gc, igc;
-extern int border_width, title_height, snapat, button1, button2, button3, button4, button5, keyn;
+extern int border_width, title_height, snapat, button1, button2, button3, button4, button5;
 extern XFontStruct *font;
-extern keybind *keys;
-void cfg_init(void);
-void setopt(char *key, char *value);
-void readcfg(char *cfg);
-void bind_key(char *str);
-void unbind_keys(void);
-int strbuttonaction(char *str);
-int strkeyaction(char *str);
-int buttonaction(int button);
-KeyCode str_key(char **str, int *mask);
+void cfg_read(void);
+void cfg_parse(char *cfg);
+void cfg_set_opt(char *key, char *value);
+KeySym str_key(char **str, unsigned int *mask);
+unsigned int str_modifier(char *name);
+int str_buttonaction(char *str);
+int str_keyaction(char *str);
 int read_file(char *path, char **buf);
 char *eat(char **str, char *until);
 
 // drag.c
 extern XButtonEvent be;
 extern int xo, yo;
-Bool isrelease(Display *display, XEvent *event, XPointer arg);
 void drag_start(XEvent ev);
 void drag_end(void);
 int drag_handle_event(XEvent ev);
@@ -57,15 +53,22 @@ void iconify(client *c);
 void restore(client *c);
 
 // input.c
-extern unsigned int mousemodmask, numlockmask;
+extern unsigned int mousemodmask, *mod_ignore;
 extern XModifierKeymap *modmap;
-void grab_key(Window w, unsigned int modmask, KeyCode key);
-void ungrab_key(Window w, unsigned int modmask, KeyCode key);
-void grab_button(Window w, unsigned int button, unsigned int modmask, unsigned int event_mask);
-int getmodifier(char *name);
-keybind *evkey(XEvent ev);
+extern keybind *keys;
+extern int keyn, nmod_ignore;
+void bind_key(char *str);
+void update_keys(void);
+void ungrab_keys(void);
+void free_keys(void);
+int buttonaction(int button);
 int keyaction(XEvent ev);
+keybind *evkey(XEvent ev);
 int key_to_mask(KeyCode key);
+void grab_key(keybind key);
+void ungrab_key(keybind key);
+void grab_button(Window w, unsigned int button, unsigned int modmask, unsigned int event_mask);
+int cmpmask(int m1, int m2);
 
 // main.c
 extern Display *dpy;
@@ -73,10 +76,10 @@ extern int screen, display_width, display_height, have_shape, shape_event, qsfd[
 extern Window root;
 extern Atom xa_wm_protocols, xa_wm_delete, xa_wm_state, xa_wm_change_state, xa_motif_wm_hints;
 extern XSetWindowAttributes p_attr;
-void error(void);
-void end(void);
-void qsh(int sig);
 int main(int argc, char *argv[]);
+void end(void);
+void error(void);
+void qsh(int sig);
 
 // wlist.c
 extern Window wlist;

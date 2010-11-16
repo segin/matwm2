@@ -3,9 +3,6 @@
 XButtonEvent be;
 int xo, yo;
 
-Bool isrelease(Display *display, XEvent *event, XPointer arg) {
-}
-
 void drag_start(XEvent ev) {
   if(evh)
     return;

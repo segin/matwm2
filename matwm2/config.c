@@ -2,30 +2,28 @@
 
 XColor bg, ibg, fg, ifg;
 GC gc, igc;
-int border_width, title_height, snapat, button1, button2, button3, button4, button5, keyn = 0;
+int border_width, title_height, snapat, button1, button2, button3, button4, button5;
 XFontStruct *font;
-keybind *keys = NULL;
 
-void cfg_init(void) {
-  XGCValues gv;
+void cfg_read(void) {
   char *home = getenv("HOME");
   int cfglen = home ? strlen(home) + strlen(CFGFN) + 2 : 0;
   char cfgfn[cfglen], *cfg;
-  modmap = XGetModifierMapping(dpy);
-  numlockmask = key_to_mask(XKeysymToKeycode(dpy, XK_Num_Lock));
+  XGCValues gv;
   cfg = (char *) malloc(strlen(DEF_CFG));
   strncpy(cfg, DEF_CFG, strlen(DEF_CFG));
-  readcfg(cfg);
+  cfg_parse(cfg);
   free((void *) cfg);
   if(home) {
     strncpy(cfgfn, home, cfglen);
     strncat(cfgfn, "/", cfglen);
     strncat(cfgfn, CFGFN, cfglen);
     if(read_file(cfgfn, &cfg) > 0) {
-      readcfg(cfg);
+      cfg_parse(cfg);
       free((void *) cfg);
     }
   }
+  update_keys();
   title_height = font->max_bounds.ascent + font->max_bounds.descent + 2;
   gv.function = GXinvert;
   gv.subwindow_mode = IncludeInferiors;
@@ -38,8 +36,30 @@ void cfg_init(void) {
   igc = XCreateGC(dpy, root, GCFunction | GCSubwindowMode | GCLineWidth | GCForeground | GCFont, &gv);
 }
 
-void setopt(char *key, char *value) {
+void cfg_parse(char *cfg) {
+  char *opt, *key, *val;
+  keybind *old_keys = keys;
+  while(cfg) {
+    opt = eat(&cfg, "\n");
+    key = eat(&opt, ":");
+    if(opt == NULL)
+      continue;
+    while(*opt == ' ' || *opt == '\t')
+      opt++;
+    val = opt;
+    if(strcmp(key, "key") == 0) {
+      if(old_keys) {
+        free_keys();
+        old_keys = NULL;
+      }
+      bind_key(val);
+    } else cfg_set_opt(key, val);
+  }
+}
+
+void cfg_set_opt(char *key, char *value) {
   XColor dummy;
+  int i;
   if(strcmp(key, "background") == 0)
     XAllocNamedColor(dpy, DefaultColormap(dpy, screen), value, &bg, &dummy);
   if(strcmp(key, "inactive_background") == 0)
@@ -60,73 +80,64 @@ void setopt(char *key, char *value) {
   if(strcmp(key, "snap") == 0)
     snapat = strtol(value, NULL, 0);
   if(strcmp(key, "button1") == 0)
-    button1 = strbuttonaction(value);
+    button1 = str_buttonaction(value);
   if(strcmp(key, "button2") == 0)
-    button2 = strbuttonaction(value);
+    button2 = str_buttonaction(value);
   if(strcmp(key, "button3") == 0)
-    button3 = strbuttonaction(value);
+    button3 = str_buttonaction(value);
   if(strcmp(key, "button4") == 0)
-    button4 = strbuttonaction(value);
+    button4 = str_buttonaction(value);
   if(strcmp(key, "button5") == 0)
-    button5 = strbuttonaction(value);
+    button5 = str_buttonaction(value);
   if(strcmp(key, "mouse_modifier") == 0)
     str_key(&value, &mousemodmask);
+  if(strcmp(key, "ignore_modifier") == 0)
+    while(value) {
+      mod_ignore = (unsigned int *) realloc((void *) mod_ignore, (nmod_ignore + nmod_ignore + 2) * sizeof(unsigned int));
+      if(!mod_ignore)
+        error();
+      mod_ignore[nmod_ignore] = str_modifier(eat(&value, " \t"));
+      for(i = 0; i < nmod_ignore; i++)
+        mod_ignore[nmod_ignore + 1 + i] = mod_ignore[i] | mod_ignore[nmod_ignore];
+      nmod_ignore += nmod_ignore + 1;
+    }
 }
 
-void readcfg(char *cfg) {
-  char *opt, *key, *val;
-  keybind *old_keys = keys;
-  while(cfg) {
-    opt = eat(&cfg, "\n");
-    key = eat(&opt, ":");
-    if(opt == NULL)
-      continue;
-    while(*opt == ' ' || *opt == '\t')
-      opt++;
-    val = opt;
-    if(strcmp(key, "key") == 0) {
-      if(old_keys) {
-        unbind_keys();
-        old_keys = NULL;
-      }
-      bind_key(val);
-    } else setopt(key, val);
+KeySym str_key(char **str, unsigned int *mask) {
+  int mod;
+  char *k;
+  *mask = 0;
+  while(*str) {
+    k = eat(str, "\t ");
+    mod = str_modifier(k);
+    if(!mod)
+      return XStringToKeysym(k);
+    *mask = *mask | mod;
   }
+  return 0;
 }
 
-void bind_key(char *str) {
-  keybind k;
-  k.code = str_key(&str, &k.mask);
-  if(!str)
-    return;
-  k.action = strkeyaction(eat(&str, " \t"));
-  if(str) {
-    while(*str == ' ' || *str == '\t')
-      str++;
-    k.arg = (char *) malloc(strlen(str));
-    strncpy(k.arg, str, strlen(str));
-  } else k.arg = NULL;
-  keys = (keybind *) realloc((void *) keys, (keyn + 1) * sizeof(keybind));
-  if(!keys)
-    error();
-  keys[keyn] = k;
-  keyn++;
-  grab_key(root, k.mask, k.code);
+unsigned int str_modifier(char *name) {
+  if(strcmp(name, "shift") == 0)
+    return ShiftMask;
+  if(strcmp(name, "lock") == 0)
+    return LockMask;
+  if(strcmp(name, "control") == 0)
+    return ControlMask;
+  if(strcmp(name, "mod1") == 0)
+    return Mod1Mask;
+  if(strcmp(name, "mod2") == 0)
+    return Mod2Mask;
+  if(strcmp(name, "mod3") == 0)
+    return Mod3Mask;
+  if(strcmp(name, "mod4") == 0)
+    return Mod4Mask;
+  if(strcmp(name, "mod5") == 0)
+    return Mod5Mask;
+  return 0;
 }
 
-void unbind_keys(void) {
-  int i;
-  for(i = 0; i < keyn; i++) {
-    ungrab_key(root, keys[i].mask, keys[i].code);
-    if(keys[i].arg)
-      free((void *) keys[i].arg);
-  }
-  if(keys)
-    free((void *) keys);
-  keys = NULL;
-}
-
-int strbuttonaction(char *str) {
+int str_buttonaction(char *str) {
   if(strcmp(str, "move") == 0)
     return BA_MOVE;
   if(strcmp(str, "resize") == 0)
@@ -138,7 +149,7 @@ int strbuttonaction(char *str) {
   return BA_NONE;
 }
 
-int strkeyaction(char *str) {
+int str_keyaction(char *str) {
   if(strcmp(str, "next") == 0)
     return KA_NEXT;
   if(strcmp(str, "prev") == 0)
@@ -155,39 +166,11 @@ int strkeyaction(char *str) {
     return KA_BOTTOMLEFT;
   if(strcmp(str, "bottomright") == 0)
     return KA_BOTTOMRIGHT;
+  if(strcmp(str, "close") == 0)
+    return KA_CLOSE;
   if(strcmp(str, "exec") == 0)
     return KA_EXEC;
   return KA_NONE;
-}
-
-int buttonaction(int button) {
-  switch(button) {
-    case Button1:
-      return button1;
-    case Button2:
-      return button2;
-    case Button3:
-      return button3;
-    case Button4:
-      return button4;
-    case Button5:
-      return button5;
-  }
-  return BA_NONE;
-}
-
-KeyCode str_key(char **str, int *mask) {
-  int mod;
-  char *k;
-  *mask = 0;
-  while(*str) {
-    k = eat(str, "\t ");
-    mod = getmodifier(k);
-    if(!mod)
-      return XKeysymToKeycode(dpy, XStringToKeysym(k));
-    *mask = *mask | mod;
-  }
-  return 0;
 }
 
 int read_file(char *path, char **buf) {

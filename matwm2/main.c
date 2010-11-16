@@ -6,27 +6,6 @@ Window root;
 Atom xa_wm_protocols, xa_wm_delete, xa_wm_state, xa_wm_change_state, xa_motif_wm_hints;
 XSetWindowAttributes p_attr;
 
-void error(void) {
-  perror("error");
-  exit(1);
-}
-
-void end(void) {
-  while(cn) {
-    if(clients[0]->iconic)
-      XMapWindow(dpy, clients[0]->window);
-    remove_client(clients[0], 0);
-  }
-  if(clients)
-    free((void *) clients);
-  unbind_keys();
-  XCloseDisplay(dpy);
-}
-
-void qsh(int sig) {
-  write(qsfd[1], &sig, sizeof(int));
-}
-
 int main(int argc, char *argv[]) {
   XEvent ev;
   unsigned int nwins;
@@ -60,7 +39,7 @@ int main(int argc, char *argv[]) {
   xa_motif_wm_hints = XInternAtom(dpy, "_MOTIF_WM_HINTS", False);
   display_width = XDisplayWidth(dpy, screen);
   display_height = XDisplayHeight(dpy, screen);
-  cfg_init();
+  cfg_read();
   p_attr.override_redirect = True;
   p_attr.background_pixel = fg.pixel;
   p_attr.event_mask = ExposureMask | KeyReleaseMask;
@@ -96,5 +75,26 @@ int main(int argc, char *argv[]) {
     XNextEvent(dpy, &ev);
     handle_event(ev);
   }
+}
+
+void end(void) {
+  while(cn) {
+    if(clients[0]->iconic)
+      XMapWindow(dpy, clients[0]->window);
+    remove_client(clients[0], 0);
+  }
+  if(clients)
+    free((void *) clients);
+  free_keys();
+  XCloseDisplay(dpy);
+}
+
+void error(void) {
+  perror("error");
+  exit(1);
+}
+
+void qsh(int sig) {
+  write(qsfd[1], &sig, sizeof(int));
 }
 

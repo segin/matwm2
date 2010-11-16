@@ -1,67 +1,83 @@
 #include "matwm.h"
 
-unsigned int mousemodmask = 0, numlockmask = 0;
+unsigned int mousemodmask = 0, *mod_ignore = NULL;
 XModifierKeymap *modmap;
+keybind *keys = NULL;
+int keyn = 0, nmod_ignore  = 0;
 
-void grab_key(Window w, unsigned int modmask, KeyCode key) {
-  XGrabKey(dpy, key, modmask, w, True, GrabModeAsync, GrabModeAsync);
-  XGrabKey(dpy, key, LockMask | modmask, w, True, GrabModeAsync, GrabModeAsync);
-  if(numlockmask) {
-    XGrabKey(dpy, key, numlockmask | modmask, w, True, GrabModeAsync, GrabModeAsync);
-    XGrabKey(dpy, key, numlockmask | LockMask | modmask, w, True, GrabModeAsync, GrabModeAsync);
+void bind_key(char *str) {
+  keybind k;
+  k.sym = str_key(&str, &k.mask);
+  if(!str)
+    return;
+  k.action = str_keyaction(eat(&str, " \t"));
+  if(str) {
+    while(*str == ' ' || *str == '\t')
+      str++;
+    k.arg = (char *) malloc(strlen(str));
+    strncpy(k.arg, str, strlen(str));
+  } else k.arg = NULL;
+  keys = (keybind *) realloc((void *) keys, (keyn + 1) * sizeof(keybind));
+  if(!keys)
+    error();
+  keys[keyn] = k;
+  keyn++;
+}
+
+void update_keys(void) {
+  int i;
+  modmap = XGetModifierMapping(dpy);
+  for(i = 0; i < keyn; i++) {
+    keys[i].code = XKeysymToKeycode(dpy, keys[i].sym);
+    grab_key(keys[i]);
   }
 }
 
-void ungrab_key(Window w, unsigned int modmask, KeyCode key) {
-  XUngrabKey(dpy, key, modmask, w);
-  XUngrabKey(dpy, key, LockMask | modmask, w);
-  if(numlockmask) {
-    XUngrabKey(dpy, key, numlockmask | modmask, w);
-  XUngrabKey(dpy, key, numlockmask | LockMask | modmask, w);
-  }
-}
-
-void grab_button(Window w, unsigned int button, unsigned int modmask, unsigned int event_mask) {
-  XGrabButton(dpy, button, modmask, w, False, event_mask, GrabModeAsync, GrabModeSync, None, None);
-  XGrabButton(dpy, button, LockMask | modmask, w, False, event_mask, GrabModeAsync, GrabModeSync, None, None);
-  if(numlockmask) {
-    XGrabButton(dpy, button, numlockmask | modmask, w, False, event_mask, GrabModeAsync, GrabModeSync, None, None);
-    XGrabButton(dpy, button, numlockmask | LockMask | modmask, w, False, event_mask, GrabModeAsync, GrabModeSync, None, None);
-  }
-}
-
-int getmodifier(char *name) {
-  if(strcmp(name, "shift") == 0)
-    return ShiftMask;
-  if(strcmp(name, "lock") == 0)
-    return LockMask;
-  if(strcmp(name, "control") == 0)
-    return ControlMask;
-  if(strcmp(name, "mod1") == 0)
-    return Mod1Mask;
-  if(strcmp(name, "mod2") == 0)
-    return Mod2Mask;
-  if(strcmp(name, "mod3") == 0)
-    return Mod3Mask;
-  if(strcmp(name, "mod4") == 0)
-    return Mod4Mask;
-  if(strcmp(name, "mod5") == 0)
-    return Mod5Mask;
-  return 0;
-}
-keybind *evkey(XEvent ev) {
+void ungrab_keys(void) {
   int i;
   for(i = 0; i < keyn; i++)
-    if(keys[i].code == ev.xkey.keycode && cmpmask(ev.xkey.state, keys[i].mask))
-      return &keys[i];
+    ungrab_key(keys[i]);
+}
+
+void free_keys(void) {
+  int i;
+  for(i = 0; i < keyn; i++)
+    free((void *) keys[i].arg);
+  free((void *) keys);
+  keys = NULL;
+  keyn = 0;
+}
+
+int buttonaction(int button) {
+  switch(button) {
+    case Button1:
+      return button1;
+    case Button2:
+      return button2;
+    case Button3:
+      return button3;
+    case Button4:
+      return button4;
+    case Button5:
+      return button5;
+  }
+  return BA_NONE;
 }
 
 int keyaction(XEvent ev) {
   int i;
   for(i = 0; i < keyn; i++)
-    if(keys[i].code == ev.xkey.keycode && cmpmask(ev.xkey.state, keys[i].mask))
+    if(keys[i].code == ev.xkey.keycode && cmpmask(keys[i].mask, ev.xkey.state))
       return keys[i].action;
   return KA_NONE;
+}
+
+keybind *evkey(XEvent ev) {
+  int i;
+  for(i = 0; i < keyn; i++)
+    if(keys[i].code == ev.xkey.keycode && cmpmask(keys[i].mask, ev.xkey.state))
+      return &keys[i];
+  return NULL;
 }
 
 int key_to_mask(KeyCode key) {
@@ -70,5 +86,33 @@ int key_to_mask(KeyCode key) {
     if(modmap->modifiermap[i] == key)
       return 1 << (i / modmap->max_keypermod);
   return 0;
+}
+
+void grab_key(keybind key) {
+  int i;
+  XGrabKey(dpy, key.code, key.mask, root, True, GrabModeAsync, GrabModeAsync);
+  for(i = 0; i < nmod_ignore; i++)
+    XGrabKey(dpy, key.code, key.mask | mod_ignore[i], root, True, GrabModeAsync, GrabModeAsync);
+}
+
+void ungrab_key(keybind key) {
+  int i;
+  XUngrabKey(dpy, key.code, key.mask, root);
+  for(i = 0; i < nmod_ignore; i++)
+    XUngrabKey(dpy, key.code, key.mask | mod_ignore[i], root);
+}
+
+void grab_button(Window w, unsigned int button, unsigned int modmask, unsigned int event_mask) {
+  int i;
+  XGrabButton(dpy, button, modmask, w, False, event_mask, GrabModeAsync, GrabModeSync, None, None);
+  for(i = 0; i < nmod_ignore; i++)
+    XGrabButton(dpy, button, modmask | mod_ignore[i], w, False, event_mask, GrabModeAsync, GrabModeSync, None, None);
+}
+
+int cmpmask(int m1, int m2) {
+  int i;
+  for(i = 0; i < nmod_ignore; i++)
+    m2 ^= m2 & mod_ignore[i];
+  return m1 == m2;
 }
 

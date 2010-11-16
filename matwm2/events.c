@@ -85,8 +85,9 @@ void handle_event(XEvent ev) {
       break;
     case MappingNotify:
       if(ev.xmapping.request != MappingPointer) {
-        XUngrabKeyboard(dpy, CurrentTime);
+        ungrab_keys();
         XRefreshKeyboardMapping(&ev.xmapping);
+        update_keys();
       }
       break;
     case KeyPress:
@@ -107,7 +108,11 @@ void handle_event(XEvent ev) {
       if(current && keyaction(ev) == KA_TOPLEFT)
         move(current, 0, 0);
       if(keyaction(ev) == KA_EXEC)
-        popen(evkey(ev)->arg, "r");
+        if(vfork() == 0) {
+          setsid();
+          execlp("sh", "sh", "-c", evkey(ev)->arg, (char *) 0);
+          _exit(1);
+        }
       break;
     case ConfigureNotify:
       if(root == ev.xconfigure.window) {

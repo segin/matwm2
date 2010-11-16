@@ -20,6 +20,7 @@ void iconify(client *c) {
   for(i = client_number(c); i < cn - 1; i++)
     clients[i] = clients[i + 1];
   clients[cn - 1] = c;
+  focus(clients[0]);
 }
 
 void restore(client *c) {
