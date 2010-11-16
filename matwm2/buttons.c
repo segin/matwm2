@@ -72,6 +72,27 @@ void button_draw(client *c, button *b) {
 		XDrawLine(dpy, b->w, (c == current) ? gc : igc, 2, 2, button_size - 2, button_size - 2);
 		XDrawLine(dpy, b->w, (c == current) ? gc : igc, 2, button_size - 3, button_size - 2, 1);
 	}
+	if(b->action == B_STICKY) {
+		XDrawArc(dpy, b->w, (c == current) ? gc : igc, 2, 2, button_size - 5, button_size - 5, 0, 360 * 64);
+		if(c->desktop == STICKY)
+			XFillArc(dpy, b->w, (c == current) ? gc : igc, 2, 2, button_size - 5, button_size - 5, 0, 360 * 64);
+	}
+	if(b->action == B_ONTOP) {
+		XDrawLine(dpy, b->w, (c == current) ? gc : igc, 2, button_size / 2, button_size / 2, 2);
+		XDrawLine(dpy, b->w, (c == current) ? gc : igc, button_size - 2, (button_size / 2) + 1, button_size / 2, 2);
+		if(c->layer == TOP) {
+			XDrawLine(dpy, b->w, (c == current) ? gc : igc, 2, button_size - 3, button_size / 2, button_size / 2);
+			XDrawLine(dpy, b->w, (c == current) ? gc : igc, button_size - 2, button_size - 2, button_size / 2, button_size / 2);
+		}
+	}
+	if(b->action == B_BELOW) {
+		XDrawLine(dpy, b->w, (c == current) ? gc : igc, 2, button_size / 2, (button_size / 2) + 1, button_size - 2);
+		XDrawLine(dpy, b->w, (c == current) ? gc : igc, button_size - 2, (button_size / 2) - 1, button_size / 2, button_size - 3);
+		if(c->layer == BOTTOM) {
+			XDrawLine(dpy, b->w, (c == current) ? gc : igc, 2, 2, (button_size / 2) + 1, (button_size / 2) + 1);
+			XDrawLine(dpy, b->w, (c == current) ? gc : igc, button_size - 2, 1, button_size / 2, button_size / 2);
+		}
+	}
 }
 
 void buttons_update(client *c) {
@@ -132,6 +153,12 @@ int button_handle_event(XEvent ev) {
 						client_toggle_state(c, MAXIMIZED_L | MAXIMIZED_R | MAXIMIZED_T | MAXIMIZED_B);
 					if(b->action == B_CLOSE)
 						delete_window(c);
+					if(b->action == B_STICKY)
+						client_to_desktop(c, (c->desktop == STICKY) ? desktop : STICKY);
+					if(b->action == B_ONTOP)
+						client_set_layer(c, (c->layer == TOP) ? NORMAL : TOP);
+					if(b->action == B_BELOW)
+						client_set_layer(c, (c->layer == BOTTOM) ? NORMAL : BOTTOM);
 				}
 				if(button_down == 2) {
 					button_current = b;

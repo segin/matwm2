@@ -1,3 +1,8 @@
+0.0.83:
+	sticky, ontop and below buttons added & man updated about this
+	double click actions now possible & added info about the options for this in the manual
+	added info about wich buttons can be used to click buttons in manual
+
 0.0.82:
 	added title_spacing option to set amount of space between title and client window
 	re-ordered things in default configuration

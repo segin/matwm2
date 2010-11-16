@@ -114,7 +114,16 @@ enum {
 	B_MAXIMIZE,
 	B_EXPAND,
 	B_ICONIFY,
+	B_STICKY,
+	B_ONTOP,
+	B_BELOW,
 	B_NONE
+};
+
+enum {
+	D_MAXIMIZE,
+	D_EXPAND,
+	D_NONE
 };
 
 #include "mwm_hints.h"

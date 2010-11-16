@@ -66,12 +66,16 @@ Sets the focus model, if set to "true" matwm2 will focus windows when they are c
 If set to "true" windows will be risen when they (meaning the window itself, not its frame) are clicked, if set to "false" this behavior is disabled.
 .IP "focus_new [boolean]"
 If set to "true" new windows will be focussed when they appear and accordingly a value of "false" disables this behaviour. If you are dragging a window or in window list mode at the time of the window apearing the new window shall not be focussed even with this option set to "true".
+.IP "doubleclick [action]"
+Sets the action to be taken when a window frame is double clicked, can be either "maximize", "epand" and "none". These correspond with the key actions with the same name described below. You can use either the left or right (first and third respectively) mouse button to double click.
+.IP "doubleclick_time [integer]"
+With this option you can specify how much time there can be between two clicks at most while still considering it a double click, in miliseconds. 
 .IP "center_title [boolean]"
 If set to "true" the title of windows will apear in the center of the titlebar, if set to "false" it will be at the left.
 .IP "center_wlist_items [boolean]"
 If set to "true" all titles in the window list are centered, if set to "false" they are aligned at the left.
 .IP "buttons_left [button] [...]"
-Set a list of buttons (from left to right) to show at the left of the title of windows. Possible buttons are "iconify", "expand", "maximize" and "close", they do the same as the key actions with the same names described below. Can be set to "none" if you want no buttons there.
+Set a list of buttons (from left to right) to show at the left of the title of windows. Possible buttons are "iconify", "expand", "maximize", "close", "sticky", "ontop" and "below", they do the same as the key actions with the same names described below. Can be set to "none" if you want no buttons there. Buttons can be clicked with either the first (left) or the third (right) mouse button.
 .IP "buttons_right [button] [...]"
 Same as the "buttons_left" option but for buttons at the right of the titlebar.
 .IP "taskbar_ontop"

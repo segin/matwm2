@@ -6,7 +6,7 @@ inactive_foreground   darkgray\n\
 font                  fixed\n\
 border_width          4\n\
 title_spacing         2\n\
-buttons_left          none\n\
+buttons_left          sticky ontop\n\
 buttons_right         iconify expand maximize close\n\
 center_title          false\n\
 center_wlist_items		false\n\
@@ -16,6 +16,8 @@ taskbar_ontop         false\n\
 focus_new             false\n\
 click_focus           false\n\
 click_raise           false\n\
+doubleclick_time      300\n\
+doubleclick           maximize\n\
 button1               move\n\
 button2               none\n\
 button3               resize\n\

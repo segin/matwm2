@@ -1,6 +1,8 @@
 #include "matwm.h"
 
 int (*evh)(XEvent) = NULL;
+Time lastclick = 0;
+unsigned int lastbutton = None;
 
 void handle_event(XEvent ev) {
 	client *c = owner(ev.xany.window);
@@ -54,6 +56,20 @@ void handle_event(XEvent ev) {
 				return;
 			case ButtonPress:
 				XAllowEvents(dpy, ReplayPointer, CurrentTime);
+				if(ev.xbutton.window != c->window && (ev.xbutton.button == Button1 || ev.xbutton.button == Button3)) {
+					if(lastclick + doubleclick_time > ev.xbutton.time && lastbutton == ev.xbutton.button) {
+	 					if(doubleclick == D_MAXIMIZE) {
+							client_toggle_state(current, MAXIMIZED_L | MAXIMIZED_R | MAXIMIZED_T | MAXIMIZED_B);
+							return;
+						}
+						if(doubleclick == D_EXPAND) {
+							client_expand(c, EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B, 0);
+							return;
+						}
+					}
+					lastclick = ev.xbutton.time;
+					lastbutton = ev.xbutton.button;
+				}
 				if(c != current)
 					client_focus(c);
 				if(ev.xbutton.window == c->window) {

@@ -46,5 +46,8 @@ void client_to_desktop(client *c, int d) {
 	}
 	c->desktop = d;
 	ewmh_update_desktop(c);
+	for(i = 0; i < c->nbuttons; i++)
+		if(c->buttons[i].action == B_STICKY)
+			button_draw(c, &c->buttons[i]);
 }
 

@@ -84,10 +84,13 @@ void client_lower(client *c) {
 }
 
 void client_set_layer(client *c, int layer) {
-	int prev = client_layer(c);
+	int i, prev = client_layer(c);
 	c->layer = layer;
 	if(client_layer(c) != prev)
 		client_update_layer(c, prev);
+	for(i = 0; i < c->nbuttons; i++)
+		if(c->buttons[i].action == B_ONTOP || c->buttons[i].action == B_BELOW)
+			button_draw(c, &c->buttons[i]);
 }
 
 void client_toggle_state(client *c, int state) {

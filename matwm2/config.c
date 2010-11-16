@@ -2,7 +2,7 @@
 
 XColor bg, ibg, fg, ifg;
 GC gc, igc, bgc, ibgc;
-int border_width, text_height, title_height, title_spacing, center_title, center_wlist_items, button_size, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first = 1, *buttons_right = NULL, nbuttons_right, *buttons_left = NULL, nbuttons_left;
+int border_width, text_height, title_height, title_spacing, center_title, center_wlist_items, button_size, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc, first = 1, *buttons_right = NULL, nbuttons_right, *buttons_left = NULL, nbuttons_left, doubleclick_time, doubleclick;
 XFontStruct *font = NULL;
 char *no_title = NO_TITLE;
 
@@ -109,6 +109,11 @@ void cfg_set_opt(char *key, char *value, int initial) {
 		if(i > 0)
 			title_spacing = i;
 	}
+	if(strcmp(key, "doubleclick_time") == 0) {
+		i = strtol(value, NULL, 0);
+		if(i > 0)
+			doubleclick_time = i;
+	}
 	if(strcmp(key, "snap") == 0)
 		snapat = strtol(value, NULL, 0);
 	if(strcmp(key, "desktops") == 0) {
@@ -126,6 +131,8 @@ void cfg_set_opt(char *key, char *value, int initial) {
 		button4 = str_buttonaction(value);
 	if(strcmp(key, "button5") == 0)
 		button5 = str_buttonaction(value);
+	if(strcmp(key, "doubleclick") == 0)
+		doubleclick = str_doubleclick(value);
 	if(strcmp(key, "click_focus") == 0)
 		str_bool(value, &click_focus);
 	if(strcmp(key, "click_raise") == 0)
@@ -293,6 +300,14 @@ int str_keyaction(char *str) {
 	return KA_NONE;
 }
 
+int str_doubleclick(char *str) {
+	if(strcmp(str, "maximize") ==  0)
+		return D_MAXIMIZE;
+	if(strcmp(str, "expand") ==  0)
+		return D_EXPAND;
+	return D_NONE;
+}
+
 int str_wbutton(char *button) {
 	if(strcmp(button, "close") == 0)
 		return B_CLOSE;
@@ -302,6 +317,12 @@ int str_wbutton(char *button) {
 		return B_EXPAND;
 	if(strcmp(button, "iconify") == 0)
 		return B_ICONIFY;
+	if(strcmp(button, "sticky") == 0)
+		return B_STICKY;
+	if(strcmp(button, "ontop") == 0)
+		return B_ONTOP;
+	if(strcmp(button, "below") == 0)
+		return B_BELOW;
 	return B_NONE;
 }
 
