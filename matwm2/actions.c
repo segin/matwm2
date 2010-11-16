@@ -180,8 +180,10 @@ void client_restore(client *c) {
 		return;
 	nicons--;
 	client_show(c);
-	if(c->desktop != STICKY)
+	if(c->desktop != STICKY || c->desktop != desktop) {
 		c->desktop = desktop;
+		ewmh_update_desktop(c);
+	}
 	c->flags ^=ICONIC;
 	client_raise(c);
 	set_wm_state(c->window, NormalState);
@@ -232,6 +234,7 @@ void client_iconify_all(void) {
 				client_restore(clients[i]);
 				clients[i]->flags ^= RESTORE;
 			}
+		all_iconic = 0;
 	} else {
 		for(i = 0; i < cn; i++)
 			if((clients[i]->desktop == desktop || clients[i]->desktop == STICKY) && !(clients[i]->flags & ICONIC) && !(clients[i]->flags & DONT_LIST)) {

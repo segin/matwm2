@@ -99,7 +99,7 @@ int ewmh_handle_event(XEvent ev) {
 						client_restore(c);
 						client_focus(c);
 					} else {
-						if(c->desktop != desktop || c->desktop != STICKY)
+						if(c->desktop != desktop && c->desktop != STICKY)
 							desktop_goto(c->desktop);
 						client_raise(c);
 						client_focus(c);
