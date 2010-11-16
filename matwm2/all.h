@@ -92,7 +92,7 @@ void client_update_title(client *c);
 void client_update_layer(client *c, int prev);
 void client_clear_state(client *c);
 void client_over_fullscreen(client *c);
-int clients_alloc(void);
+void clients_alloc(void);
 
 /* global variables from input.c */
 extern unsigned int mousemodmask, nosnapmodmask, *mod_ignore;
@@ -122,6 +122,7 @@ extern int xerrorstatus;
 
 /* functions from x11.c */
 int xerrorhandler(Display *display, XErrorEvent *xerror);
+bool select_root_events(void);
 void get_normal_hints(client *c);
 int get_state_hint(Window w);
 int get_wm_state(Window w);
@@ -141,7 +142,7 @@ int isviewable(Window w);
 Bool isunmap(Display *display, XEvent *event, XPointer arg);
 
 /* global variables from drag.c */
-extern int drag_xo, drag_yo;
+extern int drag_xo, drag_yo, xr, yr;
 extern unsigned int drag_button;
 extern unsigned char drag_mode;
 
@@ -150,10 +151,9 @@ void drag_start(unsigned char mode, int button, int x, int y);
 void drag_end(void);
 bool drag_handle_event(XEvent *ev);
 bool drag_release_wait(XEvent *ev);
-int snapx(client *c, int nx, int ny);
-int snapy(client *c, int nx, int ny);
-int snaph(client *c, int nx, int ny);
-int snapv(client *c, int nx, int ny);
+bool __snap(int x1, int x2, int *ret);
+bool _snap(int r, int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2, int *ret);
+int snap(client *c, int nx, int ny, char axis);
 
 /* functions from evn.c */
 #ifdef DEBUG_EVENTS
@@ -193,7 +193,7 @@ void client_fullscreen(client *c);
 void client_set_layer(client *c, int layer);
 void client_toggle_state(client *c, int state);
 void client_expand_x(client *c, int d, int first);
-void client_expand_y(client *c, int d, bool first);
+void client_expand_y(client *c, int d, int first);
 void client_expand(client *c, int d, bool a);
 void client_toggle_title(client *c);
 void client_iconify(client *c);

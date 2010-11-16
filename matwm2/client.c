@@ -181,8 +181,7 @@ void client_remove(client *c) {
 		client_focus_first();
 	}
 	free(c);
-	if(!clients_alloc())
-		return;
+	clients_alloc();
 	if(evh == wlist_handle_event)
 		wlist_update();
 	ewmh_update_clist();
@@ -356,18 +355,17 @@ void client_over_fullscreen(client *c) { /* help a window getting above fullscre
 	clients_apply_stacking();
 }
 
-int clients_alloc(void) { /* to make sure enough memory is allocated for cn clients */
+void clients_alloc(void) { /* to make sure enough memory is allocated for cn clients */
 	client **newptr;
 	if(!cn) {
 		free(clients);
 		free(stacking);
 		clients = NULL;
 		stacking = NULL;
-		return 1;
+		return;
 	}
 	newptr = (client **) _realloc((void *) clients, cn * sizeof(client *));
 	clients = newptr;
 	newptr = (client **) _realloc((void *) stacking, cn * sizeof(client *));
 	stacking = newptr;
-	return 1;
 }

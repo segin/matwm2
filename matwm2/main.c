@@ -117,13 +117,16 @@ int main(int argc, char *argv[]) {
 	depth = DefaultDepth(dpy, screen);
 	visual = DefaultVisual(dpy, screen);
 	XSetErrorHandler(&xerrorhandler); /* set up error handler - to be found in x11.c */
-	XSelectInput(dpy, root, StructureNotifyMask | SubstructureRedirectMask | SubstructureNotifyMask | FocusChangeMask | (!click_root ? ButtonPressMask : 0)); /* some of this events can only be selected by one application, this will error if another window manager is running */
 	xa_wm_protocols = XInternAtom(dpy, "WM_PROTOCOLS", False);
 	xa_wm_delete = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
 	xa_wm_state = XInternAtom(dpy, "WM_STATE", False);
 	xa_wm_change_state = XInternAtom(dpy, "WM_CHANGE_STATE", False);
 	xa_motif_wm_hints = XInternAtom(dpy, "_MOTIF_WM_HINTS", False);
+	ewmh_initialize();
+	screens_get(); /* we need atoms from above XInternAtom() and ewmh_initialize() calls for this */
 	cfg_read(1); /* read configuration - see config.c */
+	if(!select_root_events()) /* config has to be read before this */
+		exit(1);
 	p_attr.override_redirect = True;
 	p_attr.background_pixel = fg.pixel;
 	p_attr.border_pixel = ibfg.pixel;
@@ -133,12 +136,10 @@ int main(int argc, char *argv[]) {
 	                      CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
 	p_attr.event_mask = SubstructureRedirectMask |  SubstructureNotifyMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask | LeaveWindowMask | ExposureMask;
 	p_attr.background_pixel = ibg.pixel;
+	ewmh_update(); /* for this we need wlist to be there and configuration to be read */
 	#ifdef USE_SHAPE
 	have_shape = XShapeQueryExtension(dpy, &shape_event, &di);
 	#endif
-	ewmh_initialize();
-	screens_get();
-	ewmh_update();
 	XSetInputFocus(dpy, PointerRoot, RevertToPointerRoot, CurrentTime); /* set input focus to the root window */
 	XQueryTree(dpy, root, &dw, &dw, &wins, &nwins); /* look for windows already present */
 	for(ui = 0; ui < nwins; ui++)
@@ -191,7 +192,7 @@ void quit(void) {
 	for(i = cn - 1; i >= 0; i--) /* on top of that go the currently visible ones */
 		if(stacking[i]->desktop == desktop || stacking[i]->desktop == STICKY)
 			client_deparent(stacking[i]);
- if(dpy) { /* if we have a connection with X, close it */
+	if(dpy) { /* if we have a connection with X, close it */
 		XSetInputFocus(dpy, PointerRoot, RevertToPointerRoot, CurrentTime); /* this prevents focus being stuck with no WM running */
 		XCloseDisplay(dpy);
 	}

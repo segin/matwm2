@@ -1,6 +1,6 @@
 #include "matwm.h"
 
-int drag_xo, drag_yo;
+int drag_xo, drag_yo, xr, yr;
 unsigned int drag_button;
 unsigned char drag_mode;
 
@@ -11,6 +11,8 @@ void drag_start(unsigned char mode, int button, int x, int y) {
 		if(!(current->flags & CAN_RESIZE))
 			return;
 		client_warp(current);
+		xr = client_x(current);
+		yr = client_y(current);
 		drag_xo = client_x(current) + (client_border(current) * 2);
 		drag_yo = client_y(current) + (client_border(current) * 2) + client_title(current);
 	} else {
@@ -45,7 +47,7 @@ bool drag_handle_event(XEvent *ev) {
 						y = ev->xmotion.y + 2;
 						if(nosnapmodmask && ev->xmotion.state & nosnapmodmask)
 							client_resize(current, x - drag_xo, y - drag_yo);
-						else client_resize(current, snaph(current, x, snapv(current, x, y)) - drag_xo, snapv(current, snaph(current, x, y), y) - drag_yo);
+						else client_resize(current, snap(current, x, snap(current, x, y, 'v'), 'h') - drag_xo, snap(current, snap(current, x, y, 'h'), y, 'v') - drag_yo);
 					} else if(drag_warp && ev->xmotion.x == right - 1 && desktop < dc - 1) {
 						client_move(current, left - (drag_xo + 1), ev->xmotion.y - drag_yo);
 						XWarpPointer(dpy, None, root, 0, 0, 0, 0, 1, ev->xmotion.y);
@@ -56,7 +58,7 @@ bool drag_handle_event(XEvent *ev) {
 						desktop_goto(desktop - 1);
 					} else if(nosnapmodmask && ev->xmotion.state & nosnapmodmask)
 						client_move(current, ev->xmotion.x - drag_xo, ev->xmotion.y - drag_yo);
-					else client_move(current, snapx(current, ev->xmotion.x - drag_xo, snapy(current, ev->xmotion.x - drag_xo, ev->xmotion.y - drag_yo)), snapy(current, snapx(current, ev->xmotion.x - drag_xo, ev->xmotion.y - drag_yo), ev->xmotion.y - drag_yo));
+					else client_move(current, snap(current, ev->xmotion.x - drag_xo, snap(current, ev->xmotion.x - drag_xo, ev->xmotion.y - drag_yo, 'v'), 'h'), snap(current, snap(current, ev->xmotion.x - drag_xo, ev->xmotion.y - drag_yo, 'h'), ev->xmotion.y - drag_yo, 'v'));
 					return true;
 				case ButtonRelease:
 					if(ev->xbutton.button == drag_button || drag_button == AnyButton)
@@ -84,86 +86,42 @@ bool drag_release_wait(XEvent *ev) {
 	return false;
 }
 
-int snapx(client *c, int nx, int ny) {
-	int i, right;
-	for(i = 0; i < nscreens; i++) {
-		if(nx < screens[i].x + snapat && nx > screens[i].x - snapat)
-			return screens[i].x;
-		right = screens[i].x + screens[i].width;
-		if(nx < (right - client_width_total(c)) + snapat && nx > (right - client_width_total(c)) - snapat)
-			return right - client_width_total(c);
+bool __snap(int x1, int x2, int *ret) {
+	if(x1 < x2 + snapat && x1 > x2 - snapat) {
+		*ret = x2;
+		return true;
 	}
-	for(i = 0; i < cn; i++) {
-		if(clients[i] == c || !client_visible(clients[i]) || ny + client_height_total(c) < client_y(clients[i]) || ny > client_y(clients[i]) + client_height_total(clients[i]))
-			continue;
-		if(nx < client_x(clients[i]) + snapat && nx > client_x(clients[i]) - snapat)
-			return client_x(clients[i]);
-		if(nx < client_x(clients[i]) + client_width_total(clients[i]) + snapat && nx > client_x(clients[i]) + client_width_total(clients[i]) - snapat)
-			return client_x(clients[i]) + client_width_total(clients[i]);
-		if(nx + client_width_total(c) < client_x(clients[i]) + snapat && nx + client_width_total(c) > client_x(clients[i]) - snapat)
-			return client_x(clients[i]) - client_width_total(c);
-		if(nx + client_width_total(c) < client_x(clients[i]) + client_width_total(clients[i]) + snapat && nx + client_width_total(c) > client_x(clients[i]) + client_width_total(clients[i]) - snapat)
-			return client_x(clients[i]) + client_width_total(clients[i]) - client_width_total(c);
-	}
-	return nx;
+	return false;
 }
 
-int snapy(client *c, int nx, int ny) {
-	int i, bottom;
-	for(i = 0; i < nscreens; i++) {
-		if(ny < screens[i].y + snapat && ny > screens[i].y - snapat)
-			return 0;
-		bottom = screens[i].y + screens[i].height;
-		if(ny < (bottom - client_height_total(c)) + snapat && ny > (bottom - client_height_total(c)) - snapat)
-			return bottom - client_height_total(c);
-	}
-	for(i = 0; i < cn; i++) {
-		if(clients[i] == c || !client_visible(clients[i]) || nx + client_width_total(c) < client_x(clients[i]) || nx > client_x(clients[i]) + client_width_total(clients[i]))
-			continue;
-		if(ny < client_y(clients[i]) + snapat && ny > client_y(clients[i]) - snapat)
-			return client_y(clients[i]);
-		if(ny < client_y(clients[i]) + client_height_total(clients[i]) + snapat && ny > client_y(clients[i]) + client_height_total(clients[i]) - snapat)
-			return client_y(clients[i]) + client_height_total(clients[i]);
-		if(ny + client_height_total(c) < client_y(clients[i]) + snapat && ny + client_height_total(c) > client_y(clients[i]) - snapat)
-			return client_y(clients[i]) - client_height_total(c);
-		if(ny + client_height_total(c) < client_y(clients[i]) + client_height_total(clients[i]) + snapat && ny + client_height_total(c) > client_y(clients[i]) + client_height_total(clients[i]) - snapat)
-			return client_y(clients[i]) + client_height_total(clients[i]) - client_height_total(c);
-	}
-	return ny;
+bool _snap(int r, int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2, int *ret) {
+	if(drag_mode == A_MOVE && y1 <= y2 + h2 && y1 + h1 >= y2)
+		if(__snap(x1, x2, ret) || __snap(x1, x2 - w1, ret) || __snap(x1, x2 + w2, ret) || __snap(x1, x2 + w2 - w1, ret))
+			return true;
+	if(drag_mode == A_RESIZE && r <= y2 + h2 && r + h1 >= y2)
+		if(__snap(x1, x2, ret) || __snap(x1, x2 + w2, ret))
+			return true;
+	return false;
 }
 
-int snaph(client *c, int nx, int ny) {
-	int i, right;
-	for(i = 0; i < nscreens; i++) {
-		right = screens[i].x + screens[i].width;
-		if(nx < right + snapat && nx > right - snapat)
-			return right;
+int snap(client *c, int nx, int ny, char axis) {
+	int i, ret, width, height;
+	width = client_width_total(c);
+	height = client_height_total(c);
+	if(axis == 'h') {
+		for(i = 0; i < nscreens; i++)
+			if(_snap(yr, nx, ny, width, height, screens[i].x, screens[i].y, screens[i].width, screens[i].height, &ret))
+				return ret;
+		for(i = 0; i < cn; i++)
+			if(stacking[i] != c && client_visible(stacking[i]) && _snap(yr, nx, ny, width, height, client_x(stacking[i]), client_y(stacking[i]), client_width_total(stacking[i]), client_height_total(stacking[i]), &ret))
+				return ret;
+	} else {
+		for(i = 0; i < nscreens; i++)
+			if(_snap(xr, ny, nx, height, width, screens[i].y, screens[i].x, screens[i].height, screens[i].width, &ret))
+				return ret;
+		for(i = 0; i < cn; i++)
+			if(stacking[i] != c && client_visible(stacking[i]) && _snap(xr, ny, nx, height, width, client_y(stacking[i]), client_x(stacking[i]), client_height_total(stacking[i]), client_width_total(stacking[i]), &ret))
+				return ret;
 	}
-	for(i = 0; i < cn; i++) {
-		if(clients[i] == c || (clients[i]->desktop != STICKY && clients[i]->desktop != desktop) || ny < client_y(clients[i]) || c->y > client_y(clients[i]) + client_height_total(clients[i]) || clients[i]->flags & ICONIC)
-			continue;
-		if(nx < client_x(clients[i]) + snapat && nx > client_x(clients[i]) - snapat)
-			return client_x(clients[i]);
-		if(nx < client_x(clients[i]) + client_width_total(clients[i]) + snapat && nx > client_x(clients[i]) + client_width_total(clients[i]) - snapat)
-			return client_x(clients[i]) + client_width_total(clients[i]);
-	}
-	return nx;
-}
-
-int snapv(client *c, int nx, int ny) {
-	int i, bottom;
-	for(i = 0; i < nscreens; i++) {
-		bottom = screens[i].y + screens[i].height;
-		if(ny < bottom + snapat && ny > bottom - snapat)
-			return bottom;
-	}
-	for(i = 0; i < cn; i++) {
-		if(clients[i] == c ||	(clients[i]->desktop != STICKY && clients[i]->desktop != desktop) || nx < client_x(clients[i]) || c->x > client_x(clients[i]) + client_width_total(clients[i]) || clients[i]->flags & ICONIC)
-			continue;
-		if(ny < client_y(clients[i]) + snapat && ny > client_y(clients[i]) - snapat)
-			return client_y(clients[i]);
-		if(ny < client_y(clients[i]) + client_height_total(clients[i]) + snapat && ny > client_y(clients[i]) + client_height_total(clients[i]) - snapat)
-			return client_y(clients[i]) + client_height_total(clients[i]);
-	}
-	return ny;
+	return (axis == 'h') ? nx : ny;
 }

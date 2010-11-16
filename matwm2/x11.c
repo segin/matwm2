@@ -6,13 +6,8 @@ int xerrorhandler(Display *display, XErrorEvent *xerror) { /* we set this as the
 	#ifdef DEBUG
 	client *c;
 	#endif
-	if(xerror->error_code == BadAccess && xerror->resourceid == root) {
-		if(!xerrorstatus) { /* if we are still doing X stuff before handling the data in qsfd the error might occur again */
-			fprintf(stderr, NAME ": error: root window at display %s is not available\n", XDisplayName(dn));
-			qsfd_send(ERROR);
-			xerrorstatus++;
-		}
-	}
+	if(xerror->error_code == BadAccess && xerror->resourceid == root)
+		xerrorstatus++;
 	#ifdef DEBUG
 	else {
 		char ret[666];
@@ -23,6 +18,20 @@ int xerrorhandler(Display *display, XErrorEvent *xerror) { /* we set this as the
 	}
 	#endif
 	return 0;
+}
+
+bool select_root_events(void) {
+	/* make sure xerrorstatus is 0 */
+	XSync(dpy, False);
+	xerrorstatus = 0;
+	/* select events and check if an error occurred */
+	XSelectInput(dpy, root, StructureNotifyMask | SubstructureRedirectMask | SubstructureNotifyMask | FocusChangeMask | (click_root ? ButtonPressMask : 0)); /* some of this events can only be selected by one application, this will error if another window manager is running */
+	XSync(dpy, False); /* calls the error handler if any errors occured */
+	if(xerrorstatus) { /* if XSelectInput() has failed, this will be set */
+		fprintf(stderr, NAME ": error: can't select events on the root window\n");
+		return false;
+	}
+	return true;
 }
 
 void get_normal_hints(client *c) { /* read normal size hints */

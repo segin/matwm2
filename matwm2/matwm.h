@@ -132,7 +132,6 @@ enum { /* fullscreen_stacking modes */
 
 enum { /* for sending to qsfd pipe */
 	QUIT,
-	ERROR,
 	REINIT
 };
 

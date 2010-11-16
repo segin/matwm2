@@ -60,7 +60,7 @@ for opt in $*; do
 	                    echo "	RM        Command for deleting files"
 	                    echo
 	                    echo "Send comments, suggestions and bugs to Mattis Michel <sic_zer0@hotmail.com>"
-	                    return 0
+	                    exit
 	esac
 done
 
@@ -107,7 +107,7 @@ if which pkg-config 2>&1 > /dev/null; then
 else
 	echo "not found"
 	echo "error: this script needs pkg-config"
-	return 1;
+	exit 1
 fi
 
 # check what libraries exist
@@ -117,7 +117,7 @@ if pkg-config --exists x11 2> /dev/null; then
 else
 	echo "not found"
 	echo "error: we need Xlib" 1>&2
-	return 1
+	exit 1
 fi
 
 if [ "$shape" = "yes" ]; then
@@ -220,4 +220,3 @@ echo "	xinerama support:       $xinerama"
 echo "	Xft support:            $xft"
 echo "	vfork system call:      $vfork"
 echo "	debugging output:       $debug"
-

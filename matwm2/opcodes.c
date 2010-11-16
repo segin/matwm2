@@ -246,6 +246,6 @@ char *str_opcode(unsigned char opcode) {
 		case X_NoOperation:
 			return "X_NoOperation";
 	}
-	return "unknown opcode";
+	return "unknown";
 }
 #endif /* DEBUG */

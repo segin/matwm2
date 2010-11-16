@@ -22,27 +22,30 @@ bool screens_handle_event(XEvent *ev) {
 
 void screens_get(void) {
 	#ifdef USE_XINERAMA
-	int i;
+	int i, event, error;
 	XineramaScreenInfo *screeninfo;
-	screeninfo = XineramaQueryScreens(dpy, &nscreens);
-	if(screeninfo) {
-		screens = _realloc((void *) screens, nscreens);
-		for(i = 0; i < nscreens; i++) {
-			screens[i].x = screeninfo[i].x_org;
-			screens[i].y = screeninfo[i].y_org;
-			screens[i].width = screeninfo[i].width;
-			screens[i].height = screeninfo[i].height;
+	if(XineramaQueryExtension(dpy, &event, &error)) {
+		screeninfo = XineramaQueryScreens(dpy, &nscreens);
+		if(nscreens) {
+			screens = _realloc((void *) screens, nscreens * sizeof(screen_dimensions));
+			for(i = 0; i < nscreens; i++) {
+				screens[i].x = screeninfo[i].x_org;
+				screens[i].y = screeninfo[i].y_org;
+				screens[i].width = screeninfo[i].width;
+				screens[i].height = screeninfo[i].height;
+			}
+			XFree((void *) screeninfo);
+			goto ok;
 		}
-	} else
-	#endif
-	{
-		nscreens = 1;
-		screens = _realloc(screens, nscreens);
-		screens[0].x = 0;
-		screens[0].y = 0;
-		screens[0].width = XDisplayWidth(dpy, screen);
-		screens[0].height = XDisplayHeight(dpy, screen);
 	}
+	#endif
+	nscreens = 1;
+	screens = _realloc(screens, sizeof(screen_dimensions));
+	screens[0].x = 0;
+	screens[0].y = 0;
+	screens[0].width = XDisplayWidth(dpy, screen);
+	screens[0].height = XDisplayHeight(dpy, screen);
+	ok:
 	screens_update_current();
 	ewmh_update_geometry();
 	ewmh_update_strut();
@@ -131,6 +134,7 @@ bool screens_correct_center(int *x, int *y, int *width, int *height) { /* for wi
 	int min, max, ref;
 	if(!correct_center)
 		return false;
+	screens_update_current();
 	min = *x + (*width / 2) - 2;
 	max = min + 4;
 	ref = (screens_rightmost() - screens_leftmost()) / 2;

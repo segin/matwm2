@@ -330,6 +330,7 @@ void cfg_reinitialize(void) {
 	/* update some things */
 	p_attr.background_pixel = fg.pixel;
 	p_attr.border_pixel = ibfg.pixel;
+	select_root_events();
 	/* update clients */
 	for(i = 0; i < cn; i++) {
 		#ifdef USE_XFT

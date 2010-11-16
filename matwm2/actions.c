@@ -121,39 +121,53 @@ void client_toggle_state(client *c, int state) { /* used directly only for maxim
 }
 
 void client_expand_x(client *c, int d, int first) { /* calculate horizontal dimensions for expanding */
-	int i, right;
+	int i, right, client_right;
+	client_right = c->x + client_width_total(c);
 	for(i = 0; i < cn; i++) {
 		if(!client_visible(clients[i]) || (first ? c->y : c->expand_y) >= client_y(clients[i]) + client_height_total(clients[i]) || (first ? c->y + client_height_total(c) : c->expand_height) <= client_y(clients[i]))
 			continue;
 		if(d & EXPANDED_L && client_x(clients[i]) + client_width_total(clients[i]) <= c->x && client_x(clients[i]) + client_width_total(clients[i]) > c->expand_x)
 			c->expand_x = client_x(clients[i]) + client_width_total(clients[i]);
-		if(d & EXPANDED_R && client_x(clients[i]) >= c->x + (c->width + (client_border(c) * 2)) && client_x(clients[i]) < c->expand_width)
+		if(d & EXPANDED_R && client_x(clients[i]) >= client_right && client_x(clients[i]) < c->expand_width)
 			c->expand_width = client_x(clients[i]);
 	}
 	for(i = 0; i < nscreens; i++) {
+		if((first ? c->y : c->expand_y) >= screens[i].y + screens[i].height || (first ? c->y + client_height_total(c) : c->expand_height) <= screens[i].y)
+			continue;
 		if(d & EXPANDED_L && screens[i].x <= c->x && screens[i].x > c->expand_x)
 			c->expand_x = screens[i].x;
+		if(d & EXPANDED_R && screens[i].x >= client_right && screens[i].x < c->expand_width) /* we also snap to the outsides of screens, because this might be useful with overlapping screens */
+			c->expand_width = screens[i].x;
 		right = screens[i].x + screens[i].width;
-		if(d & EXPANDED_R && right >= c->x + (c->width + (client_border(c) * 2)) && right < c->expand_width)
+		if(d & EXPANDED_L && right <= c->x && right > c->expand_x)
+			c->expand_x = right;
+		if(d & EXPANDED_R && right >= client_right && right < c->expand_width)
 			c->expand_width = right;
 	}
 }
 
-void client_expand_y(client *c, int d, bool first) {  /* calculate vertical dimensions for expanding */
-	int i, bottom;
+void client_expand_y(client *c, int d, int first) { /* calculate horizontal dimensions for expanding */
+	int i, bottom, client_bottom;
+	client_bottom = c->y + client_height_total(c);
 	for(i = 0; i < cn; i++) {
 		if(!client_visible(clients[i]) || (first ? c->x : c->expand_x) >= client_x(clients[i]) + client_width_total(clients[i]) || (first ? c->x + client_width_total(c) : c->expand_width) <= client_x(clients[i]))
 			continue;
 		if(d & EXPANDED_T && client_y(clients[i]) + client_height_total(clients[i]) <= c->y && client_y(clients[i]) + client_height_total(clients[i]) > c->expand_y)
 			c->expand_y = client_y(clients[i]) + client_height_total(clients[i]);
-		if(d & EXPANDED_B && client_y(clients[i]) >= c->y + (c->height + (client_border(c) * 2) + client_title(c)) && client_y(clients[i]) < c->expand_height)
+		if(d & EXPANDED_B && client_y(clients[i]) >= client_bottom && client_y(clients[i]) < c->expand_height)
 			c->expand_height = client_y(clients[i]);
 	}
 	for(i = 0; i < nscreens; i++) {
+		if((first ? c->x : c->expand_x) >= screens[i].x + screens[i].width || (first ? c->x + client_width_total(c) : c->expand_width) <= screens[i].x)
+			continue;
 		if(d & EXPANDED_T && screens[i].y <= c->y && screens[i].y > c->expand_y)
 			c->expand_y = screens[i].y;
+		if(d & EXPANDED_B && screens[i].y >= client_bottom && screens[i].y < c->expand_height) /* we also snap to the outsides of screens, because this might be useful with overlapping screens */
+			c->expand_height = screens[i].y;
 		bottom = screens[i].y + screens[i].height;
-		if(d & EXPANDED_B && bottom >= c->y + (c->height + (client_border(c) * 2) + client_title(c)) && bottom < c->expand_height)
+		if(d & EXPANDED_T && bottom <= c->y && bottom > c->expand_y)
+			c->expand_y = bottom;
+		if(d & EXPANDED_B && bottom >= client_bottom && bottom < c->expand_height)
 			c->expand_height = bottom;
 	}
 }
