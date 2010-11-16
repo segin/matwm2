@@ -43,20 +43,19 @@ void restore(int n);
 
 // input.c
 extern unsigned int mousemodmask, numlockmask;
-extern XModifierKeymap *modmap;
 void grab_key(Window w, unsigned int modmask, KeyCode key);
 void grab_button(Window w, unsigned int button, unsigned int modmask, unsigned int event_mask);
 void drag(XButtonEvent *be, int res);
-int getmodifier(KeyCode key);
+int getmodifier(char *name);
 void mapkeys(void);
 
 // main.c
 extern Display *dpy;
-extern int screen, display_width, display_height, have_shape, shape_event;
+extern int screen, display_width, display_height, have_shape, shape_event, qsfd[2];
 extern Window root;
 extern Atom xa_wm_protocols, xa_wm_delete, xa_wm_state, xa_wm_change_state, xa_motif_wm_hints;
 extern XSetWindowAttributes p_attr;
-void open_display(char *display);
+void error(void);
 void end(void);
 void quit(int sig);
 int main(int argc, char *argv[]);

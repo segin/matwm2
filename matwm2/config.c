@@ -69,7 +69,7 @@ KeyCode string_to_key(char *str, int *mask) {
     if(t[p] == ' ' || t[p] == '\t' || t[p] == 0) {
       t[p] = 0;
       if(l) {
-        mod = getmodifier(XKeysymToKeycode(dpy, XStringToKeysym(t + (p - l))));
+        mod = getmodifier(t + (p - l));
         *mask = *mask | mod;
         if(!mod) {
           return XKeysymToKeycode(dpy, XStringToKeysym(str + (p - l)));
@@ -115,7 +115,6 @@ void config_read(void) {
   font = XLoadQueryFont(dpy, xrm_getstr(cfg, "font", DEF_FONT));
   if(!font) {
     fprintf(stderr, "error: font not found\n");
-    XCloseDisplay(dpy);
     exit(1);
   }
   title_height = font->max_bounds.ascent + font->max_bounds.descent + 2;

@@ -1,6 +1,6 @@
 #include "matwm.h"
+
 unsigned int mousemodmask = 0, numlockmask = 0;
-XModifierKeymap *modmap;
 
 void grab_key(Window w, unsigned int modmask, KeyCode key) {
   XGrabKey(dpy, key, modmask, w, True, GrabModeAsync, GrabModeAsync);
@@ -58,17 +58,32 @@ void drag(XButtonEvent *be, int res) {
   XUngrabPointer(dpy, CurrentTime);
 }
 
-int getmodifier(KeyCode key) {
-  int i;
-  for(i = 0; i < 8; i++)
-    if(modmap->modifiermap[modmap->max_keypermod * i] == key)
-      return (1 << i);
+int getmodifier(char *name) {
+  if(strcmp(name, "shift") == 0)
+    return ShiftMask;
+  if(strcmp(name, "lock") == 0)
+    return LockMask;
+  if(strcmp(name, "control") == 0)
+    return ControlMask;
+  if(strcmp(name, "mod1") == 0)
+    return Mod1Mask;
+  if(strcmp(name, "mod2") == 0)
+    return Mod2Mask;
+  if(strcmp(name, "mod3") == 0)
+    return Mod3Mask;
+  if(strcmp(name, "mod4") == 0)
+    return Mod4Mask;
+  if(strcmp(name, "mod5") == 0)
+    return Mod5Mask;
   return 0;
 }
 
 void mapkeys(void) {
-  modmap = XGetModifierMapping(dpy);
-  numlockmask = getmodifier(XKeysymToKeycode(dpy, XK_Num_Lock));
+  int i;
+  XModifierKeymap *modmap = XGetModifierMapping(dpy);
+  for(i = 0; i < 8; i++)
+    if(modmap->modifiermap[i * modmap->max_keypermod] == XKeysymToKeycode(dpy, XK_Num_Lock))
+      numlockmask = (1 << i);
   string_to_key(xrm_getstr(cfg, "mouse_modifier", DEF_MOUSEMOD), &mousemodmask);
   key_next = xrm_getkey(cfg, "key_next", DEF_KEY_NEXT);
   key_prev = xrm_getkey(cfg, "key_prev", DEF_KEY_PREV);

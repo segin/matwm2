@@ -5,12 +5,12 @@ int xerrorhandler(Display *display, XErrorEvent *xerror) {
   int i;
   char ret[666];
   XGetErrorText(xerror->display, xerror->error_code, ret, 666);
-  for(i = 0; i < cn; i++)
+/*  for(i = 0; i < cn; i++)
     if(clients[i].window == xerror->resourceid)
       printf("client window of %s: ", clients[i].name);
   for(i = 0; i < cn; i++)
     if(clients[i].parent == xerror->resourceid)
-      printf("parent window of %s: ", clients[i].name);
+      printf("parent window of %s: ", clients[i].name);*/
   printf("x error: %s\n", ret);
 #endif
   if(xerror->error_code == BadAccess && xerror->resourceid == root) {

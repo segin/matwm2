@@ -1,6 +1,6 @@
 #include "matwm.h"
 
-client *clients;
+client *clients = NULL;
 int cn = 0, current = 0;
 
 void add_client(Window w) {
@@ -68,7 +68,8 @@ void remove_client(int n, int fc) {
     XRemoveFromSaveSet(dpy, clients[n].window);
   }
   XDestroyWindow(dpy, clients[n].parent);
-  XFree(clients[n].name);
+  if(clients[n].name)
+    XFree(clients[n].name);
   cn--;
   for(i = n; i < cn; i++)
     clients[i] = clients[i + 1];
@@ -87,12 +88,10 @@ void draw_client(int n) {
 }
 
 void alloc_clients(void) {
-  clients = (client *) realloc((client *) clients, (cn + 1) * sizeof(client));
-  if(!clients) {
-    fprintf(stderr, "error: allocating memory failed\n");
-    end();
-    exit(1);
-  }
+  client *newptr = (client *) realloc((client *) clients, (cn + 1) * sizeof(client));
+  if(!newptr)
+    error();
+  clients = newptr;
 }
 
 void move(int n, int x, int y) {
@@ -209,7 +208,7 @@ void maximise(int n) {
   clients[n].prev_height = clients[n].height;
   restack_client(current, 1);
   move(n, 0, 0);
-  resize(n, display_width - (border(n) * 2), display_height - ((border(n) * 2) + title_height));
+  resize(n, display_width - (border(n) * 2), display_height - ((border(n) * 2) + title(n)));
   clients[n].maximised = 1;
 }
 
