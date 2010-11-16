@@ -6,10 +6,10 @@ RM        = rm -f
 
 CFLAGS    += -DSHAPE # comment out this line to disable shape support
 LDFLAGS   += -lXext # if shape support is disabled, this normally is no longer necessary and schould probally be commented out too
-CFLAGS    += -DDEBUG -ggdb3 # -DDEBUG_EVENTS -DSYNC # for debugging
+#CFLAGS    += -DDEBUG -ggdb3 # -DDEBUG_EVENTS -DSYNC # for debugging
 CFLAGS    += -I$(XROOT)/include
 LDFLAGS   += -lX11 -L$(XROOT)/lib
-CFLAGS    += -DVERSION=\"0.0.89pre1\"
+CFLAGS    += -DVERSION=\"0.0.89\"
 
 SRCFILES  := actions.c buttons.c client.c config.c drag.c events.c evn.c ewmh.c info.c input.c main.c misc.c vdesk.c wlist.c x11.c
 OBJFILES  := $(SRCFILES:.c=.o)

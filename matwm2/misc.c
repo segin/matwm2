@@ -1,16 +1,22 @@
 #include "matwm.h"
 
-void spawn(char *cmd) {
-	if(rfork(RFPROC | RFNOWAIT) == 0) {
-		setsid();
-		if(dn)
-			setenv("DISPLAY", dn, 1);
-		execlp("sh", "sh", "-c", cmd, (char *) 0);
-		_exit(1);
+void spawn(char *cmd) { /* run a command with sh -c */
+	int pid = vfork(); /* we fork from a forked off process here to prevent creating zombie children (process information that is left there for the next call to wait()) */
+	if(pid == 0) {
+		if(vfork() == 0) {
+			setsid();
+			if(dn)
+				setenv("DISPLAY", dn, 1);
+			execlp("sh", "sh", "-c", cmd, (char *) 0);
+		}
+		else
+			_exit(0);
 	}
+	if(pid > 0)
+		wait(NULL);
 }
 
-int read_file(char *path, char **buf) {
+int read_file(char *path, char **buf) { /* allocates memory at, and reads a file to *buf */
 	struct stat sb;
 	int r = 0, fd = open(path, O_RDONLY);
 	if(fd > 0) {
@@ -28,27 +34,27 @@ int read_file(char *path, char **buf) {
 	return r;
 }
 
-char *eat(char **str, char *until) {
+char *eat(char **str, char *until) { /* returns a pointer at the first non-whitespace character of *str, replaces the first occurence of one of the characters in null terminated string until by null and sets *str to the adress of the next character unless it encounters a null character in *str in wich case it sets *str to NULL */
 	char *ret = NULL, *c;
 	int literal = 0;
 	while(1) {
-		if(!ret && (**str != ' ' && **str != '\t'))
+		if(!ret && (**str != ' ' && **str != '\t')) /* ret is not set yet and **str is not whitespace, set ret */
 			ret = *str;
-		if(**str == '\\' && !literal) {
+		if(**str == '\\' && !literal) { /* escape character encountered */
 			literal = 1;
 			(*str)++;
 			continue;
 		}
-		if(**str == 0) {
+		if(**str == 0) { /* null encountered, end of *str */
 			*str = NULL;
 			return ret;
 		}
-		if(literal)
+		if(literal) /* last character was an escape character, don't compare it to the characters in until and unset literal */
 			literal = 0;
 		else {
 			c = until;
 			while(ret && *c) {
-  			if(**str == *c) {
+  			if(**str == *c) { /* **str matches until, time to return */
 					**str = 0;
 					(*str)++;
 					return ret;
@@ -60,7 +66,7 @@ char *eat(char **str, char *until) {
 	}
 }
 
-void unescape(char *str) {
+void unescape(char *str) { /* to remove escape characters when we are no longer looking for special characters */
 	int i, j = 0, literal = 0;
 	for(i = 0; str[i] != 0; i++) {
 		if(j < i)

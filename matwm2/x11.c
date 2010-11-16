@@ -62,20 +62,22 @@ void get_mwm_hints(client *c) {
 	MWMHints *mwmhints;
 	if(XGetWindowProperty(dpy, c->window, xa_motif_wm_hints, 0, 3, False, AnyPropertyType, &rt, &rf, &nir, &bar, (unsigned char **) &mwmhints) == Success) {
 		if(nir > 2) {
-			if(mwmhints->flags & MWM_HINTS_DECORATIONS) {
+			if(mwmhints->flags & MWM_HINTS_FUNCTIONS) {
 				c->flags ^= c->flags & (HAS_TITLE | HAS_BORDER | CAN_MOVE | CAN_RESIZE);
 				if(mwmhints->functions & MWM_FUNC_ALL) {
 					mwmhints->functions &= ~MWM_FUNC_ALL;
 					mwmhints->functions = (MWM_FUNC_RESIZE | MWM_FUNC_MOVE) & (~mwmhints->functions);
 				}
-				if(mwmhints->decorations & MWM_DECOR_ALL) {
-					mwmhints->decorations &= ~MWM_DECOR_ALL;
-					mwmhints->decorations = (MWM_DECOR_TITLE | MWM_DECOR_BORDER | MWM_DECOR_RESIZEH) & (~mwmhints->decorations);
-				}
 				if(mwmhints->functions & MWM_FUNC_MOVE)
 					c->flags |= CAN_MOVE;
 				if(mwmhints->functions & MWM_FUNC_RESIZE)
 					c->flags |= CAN_RESIZE;
+			}
+			if(mwmhints->flags & MWM_HINTS_DECORATIONS) {
+				if(mwmhints->decorations & MWM_DECOR_ALL) {
+					mwmhints->decorations &= ~MWM_DECOR_ALL;
+					mwmhints->decorations = (MWM_DECOR_TITLE | MWM_DECOR_BORDER | MWM_DECOR_RESIZEH) & (~mwmhints->decorations);
+				}
 				if(mwmhints->decorations & MWM_DECOR_TITLE)
 					c->flags |= HAS_TITLE;
 				if(mwmhints->decorations & MWM_DECOR_BORDER)
