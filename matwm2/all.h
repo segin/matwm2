@@ -33,7 +33,6 @@ void client_draw_border(client *c);
 void client_draw_title(client *c);
 void clients_alloc(void);
 void client_set_bg(client *c, XColor color);
-int has_window(client *c);
 int client_number(client *c);
 client *owner(Window w);
 
@@ -139,5 +138,6 @@ int has_protocol(Window w, Atom protocol);
 void delete_window(client *c);
 int gxo(client *c, int initial);
 int gyo(client *c, int initial);
+int has_child(Window parent, Window child);
 Bool isunmap(Display *display, XEvent *event, XPointer arg);
 

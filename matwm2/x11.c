@@ -11,7 +11,7 @@ int xerrorhandler(Display *display, XErrorEvent *xerror) {
     XGetErrorText(xerror->display, xerror->error_code, ret, 666);
     client *c = owner(xerror->resourceid);
     if(c) printf("%s: x error: %s\n", c->name, ret);
-    else printf("%i: x error: %s\n", xerror->resourceid);
+    else printf("%i: x error: %s\n", xerror->resourceid, ret);
   }
 #endif
   return 0;
@@ -168,6 +168,16 @@ int gyo(client *c, int initial) {
       case SouthWestGravity:
         return (border(c) * 2) + title(c) + (initial ? -c->oldbw * 2 : c->height);
     }
+  return 0;
+}
+
+int has_child(Window parent, Window child) {
+  unsigned int i, nwins;
+  Window dw, *wins;
+  XQueryTree(dpy, parent, &dw, &dw, &wins, &nwins);
+  for(i = 0; i < nwins; i++)
+    if(wins[i] == child)
+      return 1;
   return 0;
 }
 

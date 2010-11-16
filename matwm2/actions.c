@@ -146,6 +146,8 @@ void client_iconify(client *c) {
   XMapWindow(dpy, c->wlist_item);
   c->flags |= ICONIC;
   XIfEvent(dpy, &ev, &isunmap, (XPointer) &c->window);
+  if(current == c && evh == drag_handle_event)
+    evh = drag_release_wait;
   for(i = client_number(c); i < cn - 1; i++)
     clients[i] = clients[i + 1];
   clients[cn - 1] = c;

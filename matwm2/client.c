@@ -59,7 +59,8 @@ void client_add(Window w) {
     for(i = cn - 1; i > 0; i--)
       clients[i] = clients[i - 1];
     clients[0] = new;
-    warpto(new);
+    if(evh != wlist_handle_event && evh != drag_handle_event)
+      warpto(new);
   } else clients[cn - 1] = new;
   if(!current)
     client_focus(new);
@@ -135,16 +136,6 @@ void client_set_bg(client *c, XColor color) {
     XClearWindow(dpy, c->wlist_item);
     wlist_item_draw(c);
   }
-}
-
-int has_window(client *c) {
-  unsigned int i, nwins;
-  Window dw, *wins;
-  XQueryTree(dpy, c->parent, &dw, &dw, &wins, &nwins);
-  for(i = 0; i < nwins; i++)
-    if(wins[i] == c->window)
-      return 1;
-  return 0;
 }
 
 int client_number(client *c) {

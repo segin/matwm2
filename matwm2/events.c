@@ -13,15 +13,16 @@ void handle_event(XEvent ev) {
     return;
   if(handle_button_event(ev))
     return;
-  if(c && !has_window(c) && ev.type != DestroyNotify)
+  if(c && !has_child(c->parent, c->window) && ev.type != DestroyNotify)
     return;
   switch(ev.type) {
     case MapRequest:
       c = owner(ev.xmaprequest.window);
       if(c) {
-        if(c->flags & ICONIC)
+        if(c->flags & ICONIC && has_child(c->parent, c->window))
           client_restore(c);
-      } else client_add(ev.xmaprequest.window);
+      } else if(has_child(root, ev.xmaprequest.window))
+        client_add(ev.xmaprequest.window);
       break;
     case DestroyNotify:
       c = owner(ev.xdestroywindow.window);
@@ -38,10 +39,12 @@ void handle_event(XEvent ev) {
     case ConfigureRequest:
       c = owner(ev.xconfigurerequest.window);
       if(c) {
+        if(!has_child(c->parent, c->window))
+          break;
         c->flags ^= c->flags & (MAXIMISED | EXPANDED);
         client_resize(c, (ev.xconfigurerequest.value_mask & CWWidth) ? ev.xconfigurerequest.width : c->width, (ev.xconfigurerequest.value_mask & CWHeight) ? ev.xconfigurerequest.height : c->height);
         client_move(c, (ev.xconfigurerequest.value_mask & CWX) ? ev.xconfigurerequest.x - gxo(c, 0) : c->x, (ev.xconfigurerequest.value_mask & CWY) ? ev.xconfigurerequest.y - gyo(c, 0) : c->y);
-      } else {
+      } else if(has_child(root, ev.xconfigurerequest.window)) {
         XWindowChanges wc;
         wc.sibling = ev.xconfigurerequest.above;
         wc.stack_mode = ev.xconfigurerequest.detail;
