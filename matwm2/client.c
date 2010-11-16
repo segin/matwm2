@@ -90,7 +90,8 @@ void client_add(Window w) {
 		if(((focus_new && !i) || !current) && !(new->flags & ICONIC))
 			client_focus(new);
 	}
-	client_over_fullscreen(new);
+	if(!(new->flags & ICONIC))
+		client_over_fullscreen(new);
 	ewmh_update_desktop(new);
 	ewmh_update_allowed_actions(new);
 	ewmh_update_state(new);
