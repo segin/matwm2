@@ -1,8 +1,8 @@
 // client.c
 extern client *clients;
 extern int cn, current;
-void add_client(Window w, int g);
-void remove_client(int n);
+void add_client(Window w, int new);
+void remove_client(int n, int fc);
 void draw_client(int n);
 void alloc_clients(void);
 void move(int n, int x, int y);
@@ -28,7 +28,8 @@ extern int icons_ontop;
 void sort_icons(void);
 void restack_icons(int top);
 void draw_icon(int n);
-void minimise(int n);
+void iconify(int n);
+void restore(int n);
 
 // input.c
 void grab_keysym(Window w, int modmask, KeySym key);
@@ -40,7 +41,7 @@ extern Display *dpy;
 extern int screen, display_height;
 extern Window root;
 extern unsigned int numlockmask;
-extern Atom xa_wm_protocols, xa_wm_delete, xa_wm_state;
+extern Atom xa_wm_protocols, xa_wm_delete, xa_wm_state, xa_wm_change_state;
 extern XSetWindowAttributes p_attr;
 void open_display(char *display);
 void end(void);

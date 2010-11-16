@@ -4,7 +4,7 @@ Display *dpy;
 int screen, display_height;
 Window root;
 unsigned int numlockmask = 0;
-Atom xa_wm_protocols, xa_wm_delete, xa_wm_state;
+Atom xa_wm_protocols, xa_wm_delete, xa_wm_state, xa_wm_change_state;
 XSetWindowAttributes p_attr;
 
 void open_display(char *display) {
@@ -25,8 +25,11 @@ void open_display(char *display) {
 }
 
 void end(void) {
-  while(cn)
-    remove_client(0);
+  while(cn) {
+    if(clients[cn].iconic)
+      restore(cn);
+    remove_client(0, 0);
+  }
   free(clients);
   XCloseDisplay(dpy);
 }
@@ -48,6 +51,7 @@ int main(int argc, char *argv[]) {
   xa_wm_protocols = XInternAtom(dpy, "WM_PROTOCOLS", False);
   xa_wm_delete = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
   xa_wm_state = XInternAtom(dpy, "WM_STATE", False);
+  xa_wm_change_state = XInternAtom(dpy, "WM_CHANGE_STATE", False);
   modmap = XGetModifierMapping(dpy);
   for(i = 0; i < 8; i++)
     if(modmap->modifiermap[modmap->max_keypermod * i] == XKeysymToKeycode(dpy, XK_Num_Lock))

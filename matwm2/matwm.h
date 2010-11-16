@@ -9,7 +9,7 @@
 
 // client structure
 typedef struct client {
-  Window window, parent, icon;
+  Window window, parent;
   int x, y, width, height, oldbw, iconic;
   XSizeHints normal_hints;
   char *name;

@@ -39,6 +39,7 @@ void config_read(void) {
   gc = XCreateGC(dpy, root, GCFunction | GCSubwindowMode | GCLineWidth | GCForeground | GCFont, &gv);
   gv.foreground = ifg.pixel;
   igc = XCreateGC(dpy, root, GCFunction | GCSubwindowMode | GCLineWidth | GCForeground | GCFont, &gv);
+  grab_keysym(root, Mod1Mask, XK_q);
   grab_keysym(root, Mod1Mask, XK_Tab);
   grab_keysym(root, Mod1Mask, XK_a);
   grab_keysym(root, Mod1Mask, XK_s);

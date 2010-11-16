@@ -39,7 +39,7 @@ void drag(int n, XButtonEvent *be) {
     } else if(ev.type == EnterNotify || ev.type == ButtonPress) {
       continue;
     } else if(ev.type == UnmapNotify && ev.xunmap.window == clients[n].window) {
-      remove_client(n);
+      remove_client(n, 1);
       break;
     } else handle_event(ev);
   }
