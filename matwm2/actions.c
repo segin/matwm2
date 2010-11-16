@@ -103,7 +103,31 @@ void client_toggle_state(client *c, int state) {
 	ewmh_update_state(c);
 }
 
-void client_expand(client *c, int d) {
+void client_expand_x(client *c, int d, int first) {
+	int i;
+	for(i = 0; i < cn; i++) {
+		if(!client_visible(clients[i]) || (first ? c->y : c->expand_y) >= client_y(clients[i]) + client_height_total(clients[i]) || (first ? c->y + client_height_total(c) : c->expand_height) <= client_y(clients[i]))
+			continue;
+		if(d & EXPANDED_L && client_x(clients[i]) + client_width_total(clients[i]) <= c->x && client_x(clients[i]) + client_width_total(clients[i]) > c->expand_x)
+			c->expand_x = client_x(clients[i]) + client_width_total(clients[i]);
+		if(d & EXPANDED_R && client_x(clients[i]) >= c->x + (c->width + (client_border(c) * 2)) && client_x(clients[i]) < c->expand_width)
+			c->expand_width = client_x(clients[i]);
+	}
+}
+
+void client_expand_y(client *c, int d, int first) {
+	int i;
+	for(i = 0; i < cn; i++) {
+		if(!client_visible(clients[i]) || (first ? c->x : c->expand_x) >= client_x(clients[i]) + client_width_total(clients[i]) || (first ? c->x + client_width_total(c) : c->expand_width) <= client_x(clients[i]))
+			continue;
+		if(d & EXPANDED_T && client_y(clients[i]) + client_height_total(clients[i]) <= c->y && client_y(clients[i]) + client_height_total(clients[i]) > c->expand_y)
+			c->expand_y = client_y(clients[i]) + client_height_total(clients[i]);
+		if(d & EXPANDED_B && client_y(clients[i]) >= c->y + (c->height + (client_border(c) * 2) + client_title(c)) && client_y(clients[i]) < c->expand_height)
+			c->expand_height = client_y(clients[i]);
+	}
+}
+
+void client_expand(client *c, int d, int a) {
 	int i;
 	if(!(c->flags & CAN_MOVE) || !(c->flags & CAN_RESIZE))
 		return;
@@ -116,21 +140,12 @@ void client_expand(client *c, int d) {
 	c->expand_y = (d & EXPANDED_T) ? 0 : client_y(c);
 	c->expand_width = (d & EXPANDED_R) ? display_width : (client_x(c) + client_width_total(c));
 	c->expand_height = (d & EXPANDED_B) ? display_height : (client_y(c) + client_height_total(c));
-	for(i = 0; i < cn; i++) {
-		if(!client_visible(clients[i]) || c->y >= client_y(clients[i]) + client_height_total(clients[i]) || c->y + (c->height + (client_border(c) * 2) + client_title(c)) <= client_y(clients[i]))
-			continue;
-		if(d & EXPANDED_L && client_x(clients[i]) + client_width_total(clients[i]) <= c->x && client_x(clients[i]) + client_width_total(clients[i]) > c->expand_x)
-			c->expand_x = client_x(clients[i]) + client_width_total(clients[i]);
-		if(d & EXPANDED_R && client_x(clients[i]) >= c->x + (c->width + (client_border(c) * 2)) && client_x(clients[i]) < c->expand_width)
-			c->expand_width = client_x(clients[i]);
-	}
-	for(i = 0; i < cn; i++) {
-		if(!client_visible(clients[i]) || c->expand_x >= client_x(clients[i]) + client_width_total(clients[i]) || c->expand_width <= client_x(clients[i]))
-			continue;
-		if(d & EXPANDED_T && client_y(clients[i]) + client_height_total(clients[i]) <= c->y && client_y(clients[i]) + client_height_total(clients[i]) > c->expand_y)
-			c->expand_y = client_y(clients[i]) + client_height_total(clients[i]);
-		if(d & EXPANDED_B && client_y(clients[i]) >= c->y + (c->height + (client_border(c) * 2) + client_title(c)) && client_y(clients[i]) < c->expand_height)
-			c->expand_height = client_y(clients[i]);
+	if(a) {
+		client_expand_y(c, d, 1);
+		client_expand_x(c, d, 0);
+	} else {
+		client_expand_x(c, d, 1);
+		client_expand_y(c, d, 0);
 	}
 	c->expand_width -= c->expand_x + (client_border(c) * 2);
 	c->expand_height -= c->expand_y + (client_border(c) * 2) + client_title(c);

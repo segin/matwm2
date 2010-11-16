@@ -1,6 +1,6 @@
 #include "matwm.h"
 
-client **clients = NULL, **stacking = NULL, *current = NULL, *previous = NULL;
+client **clients = NULL, **stacking = NULL, *current = NULL, *previous = NULL, *undermouse = NULL;
 int cn = 0, nicons = 0;
 
 void client_add(Window w) {
@@ -34,7 +34,7 @@ void client_add(Window w) {
 	new->y = attr.y - new->yo;
 	if(wm_state == IconicState)
 		new->flags |= ICONIC;
-	XSelectInput(dpy, w, PropertyChangeMask | EnterWindowMask | FocusChangeMask);
+	XSelectInput(dpy, w, PropertyChangeMask | FocusChangeMask);
 #ifdef SHAPE
 	XShapeSelectInput(dpy, w, ShapeNotifyMask);
 #endif

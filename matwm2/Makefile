@@ -4,8 +4,8 @@ XROOT     = /usr/X11R6
 CC        = cc
 
 CFLAGS    += -DSHAPE -lXext # comment out this line if you haven't got the x extentions library
-CFLAGS    += -lX11 -I$(XROOT)/include -L$(XROOT)/lib
-#CFLAGS    += -DDEBUG -ggdb3 # -DDEBUG_EVENTS -DSYNC
+CFLAGS    += -DDEBUG -ggdb3 # -DDEBUG_EVENTS -DSYNC # for debugging
+#CFLAGS    += -lX11 -I$(XROOT)/include -L$(XROOT)/lib
 
 all: matwm2
 

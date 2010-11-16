@@ -77,7 +77,7 @@ Iconify the current window (window will dissapear, but can be found in either a 
 .IP "maximise [direction][...]"
 Maximise the current window, or revert a maximised window to its previous state. The optional argument [direction] can be h, v, l, r, d or u (respectively horizontal, vertical, left, right, up and down), or a combination of those to specify the action is to be comitted only in the specified direction(s).
 .IP "expand [direction][...]"
-This function serves to grow a window in size as much as is possible without overlapping any more windows then are currently already overlapped by it. The [direction] argument does exactly what is does for the maximise key action.
+This function serves to grow a window in size as much as is possible without overlapping any more windows then are currently already overlapped by it. The [direction] argument does exactly what is does for the maximise key action. By default it calculates available horizontal space first, to make it calculate vertical space first you can add and a to the direction argument.
 .IP "fullscreen"
 Make the current window apear fullscreen, or revert a fullscreen window to its previous state.
 .IP "close"

@@ -9,7 +9,9 @@ void client_raise(client *c);
 void client_lower(client *c);
 void client_set_layer(client *c, int layer);
 void client_toggle_state(client *c, int state);
-void client_expand(client *c, int d);
+void client_expand_x(client *c, int d, int first);
+void client_expand_y(client *c, int d, int first);
+void client_expand(client *c, int d, int a);
 void client_toggle_title(client *c);
 void client_iconify(client *c);
 void client_restore(client *c);
@@ -30,7 +32,7 @@ void buttons_update(client *c);
 int button_handle_event(XEvent ev);
 
 // global variables from client.c
-extern client **clients, **stacking, *current, *previous;
+extern client **clients, **stacking, *current, *previous, *undermouse;
 extern int cn, nicons;
 
 // functions from client.c

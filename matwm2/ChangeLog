@@ -456,3 +456,9 @@
 	fixed client_focus_first() on desktop change
 	fixed client_save() wich broke recently due to last changes in client_move()
 
+0.0.79:
+	removed obsolete selecting of EnterNotify on root window
+	don't listen to EnterNotify events from client window to it's frame
+	edited Makefile and README slightly to be more clear
+	added argument for expand to make it calculate vertical space first instead of horizontal space and default keybinding for it, updated manual about this too
+

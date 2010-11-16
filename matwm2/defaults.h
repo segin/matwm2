@@ -27,6 +27,7 @@ key                   control mod1 h          maximise h\n\
 key                   control mod1 v          maximise v\n\
 key                   control mod1 f          fullscreen\n\
 key                   control mod1 e          expand\n\
+key                   control mod1 r          expand a\n\
 key                   control mod1 z          expand h\n\
 key                   control mod1 j          expand v\n\
 key                   control mod1 q          close\n\
@@ -48,6 +49,7 @@ key                   mod4 h                  maximise h\n\
 key                   mod4 v                  maximise v\n\
 key                   mod4 f                  fullscreen\n\
 key                   mod4 e                  expand\n\
+key                   mod4 r                  expand a\n\
 key                   mod4 z                  expand h\n\
 key                   mod4 j                  expand v\n\
 key                   mod4 q                  close\n\

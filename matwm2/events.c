@@ -4,7 +4,7 @@ int (*evh)(XEvent) = NULL;
 
 void handle_event(XEvent ev) {
 	client *c = owner(ev.xany.window);
-	int i = 0;
+	int i = 0, j = 0;
 	char *a;
 #ifdef DEBUG_EVENTS
 	if(c) printf("%i (%s): %s\n", ev.xany.window, c->name, event_name(ev));
@@ -45,7 +45,7 @@ void handle_event(XEvent ev) {
 					client_iconify(c);
 				return;
 			case EnterNotify:
-				if(c != current && !(c->flags & CLICK_FOCUS) && !click_focus)
+				if(c != current && !(c->flags & CLICK_FOCUS) && !click_focus && ev.xcrossing.detail != NotifyInferior && (ev.xcrossing.window == c->parent || ev.xcrossing.window == c->wlist_item))
 					client_focus(c);
 				return;
 			case Expose:
@@ -124,9 +124,11 @@ void handle_event(XEvent ev) {
 						i |= EXPANDED_T;
 					if(*a == 'd')
 						i |= EXPANDED_B;
+					if(*a == 'a')
+						j = 1;
 					a++;
 				}
-				client_expand(current, i ? i : (EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B));
+				client_expand(current, i ? i : (EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B), j);
 				return;
 			case KA_FULLSCREEN:
 				i = client_layer(current);

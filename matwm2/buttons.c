@@ -97,7 +97,7 @@ int button_handle_event(XEvent ev) {
 					if(ev.xbutton.window == c->button_iconify)
 						client_iconify(c);
 					if(ev.xbutton.window == c->button_expand)
-						client_expand(c, EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B);
+						client_expand(c, EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B, 0);
 					if(ev.xbutton.window == c->button_maximise)
 						client_toggle_state(c, MAXIMISED_L | MAXIMISED_R | MAXIMISED_T | MAXIMISED_B);
 					if(ev.xbutton.window == c->button_close)
