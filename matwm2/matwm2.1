@@ -9,7 +9,7 @@ matwm2 \- Window manager for X11
 .B matwm2
 is a simple window manager for X11. It features window frames with titlebar and buttons, configurable key bindings and mouse buttons, support for EWMH and motif hints, focus-follows-mouse and click-to-focus focus models and virtual desktops.
 .PP
-Window borders have 4 buttons, wich do the same as the following key actions explained below (from left to right): "iconify", "expand", "maximise" and "close". To exit matwm send it SIGINT signal. At exit matwm will place the windows back on the root window in stacking order, iconic windows on the bottom, above that the windows from all inactive desktops in reverse order and then above those the windows from the current desktop and sticky windows shown on it.
+Window borders have 4 buttons, wich do the same as the following key actions explained below (from left to right): "iconify", "expand", "maximise" and "close". To exit matwm send it SIGINT signal. At exit matwm will place the windows back on the root window in stacking order, iconic windows on the bottom, above that the windows from all inactive desktops in reverse order and then above those the windows from the current desktop and sticky windows shown on it. When a focussed window dissapears the window that was focussed before will be focused (unless the "click_focus" option is set to "false" and the cursor is above another window due to the window dissapearing), and if no previous window is there (if it has dissapeared for example) then the topmost window will be focused.
 .PP
 Further, explanition of the various options in the configuration file(s) below combined with the default configuration, schould give you an idea of how to use matwm2. Just keep in mind there is no default built-in way of launching applications exept the ctrl-mod1-return key binding, wich spawns an xterm.
 .SH OPTIONS
@@ -53,9 +53,13 @@ If specified modifier key(s) are down, user can use the same button actions as s
 .IP "no_snap_modifier [modifier key] [...]"
 If specified modifier key(s) are down while dragging a window (either to move or resize it) windows will not snap to eachother or window edges.
 .IP "click_focus [boolean]"
-Sets the focus model, if set to "true" matwm2 will focus windows when they are clicked. If set to "false" windows will be focussed when the mouse cursor moves over them.
+Sets the focus model, if set to "true" matwm2 will focus windows when they are clicked. If set to "false" windows will be focussed when the mouse cursor moves over them. If it is false and the window under the mouse somehow hasn't got focus anymore, and windows that have EWMH hints set to specify they are a desktop will always be focussed only when clicked.
 .IP "click_raise [boolean]"
 If set to "true" windows will be risen when they (meaning the window itself, not its frame) are clicked, if set to "false" this behavior is disabled.
+.IP "focus_new [boolean]"
+If set to "true" new windows will be focussed when they appear and accordingly a value of "false" disables this behaviour.
+.IP "taskbar_ontop"
+If set to "true" taskbar windows that use EWMH hints will be kept ontop, if set to "false" windows can cover them.
 .IP "resetkeys"
 Remove all previously defined key bindings from memory.
 .IP "key [modifier key] [...] [X11 key name] [key action]"

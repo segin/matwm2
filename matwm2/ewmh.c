@@ -184,6 +184,8 @@ int ewmh_get_hints(client *c) {
 				c->flags ^= c->flags & (CAN_MOVE | CAN_RESIZE | HAS_BORDER | HAS_TITLE);
 				c->flags |= NO_STRUT | DONT_LIST | DONT_FOCUS | DESKTOP_LOCKED;
 				c->desktop = STICKY;
+				if(taskbar_ontop)
+					c->layer = TOP;
 			}
 		}
 		XFree((void *) data);
@@ -214,8 +216,8 @@ void ewmh_set_active(client *c) {
 }
 
 void ewmh_update_allowed_actions(client *c) {
-	int nactions = 5;
-	Atom actions[12] = {ewmh_atoms[NET_WM_ACTION_MINIMIZE], ewmh_atoms[NET_WM_ACTION_CLOSE], ewmh_atoms[NET_WM_ACTION_CHANGE_DESKTOP], ewmh_atoms[NET_WM_ACTION_ABOVE], ewmh_atoms[NET_WM_ACTION_BELOW]};
+	int nactions = 3;
+	Atom actions[12] = {ewmh_atoms[NET_WM_ACTION_CLOSE],  ewmh_atoms[NET_WM_ACTION_ABOVE], ewmh_atoms[NET_WM_ACTION_BELOW]};
 	if(c->flags & CAN_MOVE && c->flags & CAN_RESIZE) {
 		actions[nactions++] = ewmh_atoms[NET_WM_ACTION_MAXIMIZE_HORZ];
 		actions[nactions++] = ewmh_atoms[NET_WM_ACTION_MAXIMIZE_VERT];
@@ -225,6 +227,10 @@ void ewmh_update_allowed_actions(client *c) {
 		actions[nactions++] = ewmh_atoms[NET_WM_ACTION_MOVE];
 	if(c->flags & CAN_RESIZE)
 		actions[nactions++] = ewmh_atoms[NET_WM_ACTION_RESIZE];
+	if(!(c->flags & DONT_LIST))
+		actions[nactions++] = ewmh_atoms[NET_WM_ACTION_MINIMIZE];
+	if(!(c->flags & DESKTOP_LOCKED))
+		actions[nactions++] = ewmh_atoms[NET_WM_ACTION_CHANGE_DESKTOP];
 	XChangeProperty(dpy, c->window, ewmh_atoms[NET_WM_ALLOWED_ACTIONS], XA_ATOM, 32, PropModeReplace, (unsigned char *) &actions, nactions);
 }
 
@@ -237,9 +243,9 @@ void ewmh_update_state(client *c) {
 		state[statec++] = ewmh_atoms[NET_WM_STATE_MAXIMIZED_VERT];
 	if(c->flags & FULLSCREEN)
 		state[statec++] = ewmh_atoms[NET_WM_STATE_FULLSCREEN];
-	if(c->layer == TOP)
+	if(client_layer(c) <= TOP)
 		state[statec++] = ewmh_atoms[NET_WM_STATE_ABOVE];
-	if(c->layer == BOTTOM)
+	if(client_layer(c) >= BOTTOM)
 		state[statec++] = ewmh_atoms[NET_WM_STATE_BELOW];
 	XChangeProperty(dpy, c->window, ewmh_atoms[NET_WM_STATE], XA_ATOM, 32, PropModeReplace, (unsigned char *) &state, statec);
 }

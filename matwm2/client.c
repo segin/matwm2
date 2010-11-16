@@ -1,6 +1,6 @@
 #include "matwm.h"
 
-client **clients = NULL, **stacking = NULL, *current = NULL;
+client **clients = NULL, **stacking = NULL, *current = NULL, *previous = NULL;
 int cn = 0, nicons = 0;
 
 void client_add(Window w) {
@@ -68,7 +68,7 @@ void client_add(Window w) {
 	cn++;
 	clients_alloc();
 	if(!(new->flags & ICONIC)) {
-		for(i = cn - 1; i > 0 && (stacking[i - 1]->flags & ICONIC || stacking[i - 1]->layer >= new->layer); i--)
+		for(i = cn - 1; i > 0 && (stacking[i - 1]->flags & ICONIC || client_layer(stacking[i - 1]) >= client_layer(new)); i--)
 			stacking[i] = stacking[i - 1];
 		stacking[i] = new;
 		if(evh == drag_handle_event)
@@ -80,7 +80,7 @@ void client_add(Window w) {
 		nicons++;
 	}
 	clients[cn - 1] = new;
-	if(!current || click_focus)
+	if(focus_new || !current)
 		client_focus(new);
 	if(evh == wlist_handle_event)
 		wlist_update();
@@ -101,11 +101,14 @@ void client_hide(client *c) {
 	XUnmapWindow(dpy, c->parent);
 	XUnmapWindow(dpy, c->window);
 	XIfEvent(dpy, &ev, &isunmap, (XPointer) &c->window);
+	if(c == previous)
+		previous = NULL;
 	if(c == current) {
 		if(evh == drag_handle_event)
 			evh = drag_release_wait;
-		client_focus(NULL);
+		client_focus_first();
 	}
+
 }
 
 void client_deparent(client *c) {
@@ -131,8 +134,12 @@ void client_remove(client *c) {
 	for(i = client_number(stacking, c) + 1; i < cn; i++)
 		stacking[i - 1] = stacking[i];
 	cn--;
-	if(c == current)
+	if(c == previous)
+		previous = NULL;
+	if(c == current) {
 		current = NULL;
+		client_focus_first();
+	}
 	free(c);
 	clients_alloc();
 	if(evh == wlist_handle_event)
@@ -239,12 +246,29 @@ void client_update_title(client *c) {
 	ewmh_update_extents(c);
 }
 
+void client_update_layer(client *c, int prev) {
+	int i;
+	if(client_layer(c) > prev)
+		for(i = client_number(stacking, c); i < cn - 1 && client_layer(stacking[i + 1]) < client_layer(c) && !(stacking[i + 1]->flags & ICONIC); i++)
+			stacking[i] = stacking[i + 1];
+	else
+		for(i = client_number(stacking, c); i > 0 && client_layer(stacking[i - 1]) > client_layer(c); i--)
+			stacking[i] = stacking[i - 1];
+	stacking[i] = c;
+	clients_apply_stacking();
+	ewmh_update_state(c);
+}
+
 void client_warp(client *c) {
 	XWarpPointer(dpy, None, c->parent, 0, 0, 0, 0, client_width_total_intern(c) - 1, client_height_total_intern(c) - 1);
 }
 
 void client_focus_first(void) {
 	int i;
+	if(previous) {
+		client_focus(previous);
+		return;
+	}
 	for(i = 0; i < cn; i++)
 		if(client_visible(stacking[i]) && !(stacking[i]->flags & DONT_FOCUS)) {
 			client_focus(stacking[i]);

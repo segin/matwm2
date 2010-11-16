@@ -77,6 +77,12 @@ int client_visible(client *c) {
 	return (c->desktop == desktop || c->desktop == STICKY) && !(c->flags & ICONIC);
 }
 
+int client_layer(client *c) {
+	if(c->layer <= NORMAL && c->flags & FULLSCREEN)
+		return TOP;
+	return c->layer;
+}
+
 int client_number(client **array, client *c) {
 	int i;
 	for(i = 0; i < cn; i++)

@@ -2,6 +2,7 @@
 
 Window wlist;
 int wlist_width;
+client *client_before_wlist;
 
 void wlist_start(XEvent ev) {
 	if(evh || !cn || !wlist_update())
@@ -9,6 +10,7 @@ void wlist_start(XEvent ev) {
 	XMapRaised(dpy, wlist);
 	XGrabKeyboard(dpy, root, True, GrabModeAsync, GrabModeAsync, CurrentTime);
 	evh = wlist_handle_event;
+	client_before_wlist = current;
 	handle_event(ev);
 }
 
@@ -16,6 +18,8 @@ void wlist_end(int err) {
 	XUngrabKeyboard(dpy, CurrentTime);
 	evh = NULL;
 	if(current && !err) {
+		if(client_before_wlist && client_before_wlist != current)
+			previous = client_before_wlist;
 		client_save(current);
 		if(current->flags & ICONIC)
 			client_restore(current);

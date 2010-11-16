@@ -1,4 +1,3 @@
-do desktop windows want input focus?
 firefox 2/seamonkey fullscreen restores impropperly - they send configurerequest that places the window partially off screen after they are restored, this their fault? fvwm seems able to work with it but kwin, blackbox and others also have problems
 what if the window list becomes higher then the screen?
 windows with same title are confusing

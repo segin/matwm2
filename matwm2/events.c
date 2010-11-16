@@ -45,12 +45,8 @@ void handle_event(XEvent ev) {
 					client_iconify(c);
 				return;
 			case EnterNotify:
-				if(c != current) {
-					if(!current && (c->flags & DONT_FOCUS || c->flags & CLICK_FOCUS))
-						client_focus_first();
-					else if(!(c->flags & CLICK_FOCUS) && !click_focus)
-						client_focus(c);
-				}
+				if(c != current && !(c->flags & CLICK_FOCUS) && !click_focus)
+					client_focus(c);
 				return;
 			case Expose:
 				if(ev.xexpose.count == 0 && evh == wlist_handle_event && c && ev.xexpose.window == c->wlist_item)
@@ -133,7 +129,9 @@ void handle_event(XEvent ev) {
 				client_expand(current, i ? i : (EXPANDED_L | EXPANDED_R | EXPANDED_T | EXPANDED_B));
 				return;
 			case KA_FULLSCREEN:
+				i = client_layer(current);
 				client_toggle_state(current, FULLSCREEN);
+				client_update_layer(current, i);
 				return;
 			case KA_STICKY:
 				client_to_desktop(current, (current->desktop == STICKY) ? desktop : STICKY);
@@ -235,10 +233,6 @@ void handle_event(XEvent ev) {
 					client_update_size(clients[i]);
 			}
 			return;
-		case EnterNotify:
-			if(ev.xcrossing.window == root && !current)
-				client_focus_first();
-			break;
 	}
 }
 

@@ -2,7 +2,7 @@
 
 XColor bg, ibg, fg, ifg;
 GC gc, igc, bgc, ibgc;
-int border_width, text_height, title_height, button_parent_width, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, dc;
+int border_width, text_height, title_height, button_parent_width, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc;
 XFontStruct *font;
 char *no_title = NO_TITLE;
 
@@ -114,6 +114,10 @@ void cfg_set_opt(char *key, char *value) {
 		str_bool(value, &click_focus);
 	if(strcmp(key, "click_raise") == 0)
 		str_bool(value, &click_raise);
+	if(strcmp(key, "focus_new") == 0)
+		str_bool(value, &focus_new);
+	if(strcmp(key, "taskbar_ontop") == 0)
+		str_bool(value, &taskbar_ontop);
 	if(strcmp(key, "mouse_modifier") == 0)
 		str_key(&value, &mousemodmask);
 	if(strcmp(key, "no_snap_modifier") == 0)

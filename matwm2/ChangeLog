@@ -429,3 +429,12 @@
 	introduces CLICK_FOCUS and DESKTOP_LOCKED flags for better handling of special EWMH window types
 	client_focus_first() stuff on EnterNotify, schould also work when click_focus is set
 
+0.0.74:
+	set _NET_WM_ALLOWED_ACTIONS more correctly
+	focus newly created windows option (a click can refocus the window under the mouse)
+	updated BUGS about click to focus desktop thing in last releaste
+	added more details on the focus model into the man page
+	if the current window dissapears focus the window that was focussed before that if there is one else the topmost one
+	keep taskbar always on top optionally and lots of work to make this not interfere with fullscreen mode
+	layer member of client structure is no longer acessed directly by most functions, new client_layer() function is used instead
+

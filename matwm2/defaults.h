@@ -17,6 +17,8 @@ mouse_modifier        mod1\n\
 no_snap_modifier			shift\n\
 click_focus						false\n\
 click_raise						false\n\
+focus_new							false\n\
+taskbar_ontop					false\n\
 key                   mod1 Tab                next\n\
 key                   mod1 shift Tab          prev\n\
 key                   control mod1 s          iconify\n\

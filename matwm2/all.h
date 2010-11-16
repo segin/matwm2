@@ -30,7 +30,7 @@ void buttons_update(client *c);
 int button_handle_event(XEvent ev);
 
 // global variables from client.c
-extern client **clients, **stacking, *current;
+extern client **clients, **stacking, *current, *previous;
 extern int cn, nicons;
 
 // functions from client.c
@@ -49,6 +49,7 @@ void client_update_pos(client *c);
 void client_update_size(client *c);
 void client_update(client *c);
 void client_update_title(client *c);
+void client_update_layer(client *c, int prev);
 void client_warp(client *c);
 void client_focus_first(void);
 void client_clear_state(client *c);
@@ -57,7 +58,7 @@ void clients_alloc(void);
 // global variables from config.c
 extern XColor bg, ibg, fg, ifg;
 extern GC gc, igc, bgc, ibgc;
-extern int border_width, text_height, title_height, button_parent_width, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, dc;
+extern int border_width, text_height, title_height, button_parent_width, snapat, button1, button2, button3, button4, button5, click_focus, click_raise, focus_new, taskbar_ontop, dc;
 extern XFontStruct *font;
 extern char *no_title;
 
@@ -127,6 +128,7 @@ int client_width_total_intern(client *c);
 int client_height_total_intern(client *c);
 int client_title_width(client *c);
 int client_visible(client *c);
+int client_layer(client *c);
 int client_number(client **array, client *c);
 client *owner(Window w);
 
@@ -181,6 +183,7 @@ void client_to_desktop(client *c, int d);
 // global variables from wlist.c
 extern Window wlist;
 extern int wlist_width;
+extern client *client_before_wlist;
 
 // functions from wlist.c
 void wlist_start(XEvent ev);
