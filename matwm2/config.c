@@ -191,6 +191,10 @@ int str_keyaction(char *str) {
     return KA_NEXT_DESKTOP;
   if(strcmp(str, "prev_desktop") == 0)
     return KA_PREV_DESKTOP;
+  if(strcmp(str, "ontop") == 0)
+    return KA_ONTOP;
+  if(strcmp(str, "below") == 0)
+    return KA_BELOW;
   return KA_NONE;
 }
 

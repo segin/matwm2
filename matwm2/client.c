@@ -67,7 +67,8 @@ void client_add(Window w) {
     stacking[i] = new;
     if(evh == drag_handle_event)
       client_raise(current);
-    client_show(new);
+    if(new->desktop == desktop || new->desktop == STICKY)
+      client_show(new);
   } else {
     stacking[cn - 1] = new;
     nicons++;

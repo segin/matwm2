@@ -90,3 +90,9 @@
 	on exit clients are now reparented in better order (current desktop and sticky windows on top, under it all desktops from left to right order, then iconic windows)
 	set input focus to root window on exit - this prevents some problems with clients that steal focus i hope
 
+0.0.59:
+	added key actions for always on top and stay below, also made them listen the apropiate ewmh hints
+	get_ewmh_hints() now looks on wich desktop windows schould be
+	several changes/additions here and there to make the above two possible
+	ewmh_update_desktop() uses long for storing the data, as i think this is more correct
+

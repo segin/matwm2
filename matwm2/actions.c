@@ -69,7 +69,7 @@ void client_focus(client *c) {
 
 void client_raise(client *c) {
   int i;
-  for(i = client_number(stacking, c); i > 0 && stacking[i - 1]->layer >= c->layer; i--)
+  for(i = client_number(stacking, c); i > 0 && (stacking[i - 1]->layer >= c->layer || stacking[i - 1]->desktop == ICONS); i--)
     stacking[i] = stacking[i - 1];
   stacking[i] = c;
   clients_apply_stacking();
@@ -81,6 +81,20 @@ void client_lower(client *c) {
     stacking[i] = stacking[i + 1];
   stacking[i] = c;
   clients_apply_stacking();
+}
+
+void client_set_layer(client *c, int layer) {
+  int i, prev = c->layer;
+  c->layer = layer;
+  if(layer > prev)
+    for(i = client_number(stacking, c); i < cn - 1 && stacking[i + 1]->layer < c->layer && stacking[i + 1]->desktop != ICONS; i++)
+      stacking[i] = stacking[i + 1];
+  else
+    for(i = client_number(stacking, c); i > 0 && stacking[i - 1]->layer > c->layer; i--)
+      stacking[i] = stacking[i - 1];
+  stacking[i] = c;
+  clients_apply_stacking();
+  ewmh_update_state(c);
 }
 
 void client_maximise(client *c) {

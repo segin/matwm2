@@ -24,6 +24,8 @@ void ewmh_initialize(void) {
   ewmh_atoms[NET_WM_STATE_FULLSCREEN] = XInternAtom(dpy, "_NET_WM_STATE_FULLSCREEN", False);
   ewmh_atoms[NET_WM_STATE_MAXIMIZED_HORZ] = XInternAtom(dpy, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
   ewmh_atoms[NET_WM_STATE_MAXIMIZED_VERT] = XInternAtom(dpy, "_NET_WM_STATE_MAXIMIZED_VERT", False);
+  ewmh_atoms[NET_WM_STATE_ABOVE] = XInternAtom(dpy, "_NET_WM_STATE_ABOVE", False);
+  ewmh_atoms[NET_WM_STATE_BELOW] = XInternAtom(dpy, "_NET_WM_STATE_BELOW", False);
   ewmh_atoms[NET_CLOSE_WINDOW] = XInternAtom(dpy, "_NET_CLOSE_WINDOW", False);
   ewmh_atoms[NET_WM_WINDOW_TYPE] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
   ewmh_atoms[NET_WM_WINDOW_TYPE_DESKTOP] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DESKTOP", False);
@@ -36,6 +38,8 @@ void ewmh_initialize(void) {
   ewmh_atoms[NET_WM_ACTION_FULLSCREEN] = XInternAtom(dpy, "_NET_WM_ACTION_FULLSCREEN", False);
   ewmh_atoms[NET_WM_ACTION_MOVE] = XInternAtom(dpy, "_NET_WM_ACTION_MOVE", False);
   ewmh_atoms[NET_WM_ACTION_RESIZE] = XInternAtom(dpy, "_NET_WM_ACTION_RESIZE", False);
+  ewmh_atoms[NET_WM_ACTION_ABOVE] = XInternAtom(dpy, "_NET_WM_ACTION_ABOVE", False);
+  ewmh_atoms[NET_WM_ACTION_BELOW] = XInternAtom(dpy, "_NET_WM_ACTION_BELOW", False);
   ewmh_atoms[NET_WM_ACTION_CHANGE_DESKTOP] = XInternAtom(dpy, "_NET_WM_ACTION_CHANGE_DESKTOP", False);
   ewmh_atoms[NET_WM_MOVERESIZE] = XInternAtom(dpy, "_NET_WM_MOVERESIZE", False);
   ewmh_atoms[NET_FRAME_EXTENTS] = XInternAtom(dpy, "_NET_FRAME_EXTENTS", False);
@@ -93,6 +97,10 @@ int ewmh_handle_event(XEvent ev) {
           client_maximise(c);
         if(c && ev.xclient.data.l[1] == ewmh_atoms[NET_WM_STATE_FULLSCREEN] && (ev.xclient.data.l[0] == NET_WM_STATE_TOGGLE || (ev.xclient.data.l[0] == NET_WM_STATE_ADD && !(c->flags & FULLSCREEN)) || (ev.xclient.data.l[0] == NET_WM_STATE_REMOVE && (c->flags & FULLSCREEN))))
           client_fullscreen(c);
+        if(c && ev.xclient.data.l[1] == ewmh_atoms[NET_WM_STATE_ABOVE])
+          client_set_layer(c, (c->layer == TOP) ? NORMAL : TOP);
+        if(c && ev.xclient.data.l[1] == ewmh_atoms[NET_WM_STATE_BELOW])
+          client_set_layer(c, (c->layer == BOTTOM) ? NORMAL : BOTTOM);
         return 1;
       }
       if(ev.xclient.message_type == ewmh_atoms[NET_CURRENT_DESKTOP])
@@ -120,8 +128,8 @@ int ewmh_handle_event(XEvent ev) {
 
 int get_ewmh_hints(client *c) {
   Atom rt, *data;
-  int i, rf;
-  unsigned long nir, bar;
+  int rf;
+  unsigned long nir, bar, *d;
   if(XGetWindowProperty(dpy, c->window, ewmh_atoms[NET_WM_WINDOW_TYPE], 0, 1, False, XA_ATOM, &rt, &rf, &nir, &bar, (unsigned char **) &data) == Success) {
     if(nir) {
       if(*data == ewmh_atoms[NET_WM_WINDOW_TYPE_DESKTOP]) {
@@ -138,11 +146,23 @@ int get_ewmh_hints(client *c) {
     }
     XFree((void *) data);
   }
+  if(XGetWindowProperty(dpy, c->window, ewmh_atoms[NET_WM_DESKTOP], 0, 1, False, XA_CARDINAL, &rt, &rf, &nir, &bar, (unsigned char **) &d) == Success) {
+    if(nir) {
+      if(*d >= 0 && *d < dc)
+        c->desktop = *d;
+      else if(*d == 0xffffffff)
+        c->desktop = STICKY;
+    }
+    XFree((void *) d);
+  }
   if(XGetWindowProperty(dpy, c->window, ewmh_atoms[NET_WM_STATE], 0, 1, False, XA_ATOM, &rt, &rf, &nir, &bar, (unsigned char **) &data) == Success) {
     if(nir) {
-      if(*data == ewmh_atoms[NET_WM_STATE_FULLSCREEN]) {
+      if(*data == ewmh_atoms[NET_WM_STATE_FULLSCREEN])
         c->flags |= FULLSCREEN;
-      }
+      if(*data == ewmh_atoms[NET_WM_STATE_ABOVE])
+        c->layer = TOP;
+      if(*data == ewmh_atoms[NET_WM_STATE_BELOW])
+        c->layer = BOTTOM;
     }
     XFree((void *) data);
   }
@@ -159,7 +179,7 @@ void ewmh_update_geometry(void) {
 }
 
 void ewmh_update_desktop(client *c) {
-  int d = (c->desktop < 0) ? 0xffffffff : c->desktop;
+  long d = (c->desktop < 0) ? 0xffffffff : c->desktop;
   XChangeProperty(dpy, c->window, ewmh_atoms[NET_WM_DESKTOP], XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &d, 1);
 }
 
@@ -172,8 +192,8 @@ void ewmh_set_active(client *c) {
 }
 
 void ewmh_update_allowed_actions(client *c) {
-  int nactions = 3;
-  Atom actions[12] = {ewmh_atoms[NET_WM_ACTION_MINIMIZE], ewmh_atoms[NET_WM_ACTION_CLOSE], ewmh_atoms[NET_WM_ACTION_CHANGE_DESKTOP]};
+  int nactions = 5;
+  Atom actions[12] = {ewmh_atoms[NET_WM_ACTION_MINIMIZE], ewmh_atoms[NET_WM_ACTION_CLOSE], ewmh_atoms[NET_WM_ACTION_CHANGE_DESKTOP], ewmh_atoms[NET_WM_ACTION_ABOVE], ewmh_atoms[NET_WM_ACTION_BELOW]};
   if(c->flags & CAN_MOVE && c->flags & CAN_RESIZE) {
     actions[nactions++] = ewmh_atoms[NET_WM_ACTION_MAXIMIZE_HORZ];
     actions[nactions++] = ewmh_atoms[NET_WM_ACTION_MAXIMIZE_VERT];
@@ -195,6 +215,10 @@ void ewmh_update_state(client *c) {
   }
   if(c->flags & FULLSCREEN)
     state[statec++] = ewmh_atoms[NET_WM_STATE_FULLSCREEN];
+  if(c->layer == TOP)
+    state[statec++] = ewmh_atoms[NET_WM_STATE_ABOVE];
+  if(c->layer == BOTTOM)
+    state[statec++] = ewmh_atoms[NET_WM_STATE_BELOW];
   XChangeProperty(dpy, c->window, ewmh_atoms[NET_WM_STATE], XA_ATOM, 32, PropModeReplace, (unsigned char *) &state, statec);
 }
 

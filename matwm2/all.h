@@ -4,6 +4,7 @@ int client_resize(client *c, int width, int height);
 void client_focus(client *c);
 void client_raise(client *c);
 void client_lower(client *c);
+void client_set_layer(client *c, int layer);
 void client_maximise(client *c);
 void client_fullscreen(client *c);
 void client_expand(client *c);

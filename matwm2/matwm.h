@@ -75,7 +75,9 @@ enum {
   KA_EXEC,
   KA_NEXT_DESKTOP,
   KA_PREV_DESKTOP,
-  KA_STICKY
+  KA_STICKY,
+  KA_ONTOP,
+  KA_BELOW
 };
 
 enum {

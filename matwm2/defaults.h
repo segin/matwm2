@@ -27,6 +27,8 @@ key                   control mod1 y          topleft\n\
 key                   control mod1 u          topright\n\
 key                   control mod1 b          bottomleft\n\
 key                   control mod1 n          bottomright\n\
+key                   control mod1 o          ontop\n\
+key                   control mod1 p          below\n\
 key                   control mod1 a          iconify_all\n\
 key                   control mod1 Right      next_desktop\n\
 key                   control mod1 Left       prev_desktop\n\
@@ -42,6 +44,8 @@ key                   mod4 y                  topleft\n\
 key                   mod4 u                  topright\n\
 key                   mod4 b                  bottomleft\n\
 key                   mod4 n                  bottomright\n\
+key                   mod4 o                  ontop\n\
+key                   mod4 p                  below\n\
 key                   mod4 a                  iconify_all\n\
 key                   mod4 Right              next_desktop\n\
 key                   mod4 Left               prev_desktop\n"

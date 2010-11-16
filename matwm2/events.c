@@ -148,6 +148,10 @@ void handle_event(XEvent ev) {
         client_move(current, ewmh_strut[0], ewmh_strut[2]);
         client_warp(current);
       }
+      if(current && !(current->layer == DESKTOP) && keyaction(ev) == KA_ONTOP)
+        client_set_layer(current, (current->layer == TOP) ? NORMAL : TOP);
+      if(current && !(current->layer == DESKTOP) && keyaction(ev) == KA_BELOW)
+        client_set_layer(current, (current->layer == BOTTOM) ? NORMAL : BOTTOM);
       if(cn && keyaction(ev) == KA_ICONIFY_ALL)
         for(i = 0; i < cn; i++)
           client_iconify(clients[i]);
