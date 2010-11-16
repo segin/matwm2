@@ -17,12 +17,18 @@
 
 typedef struct {
   Window        window, parent, wlist_item;
-  int           x, y, width, height, iconic, maximised;
+  int           x, y, width, height, state;
   int           oldbw, prev_x, prev_y, prev_width, prev_height;
-  int           title, border, resize, shaped;
+  int           expand_prev_x, expand_prev_y, expand_prev_width, expand_prev_height;
+  int           title, border, resize;
   XSizeHints    normal_hints;
   char          *name;
 } client;
+
+#define ICONIC          (1 << 0)
+#define MAXIMISED       (1 << 1)
+#define EXPANDED        (1 << 2)
+#define SHAPED          (1 << 3)
 
 typedef struct {
   KeySym sym;
@@ -31,14 +37,14 @@ typedef struct {
   char *arg;
 } keybind;
 
-enum {KA_NONE, KA_NEXT, KA_PREV, KA_ICONIFY, KA_MAXIMISE, KA_CLOSE, KA_TOPLEFT, KA_TOPRIGHT, KA_BOTTOMRIGHT, KA_BOTTOMLEFT, KA_EXEC};
+enum {KA_NONE, KA_NEXT, KA_PREV, KA_ICONIFY, KA_MAXIMISE, KA_EXPAND, KA_CLOSE, KA_TOPLEFT, KA_TOPRIGHT, KA_BOTTOMRIGHT, KA_BOTTOMLEFT, KA_EXEC};
 enum {BA_NONE, BA_MOVE, BA_RESIZE, BA_RAISE, BA_LOWER};
 
-#define border(c)       ((!c->shaped && c->border) ? border_width : 0)
-#define title(c)        ((!c->shaped && c->title && c->border) ? title_height : 0)
+#define border(c)       ((!(c->state & SHAPED) && c->border) ? border_width : 0)
+#define title(c)        ((!(c->state & SHAPED) && c->title && c->border) ? title_height : 0)
 #define total_width(c)  (c->width + (border(c) * 2))
 #define total_height(c) (c->height + (border(c) * 2) + title(c))
-#define warp()          XWarpPointer(dpy, None, current->parent, 0, 0, 0, 0, current->width + (border(current) ? border_width : -1), (current->height + (border(current) ? border_width : -1)) + title(current));
+#define warpto(c)       XWarpPointer(dpy, None, c->parent, 0, 0, 0, 0, c->width + (border(c) ? border_width : -1), (c->height + (border(c) ? border_width : -1)) + title(c));
 
 #include "mwm_hints.h"
 #include "defaults.h"

@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
 
 void end(void) {
   while(cn) {
-    if(clients[0]->iconic)
+    if(clients[0]->state & ICONIC)
       XMapWindow(dpy, clients[0]->window);
     deparent_client(clients[0]);
     remove_client(clients[0]);

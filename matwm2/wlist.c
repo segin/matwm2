@@ -19,7 +19,7 @@ void wlist_end(void) {
   XUnmapWindow(dpy, wlist);
   restore(current);
   raise_client(current);
-  warp();
+  warpto(current);
   evh = NULL;
 }
 
@@ -64,7 +64,7 @@ void wlist_update(void) {
         wlist_width = tl;
     }
   for(i = 0; i < cn; i++) {
-    if(!clients[0]->iconic && clients[i]->iconic)
+    if(!(clients[0]->state & ICONIC) && clients[i]->state & ICONIC)
       offset = 2;
     XMoveResizeWindow(dpy, clients[i]->wlist_item, 1, offset + ((title_height + 5) * nc), wlist_width - 2, title_height + 4);
     nc++;

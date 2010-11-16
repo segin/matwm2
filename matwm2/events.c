@@ -18,7 +18,7 @@ void handle_event(XEvent ev) {
     case MapRequest:
       c = owner(ev.xmaprequest.window);
       if(c) {
-        if(c->iconic)
+        if(c->state & ICONIC)
           restore(c);
       } else add_client(ev.xmaprequest.window);
       break;
@@ -39,6 +39,7 @@ void handle_event(XEvent ev) {
     case ConfigureRequest:
       c = owner(ev.xconfigurerequest.window);
       if(c) {
+        c->state ^= c->state & (MAXIMISED | EXPANDED);
         resize(c, (ev.xconfigurerequest.value_mask & CWWidth) ? ev.xconfigurerequest.width : c->width, (ev.xconfigurerequest.value_mask & CWHeight) ? ev.xconfigurerequest.height : c->height);
         move(c, (ev.xconfigurerequest.value_mask & CWX) ? ev.xconfigurerequest.x - gxo(c, 0) : c->x, (ev.xconfigurerequest.value_mask & CWY) ? ev.xconfigurerequest.y - gyo(c, 0) : c->y);
       } else {
@@ -116,14 +117,28 @@ void handle_event(XEvent ev) {
         iconify(current);
       if(current && keyaction(ev) == KA_MAXIMISE)
         maximise(current);
-      if(current && keyaction(ev) == KA_BOTTOMLEFT)
+      if(current && keyaction(ev) == KA_EXPAND)
+        expand(current);
+      if(current && keyaction(ev) == KA_BOTTOMLEFT) {
         move(current, 0, display_height - total_height(current));
-      if(current && keyaction(ev) == KA_BOTTOMRIGHT)
+        current->state ^= current->state & (MAXIMISED | EXPANDED);
+        warpto(current);
+      }
+      if(current && keyaction(ev) == KA_BOTTOMRIGHT) {
         move(current, display_width - total_width(current), display_height - total_height(current));
-      if(current && keyaction(ev) == KA_TOPRIGHT)
+        current->state ^= current->state & (MAXIMISED | EXPANDED);
+        warpto(current);
+      }
+      if(current && keyaction(ev) == KA_TOPRIGHT) {
+        current->state ^= current->state & (MAXIMISED | EXPANDED);
         move(current, display_width - total_width(current), 0);
-      if(current && keyaction(ev) == KA_TOPLEFT)
+        warpto(current);
+      }
+      if(current && keyaction(ev) == KA_TOPLEFT) {
         move(current, 0, 0);
+        current->state ^= current->state & (MAXIMISED | EXPANDED);
+        warpto(current);
+      }
       if(keyaction(ev) == KA_EXEC)
         spawn(keyarg(ev));
       break;

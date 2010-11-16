@@ -18,15 +18,16 @@ void add_client(Window w) {
   new->height = attr.height;
   new->oldbw = attr.border_width;
   new->window = w;
+  new->state = 0;
   if(have_shape)
-    new->shaped = XShapeQueryExtents(dpy, new->window, &bounding_shaped, &di, &di, &dui, &dui, &di, &di, &di, &dui, &dui) && bounding_shaped;
-  else new->shaped = 0;
+    if(XShapeQueryExtents(dpy, new->window, &bounding_shaped, &di, &di, &dui, &dui, &di, &di, &di, &dui, &dui) && bounding_shaped)
+      new->state |= SHAPED;
   getnormalhints(new);
   get_mwm_hints(new);
   new->x = attr.x - gxo(new, 1);
   new->y = attr.y - gyo(new, 1);
-  new->iconic = (wm_state == IconicState) ? 1 : 0;
-  new->maximised = 0;
+  if(wm_state == IconicState)
+    new->state |= ICONIC;
   XFetchName(dpy, w, &new->name);
   if(!new->name)
     new->name = no_title;
@@ -43,16 +44,18 @@ void add_client(Window w) {
   XReparentWindow(dpy, w, new->parent, border(new), border(new) + title(new));
   grab_button(new->parent, AnyButton, mousemodmask, ButtonPressMask | ButtonReleaseMask);
   configurenotify(new);
-  if(new->shaped)
+  if(new->state & SHAPED)
     XShapeCombineShape(dpy, new->parent, ShapeBounding, border(new), border(new) + title(new), new->window, ShapeBounding, ShapeSet);
   cn++;
   alloc_clients();
-  if(!new->iconic) {
+  if(!new->state & ICONIC) {
     XMapWindow(dpy, w);
     XMapRaised(dpy, new->parent);
     for(i = cn - 1; i > 0; i--)
       clients[i] = clients[i - 1];
     clients[0] = new;
+    if(!new->state & ICONIC)
+      warpto(new);
   } else clients[cn - 1] = new;
   XMapWindow(dpy, new->wlist_item);
   if(!current)
@@ -105,17 +108,17 @@ void alloc_clients(void) {
   clients = newptr;
 }
 
-void move(client *c, int x, int y) {
+int move(client *c, int x, int y) {
   if(x == c->x && y == c->y)
-    return;
-  c->maximised = 0;
+    return 0;
   XMoveWindow(dpy, c->parent, x, y);
   configurenotify(c);
   c->x = x;
   c->y = y;
+  return 1;
 }
 
-void resize(client *c, int width, int height) {
+int resize(client *c, int width, int height) {
   if(c->normal_hints.flags & PResizeInc) {
     width -= (width - ((c->normal_hints.flags & PBaseSize) ? c->normal_hints.base_width : 0)) % c->normal_hints.width_inc;
     height -= (height - ((c->normal_hints.flags & PBaseSize) ? c->normal_hints.base_height : 0)) % c->normal_hints.height_inc;
@@ -143,13 +146,13 @@ void resize(client *c, int width, int height) {
   if(height < MINSIZE)
     height = MINSIZE;
   if(width == c->width && height == c->height)
-    return;
-  c->maximised = 0;
+    return 0;
   c->width = width;
   c->height = height;
   XResizeWindow(dpy, c->parent, total_width(c), total_height(c));
   XResizeWindow(dpy, c->window, width, height);
   draw_client(c);
+  return 1;
 }
 
 void focus(client *c) {
@@ -158,7 +161,7 @@ void focus(client *c) {
   if(prev) {
     XSetWindowBackground(dpy, prev->parent, ibg.pixel);
     XSetWindowBackground(dpy, prev->wlist_item, ibg.pixel);
-    if(!prev->iconic) {
+    if(!(prev->state & ICONIC)) {
       XClearWindow(dpy, prev->parent);
       draw_client(prev);
     }
@@ -169,7 +172,7 @@ void focus(client *c) {
   }
   XSetWindowBackground(dpy, c->parent, bg.pixel);
   XSetWindowBackground(dpy, c->wlist_item, bg.pixel);
-  if(!c->iconic) {
+  if(!(c->state & ICONIC)) {
     XClearWindow(dpy, c->parent);
     draw_client(c);
     XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
@@ -191,14 +194,14 @@ void raise_client(client *c) {
 void lower_client(client *c) {
   int i;
   XLowerWindow(dpy, c->parent);
-  for(i = client_number(c); i < cn - 1 && !clients[i + 1]->iconic; i++)
+  for(i = client_number(c); i < cn - 1 && !(clients[i + 1]->state & ICONIC); i++)
     clients[i] = clients[i + 1];
   clients[i] = c;
 }
 
 void maximise(client *c) {
-  if(c->maximised) {
-    c->maximised = 0;
+  if(c->state & MAXIMISED) {
+    c->state ^= MAXIMISED;
     move(c, c->prev_x, c->prev_y);
     resize(c, c->prev_width, c->prev_height);
     return;
@@ -207,14 +210,47 @@ void maximise(client *c) {
   c->prev_y = c->y;
   c->prev_width = c->width;
   c->prev_height = c->height;
+  c->state |= MAXIMISED;
   raise_client(current);
   move(c, 0, 0);
   resize(c, display_width - (border(c) * 2), display_height - ((border(c) * 2) + title(c)));
-  c->maximised = 1;
+}
+
+void expand(client *c) {
+  int i, min_x = 0, min_y = 0, max_x = display_width, max_y = display_height;
+  if(c->state & EXPANDED) {
+    c->state ^= EXPANDED;
+    move(c, c->expand_prev_x, c->expand_prev_y);
+    resize(c, c->expand_prev_width, c->expand_prev_height);
+    return;
+  }
+  for(i = 0; i < cn; i++) {
+    if(clients[i]->state & ICONIC || c->y > clients[i]->y + total_height(clients[i]) || c->y + total_height(c) < clients[i]->y)
+      continue;
+    if(clients[i]->x + total_width(clients[i]) <= c->x && clients[i]->x + total_width(clients[i]) > min_x)
+      min_x = clients[i]->x + total_width(clients[i]);
+    if(clients[i]->x >= c->x + total_width(c) && clients[i]->x < max_x)
+      max_x = clients[i]->x;
+  }
+  for(i = 0; i < cn; i++) {
+    if(clients[i]->state & ICONIC || min_x > clients[i]->x + total_width(clients[i]) || max_x < clients[i]->x)
+      continue;
+    if(clients[i]->y + total_height(clients[i]) <= c->y && clients[i]->y + total_height(clients[i]) > min_y)
+      min_y = clients[i]->y + total_height(clients[i]);
+    if(clients[i]->y >= c->y + total_height(c) && clients[i]->y < max_y)
+      max_y = clients[i]->y;
+  }
+  c->expand_prev_x = c->x;
+  c->expand_prev_y = c->y;
+  c->expand_prev_width = c->width;
+  c->expand_prev_height = c->height;
+  c->state |= EXPANDED;
+  move(c, min_x, min_y);
+  resize(c, max_x - (min_x + (border(c) * 2)), max_y - (min_y + (border(c) * 2) + title(c)));
 }
 
 void set_shape(client *c) {
-  if(c->shaped)
+  if(c->state & SHAPED)
     XShapeCombineShape(dpy, c->parent, ShapeBounding, border(c), border(c) + title(c), c->window, ShapeBounding, ShapeSet);
 }
 
