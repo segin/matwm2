@@ -61,7 +61,7 @@ extern Atom xa_wm_protocols, xa_wm_delete, xa_wm_state, xa_wm_change_state, xa_m
 extern XSetWindowAttributes p_attr;
 void error(void);
 void end(void);
-void quit(int sig);
+void qsh(int sig);
 int main(int argc, char *argv[]);
 
 // x11.c

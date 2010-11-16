@@ -22,7 +22,7 @@ void end(void) {
   XCloseDisplay(dpy);
 }
 
-void quit(int sig) {
+void qsh(int sig) {
   write(qsfd[1], &sig, sizeof(int));
 }
 
@@ -34,9 +34,9 @@ int main(int argc, char *argv[]) {
   struct sigaction qsa;
   int dfd, i, di, sr;
   fd_set fds, fdsr;
-  dpy = XOpenDisplay(0);
+  dpy = XOpenDisplay(NULL);
   if(!dpy) {
-    fprintf(stderr, "error: can't open display %s\n", XDisplayName(0));
+    fprintf(stderr, "error: can't open display \"%s\"\n", XDisplayName(NULL));
     exit(1);
   }
   screen = DefaultScreen(dpy);
@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
   atexit(&end);
   if(pipe(qsfd) != 0)
     error();
-  qsa.sa_handler = quit;
+  qsa.sa_handler = qsh;
   sigemptyset(&qsa.sa_mask);
   qsa.sa_flags = 0;
   sigaction(SIGTERM, &qsa, NULL);
@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
       if(sr == 0)
         continue;
       if(FD_ISSET(qsfd[0], &fdsr))
-        exit(1);
+        exit(0);
     }
     XNextEvent(dpy, &ev);
     handle_event(ev);

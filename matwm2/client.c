@@ -70,6 +70,7 @@ void remove_client(int n, int fc) {
     XRemoveFromSaveSet(dpy, clients[n].window);
   }
   XDestroyWindow(dpy, clients[n].parent);
+  XDestroyWindow(dpy, clients[n].icon);
   if(clients[n].name)
     XFree(clients[n].name);
   cn--;
@@ -100,8 +101,7 @@ void move(int n, int x, int y) {
   if(x == clients[n].x && y == clients[n].y)
     return;
   clients[n].maximised = 0;
-  if(!clients[n].iconic)
-    XMoveWindow(dpy, clients[n].parent, x, y);
+  XMoveWindow(dpy, clients[n].parent, x, y);
   configurenotify(n);
   clients[n].x = x;
   clients[n].y = y;
@@ -139,8 +139,7 @@ void resize(int n, int width, int height) {
   clients[n].maximised = 0;
   clients[n].width = width;
   clients[n].height = height;
-  if(!clients[n].iconic)
-    XResizeWindow(dpy, clients[n].parent, total_width(n), total_height(n));
+  XResizeWindow(dpy, clients[n].parent, total_width(n), total_height(n));
   XResizeWindow(dpy, clients[n].window, width, height);
   draw_client(n);
 }
