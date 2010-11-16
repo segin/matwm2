@@ -2,49 +2,34 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define DEF_COLOR "white"
+#define DEF_FG "white"
+#define DEF_BG "black"
 #define DEF_LW 2
+#define DEF_ELW 10
 
-typedef struct {
-  int x, y, skip;
-} point;
+enum modes { NORMAL, ERASE };
 
-point *points = NULL;
-int npoints = 0;
 Display *dpy;
-int screen;
+int screen, width, height, lx, ly;
 Window root;
-GC gc;
+Pixmap canvas;
+GC gc, bgc;
 
-void addpoint(int x, int y, int skip) {
-  points = (point *) realloc((void *) points, (npoints + 1) * sizeof(point));
-  points[npoints].x = x;
-  points[npoints].y = y;
-  points[npoints].skip = skip;
-  if(npoints && !skip)
-    XDrawLine(dpy, root, gc, points[npoints - 1].x, points[npoints - 1].y, x, y);
-  npoints++;
+void addpoint(int x, int y, GC gc, int s) {
+  XDrawLine(dpy, canvas, gc, s ? x : lx, s ? y : ly, x, y);
+  XDrawLine(dpy, root, gc, s ? x : lx, s ? y : ly, x, y);
+  lx = x;
+  ly = y;
 }
 
 void clear() {
+  XFillRectangle(dpy, canvas, bgc, 0, 0, width, height);
   XClearWindow(dpy, root);
-  free((void *) points);
-  points = NULL;
-  npoints = 0;
-}
-
-void redraw() {
-  int i;
-  for(i = 0; i < npoints; i++) {
-    if(points[i].skip)
-      continue;
-    XDrawLine(dpy, root, gc, points[i - 1].x, points[i - 1].y, points[i].x, points[i].y);
-  }
 }
 
 int main(int argc, char *argv[]) {
-  char *dn = NULL, *color = NULL;
-  int i, lw = DEF_LW;
+  char *dn = NULL, *fg = DEF_FG, *bg = DEF_BG, mode = NORMAL;
+  int i, lw = DEF_LW, elw = DEF_ELW;
   XEvent ev;
   XGCValues gv;
   XColor c, dc;
@@ -54,12 +39,22 @@ int main(int argc, char *argv[]) {
       i++;
       continue;
     }
-    if(strcmp(argv[i], "-color") == 0 && i + 1 < argc) {
-      color = argv[i + 1];
+    if(strcmp(argv[i], "-fg") == 0 && i + 1 < argc) {
+      fg = argv[i + 1];
+      i++;
+      continue;
+    }
+    if(strcmp(argv[i], "-bg") == 0 && i + 1 < argc) {
+      bg = argv[i + 1];
       i++;
       continue;
     }
     if(strcmp(argv[i], "-lw") == 0 && i + 1 < argc) {
+      lw = strtol(argv[i + 1], NULL, 0);
+      i++;
+      continue;
+    }
+    if(strcmp(argv[i], "-elw") == 0 && i + 1 < argc) {
       lw = strtol(argv[i + 1], NULL, 0);
       i++;
       continue;
@@ -74,32 +69,43 @@ int main(int argc, char *argv[]) {
   }
   screen = DefaultScreen(dpy);
   root = RootWindow(dpy, screen);
-  XAllocNamedColor(dpy, DefaultColormap(dpy, screen), color ? color : DEF_COLOR, &c, &dc);
   gv.line_width = lw;
+  XAllocNamedColor(dpy, DefaultColormap(dpy, screen), fg, &c, &dc);
   gv.foreground = c.pixel;
-  gc = XCreateGC(dpy, root, GCLineWidth | GCForeground, &gv);
+  gv.background = c.pixel;
+  gv.cap_style = CapRound;
+  gc = XCreateGC(dpy, root, GCLineWidth | GCForeground | GCCapStyle, &gv);
+  gv.line_width = elw;
+  XAllocNamedColor(dpy, DefaultColormap(dpy, screen), bg, &c, &dc);
+  gv.foreground = c.pixel;
+  bgc = XCreateGC(dpy, root, GCLineWidth | GCForeground | GCCapStyle, &gv);
+  width = DisplayWidth(dpy, screen);
+  height = DisplayHeight(dpy, screen);
+  canvas = XCreatePixmap(dpy, root, width, height, DefaultDepth(dpy, screen));
   XSelectInput(dpy, root, ButtonPressMask | ExposureMask);
+  XSetWindowBackgroundPixmap(dpy, root, canvas);
+  clear();
   while(1) {
     XNextEvent(dpy, &ev);
     switch(ev.type) {
       case ButtonPress:
-        if(ev.xbutton.button != Button1) {
+        if(ev.xbutton.button == Button2) {
           clear();
           break;
-        }
+        } else if(ev.xbutton.button == Button1)
+          mode = NORMAL;
+        else if(ev.xbutton.button == Button3)
+          mode = ERASE;
+        else break;
         XGrabPointer(dpy, root, True, PointerMotionMask | ButtonReleaseMask, GrabModeAsync, GrabModeAsync, None, None, CurrentTime);
-        addpoint(ev.xbutton.x, ev.xbutton.y, 1);
+        addpoint(ev.xbutton.x, ev.xbutton.y, mode == ERASE ? bgc : gc, 1);
         break;
       case MotionNotify:
-        addpoint(ev.xmotion.x, ev.xmotion.y, 0);
+        addpoint(ev.xmotion.x, ev.xmotion.y, mode == ERASE ? bgc : gc, 0);
         break;
       case ButtonRelease:
-        if(ev.xbutton.button == Button1)
+        if(ev.xbutton.button == Button1 || ev.xbutton.button == Button3)
           XUngrabPointer(dpy, CurrentTime);
-        break;
-      case Expose:
-        if(ev.xexpose.count == 0)
-          redraw();
         break;
     }
   }
