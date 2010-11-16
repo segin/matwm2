@@ -54,6 +54,8 @@ key                   control mod1 p          below\n\
 key                   control mod1 a          iconify_all\n\
 key                   control mod1 Right      next_desktop\n\
 key                   control mod1 Left       prev_desktop\n\
+key                   control mod1 Prior      raise\n\
+key                   control mod1 Next       lower\n\
 key                   control mod1 Return     exec xterm\n\
 key                   mod4 s                  iconify\n\
 key                   mod4 x                  maximize\n\
@@ -75,7 +77,9 @@ key                   mod4 o                  ontop\n\
 key                   mod4 p                  below\n\
 key                   mod4 a                  iconify_all\n\
 key                   mod4 Right              next_desktop\n\
-key                   mod4 Left               prev_desktop\n"
+key                   mod4 Left               prev_desktop\n\
+key                   mod4 Prior              raise\n\
+key                   mod4 Next               lower\n"
 
 #define MINSIZE                 5
 #define CFGFN                   ".matwmrc"

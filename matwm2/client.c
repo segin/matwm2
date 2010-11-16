@@ -1,43 +1,46 @@
 #include "matwm.h"
 
-client **clients = NULL, **stacking = NULL, *current = NULL, *previous = NULL;
-int cn = 0, nicons = 0;
+client **clients = NULL, **stacking = NULL, *current = NULL, *previous = NULL; /* stacking is sorted from top to bottom */
+int cn = 0, nicons = 0; /* cn keeps the number of clients, of wich nicons are iconic */
 
 void client_add(Window w) {
 	XWindowAttributes attr;
-	int i, di, bounding_shaped, wm_state = get_wm_state(w);
+	int i, di, bounding_shaped, wm_state;
 	unsigned int dui;
 	client *new = (client *) malloc(sizeof(client));
+	new->window = w;
+	/* set client state */
 	wm_state = get_wm_state(w);
-	XGetWindowAttributes(dpy, w, &attr);
 	if(wm_state == WithdrawnState) {
 		wm_state = get_state_hint(w);
 		set_wm_state(w, wm_state != WithdrawnState ? wm_state : NormalState);
 	}
+
+	/* read attributes and fill up client structure with them */
+	XGetWindowAttributes(dpy, w, &attr);
 	new->width = attr.width;
 	new->height = attr.height;
 	new->oldbw = attr.border_width;
-	new->window = w;
-	new->flags = HAS_TITLE | HAS_BORDER | HAS_BUTTONS | CAN_MOVE | CAN_RESIZE;
 	new->layer = NORMAL;
 	new->desktop = desktop;
+	new->flags = HAS_TITLE | HAS_BORDER | HAS_BUTTONS | CAN_MOVE | CAN_RESIZE;
+	if(wm_state == IconicState)
+		new->flags |= ICONIC;
 #ifdef SHAPE
 	if(have_shape && XShapeQueryExtents(dpy, new->window, &bounding_shaped, &di, &di, &dui, &dui, &di, &di, &di, &dui, &dui) && bounding_shaped)
 		new->flags |= SHAPED;
 #endif
+	/* read hints - these eventually override stuff we have just set */
 	get_normal_hints(new);
 	get_mwm_hints(new);
 	ewmh_get_hints(new);
+	/* continue filling up structure - gxo and gyo need the hints to be read */
 	new->xo = gxo(new, 1);
 	new->yo = gyo(new, 1);
 	new->x = attr.x - new->xo;
 	new->y = attr.y - new->yo;
-	if(wm_state == IconicState)
-		new->flags |= ICONIC;
-	XSelectInput(dpy, w, PropertyChangeMask | FocusChangeMask);
-#ifdef SHAPE
-	XShapeSelectInput(dpy, w, ShapeNotifyMask);
-#endif
+	XFetchName(dpy, w, &new->name);
+	/* create the parent window */
 	XSetWindowBorderWidth(dpy, w, 0);
 	new->parent = XCreateWindow(dpy, root, client_x(new), client_y(new), client_width_total_intern(new), client_height_total_intern(new), (new->flags & HAS_BORDER) ? 1 : 0,
 	                            DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
@@ -48,22 +51,28 @@ void client_add(Window w) {
 	new->wlist_item = XCreateWindow(dpy, wlist, 0, 0, 1, 1, 0,
 	                                DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
 	                                CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
-	XFetchName(dpy, w, &new->name);
-	buttons_create(new);
+	buttons_create(new); /* must be called before client_update_name() is called, else the title window will be initially misplaced */
 	client_update_name(new);
-	client_grab_buttons(new);
 	XMapWindow(dpy, new->title);
-	if(!(new->flags & DONT_LIST))
+	if(!(new->flags & DONT_LIST) && (new->flags & ICONIC || (new->desktop == desktop || new->desktop == STICKY)))
 		XMapWindow(dpy, new->wlist_item);
+#ifdef SHAPE
+	set_shape(new);
+#endif
+	/* select wich events we want from the client window */
+	XSelectInput(dpy, w, PropertyChangeMask | FocusChangeMask);
+#ifdef SHAPE
+	XShapeSelectInput(dpy, w, ShapeNotifyMask);
+#endif
+	client_grab_buttons(new);
+  /* reparent the client window */
 	XAddToSaveSet(dpy, w);
   XReparentWindow(dpy, w, new->parent, client_border_intern(new), client_border_intern(new) + client_title(new));
 	if(new->flags & FULLSCREEN || new->flags & MAXIMIZED_L || new->flags & MAXIMIZED_R || new->flags & MAXIMIZED_T || new->flags & MAXIMIZED_B)
 		client_update_size(new);
 	else
 		configurenotify(new);
-#ifdef SHAPE
-	set_shape(new);
-#endif
+	/* add the client to the client list and stacking, also map it if it schould be visible etc */
 	cn++;
 	clients_alloc();
 	if(!(new->flags & ICONIC)) {
@@ -71,11 +80,10 @@ void client_add(Window w) {
 			stacking[i] = stacking[i - 1];
 		stacking[i] = new;
 		if(evh == drag_handle_event)
-			client_raise(current);
-		if(new->desktop == desktop || new->desktop == STICKY) {
-			XMapWindow(dpy, new->window);
+			client_raise(current); /* to make sure the window we are dragging stays on top */
+		XMapWindow(dpy, new->window); /* only iconic windows expect to be unmapped */
+		if(new->desktop == desktop || new->desktop == STICKY)
 			client_show(new);
-		}
 	} else {
 		stacking[cn - 1] = new;
 		nicons++;
@@ -89,10 +97,11 @@ void client_add(Window w) {
 			for(i = client_number(stacking, new); i >= 0; i--)
 				if(stacking[i]->flags & FULLSCREEN && !(stacking[i]->flags & ICONIC) && (stacking[i]->desktop == desktop || stacking[i]->desktop == STICKY))
 					break;
-		if(((focus_new && !i) || !current) && !(new->flags & ICONIC))
+		/* if i now is > 0 theres a fullscreen window we cannot go above obstructing the new window so we omit focus_new behaviour */
+		if(((focus_new && !i) || !current) && client_visible(new))
 			client_focus(new);
 	}
-	if(!(new->flags & ICONIC))
+	if(!(new->flags & ICONIC)) /* client_visible isn't apropriate here (what if the window would be moved to another desktop later) */
 		client_over_fullscreen(new);
 	ewmh_update_desktop(new);
 	ewmh_update_allowed_actions(new);
@@ -117,7 +126,7 @@ void client_hide(client *c) {
 	}
 }
 
-void client_deparent(client *c) {
+void client_deparent(client *c) { /* reparent a client's window to the root window */
 	XReparentWindow(dpy, c->window, root, client_x(c) + c->xo, client_y(c) + c->yo);
 	XSetWindowBorderWidth(dpy, c->window, c->oldbw);
 	XRemoveFromSaveSet(dpy, c->window);
@@ -175,12 +184,12 @@ void client_grab_buttons(client *c) {
 	XGrabButton(dpy, AnyButton, AnyModifier, c->window, True, ButtonPressMask, GrabModeSync, GrabModeAsync, None, None);
 }
 
-void client_draw_title(client *c) {
+void client_draw_title(client *c) { /* draw the title pixmap for a client */
 	XFillRectangle(dpy, c->title_pixmap, (c == current) ? bgc : ibgc, 0, 0, c->title_width, text_height);
 	XDrawString(dpy, c->title_pixmap, (c == current) ? gc : igc, 0, font->max_bounds.ascent, c->name, strlen(c->name));
 }
 
-void client_update_name(client *c) {
+void client_update_name(client *c) { /* apply changes in the name of a client */
 	if(!c->name || strlen(c->name) == 0)
 		c->name = no_title;
 	c->title_width = XTextWidth(font, c->name, strlen(c->name)) + 1;
@@ -190,7 +199,7 @@ void client_update_name(client *c) {
 	XMoveResizeWindow(dpy, c->title, client_title_x(c), border_width - 1, client_title_width(c), text_height);
 }
 
-void client_set_bg(client *c, XColor color, XColor border) {
+void client_set_bg(client *c, XColor color, XColor border) { /* set (and apply) the background color of a client's parent window */
 	int i;
 	XSetWindowBackground(dpy, c->parent, color.pixel);
 	client_draw_title(c);
@@ -214,7 +223,7 @@ void client_set_bg(client *c, XColor color, XColor border) {
 	}
 }
 
-void clients_apply_stacking(void) {
+void clients_apply_stacking(void) { /* apply changes in the stacking */
 	int i = 0;
 	Window wins[cn + 1];
 	wins[0] = wlist;
@@ -226,12 +235,12 @@ void clients_apply_stacking(void) {
 		wlist_update();
 }
 
-void client_update_pos(client *c) {
+void client_update_pos(client *c) { /* apply changes in the position of a client */
 	XMoveWindow(dpy, c->parent, client_x(c), client_y(c));
 	configurenotify(c);
 }
 
-void client_update_size(client *c) {
+void client_update_size(client *c) { /* apply changes in the size of a client */
 	int width = client_width(c);
 	buttons_update(c);
 	XMoveResizeWindow(dpy, c->title, client_title_x(c), border_width - 1, client_title_width(c), text_height);
@@ -240,7 +249,7 @@ void client_update_size(client *c) {
 	buttons_draw(c);
 }
 
-void client_update(client *c) {
+void client_update(client *c) { /* apply changes in position and size of a window */
 	int width = client_width(c);
 	buttons_update(c);
 	XMoveResizeWindow(dpy, c->title, client_title_x(c), border_width - 1, client_title_width(c), text_height);
@@ -249,13 +258,13 @@ void client_update(client *c) {
 	buttons_draw(c);
 }
 
-void client_update_title(client *c) {
+void client_update_title(client *c) { /* apply changes if titlebar is turned on or off */
 	XMoveWindow(dpy, c->window, client_border_intern(c), client_border_intern(c) + client_title(c));
 	client_update_size(c);
 	ewmh_update_extents(c);
 }
 
-void client_update_layer(client *c, int prev) {
+void client_update_layer(client *c, int prev) { /* apply changes in stacking if the layer of a client is changed or if it's fullscreened */
 	int i;
 	if(client_layer(c) > prev)
 		for(i = client_number(stacking, c); i < cn - 1 && client_layer(stacking[i + 1]) < client_layer(c) && !(stacking[i + 1]->flags & ICONIC); i++)
@@ -268,11 +277,11 @@ void client_update_layer(client *c, int prev) {
 	ewmh_update_state(c);
 }
 
-void client_warp(client *c) {
+void client_warp(client *c) { /* moves the pointer to a client */
 	XWarpPointer(dpy, None, c->parent, 0, 0, 0, 0, client_width_total_intern(c) - 1, client_height_total_intern(c) - 1);
 }
 
-void client_focus_first(void) {
+void client_focus_first(void) { /* to be called when focus window is lost */
 	int i;
 	if(previous && (previous->desktop == desktop || previous->desktop == STICKY)) {
 		client_focus(previous);
@@ -287,7 +296,7 @@ void client_focus_first(void) {
 		client_focus(NULL);
 }
 
-void client_clear_state(client *c) {
+void client_clear_state(client *c) { /* to revert a client to normal state (as opposed to maximised, expanded or fullscreened) without restoring its previous dimensions */
 	c->x = client_x(c);
 	c->y = client_y(c);
 	c->width = client_width(c);
@@ -298,7 +307,7 @@ void client_clear_state(client *c) {
 	}
 }
 
-void clients_alloc(void) {
+void clients_alloc(void) { /* to make sure enough memory is allocated for cn clients */
 	if(!cn) {
 		free(clients);
 		free(stacking);

@@ -1,6 +1,15 @@
 0.0.91:
 	added comments in actions.c
 	only unmap frame window when hiding, but not iconifying window - apearantly some applications did not like the previous behaviour
+	**pre1 release
+	when a new client maps on another desktop still map the client window - to comply with new behaviour described above
+	added comments in client.c and x11.c
+	do better checking on wheter to map the window list item or not in client_add()
+	default keybindings for lower/raise
+	schould only call get_wm_state() once in client_add() - hurray for drunk programming
+	attempted to make client_add() more readable
+	only focus new clients if focus_new is true AND the new window is visible (only checked if it wasn't iconic before, now propperly uses client_visible())
+	also listen to UnmapNotify events if the the client's window can't be verified to be a child of the parent window
 
 0.0.90:
 	deinstall target of Makefile now uses $(RM) too

@@ -1,6 +1,6 @@
 #include "matwm.h"
 
-int xerrorhandler(Display *display, XErrorEvent *xerror) {
+int xerrorhandler(Display *display, XErrorEvent *xerror) { /* we set this as the X error handler in main() */
 	if(xerror->error_code == BadAccess && xerror->resourceid == root) {
 		fprintf(stderr,"error: root window at display %s is not available\n", XDisplayName(dn));
 		exit(1);
@@ -17,14 +17,14 @@ int xerrorhandler(Display *display, XErrorEvent *xerror) {
 	return 0;
 }
 
-void get_normal_hints(client *c) {
+void get_normal_hints(client *c) { /* read normal size hints */
 	long sr;
 	XGetWMNormalHints(dpy, c->window, &c->normal_hints, &sr);
 	if(c->normal_hints.flags & PMinSize && c->normal_hints.flags & PMaxSize && c->normal_hints.min_width == c->normal_hints.max_width && c->normal_hints.min_height == c->normal_hints.max_height)
-		c->flags ^= c->flags & CAN_RESIZE;
+		c->flags ^= c->flags & CAN_RESIZE; /* min and max size are equal, so the window can't be resized */
 }
 
-int get_state_hint(Window w) {
+int get_state_hint(Window w) { /* read hint for the initial state of a window */
 	int ret = WithdrawnState;
 	XWMHints *wm_hints = XGetWMHints(dpy, w);
 	if(wm_hints) {
@@ -35,7 +35,7 @@ int get_state_hint(Window w) {
 	return ret;
 }
 
-int get_wm_state(Window w) {
+int get_wm_state(Window w) { /* read current state of the window */
 	Atom rt;
 	int rf;
 	unsigned long n, bar;
@@ -48,14 +48,14 @@ int get_wm_state(Window w) {
 	return ret;
 }
 
-void set_wm_state(Window w, long state) {
+void set_wm_state(Window w, long state) { /* set WM_STATE property */
 	long data[2];
 	data[0] = (long) state;
 	data[1] = None;
 	XChangeProperty(dpy, w, xa_wm_state, xa_wm_state, 32, PropModeReplace, (unsigned char *) data, 2);
 }
 
-void get_mwm_hints(client *c) {
+void get_mwm_hints(client *c) { /* read motif hints */
 	Atom rt;
 	int rf;
 	unsigned long nir, bar;
@@ -89,13 +89,13 @@ void get_mwm_hints(client *c) {
 }
 
 #ifdef SHAPE
-void set_shape(client *c) {
+void set_shape(client *c) { /* make the parent window of c have the same shape as its client window */
 	if(c->flags & SHAPED)
 		XShapeCombineShape(dpy, c->parent, ShapeBounding, client_border(c), client_border(c) + client_title(c), c->window, ShapeBounding, ShapeSet);
 }
 #endif
 
-void configurenotify(client *c)
+void configurenotify(client *c) /* informs a client about its geometry */
 {
 	XConfigureEvent ce;
 	ce.type = ConfigureNotify;
@@ -111,7 +111,7 @@ void configurenotify(client *c)
 	XSendEvent(dpy, c->window, False, StructureNotifyMask, (XEvent *) &ce);
 }
 
-int has_protocol(Window w, Atom protocol) {
+int has_protocol(Window w, Atom protocol) { /* to check if a window supports specified protocol - used below */
 	int i, count, ret = 0;
 	Atom *protocols;
 	if(XGetWMProtocols(dpy, w, &protocols, &count)) {
@@ -123,9 +123,9 @@ int has_protocol(Window w, Atom protocol) {
 	return ret;
 }
 
-void delete_window(client *c) {
+void delete_window(client *c) { /* for closing windows */
 	XEvent ev;
-	if(has_protocol(c->window, xa_wm_delete)) {
+	if(has_protocol(c->window, xa_wm_delete)) { /* check if the window supports WM_DELETE, wich is more friendly then just killing the client */
 		ev.type = ClientMessage;
 		ev.xclient.window = c->window;
 		ev.xclient.message_type = xa_wm_protocols;
@@ -136,7 +136,7 @@ void delete_window(client *c) {
 	} else XKillClient(dpy, c->window);
 }
 
-int gxo(client *c, int initial) {
+int gxo(client *c, int initial) { /* returns offset for horizontal window gravity */
 	if(c->normal_hints.flags & PWinGravity)
 		switch(c->normal_hints.win_gravity) {
 			case StaticGravity:
@@ -153,7 +153,7 @@ int gxo(client *c, int initial) {
 	return ((c->flags & NO_STRUT) ? 0 : -ewmh_strut[0]);
 }
 
-int gyo(client *c, int initial) {
+int gyo(client *c, int initial) { /* returns offset for vertical window gravity */
 	if(c->normal_hints.flags & PWinGravity)
 		switch(c->normal_hints.win_gravity) {
 			case StaticGravity:
@@ -170,7 +170,7 @@ int gyo(client *c, int initial) {
 	return ((c->flags & NO_STRUT) ? 0 : -ewmh_strut[2]);
 }
 
-int has_child(Window parent, Window child) {
+int has_child(Window parent, Window child) { /* checks if child is a child of parent */
 	unsigned int i, nwins;
 	Window dw, *wins;
 	XQueryTree(dpy, parent, &dw, &dw, &wins, &nwins);
@@ -180,7 +180,7 @@ int has_child(Window parent, Window child) {
 	return 0;
 }
 
-int isviewable(Window w) {
+int isviewable(Window w) { /* check if a window is actually viewable */
 	XWindowAttributes attr;
 	XGetWindowAttributes(dpy, w, &attr);
 	if(attr.map_state == IsViewable)
@@ -188,7 +188,7 @@ int isviewable(Window w) {
 	return 0;
 }
 
-Bool isunmap(Display *display, XEvent *event, XPointer arg) {
+Bool isunmap(Display *display, XEvent *event, XPointer arg) { /* predicate procedure to look for an UnmapNotify for a specific window */
 	if(event->type == UnmapNotify && event->xunmap.window == *(Window *) arg)
 		return True;
 	return False;

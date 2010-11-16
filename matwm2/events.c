@@ -16,13 +16,15 @@ void handle_event(XEvent ev) {
 	if((evh && evh(ev)) || button_handle_event(ev) || ewmh_handle_event(ev))
 		return;
 	if(c) {
-		if(!has_child(c->parent, c->window) && ev.type != DestroyNotify)
+		if(!has_child(c->parent, c->window) && ev.type != DestroyNotify && ev.type != UnmapNotify)
 			return;
 		switch(ev.type) {
 			case UnmapNotify:
 				if(c->window == ev.xunmap.window) {
-					client_deparent(c);
-					set_wm_state(c->window, WithdrawnState);
+					if(has_child(c->parent, c->window)) {
+						client_deparent(c);
+						set_wm_state(c->window, WithdrawnState);
+					}
 					client_remove(c);
 					ewmh_update_clist();
 				}
