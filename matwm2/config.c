@@ -2,7 +2,7 @@
 
 XColor bg, ibg, fg, ifg;
 GC gc, igc;
-int border_width, title_height, snapat, button1, button2, button3, button4, button5;
+int border_width, text_height, title_height, button_parent_width, snapat, button1, button2, button3, button4, button5;
 XFontStruct *font;
 char *no_title = NO_TITLE;
 
@@ -26,7 +26,9 @@ void cfg_read(void) {
     free((void *) cfgfn);
   }
   update_keys();
-  title_height = font->max_bounds.ascent + font->max_bounds.descent + 2;
+  text_height = font->max_bounds.ascent + font->max_bounds.descent;
+  title_height = text_height + 2;
+  button_parent_width = (text_height * 4) + 8;
   gv.function = GXinvert;
   gv.subwindow_mode = IncludeInferiors;
   gv.line_width = 1;

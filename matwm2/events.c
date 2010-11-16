@@ -10,9 +10,12 @@ Bool isgone(Display *display, XEvent *event, XPointer arg) {
 
 void handle_event(XEvent ev) {
   client *c = owner(ev.xany.window);
+  int i;
 //  if(c) printf("%s: %s\n", c->name, event_name(ev));
 //  else printf("%i: %s\n", ev.xany.window, event_name(ev));
   if(evh && evh(ev))
+    return;
+  if(handle_button_event(ev))
     return;
   switch(ev.type) {
     case MapRequest:
@@ -85,6 +88,8 @@ void handle_event(XEvent ev) {
       if(ev.xexpose.count == 0) {
         if(c && ev.xexpose.window == c->parent)
           draw_client(c);
+        if(c && ev.xexpose.window == c->button_parent)
+          XClearWindow(dpy, c->button_parent);
         if(evh == wlist_handle_event && c && ev.xexpose.window == c->wlist_item)
           wlist_item_draw(c);
       }

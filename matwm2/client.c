@@ -38,8 +38,10 @@ void add_client(Window w) {
                               DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
                               CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
   new->wlist_item = XCreateWindow(dpy, wlist, 0, 0, 1, 1, 0,
-                            DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
-                            CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
+                                  DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
+                                  CWOverrideRedirect | CWBackPixel | CWEventMask, &p_attr);
+  buttons_create(new);
+  XMapWindow(dpy, new->wlist_item);
   XAddToSaveSet(dpy, w);
   XReparentWindow(dpy, w, new->parent, border(new), border(new) + title(new));
   grab_button(new->parent, AnyButton, mousemodmask, ButtonPressMask | ButtonReleaseMask);
@@ -57,7 +59,6 @@ void add_client(Window w) {
     if(!new->state & ICONIC)
       warpto(new);
   } else clients[cn - 1] = new;
-  XMapWindow(dpy, new->wlist_item);
   if(!current)
     focus(new);
   if(evh == wlist_handle_event)
@@ -96,6 +97,7 @@ void draw_client(client *c) {
   if(c->name && title(c)) {
     XDrawString(dpy, c->parent, (c == current) ? gc : igc, border_width, border_width + font->max_bounds.ascent, c->name, strlen(c->name));
     XClearArea(dpy, c->parent, c->width + border_width - 1, border_width, border_width, title_height, False);
+    buttons_draw(c);
   }
   if(border(c))
     XDrawRectangle(dpy, c->parent, (c == current) ? gc : igc, 0, 0, c->width + (border_width * 2) - 1, c->height + (border_width * 2) + title(c) - 1);
@@ -149,6 +151,7 @@ int resize(client *c, int width, int height) {
     return 0;
   c->width = width;
   c->height = height;
+  XMoveWindow(dpy, c->button_parent, (c->width + border_width) - button_parent_width, border_width);
   XResizeWindow(dpy, c->parent, total_width(c), total_height(c));
   XResizeWindow(dpy, c->window, width, height);
   draw_client(c);
@@ -160,9 +163,16 @@ void focus(client *c) {
   current = c;
   if(prev) {
     XSetWindowBackground(dpy, prev->parent, ibg.pixel);
+    XSetWindowBackground(dpy, prev->button_parent, ibg.pixel);
+    XSetWindowBackground(dpy, prev->button_iconify, ibg.pixel);
+    XSetWindowBackground(dpy, prev->button_expand, ibg.pixel);
+    XSetWindowBackground(dpy, prev->button_maximise, ibg.pixel);
+    XSetWindowBackground(dpy, prev->button_close, ibg.pixel);
     XSetWindowBackground(dpy, prev->wlist_item, ibg.pixel);
     if(!(prev->state & ICONIC)) {
       XClearWindow(dpy, prev->parent);
+      XClearWindow(dpy, prev->button_parent);
+      buttons_draw(prev);
       draw_client(prev);
     }
     if(evh == wlist_handle_event) {
@@ -171,9 +181,16 @@ void focus(client *c) {
     }
   }
   XSetWindowBackground(dpy, c->parent, bg.pixel);
+  XSetWindowBackground(dpy, c->button_parent, bg.pixel);
+  XSetWindowBackground(dpy, c->button_iconify, bg.pixel);
+  XSetWindowBackground(dpy, c->button_expand, bg.pixel);
+  XSetWindowBackground(dpy, c->button_maximise, bg.pixel);
+  XSetWindowBackground(dpy, c->button_close, bg.pixel);
   XSetWindowBackground(dpy, c->wlist_item, bg.pixel);
   if(!(c->state & ICONIC)) {
     XClearWindow(dpy, c->parent);
+    XClearWindow(dpy, c->button_parent);
+    buttons_draw(c);
     draw_client(c);
     XSetInputFocus(dpy, c->window, RevertToPointerRoot, CurrentTime);
   }
@@ -218,6 +235,8 @@ void maximise(client *c) {
 
 void expand(client *c) {
   int i, min_x = 0, min_y = 0, max_x = display_width, max_y = display_height;
+  if(c->state & MAXIMISED)
+    maximise(c);
   if(c->state & EXPANDED) {
     c->state ^= EXPANDED;
     move(c, c->expand_prev_x, c->expand_prev_y);
@@ -244,9 +263,9 @@ void expand(client *c) {
   c->expand_prev_y = c->y;
   c->expand_prev_width = c->width;
   c->expand_prev_height = c->height;
-  c->state |= EXPANDED;
   move(c, min_x, min_y);
   resize(c, max_x - (min_x + (border(c) * 2)), max_y - (min_y + (border(c) * 2) + title(c)));
+  c->state |= EXPANDED;
 }
 
 void set_shape(client *c) {

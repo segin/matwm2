@@ -1,3 +1,9 @@
+// buttons.c
+extern Window button_current;
+void buttons_create(client *c);
+void buttons_draw(client *c);
+int handle_button_event(XEvent ev);
+
 // client.c
 extern client **clients, *current;
 extern int cn;
@@ -20,7 +26,7 @@ client *owner(Window w);
 // config.c
 extern XColor bg, ibg, fg, ifg;
 extern GC gc, igc;
-extern int border_width, title_height, snapat, button1, button2, button3, button4, button5;
+extern int border_width, text_height, title_height, button_parent_width, snapat, button1, button2, button3, button4, button5;
 extern XFontStruct *font;
 extern char *no_title;
 void cfg_read(void);
