@@ -13,16 +13,19 @@
 #include <sys/types.h>
 #include <sys/disklabel.h>
 
+#define ejerror(msg) fprintf(stderr, msg " %s: %s\n", argv[a], strerror(errno));
+
 int main(int argc, char *argv[])
 {
 	int a, fd;
 	for(a = 1; a <= argc; a++) { 
-		fd = open(argv[a], O_DIRECT | O_NONBLOCK);
-		if(fd != -1) { 
-			ioctl(fd, CDIOCEJECT);
+		if((fd = open(argv[a], O_DIRECT | O_NONBLOCK)) != -1) {
+			if(ioctl(fd, CDIOCEJECT) == -1) {
+				ejerror("ioctl(CDIOCEJECT) failed for");
+			} 
 			close(fd);
 		} else { 
-			fprintf(stderr, "Cannot eject %s: %s\n", argv[a], strerror(errno));
+			ejerror("Cannot eject");
 		}
 	};
 }
