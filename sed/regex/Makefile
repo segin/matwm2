@@ -1,11 +1,12 @@
 # libregex: BSD regex library
 # forked from FreeBSD 7.2-RELEASE-p3
 
-CC	=	mingw32-gcc
+#CC	=	mingw32-gcc
+CC	=	i586-mingw32msvc-gcc
 CFLAGS	+=	-I. -Igrot
 
 
-SRCS	=	engine.c regcomp.c regerror.c regexec.c regfree.c 
+SRCS	=	regcomp.c regerror.c regexec.c regfree.c 
 OBJS	:=	$(SRCS:.c=.o)
 
 all: libregex.a

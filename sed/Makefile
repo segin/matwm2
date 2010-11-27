@@ -1,7 +1,8 @@
 # bsd-sed-win32 Makefile
 # # # 
 
-CC 	= 	mingw32-gcc
+#CC 	= 	mingw32-gcc
+CC	=	i586-mingw32msvc-gcc 
 CFLAGS	+=	-Iregex
 LIBS 	+= 	-lregex 
 LDFLAGS	+=	$(LIBS) 
