@@ -26,8 +26,10 @@ struct dosExe {
 	int peHasOptionalHeader;
 	int xxx;
 	IMAGE_DOS_HEADER dosHeader;
-	IMAGE_OS2_HEADER neHeader;
-	IMAGE_FILE_HEADER peHeader;
+	union {
+		IMAGE_OS2_HEADER neHeader;
+		IMAGE_FILE_HEADER peHeader;
+	};
 };
 
 void init_tbl(void)
@@ -97,7 +99,7 @@ main(int argc, char *argv[])
 		printf("Overlay number: 			%#x\n", exe.dosHeader.e_ovno);
 		printf("OEM Identifier:				%#x\n", exe.dosHeader.e_oemid);
 		printf("OEM Information:			%#x\n", exe.dosHeader.e_oeminfo);
-		printf("Offset of next header:			%#x\n",exe.dosHeader.e_lfanew);
+		printf("Offset of next header:			%#x\n", exe.dosHeader.e_lfanew);
 			
 	/* Fuck all this for now. 
 	static struct option long_options[] = { 
@@ -109,6 +111,8 @@ main(int argc, char *argv[])
 		}
 	}
 	*/
+		if(exe.dosHeader.e_lfanew != 0) { 
+			
 		fclose(pefile);
 	};
 	
