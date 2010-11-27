@@ -34,6 +34,8 @@
  * $FreeBSD: src/lib/libc/regex/utils.h,v 1.3.8.1 2009/04/15 03:14:26 kensmith Exp $
  */
 
+#define   _POSIX2_RE_DUP_MAX      255
+
 /* utility definitions */
 #define	DUPMAX		_POSIX2_RE_DUP_MAX	/* xxx is this right? */
 #define	INFINITY	(DUPMAX + 1)
