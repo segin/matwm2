@@ -1,7 +1,7 @@
 /* 
  * NetMSG Protocol, C Language Implementation 
- * Copyright (C) 2008-2009 Segin Takushiro <segin2005@gmail.com>
- * 
+ * Copyright (C) 2008-2009 Kirn Gill <segin2005@gmail.com>
+ *  
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
