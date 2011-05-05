@@ -2,8 +2,8 @@
 # # # 
 
 #CC 	= 	mingw32-gcc
-CC	=	i586-mingw32msvc-gcc 
-CFLAGS	+=	-Iregex
+CC	=	gcc -m32
+CFLAGS	+=	-Iregex 
 LIBS 	+= 	-lregex 
 LDFLAGS	+=	$(LIBS) 
 
