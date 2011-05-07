@@ -95,8 +95,9 @@ int main(void)
 	      );
 	memset(name, 0, 10);
 	fgets(name, 6, stdin);
+#ifndef __WIN32__
 	fpurge(stdin);
-	
+#endif /* __WIN32__ */	
 	printf("\nNow, enter your trainer ID.\n\nID> ");
 	scanf("%d",&id);
 	
