@@ -3,6 +3,7 @@
 #include "irc.h"
 #include "misc.h"
 #include "screen.h"
+#include "dprintf.h"
 
 #include <stdio.h> /* for perror() */
 #include <unistd.h> /* for STDIN_FILENO and close() */
@@ -211,6 +212,9 @@ void quit(void) {
 	int i;
 	for(i = 0; i < nservers; i++)
 		server_disconnect(servers[i]);
+#ifdef __WIN32__
+	WSACleanup();
+#endif /* __WIN32__ */
 	screen_end();
 }
 
@@ -221,11 +225,23 @@ int main(int argc, char *argv[]) {
 	fd_set fds, fdsc;
 	int i, j, last;
 
-	signal(SIGTERM, &sighandler);
-	signal(SIGINT, &sighandler);
+#ifdef __WIN32__ 
+	WSADATA WSAData;
+ 
+	i = WSAStartup(WINSOCK_VERSION, &WSAData);
+	if(i != 0)
+	{
+		printf("[-] Error in main() with WSAStartup(): %d\n", i);
+		return 0;
+	}
+#else 
 	signal(SIGHUP, &sighandler);
 	signal(SIGUSR1, &sighandler);
 	signal(SIGCHLD, &sighandler);
+	signal(SIGINT, &sighandler);
+#endif /* __WIN32__ */
+	signal(SIGTERM, &sighandler);
+
 	atexit(&quit);
 	screen_initialize();
 

@@ -7,6 +7,20 @@
 #include <stdarg.h>
 #include <signal.h>
 
+#ifdef __WIN32__
+#include <windows.h>
+
+struct winsize
+{
+  unsigned short ws_row;	/* rows, in characters */
+  unsigned short ws_col;	/* columns, in characters */
+  unsigned short ws_xpixel;	/* horizontal size, pixels */
+  unsigned short ws_ypixel;	/* vertical size, pixels */
+};
+
+void screen_get_win32_console_size(struct winsize *ws);
+#endif
+
 #define ENTRY_SIZE 1024
 #define HISTORY_SIZE 512
 

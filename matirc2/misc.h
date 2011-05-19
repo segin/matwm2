@@ -2,7 +2,7 @@
 #define __MISC_H__
 
 #include <stdlib.h>
-#include <ncurses.h> /* for consistent bool typedef */
+#include <curses.h> /* for consistent bool typedef */
 
 #define ALLOC_INCREMENT 512
 

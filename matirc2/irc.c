@@ -2,7 +2,9 @@
 #include "misc.h"
 
 #include <sys/types.h>
+#ifndef __WIN32__
 #include <sys/uio.h>
+#endif
 #include <unistd.h>
 
 void irc_alloc(irc_command *command, size_t size) {

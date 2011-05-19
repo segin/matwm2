@@ -14,7 +14,6 @@
 #ifndef __WIN32__
 typedef unsigned int SOCKET;
 #else
-#define dprintf(...) dprintf_wrapper_win32(__VA_ARGS__);
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #endif /* __WIN32__ */

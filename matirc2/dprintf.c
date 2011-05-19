@@ -20,9 +20,9 @@ int dprintf_wrapper_unix(int fd, char *fmt, ...)
 	return(ret);
 }
 
-int dprintf_wrapper_win32(SOCKET fd, char *fmt, ...)
-{
 #ifdef __WIN32__
+int dprintf(SOCKET fd, char *fmt, ...)
+{
 	int fdx = _open_osfhandle(fd, 0);
 	register int ret;
 	FILE *fds;
@@ -34,7 +34,6 @@ int dprintf_wrapper_win32(SOCKET fd, char *fmt, ...)
 	fclose(fds);
 	va_end(ap);
 	return(ret);
-#endif /* __WIN32__ */
 }
-
+#endif /* __WIN32__ */
 

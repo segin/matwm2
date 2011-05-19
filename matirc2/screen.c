@@ -6,8 +6,15 @@
 #include <stdio.h> /* for vasprintf(), dprintf() and fprintf() */
 #include <curses.h>
 /* for determining the terminal size */
+#ifndef __WIN32__
 #include <sys/ioctl.h>
+#endif
 #include <unistd.h> /* STDOUT_FILENO */
+
+#ifdef __WIN32__
+#define false 0
+#define true -1
+#endif
 
 WINDOW *screen_main, *screen_status, *screen_entry;
 int attrs = 0, screen_entry_pos = 0, screen_entry_len = 0, screen_history_start = -1, screen_history_pos = -1, screen_history_len = 0, screen_entry_offset = 0, screen_entry_scroll = 0;
@@ -21,18 +28,31 @@ void sigwinch(int s) {
 }
 #endif
 
+#ifdef __WIN32__
+void screen_get_win32_console_size(struct winsize *ws)
+{
+	/* XXX: Just assume 80x25 for now */
+	ws->ws_row = 25;
+	ws->ws_col = 80;
+}
+#endif
+
 void screen_initialize(void) {
-  initscr();
+	initscr();
 	noecho();
-  cbreak();
+	cbreak();
+#ifndef __WIN32__
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
-  screen_main = newwin(size.ws_row - 2, size.ws_col, 0, 0);
+#else
+	screen_get_win32_console_size(&size);
+#endif
+	screen_main = newwin(size.ws_row - 2, size.ws_col, 0, 0);
 	screen_status = newwin(1, size.ws_col, size.ws_row - 2, 0);
 	screen_entry = newwin(1, size.ws_col, size.ws_row - 1, 0);
 	scrollok(screen_main, TRUE);
 	wbkgdset(screen_status, A_REVERSE);
 	wclear(screen_status);
-  keypad(screen_entry, TRUE);
+	keypad(screen_entry, TRUE);
 	refresh();
 	wrefresh(screen_status);
 	#ifdef SIGWINCH
