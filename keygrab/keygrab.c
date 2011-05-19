@@ -24,6 +24,8 @@
 #include <getopt.h>
 #include <windows.h>
 
+static char __sig[] = "dadef37f6c65947a628de3b301ffb729";
+
 enum {
      offset_1_16_1 = 0x12FD10,
      offset_1_16_0 = 0x12FD10,
@@ -145,7 +147,7 @@ int main(int argc, char *argv[])
     HWND SChWnd;
     char cdkey[31], user[31];
     
-    char *verstr = "1.16.1";
+    char verstr[16] = "1.16.1";
     
     static struct option long_options[] = { 
            {"version", no_argument, NULL, 'V'},
@@ -154,7 +156,7 @@ int main(int argc, char *argv[])
     while(opt = getopt_long(argc, argv, "hv:V", long_options, &tmp) != -1) {
         switch(opt) {
             case 'v':
-                 verstr = optarg;
+                 strncpy(verstr, optarg, 16);
                  break;
             case 'V':
                  version();
