@@ -1,0 +1,17 @@
+#
+# clockreset Makefile
+# 
+
+CC	:= gcc
+CFLAGS	:= -Os
+OBJEXT	:= .o
+BINEXT	:= 
+PROG	:= clockreset
+
+
+SOURCES	:= clockreset.c
+OBJS	:= $(SOURCES:.c=$(OBJEXT))
+
+all: $(PROG)$(BINEXT)
+
+$(PROG)$(BINEXT): $(OBJS)
