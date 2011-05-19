@@ -94,7 +94,7 @@ int main(void)
 		"for the MN symbol, type a \"<\".\n\nname> "
 	      );
 	memset(name, 0, 10);
-	fgets(name, 6, stdin);
+	fgets(name, 8, stdin);
 #ifndef __WIN32__
 	fpurge(stdin);
 #endif /* __WIN32__ */	
