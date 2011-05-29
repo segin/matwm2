@@ -43,6 +43,7 @@ LRESULT CALLBACK WndProc(
 			hMenu = CreatePopupMenu();
 			AppendMenu(hMenu, MF_STRING, IDM_ABOUT, "&About");
 			AppendMenu(hMenu, MF_STRING, IDM_QUIT, "E&xit");
+			DefWindowProc(hWnd, uMsg, wParam, lParam);
 			break;
 		case WM_DESTROY:
 			DestroyMenu(hMenu);
@@ -52,7 +53,7 @@ LRESULT CALLBACK WndProc(
 		case WM_COMMAND:
 			switch (wParam) {
 				case IDM_ABOUT:
-					// display about box??
+					MessageBox(hWnd, "Minecraft Resolution Helper, v0.1\n\nCopyright © 2011, Kirn Gill <segin2005@gmail.com>", "About Minecraft Resolution Helper", MB_OK | MB_ICONINFORMATION);
 					break;
 				case IDM_QUIT:
 					DestroyMenu(hMenu);
@@ -61,17 +62,20 @@ LRESULT CALLBACK WndProc(
 					break;
 			}
 		case WM_SHELLNOTIFY:
-			if (wParam == IDI_MCRES) {
-				if (lParam == WM_RBUTTONDOWN) {
+			switch (lParam) {
+				case WM_RBUTTONDOWN:
+					;
 					POINT pt;
 					GetCursorPos(&pt);
-					TrackPopupMenu(hMenu,TPM_RIGHTALIGN,pt.x,pt.y,NULL,hWnd,NULL);
+					TrackPopupMenu(hMenu, TPM_RIGHTALIGN, pt.x, pt.y, 0, hWnd, NULL);
 					PostMessage(hWnd,WM_NULL,0,0);
-				}
+					break;
+				case WM_MOUSEMOVE:
+					break;
 			}
 			break;
 		default:
-			// DefWindowProc(hWnd, uMsg, wParam, lParam);
+			return DefWindowProc(hWnd, uMsg, wParam, lParam);
 			break;
 	}
 	return 0;
@@ -89,27 +93,27 @@ int WINAPI WinMain(
 	WNDCLASSEX wc;
 	HWND hwnd;
 	HANDLE prochandle = GetModuleHandle(NULL);
+	char t[32];
 	static const GUID myGUID = {
 		0xf90b590c, 0xbea2, 0x4cb2, 
 		{ 0x9c, 0x43, 0xb8, 0x69, 0x8c, 0x57, 0xc4, 0xdd }
 	};
 	wc.cbSize = sizeof(WNDCLASSEX);
 	wc.style = 0;
-	wc.lpfnWndProc = &WndProc;
+	wc.lpfnWndProc = WndProc;
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
 	wc.hInstance = prochandle;
-	wc.hIcon = LoadIcon(prochandle, MAKEINTRESOURCE(IDI_MCRES));
-	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wc.hIcon = wc.hIconSm = 0;
+	wc.hCursor = 0;
 	wc.hbrBackground = NULL;
 	wc.lpszMenuName = NULL;
 	wc.lpszClassName = "McResHelper";
 	
-	RegisterClassEx(&wc);
-	
-	hwnd = CreateWindowEx(WS_EX_CLIENTEDGE, "McResHelper", "Minecraft Resolution Helper", 
-		(DWORD) 0, 0, 0, 0, 0, GetDesktopWindow(), (HMENU) NULL, hInstance, NULL); 
-	
+	ret = RegisterClassEx(&wc);
+	hwnd = CreateWindowEx(0, "McResHelper", "Minecraft Resolution Helper", 
+		0, 0, 0, 0, 0, 0, 0, hInstance, 0); 
+
 	trayicon.cbSize = sizeof(NOTIFYICONDATA);
 	trayicon.hWnd = hwnd;
 	trayicon.uID = IDI_MCRES;
@@ -128,6 +132,6 @@ int WINAPI WinMain(
 		DispatchMessage(&msg); 
 	} 
 	
-	Shell_NotifyIcon(NIM_DELETE, &trayicon);
+	Shell_NotifyIcon(NIM_DELETE, &trayicon);	
 	return msg.wParam;
 }
