@@ -1,5 +1,5 @@
 /* KDE 'kshell' mini-clone.
- * This software is released under both the GNU GPL version 2 and BSD licenses.
+ * This software is released under the ISC license. No nasty GPL applies anymore.
  * 
  * This program launches processes "daemonized", that is, with no controlling
  * tty... Well, really, it just kills the program's stdin/stdout/stderr before
