@@ -1,8 +1,47 @@
 /* Minecraft Resolution Helper - mcres.rc - Resource script
- * Copyright (C) 2011  Kirn Gill <segin2005@gmail.com>
- * ISC license goes here
+ * Copyright (c) 2011, Kirn Gill <segin2005@gmail.com>
+ * 
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include <windows.h>
 #include "mcres-rc.h"
 
+IDI_MCRES ICON DISCARDABLE "mcres.ico"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION 0,1,0,0
+PRODUCTVERSION 0,1,0,0
+FILEOS 0x00040004
+FILETYPE 0x00000001
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904B0"
+    BEGIN
+      VALUE "CompanyName", "Kirn Gill\0"
+      VALUE "FileDescription", "Minecraft Resolution Helper\0"
+      VALUE "FileVersion", "0, 1, 0, 0\0"
+      VALUE "InternalName", "mcres\0"
+      VALUE "LegalCopyright", "Copyright © 2011, Kirn Gill <segin2005@gmail.com>\0"
+      VALUE "OriginalFilename", "mcres.exe\0"
+      VALUE "ProductName", "Minecraft Resolution Helper\0"
+      VALUE "ProductVersion", "0.1.0\0"
+      VALUE "LegalTrademarks", "Copyright © 2011, Kirn Gill <segin2005@gmail.com>.\0"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x0409, 0x04B0
+  END
+END
