@@ -21,8 +21,15 @@
 
 #define WM_SHELLNOTIFY WM_USER+5
 
-HMENU hMenu;
-NOTIFYICONDATA trayicon;
+HMENU hMenu; HANDLE thread;
+NOTIFYICONDATA trayicon; int die = 0;
+
+enum
+{
+	MINECRAFT_WIDTH = 800,
+	MINECRAFT_HEIGHT = 600,
+	MINECRAFT_DEPTH = 32
+};
 
 int WINAPI WinMain(
 	HINSTANCE hInstance,
@@ -31,6 +38,42 @@ int WINAPI WinMain(
 	int nCmdShow
 	);
 
+int IsMinecraftRunning(void)
+{
+	return FindWindow("SunAwtFrame", "Minecraft") != NULL || FindWindow("SunAwtFrame", "Minecraft Launcher") != NULL;
+}
+	
+DWORD WINAPI McResThread(LPVOID lpParam)	
+{
+	int isRunning, wasRunning;
+	DEVMODE old, new;
+	while (!die) {
+		Sleep(100);
+		isRunning = IsMinecraftRunning();
+		if (isRunning && !wasRunning) {
+			old.dmSize = sizeof(DEVMODE);
+			EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &old);
+			new.dmSize = sizeof(DEVMODE);
+			new.dmPelsWidth = MINECRAFT_WIDTH;
+			new.dmFields |= DM_PELSWIDTH;
+			new.dmPelsHeight = MINECRAFT_HEIGHT;
+			new.dmFields |= DM_PELSHEIGHT;
+			new.dmBitsPerPel = MINECRAFT_DEPTH;
+			new.dmFields |= DM_BITSPERPEL;
+			int ret = ChangeDisplaySettings(&new, 0);
+			if (!ret) { 
+				char msg[256];
+				ret = GetLastError(); 
+				
+			}
+		}
+		if (!isRunning && wasRunning)
+			ChangeDisplaySettings(&old, 0);
+		wasRunning = isRunning;
+	};
+	ExitThread(0);
+}
+	
 LRESULT CALLBACK WndProc(
 	HWND hWnd,
 	UINT uMsg,
@@ -46,6 +89,7 @@ LRESULT CALLBACK WndProc(
 			DefWindowProc(hWnd, uMsg, wParam, lParam);
 			break;
 		case WM_DESTROY:
+			die = 1;
 			DestroyMenu(hMenu);
 			Shell_NotifyIcon(NIM_DELETE, &trayicon);
 			PostQuitMessage(0);
@@ -53,9 +97,10 @@ LRESULT CALLBACK WndProc(
 		case WM_COMMAND:
 			switch (wParam) {
 				case IDM_ABOUT:
-					MessageBox(hWnd, "Minecraft Resolution Helper, v0.1\n\nCopyright © 2011, Kirn Gill <segin2005@gmail.com>", "About Minecraft Resolution Helper", MB_OK | MB_ICONINFORMATION);
+					MessageBox(hWnd, "Minecraft Resolution Helper, v0.2\n\nCopyright © 2011, Kirn Gill <segin2005@gmail.com>", "About Minecraft Resolution Helper", MB_OK | MB_ICONINFORMATION);
 					break;
 				case IDM_QUIT:
+					die = 1;
 					DestroyMenu(hMenu);
 					Shell_NotifyIcon(NIM_DELETE, &trayicon);
 					PostQuitMessage(0);
