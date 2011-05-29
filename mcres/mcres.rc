@@ -1,0 +1,8 @@
+/* Minecraft Resolution Helper - mcres.rc - Resource script
+ * Copyright (C) 2011  Kirn Gill <segin2005@gmail.com>
+ * ISC license goes here
+ */
+
+#include <windows.h>
+#include "mcres-rc.h"
+
