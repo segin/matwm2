@@ -19,7 +19,10 @@
 #include <shellapi.h>
 #include "mcres-rc.h"
 
+#define WM_SHELLNOTIFY WM_USER+5
+
 HMENU hMenu;
+NOTIFYICONDATA trayicon;
 
 int WINAPI WinMain(
 	HINSTANCE hInstance,
@@ -43,14 +46,35 @@ LRESULT CALLBACK WndProc(
 			break;
 		case WM_DESTROY:
 			DestroyMenu(hMenu);
+			Shell_NotifyIcon(NIM_DELETE, &trayicon);
 			PostQuitMessage(0);
 			break;
-		// case WM_SHELLNOTIFY:
-		//	break;
+		case WM_COMMAND:
+			switch (wParam) {
+				case IDM_ABOUT:
+					// display about box??
+					break;
+				case IDM_QUIT:
+					DestroyMenu(hMenu);
+					Shell_NotifyIcon(NIM_DELETE, &trayicon);
+					PostQuitMessage(0);
+					break;
+			}
+		case WM_SHELLNOTIFY:
+			if (wParam == IDI_MCRES) {
+				if (lParam == WM_RBUTTONDOWN) {
+					POINT pt;
+					GetCursorPos(&pt);
+					TrackPopupMenu(hMenu,TPM_RIGHTALIGN,pt.x,pt.y,NULL,hWnd,NULL);
+					PostMessage(hWnd,WM_NULL,0,0);
+				}
+			}
+			break;
 		default:
-			DefWindowProc(hWnd, uMsg, wParam, lParam);
+			// DefWindowProc(hWnd, uMsg, wParam, lParam);
 			break;
 	}
+	return 0;
 }
 
 int WINAPI WinMain(
@@ -61,24 +85,49 @@ int WINAPI WinMain(
 	)
 {
 	MSG msg;
-	NOTIFYICONDATA trayicon;
+	int ret;
 	WNDCLASSEX wc;
 	HWND hwnd;
 	HANDLE prochandle = GetModuleHandle(NULL);
+	static const GUID myGUID = {
+		0xf90b590c, 0xbea2, 0x4cb2, 
+		{ 0x9c, 0x43, 0xb8, 0x69, 0x8c, 0x57, 0xc4, 0xdd }
+	};
 	wc.cbSize = sizeof(WNDCLASSEX);
 	wc.style = 0;
 	wc.lpfnWndProc = &WndProc;
-	wc.cbClsExtra = NULL;
-	wc.cbWndExtra = NULL;
-	wc.hInstance = prochandle;	
-	wc.hIcon = LoadIcon(prochandle, NULL);
+	wc.cbClsExtra = 0;
+	wc.cbWndExtra = 0;
+	wc.hInstance = prochandle;
+	wc.hIcon = LoadIcon(prochandle, MAKEINTRESOURCE(IDI_MCRES));
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wc.hbrBackground = COLOR_APPWORKSPACE;
+	wc.hbrBackground = NULL;
 	wc.lpszMenuName = NULL;
 	wc.lpszClassName = "McResHelper";
 	
+	RegisterClassEx(&wc);
+	
+	hwnd = CreateWindowEx(WS_EX_CLIENTEDGE, "McResHelper", "Minecraft Resolution Helper", 
+		(DWORD) 0, 0, 0, 0, 0, GetDesktopWindow(), (HMENU) NULL, hInstance, NULL); 
 	
 	trayicon.cbSize = sizeof(NOTIFYICONDATA);
+	trayicon.hWnd = hwnd;
+	trayicon.uID = IDI_MCRES;
+	trayicon.uCallbackMessage = WM_SHELLNOTIFY;
+	trayicon.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
+	trayicon.hIcon = LoadIcon(prochandle, MAKEINTRESOURCE(IDI_MCRES));
+	strcpy(trayicon.szTip,"Minecraft Resolution Helper");
 	
-
+	Shell_NotifyIcon(NIM_ADD, &trayicon);
+	
+	while (1)
+	{
+		ret = GetMessage(&msg, NULL, 0, 0);
+		if (!ret) return;
+		TranslateMessage(&msg); 
+		DispatchMessage(&msg); 
+	} 
+	
+	Shell_NotifyIcon(NIM_DELETE, &trayicon);
+	return msg.wParam;
 }

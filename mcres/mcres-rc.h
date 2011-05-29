@@ -17,8 +17,8 @@
 #ifndef __MCRES_RC_H__
 #define __MCRES_RC_H__
 
-#define IDM_ABOUT 100
-#define IDM_QUIT  101
+#define IDM_ABOUT 1000
+#define IDM_QUIT  1001
 
 #define IDI_MCRES 1
 
