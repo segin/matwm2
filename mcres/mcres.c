@@ -1,4 +1,4 @@
-/* mcres.c - Minecraft Resolution helper 
+/* Minecraft Resolution Helper - mcres.c - Minecraft Resolution helper 
  * Copyright (c) 2011, Kirn Gill <segin2005@gmail.com>
  * 
  * Permission to use, copy, modify, and/or distribute this software for any

@@ -1,5 +1,5 @@
 #
-# mcres Makefile
+# Minecraft Resolution Helper - Makefile
 # 
 
 CC	:= gcc

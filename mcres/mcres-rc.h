@@ -1,4 +1,4 @@
-/* mcres-rc.h - Common defines between .rc and program code
+/* Minecraft Resolution Helper - mcres-rc.h - Common defines between .rc and program code
  * Copyright (c) 2011, Kirn Gill <segin2005@gmail.com>
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
