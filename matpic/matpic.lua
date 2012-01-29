@@ -46,6 +46,10 @@
         include <filename>
           Threat the file specified by <filename> as if it was in place of
           this directive.
+		message <message>
+		  Print a message to stderr.
+		error <message>
+		  Print an error message to stderr and exit.
     Assembler directives description follows:
         org <address>
           Tells the assembler following bytecode will go to the adress
@@ -58,9 +62,9 @@
     expressions using the following operators: +, -, *, /, %, |, &, ^, <<, >>,
     ~, !.
     Add, substract, multiply, divide, modula/remainder, bitwise OR, AND, XOR,
-    shift left, shift right, NOT and NOT respectively. There are parsed
-    strictly left to right. And bracelets (only normal round ones) can be used
-    to group operations.
+    shift left, shift right, NOT and NOT respectively. They are parsed
+    strictly left to right. Bracelets (only normal round ones) can be used to
+    group operations.
     Integers can be preceded with "0x" for hexadecimal, "0b" for binary,
     "0o" or "0" for octal, and "0d" or nothing for decimal. They can also be
     visually divided with underscores, which will be ignored.
@@ -101,6 +105,7 @@ local instr14 = {
 	["movwf"] = { op=0x0080, a="f" },
 	["nop"] = { op=0x0000, m=0x0060 },
 	["rlf"] = { op=0x0D00, a="df" },
+	["rrf"] = { op=0x0C00, a="df" },
 	["subwf"] = { op=0x0200, a="df" },
 	["swapf"] = { op=0x0E00, a="df" },
 	["xorwf"] = { op=0x0600, a="df" },
@@ -119,7 +124,7 @@ local instr14 = {
 	["retlw"] = { op=0x3400, a="k8", m=0x0300 },
 	["return"] = { op=0x0008 },
 	["sleep"] = { op=0x0063 },
-	["sublw"] = { op=0x3D00, a="k8", m=0x0100 },
+	["sublw"] = { op=0x3C00, a="k8", m=0x0100 },
 	["xorlw"] = { op=0x3A00, a="k8" },
 	["option"] = { op=0x0062 },
 	["tris"] = { op=0x0060, a="t" },
@@ -144,7 +149,7 @@ function comp14(v)
 	elseif v.ins.a == "k11" and table.getn(v.args) == 1 then
 		v.args[1] = v.args[1] % 0x800
 		v.op = v.ins.op + v.args[1]
-	elseif v.ins.a == "t" and table.getn(v.args[1]) == 1 then
+	elseif v.ins.a == "t" and table.getn(v.args) == 1 then
 		v.args[1] = v.args[1] % 8
 		v.op = v.ins.op + v.args[1]
 	elseif v.ins.a == nil and v.args == nil then
@@ -218,7 +223,17 @@ function pp(lines)
 
 		-- handle ifdef, ifndef and endif
 		ln, x = ckifdef(ln, x)
+
 		if x == 0 then
+			-- handle message and error directives
+			_, _, d = string.find(ln, "^%s+message%s+(.*)$")
+			if d then
+				io.stderr:write(d.."\n")
+				ln = ""
+			end
+			_, _, d = string.find(ln, "^%s+error%s+(.*)$")
+			if d then errexit(d) end
+
 			-- handle defines
 			_, _, d, v = string.find(ln, "^%s+define%s+([%a_][%a%d_]*)%s+(.*)$")
 			if d == nil then
@@ -457,7 +472,7 @@ end
 function bit_or(l, r)
 	local b = 0
 	local e = 0
-	while l > 0 or l > 0 do
+	while l > 0 or r > 0 do
 		if (l % 2) == 1 or (r % 2) == 1 then
 			e = e + (2 ^ b)
 		end
@@ -471,7 +486,7 @@ end
 function bit_and(l, r)
 	local b = 0
 	local e = 0
-	while l > 0 or l > 0 do
+	while l > 0 or r > 0 do
 		if (l % 2) == 1 and (r % 2) == 1 then
 			e = e + (2 ^ b)
 		end
@@ -485,7 +500,7 @@ end
 function bit_xor(l, r)
 	local b = 0
 	local e = 0
-	while l > 0 or l > 0 do
+	while l > 0 or r > 0 do
 		if ((l % 2) == 1 or (r % 2) == 1) and (l % 2) ~= (r % 2) then
 			e = e + (2 ^ b)
 		end
@@ -505,7 +520,7 @@ function calc(l, o, r)
 	elseif o == "-" then return l - r
 	elseif o == "*" then return l * r
 	elseif o == "/" then return math.floor(l / r)
-	elseif o == "%" then return math.floor(l % r)
+	elseif o == "%" then return l % r
 	elseif o == "|" then return bit_or(l, r)
 	elseif o == "&" then return bit_and(l, r)
 	elseif o == "^" then return bit_xor(l, r)
@@ -565,7 +580,7 @@ function parsemath(str)
 	end)
 	repeat
 		str, r = string.gsub(str,
-		                  "%s*([%xx_]+)%s*([%+-%*/%%|&%^<>]+)%s*(%d[%xx_]*)",
+		                  "^%s*([%xx_]+)%s*([%+-%*/%%|&%^<>]+)%s*(%d[%xx_]*)",
 		                  function (l, o, r)
 			l = parseint(l)
 			r = parseint(r)
