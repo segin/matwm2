@@ -77,7 +77,7 @@
 
   TODO/BUGS
     - Builtin disassembler would be nice.
-	- Fix dumb manual.
+    - Fix dumb manual.
     - Support 12bit and 16bit chips, only 14bit supported for now.
     - MPASM compatibility?
 ]]--
