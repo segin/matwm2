@@ -1,6 +1,6 @@
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
---   MPASM                                                                   --
+--   MatPIC                                                                  --
 --   Small, inefficient and fully featured PIC assembler in lua.             --
 --   Copryright (c) 2012 Mattis Michel.                                      --
 -------------------------------------------------------------------------------
@@ -8,7 +8,7 @@
 
 --[[
   SYNOPSIS
-    mpasm [<input file>] [<output file>]
+    matpic [<input file>] [<output file>]
       If output file is not specified, output will be written to stdout.
       If input file is not specified, stdin will be used.
 
@@ -27,10 +27,13 @@
     directives.
     The following preprocessor directives exist (all of which are executed
     before anything else:
-        define <identifier> [<value>]
+        define <identifier>, [<value>]
           Tells the preprocessor to replace any occurence of <identifier>
           with <value> (which can be anything, whitespace included). Also
           it can be used without any value for ifdef and ifndef.
+		enum <expression>, <identifier>, [<...>]
+          Start a series of defines which will refer to consecutive numbers,
+          starting from <expression>.
         ifdef <identifier>
           Starts a block of code that is removed by the preprocessor unless
           <identifier> is defined with a prior define directive. These blocks
@@ -40,14 +43,14 @@
           defined, instead of the other way around.
         endif
           Ends either of the blocks spoken of above.
-    Assembler directives description follows:
         include <filename>
           Threat the file specified by <filename> as if it was in place of
           this directive.
+    Assembler directives description follows:
         org <address>
           Tells the assembler following bytecode will go to the adress
           specified by <address>, the argument may be any integer expression.
-        data <word>, ...
+        data <word>, [<...>]
           Insert the data specified by <word> directly into the output.
           More than one argument amounts to the same as using the directive
           multiple times.
@@ -69,12 +72,14 @@
     <something>
       Triangle bracelets indicate something you should replace with whatever
       you prefer.
+    [<...>]
+      Optionally more arguments of the same type as the last one can be given.
 
   TODO/BUGS
-    - New integer parser instead of rather limited tonumber(). Currently
-      integer parsing does not work as advertised (no binary notation etc).
     - Builtin disassembler would be nice.
+	- Fix dumb manual.
     - Support 12bit and 16bit chips, only 14bit supported for now.
+    - MPASM compatibility?
 ]]--
 
 ------------------------------
@@ -115,27 +120,35 @@ local instr14 = {
 	["return"] = { op=0x0008 },
 	["sleep"] = { op=0x0063 },
 	["sublw"] = { op=0x3D00, a="k8", m=0x0100 },
-	["xorlw"] = { op=0x3A00, a="k8" }
+	["xorlw"] = { op=0x3A00, a="k8" },
+	["option"] = { op=0x0062 },
+	["tris"] = { op=0x0060, a="t" },
 }
 
 function comp14(v)
 	-- lua, Y U NO HAVE BITWISE OPERATORS
 	if  v.ins.a == "df" and table.getn(v.args) == 2 then
-		v.args[1] = v.args[1] % 2
-		v.args[2] = v.args[2] % 0x7F
-		v.ins.op = v.ins.op + (v.args[2] * 0x80) + v.args[1]
+		v.args[1] = v.args[1] % 0x80
+		v.args[2] = v.args[2] % 2
+		v.op = v.ins.op + (v.args[2] * 0x80) + v.args[1]
 	elseif v.ins.a == "f" and table.getn(v.args) == 1 then
-		v.args[1] = v.args[1] % 0x7F
-		v.ins.op = v.ins.op + v.args[1]
+		v.args[1] = v.args[1] % 0x80
+		v.op = v.ins.op + v.args[1]
 	elseif v.ins.a == "bf" and table.getn(v.args) == 2 then
-		v.args[1] = v.args[1] % 4
-		v.args[2] = v.args[2] % 0x7F
+		v.args[1] = v.args[1] % 0x80
+		v.args[2] = v.args[2] % 8
+		v.op = v.ins.op + (v.args[2] * 0x80) + v.args[1]
 	elseif v.ins.a == "k8" and table.getn(v.args) == 1 then
-		v.args[1] = v.args[1] % 0xFF
-		v.ins.op = v.ins.op + v.args[1]
+		v.args[1] = v.args[1] % 0x100
+		v.op = v.ins.op + v.args[1]
 	elseif v.ins.a == "k11" and table.getn(v.args) == 1 then
-		v.args[1] = v.args[1] % 0x7FF
-		v.ins.op = v.ins.op + v.args[1]
+		v.args[1] = v.args[1] % 0x800
+		v.op = v.ins.op + v.args[1]
+	elseif v.ins.a == "t" and table.getn(v.args[1]) == 1 then
+		v.args[1] = v.args[1] % 8
+		v.op = v.ins.op + v.args[1]
+	elseif v.ins.a == nil and v.args == nil then
+		v.op = v.ins.op
 	else
 		errexit("invalid number of arguments to instruction")
 	end
@@ -158,13 +171,14 @@ local address = 0
 local data = {}
 local labels = {}
 local defines = {}
+local includes = {}
 
 ------------------------
 -- bunch of functions --
 ------------------------
 
 function pp(lines)
-	local d, v
+	local d, v, e
 	local x = 0
 
 	function ckifdef(ln, x)
@@ -204,8 +218,12 @@ function pp(lines)
 		-- handle ifdef, ifndef and endif
 		ln, x = ckifdef(ln, x)
 
-		-- handle defines
 		if x == 0 then
+			-- handle include
+			_, _, d = string.find(ln, "^[%a%d_]*%s+include%s+(.*)$")
+			if d then ppfile(d) end
+
+			-- handle defines
 			_, _, d, v = string.find(ln, "^%s+define%s+([%a_][%a%d_]*)%s+(.*)$")
 			if d == nil then
 				_, _, d = string.find(ln, "^%s+define%s+([%a_][%a%d_]*)$")
@@ -215,12 +233,51 @@ function pp(lines)
 				defines[d] = v
 				ln = ""
 			end
+
+			-- handle enum
+			_, e, d = string.find(ln, "^%s+enum%s+(.*)$")
+			if d then
+				local args = {}
+				local pos
+				string.gsub(d, "([^,]+)", function (a) table.insert(args, a) end)
+				if table.getn(args) < 2 then
+					errexit("too few arguments to directive 'enum'")
+				end
+				pos = parsemath(args[1])
+				table.remove(args, 1)
+				for i, v in ipairs(args) do
+					v = string.gsub(v, "^%s*(.*)%s*$", "%1")
+					if not string.find(v, "^[%a_][%a%d_]*$") then
+						errexit("syntax error")
+					end
+					defines[v] = pos
+					pos = pos + 1
+				end
+				ln = ""
+			end
 		end
 
 		lines[i] = ln
 	end
 
 	return lines
+end
+
+function ppfile(fn)
+	local lines = {}
+	local infile = io.stdin
+	if fn then infile = io.open(fn, "r") end
+	if infile == nil then
+		io.stderr:write("failed to open file " .. fn .. "\n")
+		os.exit(1)
+	end
+	file = fn
+	for ln in infile:lines() do
+		table.insert(lines, ln)
+	end
+	infile:close()
+	pp(lines)
+	includes[fn] = lines
 end
 
 function assemble(lines)
@@ -241,11 +298,11 @@ function assemble(lines)
 				line = v.line
 				v.args[i] = resolve(a)
 			end
-			if v.ins then
-				file = v.file
-				line = v.line
-				arch.comp(v)
-			end
+		end
+		if v.ins then
+			file = v.file
+			line = v.line
+			arch.comp(v)
 		end
 	end
 end
@@ -275,11 +332,11 @@ function getoutput()
 	function endline()
 		local c, s
 		if len == 0 then return end
-		c = len + (address % 0x100) + math.floor(address / 0x100)
+		c = (len * 2) + (address % 0x100) + math.floor(address / 0x100)
 		s = string.format(":%02X%04X00", len * 2, address)
 		for i, v in ipairs(l) do
-			c = c + v
-			s = s .. string.format("%04X", v)
+			c = c + (v % 0x100) + math.floor(v / 0x100)
+			s = s .. string.format("%02X%02X", v % 0x100, math.floor(v / 0x100))
 		end
 		s = s .. string.format("%02X", (0x100 - (c % 0x100)) % 0x100)
 		table.insert(r, s)
@@ -293,21 +350,20 @@ function getoutput()
 			endline()
 			address = v.address * 2
 		elseif v.ins then
-			table.insert(l, v.ins.op)
+			table.insert(l, v.op)
 			len = len + 1
 			if len == outwidth then endline() end
 		else -- data directive
-            for i, d in ipairs(v.args) do
-				table.insert(l, v.ins.args)
-				-- in case we hit max line width
-				table.remove(v.args, i)
+            while v.args[1] do
+				table.insert(l, v.args[1])
+				table.remove(v.args, 1)
 				len = len + 1
 				if len == outwidth then endline() end
 			end
 		end
 	end
 	endline()
-	table.insert(r, ":0000001FF")
+	table.insert(r, ":00000001FF")
 	return r
 end
 
@@ -335,7 +391,7 @@ function reset()
 end
 
 function parseln(ln)
-	local e, e2, c0, args = { }
+	local e, e2, c0, args
 	local directive = {
 		["org"] = function (args)
 			if args and table.getn(args) ~= 1 then
@@ -356,9 +412,10 @@ function parseln(ln)
 		["include"] = function(args)
 			local ft = file
 			if args and table.getn(args) ~= 1 then
-				errexit("org wants exactly 1 argument")
+				errexit("include wants exactly 1 argument")
 			end
-			assemblefile(args[1])
+			file = args[1]
+			assemble(includes[args[1]])
 			file = ft
 		end,
 	}
@@ -372,7 +429,7 @@ function parseln(ln)
 
 	-- look for instruction or directive
 	if ln == "" then return end
-	_, e, c0 = string.find(ln, "^%s+([%a%d_]+)")
+	_, e, c0 = string.find(ln, "^%s+([%a_][%a%d_]*)")
 	if c0 == nil then errexit("syntax error") end
 	ln = string.sub(ln, e + 1, ln.length)
 	if ln ~= "" then
@@ -387,8 +444,54 @@ function parseln(ln)
 		table.insert(data, { ["ins"] = arch.instr[c0], ["args"] = args,
 		             ["line"] = line, ["file"] = file })
 		address = address + 1
-	else errexit(c0 .. "is neither a directive or an instruction") end
+	else errexit("syntax error") end
 end
+
+function bit_or(l, r)
+	local b = 0
+	local e = 0
+	while l > 0 or l > 0 do
+		if (l % 2) == 1 or (r % 2) == 1 then
+			e = e + (2 ^ b)
+		end
+		r = math.floor(r / 2)
+		l = math.floor(l / 2)
+		b = b + 1
+	end
+	return e
+end
+
+function bit_and(l, r)
+	local b = 0
+	local e = 0
+	while l > 0 or l > 0 do
+		if (l % 2) == 1 and (r % 2) == 1 then
+			e = e + (2 ^ b)
+		end
+		r = math.floor(r / 2)
+		l = math.floor(l / 2)
+		b = b + 1
+	end
+	return e
+end
+
+function bit_xor(l, r)
+	local b = 0
+	local e = 0
+	while l > 0 or l > 0 do
+		if ((l % 2) == 1 or (r % 2) == 1) and (l % 2) ~= (r % 2) then
+			e = e + (2 ^ b)
+		end
+		r = math.floor(r / 2)
+		l = math.floor(l / 2)
+		b = b + 1
+	end
+	return e
+end
+
+function bit_shl(l, r) return l * (2 ^ r) end
+
+function bit_shr(l, r) return math.floor(l / (2 ^ r)) end
 
 function calc(l, o, r)
 	if     o == "+" then return l + r
@@ -396,50 +499,45 @@ function calc(l, o, r)
 	elseif o == "*" then return l * r
 	elseif o == "/" then return math.floor(l / r)
 	elseif o == "%" then return math.floor(l % r)
-	elseif o == "|" then
-		local b = 0
-		local e = 0
-		while l > 0 or l > 0 do
-			if (l % 2) == 1 or (r % 2) == 1 then
-				e = e + (2 ^ b)
-			end
-			r = math.floor(r / 2)
-			l = math.floor(l / 2)
-			b = b + 1
-		end
-		return e
-	elseif o == "&" then
-		local b = 0
-		local e = 0
-		while l > 0 or l > 0 do
-			if (l % 2) == 1 and (r % 2) == 1 then
-				e = e + (2 ^ b)
-			end
-			r = math.floor(r / 2)
-			l = math.floor(l / 2)
-			b = b + 1
-		end
-		return e
-	elseif o == "^" then
-		local b = 0
-		local e = 0
-		while l > 0 or l > 0 do
-			if ((l % 2) == 1 or (r % 2) == 1) and (l % 2) ~= (r % 2) then
-				e = e + (2 ^ b)
-			end
-			r = math.floor(r / 2)
-			l = math.floor(l / 2)
-			b = b + 1
-		end
-		return e
-	elseif o == "<<" then return l * (2 ^ r)
-	elseif o == ">>" then return math.floor(l / (2 ^ r))
+	elseif o == "|" then return bit_or(l, r)
+	elseif o == "&" then return bit_and(l, r)
+	elseif o == "^" then return bit_xor(l, r)
+	elseif o == "<<" then return bit_shl(l, r)
+	elseif o == ">>" then return bit_shr(l, r)
 	else errexit("syntax error") end
 end
 
 function parseint(str)
+	local n
 	local r = 0
-	r = tonumber(str) -- to be replaced
+	local b = 10
+	local nums = {
+		["0"] = 0,  ["1"] = 1,  ["2"] = 2,  ["3"] = 3,
+		["4"] = 4,  ["5"] = 5,  ["6"] = 6,  ["7"] = 7,
+		["8"] = 8,  ["9"] = 9,  ["a"] = 10, ["b"] = 11,
+		["c"] = 12, ["d"] = 13, ["e"] = 14, ["f"] = 15,
+	}
+	str = string.gsub(str, "^%s*(.*)%s*$", "%1")
+	if string.find(str, "^0") then
+		local d = 3
+		if string.find(str, "^0x") then b = 16
+		elseif string.find(str, "^0b") then b = 2
+		elseif string.find(str, "^0d") then b = 10
+		elseif string.find(str, "^0o") then b = 8
+		else
+			b = 8
+			d = 2
+		end
+		str = string.sub(str, d)
+	end
+	for c in string.gmatch(str, ".") do
+		if c ~= "_" then
+			n = nums[c]
+			if n == nil then errexit("invalid numeric constant") end
+			if not (n < b) then errexit("invalid numeric constant") end
+			r = (r * b) + n
+		end
+	end
 	return r
 end
 
@@ -458,13 +556,16 @@ function parsemath(str)
 		end
 		return x
 	end)
-	str = string.gsub(str,
-	                  "^%s*([%xx_]+)%s*([%+-%*/%%|&%^<>]+)%s*(%d[%xx_]*)",
-	                  function (l, o, r)
-		l = parseint(l)
-		r = parseint(r)
-		return calc(l, o, r)
-	end)
+	r = 1
+	while r > 0 do
+		str, r = string.gsub(str,
+		                  "%s*([%xx_]+)%s*([%+-%*/%%|&%^<>]+)%s*(%d[%xx_]*)",
+		                  function (l, o, r)
+			l = parseint(l)
+			r = parseint(r)
+			return calc(l, o, r)
+		end)
+	end
 	r = parseint(str)
 	if r == nil then errexit("syntax error") end
 	return r
@@ -481,7 +582,7 @@ end
 
 function errexit(msg)
 	if file then io.stderr:write(file .. ": ") end
-	io.stderr:write("line " .. line .. msg .. "\n")
+	io.stderr:write("line " .. line .. ": " .. msg .. "\n")
 	os.exit(1)
 end
 
