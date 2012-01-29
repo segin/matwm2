@@ -178,7 +178,7 @@ local includes = {}
 ------------------------
 
 function pp(lines)
-	local d, v, e
+	local d, v, e, fn
 	local x = 0
 
 	function ckifdef(ln, x)
@@ -193,9 +193,15 @@ function pp(lines)
 			return "", x
 		else
 			_, _, d = string.find(ln, "^%s+ifdef%s+([%a_][%a%d_]*)$")
-			if d and not defines[d] then return "", x + 1 end
+			if d then
+				if not defines[d] then return "", x + 1 end
+				return "", x
+			end
 			_, _, d = string.find(ln, "^%s+ifndef%s+([%a_][%a%d_]*)$")
-			if d and defines[d] then return "", x + 1 end
+			if d then
+				if defines[d] then return "", x + 1 end
+				return "", x
+			end
 			if string.find(ln, "^%s+endif$") then return "", 0 end
 			return ln, 0
 		end
@@ -210,19 +216,9 @@ function pp(lines)
 		ln = string.gsub(ln, "%s*$", "")
 		ln = string.lower(ln)
 
-		-- substitute any macros
-		ln = string.gsub(ln, "([%a_][%a%d_]*)", function (w)
-			if defines[w] then return defines[w] end
-		end)
-
 		-- handle ifdef, ifndef and endif
 		ln, x = ckifdef(ln, x)
-
 		if x == 0 then
-			-- handle include
-			_, _, d = string.find(ln, "^[%a%d_]*%s+include%s+(.*)$")
-			if d then ppfile(d) end
-
 			-- handle defines
 			_, _, d, v = string.find(ln, "^%s+define%s+([%a_][%a%d_]*)%s+(.*)$")
 			if d == nil then
@@ -233,6 +229,17 @@ function pp(lines)
 				defines[d] = v
 				ln = ""
 			end
+
+			-- substitute any macros
+			ln = string.gsub(ln, "([%a_][%a%d_]*)", function (w)
+				if defines[w] then return defines[w] end
+			end)
+
+			-- handle include
+			_, _, d = string.find(ln, "^[%a%d_]*%s+include%s+(.*)$")
+			fn = file
+			if d then ppfile(d) end
+			file = fn
 
 			-- handle enum
 			_, e, d = string.find(ln, "^%s+enum%s+(.*)$")
@@ -248,7 +255,7 @@ function pp(lines)
 				for i, v in ipairs(args) do
 					v = string.gsub(v, "^%s*(.*)%s*$", "%1")
 					if not string.find(v, "^[%a_][%a%d_]*$") then
-						errexit("syntax error")
+						errexit("syntax error 1")
 					end
 					defines[v] = pos
 					pos = pos + 1
@@ -430,11 +437,11 @@ function parseln(ln)
 	-- look for instruction or directive
 	if ln == "" then return end
 	_, e, c0 = string.find(ln, "^%s+([%a_][%a%d_]*)")
-	if c0 == nil then errexit("syntax error") end
+	if c0 == nil then errexit("syntax error 2") end
 	ln = string.sub(ln, e + 1, ln.length)
 	if ln ~= "" then
 		ln, e = string.gsub(ln, "^%s+", "")
-		if e == 0 then errexit("syntax error") end
+		if e == 0 then errexit("syntax error 3") end
 		args = {}
 		string.gsub(ln, "([^,]+)", function (a) table.insert(args, a) end)
 	end
@@ -444,7 +451,7 @@ function parseln(ln)
 		table.insert(data, { ["ins"] = arch.instr[c0], ["args"] = args,
 		             ["line"] = line, ["file"] = file })
 		address = address + 1
-	else errexit("syntax error") end
+	else errexit("syntax error 4") end
 end
 
 function bit_or(l, r)
@@ -504,7 +511,7 @@ function calc(l, o, r)
 	elseif o == "^" then return bit_xor(l, r)
 	elseif o == "<<" then return bit_shl(l, r)
 	elseif o == ">>" then return bit_shr(l, r)
-	else errexit("syntax error") end
+	else errexit("syntax error 5") end
 end
 
 function parseint(str)
@@ -556,8 +563,7 @@ function parsemath(str)
 		end
 		return x
 	end)
-	r = 1
-	while r > 0 do
+	repeat
 		str, r = string.gsub(str,
 		                  "%s*([%xx_]+)%s*([%+-%*/%%|&%^<>]+)%s*(%d[%xx_]*)",
 		                  function (l, o, r)
@@ -565,9 +571,9 @@ function parsemath(str)
 			r = parseint(r)
 			return calc(l, o, r)
 		end)
-	end
+	until r == 0
 	r = parseint(str)
-	if r == nil then errexit("syntax error") end
+	if r == nil then errexit("syntax error 6") end
 	return r
 end
 
