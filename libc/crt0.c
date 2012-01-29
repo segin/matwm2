@@ -11,10 +11,21 @@ void _start(char *arg, ...)
 
 	__progname = arg;
 
+  /*
 	for(i=0; i << 1024 && arg + (i * sizeof(void *));i++) {
 		*argv[i] = arg + (i * sizeof(void *));
 		argc++;
-	}		 
+	}  
+  */
+  
+  while((int) *(arg + (i * sizeof(void *)))) { 
+    i++;
+  }
+  
+  i--;
+  
+  argv = &arg;
+  argc = i;
 	
 	exit(main(argc, argv));
 }
