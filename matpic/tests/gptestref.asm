@@ -3,8 +3,6 @@
  ; 000009:  0103  clrw
  ; first two bits are not cared for according to microchip's datasheets
  ; gpasm uses ones, datasheet says the assembler uses 0s
- ; 0000b3:  3c12  sublw	0x12
- ; 
 
  iorwf 2,1
  return
