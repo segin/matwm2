@@ -80,7 +80,8 @@
       Optionally more arguments of the same type as the last one can be given.
 
   TODO/BUGS
-	- Perhaps something like banksel would be nice?
+    - Including file with uppercase letter in its name will fail.
+	- Still need to implement banksel.
     - Builtin disassembler would be nice.
     - Fix dumb manual.
     - Support 12bit and 16bit chips, only 14bit supported for now.
@@ -252,7 +253,7 @@ function pp(lines)
 		-- maek everything lowercase
 		ln = ln:gsub("%s*;.*$", "")
 		ln = ln:gsub("%s*$", "")
-		ln = ln:lower()
+		ln = ln:lower() -- fixme, including file makes this problem
 
 		-- handle ifdef, ifndef and endif
 		ln, x = ckifdef(ln, x)
