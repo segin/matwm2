@@ -80,6 +80,7 @@
       Optionally more arguments of the same type as the last one can be given.
 
   TODO/BUGS
+	- Perhaps something like banksel would be nice?
     - Builtin disassembler would be nice.
     - Fix dumb manual.
     - Support 12bit and 16bit chips, only 14bit supported for now.
@@ -182,6 +183,38 @@ local includes = {}
 -- bunch of functions --
 ------------------------
 
+function splitln(ln)
+	local r = {}
+
+	-- strip any comments and trailing whitespace,
+	ln = ln:gsub("%s*;.*$", "")
+	ln = ln:gsub("%s*$", "")
+
+	-- divide everything in a hopefully useful fashion
+	r.ln = ln
+	ln = ln:gsub("^([^%s]+)", function (l) r.label = l:lower() return "" end)
+	ln = ln:gsub("^%s+([^%s]+)", function (i) r.ins = i:lower() return "" end)
+	r.args = ln
+
+	return r
+end
+
+function splitargs(args)
+	local r, c
+	args:gsub("^%s+(.+)", function(a)
+		r = {}
+		repeat
+			a, c = a:gsub("^([^,]+)", function (a)
+				table.insert(r, a)
+				return ""
+			end)
+			if c == 0 then errexit("empty argument") end
+			ln, c = ln:gsub("^,%s*", "")
+		until c == 0
+	end)
+	return r
+end
+
 function pp(lines)
 	local d, v, e, fn
 	local x = 0
@@ -216,10 +249,10 @@ function pp(lines)
 		line = i
 
 		-- strip any comments and trailing whitespace,
-		--   maek everything lowercase
-		ln = string.gsub(ln, "%s*;.*$", "")
-		ln = string.gsub(ln, "%s*$", "")
-		ln = string.lower(ln)
+		-- maek everything lowercase
+		ln = ln:gsub("%s*;.*$", "")
+		ln = ln:gsub("%s*$", "")
+		ln = ln:lower()
 
 		-- handle ifdef, ifndef and endif
 		ln, x = ckifdef(ln, x)
@@ -241,6 +274,9 @@ function pp(lines)
 				v = ""
 			end
 			if d then
+				v = v:gsub(v, "([%a_][%a%d_]*)", function (w)
+					if defines[w] then return defines[w] end
+				end)
 				defines[d] = v
 				ln = ""
 			end
@@ -252,9 +288,11 @@ function pp(lines)
 
 			-- handle include
 			_, _, d = string.find(ln, "^[%a%d_]*%s+include%s+(.*)$")
-			fn = file
-			if d then ppfile(d) end
-			file = fn
+			if d then
+				fn = file
+				ppfile(d)
+				file = fn
+			end
 
 			-- handle enum
 			_, e, d = string.find(ln, "^%s+enum%s+(.*)$")
@@ -555,8 +593,8 @@ function parseint(str)
 	for c in string.gmatch(str, ".") do
 		if c ~= "_" then
 			n = nums[c]
-			if n == nil then errexit("invalid numeric constant") end
-			if not (n < b) then errexit("invalid numeric constant") end
+			if n == nil then errexit("invalid numeric constant "..str) end
+			if not (n < b) then errexit("invalid numeric constant "..str) end
 			r = (r * b) + n
 		end
 	end
