@@ -259,22 +259,22 @@ function pp(lines)
 
 		if x == 0 then
 			-- handle message and error directives
-			_, _, d = string.find(ln, "^%s+message%s+(.*)$")
+			_, _, d = ln:find("^%s+message%s+(.*)$")
 			if d then
 				io.stderr:write(d.."\n")
 				ln = ""
 			end
-			_, _, d = string.find(ln, "^%s+error%s+(.*)$")
+			_, _, d = ln:find("^%s+error%s+(.*)$")
 			if d then errexit(d) end
 
 			-- handle defines
-			_, _, d, v = string.find(ln, "^%s+define%s+([%a_][%a%d_]*)%s+(.*)$")
+			_, _, d, v = ln:find("^%s+define%s+([%a_][%a%d_]*)%s+(.*)$")
 			if d == nil then
-				_, _, d = string.find(ln, "^%s+define%s+([%a_][%a%d_]*)$")
+				_, _, d = ln:find("^%s+define%s+([%a_][%a%d_]*)$")
 				v = ""
 			end
 			if d then
-				v = v:gsub(v, "([%a_][%a%d_]*)", function (w)
+				v = v:gsub("([%a_][%a%d_]*)", function (w)
 					if defines[w] then return defines[w] end
 				end)
 				defines[d] = v
@@ -282,12 +282,12 @@ function pp(lines)
 			end
 
 			-- substitute any macros
-			ln = string.gsub(ln, "([%a_][%a%d_]*)", function (w)
+			ln = ln:gsub("([%a_][%a%d_]*)", function (w)
 				if defines[w] then return defines[w] end
 			end)
 
 			-- handle include
-			_, _, d = string.find(ln, "^[%a%d_]*%s+include%s+(.*)$")
+			_, _, d = ln:find("^[%a%d_]*%s+include%s+(.*)$")
 			if d then
 				fn = file
 				ppfile(d)
@@ -295,7 +295,7 @@ function pp(lines)
 			end
 
 			-- handle enum
-			_, e, d = string.find(ln, "^%s+enum%s+(.*)$")
+			_, e, d = ln:find("^%s+enum%s+(.*)$")
 			if d then
 				local args = {}
 				local pos
