@@ -306,8 +306,8 @@ function pp(lines)
 				pos = parsemath(args[1])
 				table.remove(args, 1)
 				for i, v in ipairs(args) do
-					v = string.gsub(v, "^%s*(.*)%s*$", "%1")
-					if not string.find(v, "^[%a_][%a%d_]*$") then
+					v = v:gsub("^%s*(.*)%s*$", "%1")
+					if not v:find("^[%a_][%a%d_]*$") then
 						errexit("syntax error 1")
 					end
 					defines[v] = pos
