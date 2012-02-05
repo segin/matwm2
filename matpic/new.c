@@ -229,6 +229,28 @@ void arr_free(arr_t *a) {
 	a->space = 0;
 }
 
+/****************************
+ * architecture definitions *
+ ****************************/
+
+typedef struct {
+	char *instr;
+	int opcode, atype, amask, imask;
+} oc_t;
+
+oc_t ocs14b[] = {
+	{ "" },
+};
+
+void acmp14b(oc_t *oc, int *args) {
+
+}
+
+typedef struct {
+	oc_t *ocs;
+	void (*acmp)(oc_t *, int *);
+} arch_t;
+
 /*************
  * assembler *
  *************/
@@ -244,7 +266,7 @@ typedef struct {
 		struct ins {
 			char *args;
 			int atype;
-			char oc[2];
+			oc_t *oc;
 		};
 		struct org {
 			int address;
@@ -416,7 +438,7 @@ unsigned int numarg(char **src) {
 	}
 }
 
-int getargs(char **src, int args[]) {
+int getargs(char **src, int *args) {
 	int n = 0;
 
 	if (!*src)
@@ -541,6 +563,8 @@ main() {
 				case IT_DAT:
 					printf(" data 0x%X\n", ins->value);
 					break;
+				case IT_INS:
+					printf(" opcode 0x%X", ins->oc->opcode);
 			}
 		}
 	}
