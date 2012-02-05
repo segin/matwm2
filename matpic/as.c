@@ -11,7 +11,8 @@
 #include "arch.h"
 
 int line = 1;
-char file[FN_MAX] = "<file>";
+char file[FN_MAX];
+char *infile = "<file>";
 int address = 0;
 
 arr_t inss;
@@ -190,13 +191,34 @@ int getargs(char **src, int *args) {
 
 void setfile(char *fn) {
 	int i;
+	if (*fn != '"')
+		errexit("argument to file directive needs double quotes");
+	++fn;
 	for (i = 0; i < FN_MAX - 1; ++i) {
 		if (alfa[fn[i]] & (CT_NUL | CT_NL))
+			errexit("missing double quote");
+		if (fn[i] == '"')
 			break;
 		file[i] = fn[i];
 	}
+	fn += i + 1;
+	skipsp(&fn);
+	if (!(alfa[*fn] & (CT_NUL | CT_NL)))
+		errexit("invalid crap after file directive");
 	file[i] = 0;
 	line = 0; /* will be incremented soon enough */
+}
+
+void initfile(void) {
+	int i;
+	for (i = 0; i < FN_MAX && infile[i]; ++i)
+		file[i] = infile[i];
+}
+
+void reset(void) {
+	line = 1;
+	infile = "<file>";
+	address = 0;
 }
 
 void assemble(char **code) {
@@ -209,6 +231,8 @@ void assemble(char **code) {
 		ins_t ins;
 		int args[ARG_MAX];
 		char *argp;
+
+		initfile();
 
 		while (**code) {
 			 /* skip label and eat it if one is there
@@ -265,7 +289,7 @@ void assemble(char **code) {
 				arr_add(&inss, &ins);
 				goto nextline;
 			}
-			if (cmpid(cur, "data")) {
+			if (cmpid(cur, "data")) { /* FIXME no label lookahead this way */
 				int i, n = getargs(&argp, args);
 				for (i = 0; i < n; ++i) {
 					ins.type = IT_DAT;
@@ -279,6 +303,9 @@ void assemble(char **code) {
 				if (argp == NULL)
 					errexit("'file' directive needs an argument");
 				setfile(argp);
+				ins.type = IT_FIL;
+				ins.file = argp;
+				arr_add(&inss, &ins);
 				goto nextline;
 			}
 			if (cmpid(cur, "line")) {
@@ -317,10 +344,27 @@ void assemble(char **code) {
 		ins_t *ins = (ins_t *) inss.data;
 		int c, args[ARG_MAX];
 
+		initfile();
+		address = 0;
+		
+
 		while (ins->type != IT_END) {
-			if (ins->type == IT_INS) {
-				c = getargs(&(ins->args), args);
-				ins->oc = arch->acmp(ins->oc, ins->atype, c, args);
+			switch (ins->type) {
+				case IT_INS:
+					c = getargs(&(ins->args), args);
+					ins->oc = arch->acmp(ins->oc, ins->atype, c, args);
+					++address;
+					break;
+				case IT_ORG:
+					address = ins->address;
+					break;
+				case IT_DAT:
+					++address;
+					break;
+				case IT_FIL:
+					setfile(ins->file);
+					break;
+				/* file, data */
 			}
 			++ins;
 		}

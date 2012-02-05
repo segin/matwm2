@@ -7,6 +7,7 @@
 
 extern int line;
 extern char file[FN_MAX];
+extern char *infile;
 extern int address;
 
 typedef struct {
@@ -23,6 +24,9 @@ typedef struct {
 		struct data {
 			int value;
 		};
+		struct file {
+			char *file;
+		};
 	};
 } ins_t;
 
@@ -31,6 +35,7 @@ enum itype {
 	IT_ORG, /* org directive */
 	IT_DAT, /* data directive */
 	IT_INS, /* an actual instruction */
+	IT_FIL, /* change of filename */
 };
 
 extern arr_t inss;

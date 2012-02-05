@@ -19,6 +19,7 @@ enum atype {
 
 oc_t ocs14b[] = {
 	{ "addwf", 0x0700, 0x0000, AT_DF },
+	/* note to self, do not forget banksel, bankisel, pagesel */
 	{ NULL, 0, 0, 0 }, /* important, end of list */
 };
 
