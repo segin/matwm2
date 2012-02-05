@@ -1,0 +1,6 @@
+fix label lookahead for data directive
+complete instruction set
+support output to ihex
+support banksel, bankisel, pagesel pseudo instructions
+disassembler
+relocatable code and coff output support
