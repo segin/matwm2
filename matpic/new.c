@@ -45,6 +45,7 @@ char alfa[256] = {
  *   char * src: zero terminated string
  *
  * return value
+ *   int
  *   number of characters skipped
  */
 int skipsp(char **src) {
@@ -64,6 +65,7 @@ int skipsp(char **src) {
  *   char * src: zero terminated string
  *
  * return value
+ *   int
  *   number of characters skipped
  */
 int skipnl(char **src) {
@@ -84,6 +86,7 @@ int skipnl(char **src) {
  *   char * src: zero terminated string
  *
  * return value
+ *   char *
  *   NULL if no identifier found
  *   original value of *src otherwise
  */
@@ -96,6 +99,30 @@ char *getid(char **src) {
 			++(*src);
 	}
 	return ret;
+}
+
+/* cmpid(idl, idr)
+ *
+ * description
+ *   compares two strings until the first non-identifier character
+ *
+ * arguments
+ *   char *idl, *idr: 0 terminated strings to compare
+ *
+ * return value
+ *   int
+ *   amount of equal characters if all of them match
+ *   otherwise 0
+ */
+int cmpid(char *idl, char *idr) {
+	int n = 0;
+
+	while (*(idl++) == *(idr++))
+		++n;
+	if(!(alfa[(unsigned char) *idl] & (CT_LET | CT_SEP | CT_NUM)) &&
+	   !(alfa[(unsigned char) *idr] & (CT_LET | CT_SEP | CT_NUM)))
+		return n;
+	return 0;
 }
 
 /************************
@@ -141,8 +168,8 @@ void arr_add(arr_t *a, void *data) {
 int line = 1;
 
 typedef struct {
-	int type;
-	int line;
+	int type, line;
+	char oc[2];
 	char *args;
 } record_t;
 
@@ -188,26 +215,34 @@ void assemble(char **code) {
 				if (!skipsp(code)) {
 					if (**code && **code != '\r' && **code != '\n')
 						errexit("unexpected character within label");
-					return;
+					goto nextline;
 				}
 				label.name = cur;
 				label.address = address;
 				arr_add(&labels, &label);
 			}
 
-			/* eat the instruction */
+			/* eat the instruction (or directive) */
 			cur = getid(code);
 			if (cur == NULL)
 				errexit("malformed instruction");
 
+			/* find it */
+			if (cmpid(cur, "org")) {
+				printf("org directive");
+			}
+
+			/* on to the next line */
+			nextline:
 			if (!skipnl(code) && **code)
 				errexit("unexpected character");
+			++line;
 		}
 	}
 }
 
 main() {
-	char *code = "test pest rest\r\n vest\n";
+	char *code = "test pest\r\n vest\n";
 
 	assemble(&code);
 
