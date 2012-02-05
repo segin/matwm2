@@ -254,13 +254,20 @@ oc_t ocs14b[] = {
 	{ NULL, 0, 0, 0 }, /* important, end of list */
 };
 
-void acmp14b(oc_t *oc, int argc, int *argv) {
-
+int acmp14b(int oc, int atype, int argc, int *argv) {
+	switch (atype) {
+		case AT_DF:
+			if (argc != 2)
+				/* errexit("wrong number of arguments") */;
+			oc |= (argv[0] & 0xFF) | ((argv[1] & 1) << 7);
+			break;
+	}
+	return oc;
 }
 
 typedef struct {
 	oc_t *ocs;
-	void (*acmp)(oc_t *, int, int *);
+	int (*acmp)(int, int, int, int *);
 } arch_t;
 
 arch_t pic14b = {
@@ -570,6 +577,20 @@ void assemble(char **code) {
 				errexit("unexpected character");
 			++line;
 		}
+		ins.type = IT_END;
+		arr_add(&inss, &ins);
+	}
+	{ /* second pass */
+		ins_t *ins = (ins_t *) inss.data;
+		int c, args[ARG_MAX];
+
+		while (ins->type != IT_END) {
+			if (ins->type == IT_INS) {
+				c = getargs(&(ins->args), args);
+				ins->oc = arch->acmp(ins->oc, ins->atype, c, args);
+			}
+			++ins;
+		}
 	}
 }
 
@@ -579,7 +600,7 @@ void cleanup(void) {
 }
 
 main() {
-	char *code = " org 0x200 \ntest pest\r\n vest\nrest   \n data 1, 2, 3, test\n addwf 0, 0";
+	char *code = " org 0x200 \ntest pest\r\n vest\nrest   \n data 1, 2, 3, test\n addwf 2, 1";
 
 	assemble(&code);
 
@@ -597,7 +618,7 @@ main() {
 					printf(" data 0x%X\n", ins->value);
 					break;
 				case IT_INS:
-					printf(" opcode 0x%X", ins->oc);
+					printf(" opcode 0x%X\n", ins->oc);
 			}
 		}
 	}
