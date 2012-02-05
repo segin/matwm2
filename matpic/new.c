@@ -162,6 +162,14 @@ void arr_add(arr_t *a, void *data) {
 	memcpy((void *) (((char *) a->data) + (a->size * a->count)), data, a->size);
 }
 
+void arr_free(arr_t *a) {
+	free(a->data);
+	a->data = NULL;
+	a->size = 0;
+	a->count = 0;
+	a->space = 0;
+}
+
 /*************
  * assembler *
  *************/
@@ -261,6 +269,11 @@ void assemble(char **code) {
 			++line;
 		}
 	}
+}
+
+void cleanup(void) {
+	arr_free(&inss);
+	arr_free(&labels);
 }
 
 main() {
