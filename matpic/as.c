@@ -36,6 +36,9 @@ unsigned int getval(char **src) {
 		if (**src != ')')
 			errexit("can't find ')'");
 		++*src;
+	} else if (**src == '$') {
+		val = address;
+		++*src;
 	} else if(!getnum(src, &val)) {
 		int i;
 		label_t *label;
@@ -269,6 +272,7 @@ void assemble(char **code) {
 					ins.value = args[i];
 					arr_add(&inss, &ins);
 				}
+				address += n;
 				goto nextline;
 			}
 			if (cmpid(cur, "file")) {
