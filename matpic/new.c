@@ -235,11 +235,21 @@ void arr_free(arr_t *a) {
 
 typedef struct {
 	char *instr;
-	int opcode, atype, amask, imask;
+	int opcode, amask, imask, atype;
 } oc_t;
 
+enum atype {
+	AT_DF,
+	AT_F,
+	AT_BF,
+	AT_K8,
+	AT_K11,
+	AT_T, /* for tris instruction */
+	AT_BS, /* banksel */
+};
+
 oc_t ocs14b[] = {
-	{ "" },
+	{ "addwf", 0x0700, 0x0000, 0x0000, AT_DF },
 };
 
 void acmp14b(oc_t *oc, int *args) {
