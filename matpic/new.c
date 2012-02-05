@@ -138,6 +138,8 @@ void arr_add(arr_t *a, void *data) {
 #include <stdlib.h> /* exit(), EXIT_FAILURE, EXIT_SUCCESS */
 #include <stdio.h> /* fprintf(), stderr */
 
+int line = 1;
+
 typedef struct {
 	int type;
 	int line;
@@ -151,60 +153,63 @@ enum rtype {
 	RT_INS, /* an actual instruction */
 };
 
-arr_t *records;
+arr_t records;
 
 typedef struct {
 	char *name;
 	int address;
 } label_t;
 
-arr_t *labels;
+arr_t labels;
 
 void errexit(char *msg) {
-	fprintf(stderr, "error: %s\n", msg);
+	fprintf(stderr, "line %d: %s\n", line, msg);
 	exit(EXIT_FAILURE);
 }
 
-void getinstr(char **line) {
-	int address = 0;
-	char *cur = NULL;
-	label_t label;
+void assemble(char **code) {
+	arr_new(&records, sizeof(record_t));
+	arr_new(&labels, sizeof(label_t));
 
-	/* skip label and eat it if one is there
-	 * also eat any preceding spaces before instruction
-	 * return if nothing or nothing but label
-	 */
-	if (!skipsp(line)) {
-		cur = getid(line);
-		if (cur == NULL)
-			errexit("malformed label");
-		if (!skipsp(line)) {
-			if (**line && **line != '\r' && **line != '\n')
-				errexit("unexpected character within label");
-			return;
+	{ /* first pass */
+		int address = 0;
+		char *cur = NULL;
+		label_t label;
+
+		while (**code) {
+			 /* skip label and eat it if one is there
+			 * also eat any preceding spaces before instruction
+			 * return if nothing or nothing but label
+			 */
+			if (!skipsp(code)) {
+				cur = getid(code);
+				if (cur == NULL)
+					errexit("malformed label");
+				if (!skipsp(code)) {
+					if (**code && **code != '\r' && **code != '\n')
+						errexit("unexpected character within label");
+					return;
+				}
+				label.name = cur;
+				label.address = address;
+				arr_add(&labels, &label);
+			}
+
+			/* eat the instruction */
+			cur = getid(code);
+			if (cur == NULL)
+				errexit("malformed instruction");
+
+			if (!skipnl(code) && **code)
+				errexit("unexpected character");
 		}
-		label.name = cur;
-		label.address = address;
-		arr_add(labels, &label);
 	}
-
-	/* eat the instruction */
-	cur = getid(line);
-	if (cur == NULL)
-		errexit("malformed instruction");
-
-	if (**line && **line != '\r' && **line != '\n')
-		errexit("unexpected character");
 }
 
 main() {
-	char *code = "test pest\r\n vest\n";
+	char *code = "test pest rest\r\n vest\n";
 
-	arr_new(records, sizeof(record_t));
-
-	getinstr(&code);
-	skipnl(&code);
-	getinstr(&code);
+	assemble(&code);
 
 	return EXIT_SUCCESS;
 }
