@@ -16,11 +16,11 @@ char alfa[256] = {
 	4,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
 	2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  0,  0,  0,  0,  0,  0,
 	0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
-	1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,  0,  0,
+	1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,  0,  8,
 	0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
 	1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,  0,  0,
 	0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-	0,  0,  0,  0,  0,  8,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+	0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
 	0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
 	0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
 	0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
@@ -194,7 +194,8 @@ int getnum(char **src, unsigned int *ret) {
 #include <string.h> /* memcpy */
 #include <stdio.h>  /* fprintf(), stderr */
 
-#define BLOCK 2048 /* amount of memory to allocate in one go */
+#define BLOCK 2048  /* amount of memory to allocate in one go */
+#define ARG_MAX 256 /* maximum number of arguments */
 
 typedef struct {
 	void *data;
@@ -217,6 +218,7 @@ void arr_add(arr_t *a, void *data) {
 		}
 	}
 	memcpy((void *) (((char *) a->data) + (a->size * a->count)), data, a->size);
+	++(a->count);
 }
 
 void arr_free(arr_t *a) {
@@ -238,9 +240,19 @@ int line = 1;
 
 typedef struct {
 	int type, line;
-	char *args;
-	int atype;
-	char oc[2];
+	union {
+		struct ins {
+			char *args;
+			int atype;
+			char oc[2];
+		};
+		struct org {
+			int address;
+		};
+		struct data {
+			int value;
+		};
+	};
 } ins_t;
 
 enum itype {
@@ -278,8 +290,21 @@ unsigned int getval(char **src) {
 			errexit("can't find ')'");
 		++*src;
 	} else if(!getnum(src, &val)) {
-		/* get label or error */
-		val = 0; /* FIXME */
+		int i;
+		label_t *label;
+		char *id;
+
+		id = getid(src);
+		if (id == NULL)
+			return val;
+
+		/* get label or fail */
+		for (i = 0; i < labels.count; ++i) {
+			label = (label_t *) ((label_t *) labels.data) + i;
+			if (cmpid(label->name, id))
+				return label->address;
+		}
+		errexit("unknown identifier");
 	}
 	return val;
 }
@@ -337,6 +362,20 @@ unsigned int numarg(char **src) {
 				op = OP_EOR;
 				++*src;
 				break;
+			case '<':
+				if (*((*src) + 1) == '<') {
+					op = OP_SHL;
+					*src += 2;
+					break;
+				}
+				return lval;
+			case '>':
+				if (*((*src) + 1) == '>') {
+					op = OP_SHR;
+					*src += 2;
+					break;
+				}
+				return lval;
 			default:
 				return lval;
 		}
@@ -377,6 +416,23 @@ unsigned int numarg(char **src) {
 	}
 }
 
+int getargs(char **src, int args[]) {
+	int n = 0;
+
+	if (!*src)
+		return 0;
+	while (1) {
+		args[n] = numarg(src);
+		if (alfa[**src] & (CT_NUL | CT_NL))
+			return n + 1;
+		if (**src != ',')
+			errexit("your argument is invalid");
+		++n, ++*src;
+		if (n == ARG_MAX)
+			errexit("too many arguments");
+	}
+}
+
 void assemble(char **code) {
 	arr_new(&inss, sizeof(ins_t));
 	arr_new(&labels, sizeof(label_t));
@@ -386,6 +442,8 @@ void assemble(char **code) {
 		char *cur = NULL;
 		label_t label;
 		ins_t ins;
+		int args[ARG_MAX];
+		char *argp;
 
 		while (**code) {
 			 /* skip label and eat it if one is there
@@ -415,24 +473,39 @@ void assemble(char **code) {
 				errexit("malformed instruction");
 
 			/* check for arguments */
-			ins.args = NULL;
+			argp = NULL;
 			if (!skipsp(code)) {
 				if (!(alfa[**code] & (CT_NL | CT_NUL)))
-					errexit("unexpected character within label");
+					errexit("unexpected character within instruction");
 				goto nextline;
 			} else {
 				if (alfa[**code] & (CT_NL | CT_NUL))
 					goto nextline;
 				/* we got arguments */
-				ins.args = *code;
+				argp = *code;
 				while (!(alfa[**code] & (CT_NUL | CT_NL)))
 					++*code;
 			}
 
 			/* find instructon/directive */
 			if (cmpid(cur, "org")) {
-				printf("org directive %d\n", numarg(&ins.args));
-				/* fixme */
+				if (getargs(&argp, args) != 1)
+					errexit("invalid number of arguments to org directive");
+				ins.type = IT_ORG;
+				ins.line = line;
+				ins.address = args[0];
+				address = ins.address;
+				arr_add(&inss, &ins);
+				goto nextline;
+			}
+			if (cmpid(cur, "data")) {
+				int i, n = getargs(&argp, args);
+				for (i = 0; i < n; ++i) {
+					ins.type = IT_DAT;
+					ins.line = line;
+					ins.value = args[i];
+					arr_add(&inss, &ins);
+				}
 				goto nextline;
 			}
 
@@ -451,9 +524,27 @@ void cleanup(void) {
 }
 
 main() {
-	char *code = " org 0x200 - (12 + 10) | 1\ntest pest\r\n vest\nrest   \n";
+	char *code = " org 0x200 \ntest pest\r\n vest\nrest   \n data 1, 2, 3, test";
 
 	assemble(&code);
+
+	{
+		int i;
+		ins_t *ins;
+		for (i = 0; i < inss.count; ++i) {
+			ins = (ins_t *) ((ins_t *) inss.data) + i;
+			printf("line %d, type %d:\n", ins->line, ins->type);
+			switch (ins->type) {
+				case IT_ORG:
+					printf(" org 0x%X\n", ins->address);
+					break;
+				case IT_DAT:
+					printf(" data 0x%X\n", ins->value);
+					break;
+			}
+		}
+	}
+
 	cleanup();
 
 	return EXIT_SUCCESS;
