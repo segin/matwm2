@@ -234,11 +234,12 @@ void arr_free(arr_t *a) {
  ****************************/
 
 typedef struct {
-	char *instr;
-	int opcode, amask, imask, atype;
+	char *name;
+	int oc, imask, atype;
 } oc_t;
 
 enum atype {
+	AT_NA,
 	AT_DF,
 	AT_F,
 	AT_BF,
@@ -249,17 +250,25 @@ enum atype {
 };
 
 oc_t ocs14b[] = {
-	{ "addwf", 0x0700, 0x0000, 0x0000, AT_DF },
+	{ "addwf", 0x0700, 0x0000, AT_DF },
+	{ NULL, 0, 0, 0 }, /* important, end of list */
 };
 
-void acmp14b(oc_t *oc, int *args) {
+void acmp14b(oc_t *oc, int argc, int *argv) {
 
 }
 
 typedef struct {
 	oc_t *ocs;
-	void (*acmp)(oc_t *, int *);
+	void (*acmp)(oc_t *, int, int *);
 } arch_t;
+
+arch_t pic14b = {
+	.ocs = ocs14b,
+	.acmp = &acmp14b,
+};
+
+arch_t *arch = &pic14b;
 
 /*************
  * assembler *
@@ -275,8 +284,8 @@ typedef struct {
 	union {
 		struct ins {
 			char *args;
+			int oc;
 			int atype;
-			oc_t *oc;
 		};
 		struct org {
 			int address;
@@ -541,6 +550,20 @@ void assemble(char **code) {
 				goto nextline;
 			}
 
+			{ /* not a directive, we'll try to find an instruction then */
+				oc_t *oc = arch->ocs;
+				while (oc->name != NULL) {
+					if (cmpid(cur, oc->name)) {
+						ins.type = IT_INS;
+						ins.oc = oc->oc;
+						ins.atype = oc->atype;
+						ins.args = argp;
+						arr_add(&inss, &ins);
+					}
+					++oc;
+				}
+			}
+
 			/* on to the next line */
 			nextline:
 			if (!skipnl(code) && **code)
@@ -556,7 +579,7 @@ void cleanup(void) {
 }
 
 main() {
-	char *code = " org 0x200 \ntest pest\r\n vest\nrest   \n data 1, 2, 3, test";
+	char *code = " org 0x200 \ntest pest\r\n vest\nrest   \n data 1, 2, 3, test\n addwf 0, 0";
 
 	assemble(&code);
 
@@ -574,7 +597,7 @@ main() {
 					printf(" data 0x%X\n", ins->value);
 					break;
 				case IT_INS:
-					printf(" opcode 0x%X", ins->oc->opcode);
+					printf(" opcode 0x%X", ins->oc);
 			}
 		}
 	}
