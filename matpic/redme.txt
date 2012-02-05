@@ -12,7 +12,7 @@ following directives exist:
 	org <origin>: set origin
 	data <value>, <value>: put stray words into bytecode
 	file "<filename>": tell assembler what file it is working on (also sets next line # to 1)
-	  filenames with double quotes or newlines and stuff in them are not support (no escape codes)
+		filenames with double quotes or newlines and stuff in them are not support (no escape codes)
 	line <line #>: tell assembler what the next line is numbered
 integer notation supports the following prefixes:
 	none at all: decimal
