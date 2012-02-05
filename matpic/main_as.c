@@ -8,7 +8,7 @@
 #include "as.h"
 
 main() {
-	char *code = " org 0x200 \ntest pest\r\n vest\nrest   \n data 1, 2, 3, test\n addwf 2, 1";
+	char *code = " org 0x200 \ntest file abc \n data 1, 2, 3, test\n \n addwf 2, 1\n";
 
 	assemble(&code);
 

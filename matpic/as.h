@@ -7,6 +7,7 @@
 
 extern int line;
 extern char file[FN_MAX];
+extern int address;
 
 typedef struct {
 	int type, line;

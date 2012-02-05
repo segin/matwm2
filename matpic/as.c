@@ -12,6 +12,7 @@
 
 int line = 1;
 char file[FN_MAX] = "<file>";
+int address = 0;
 
 arr_t inss;
 arr_t labels;
@@ -23,8 +24,11 @@ void errexit(char *msg) {
 
 unsigned int getval(char **src) {
 	unsigned int val;
+	int not = 0;
 
-	/* FIXME implement NOT operator */
+	skipsp(src);
+	while (**src == '!' || **src == '~')
+		++not, ++*src;
 	skipsp(src);
 	if (**src == '(') {
 		++*src;
@@ -39,16 +43,21 @@ unsigned int getval(char **src) {
 
 		id = getid(src);
 		if (id == NULL)
-			return val;
+			goto gotval;
 
 		/* get label or fail */
 		for (i = 0; i < labels.count; ++i) {
 			label = (label_t *) ((label_t *) labels.data) + i;
-			if (cmpid(label->name, id))
-				return label->address;
+			if (cmpid(label->name, id)) {
+				val = label->address;
+				goto gotval;
+			}
 		}
 		errexit("unknown identifier");
 	}
+	gotval:
+	if (not)
+		val = ~val;
 	return val;
 }
 
@@ -176,12 +185,22 @@ int getargs(char **src, int *args) {
 	}
 }
 
+void setfile(char *fn) {
+	int i;
+	for (i = 0; i < FN_MAX - 1; ++i) {
+		if (alfa[fn[i]] & (CT_NUL | CT_NL))
+			break;
+		file[i] = fn[i];
+	}
+	file[i] = 0;
+	line = 0; /* will be incremented soon enough */
+}
+
 void assemble(char **code) {
 	arr_new(&inss, sizeof(ins_t));
 	arr_new(&labels, sizeof(label_t));
 
 	{ /* first pass */
-		int address = 0;
 		char *cur = NULL;
 		label_t label;
 		ins_t ins;
@@ -209,6 +228,8 @@ void assemble(char **code) {
 						goto nextline;
 				}
 			}
+			if (alfa[**code] & (CT_NL | CT_NUL))
+				goto nextline;
 
 			/* eat the instruction (or directive) */
 			cur = getid(code);
@@ -231,11 +252,11 @@ void assemble(char **code) {
 			}
 
 			/* find instructon/directive */
+			ins.line = line;
 			if (cmpid(cur, "org")) {
 				if (getargs(&argp, args) != 1)
 					errexit("invalid number of arguments to org directive");
 				ins.type = IT_ORG;
-				ins.line = line;
 				ins.address = args[0];
 				address = ins.address;
 				arr_add(&inss, &ins);
@@ -245,11 +266,21 @@ void assemble(char **code) {
 				int i, n = getargs(&argp, args);
 				for (i = 0; i < n; ++i) {
 					ins.type = IT_DAT;
-					ins.line = line;
 					ins.value = args[i];
 					arr_add(&inss, &ins);
 				}
 				goto nextline;
+			}
+			if (cmpid(cur, "file")) {
+				if (argp == NULL)
+					errexit("'file' directive needs an argument");
+				setfile(argp);
+				goto nextline;
+			}
+			if (cmpid(cur, "line")) {
+				if (getargs(&argp, args) != 1)
+					errexit("'line' directive wants exactly 1 argument");
+				line = args[0] - 1;
 			}
 
 			{ /* not a directive, we'll try to find an instruction then */
@@ -261,9 +292,12 @@ void assemble(char **code) {
 						ins.atype = oc->atype;
 						ins.args = argp;
 						arr_add(&inss, &ins);
+						++address;
+						goto nextline;
 					}
 					++oc;
 				}
+				errexit("unknown instruction");
 			}
 
 			/* on to the next line */
