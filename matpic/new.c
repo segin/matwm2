@@ -11,7 +11,7 @@
  *   scroll down for meaning of numbers
  */
 char alfa[256] = {
-	0,  0,  0,  0,  0,  0,  0,  0,  0,  4, 16,  0,  0, 16,  0,  0,
+	32, 0,  0,  0,  0,  0,  0,  0,  0,  4,  16, 0,  0,  16, 0,  0,
 	0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
 	4,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
 	2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  0,  0,  0,  0,  0,  0,
@@ -35,6 +35,7 @@ char alfa[256] = {
 #define CT_SPC 4  /* space     ('\t' or ' ') */
 #define CT_SEP 8  /* separator ('_') */
 #define CT_NL  16 /* newline   ('\r' or '\n') */
+#define CT_NUL 32 /* nul/0     ('\0') */
 
 /* skipsp(src)
  *
@@ -117,7 +118,10 @@ char *getid(char **src) {
 int cmpid(char *idl, char *idr) {
 	int n = 0;
 
-	while (*(idl++) == *(idr++))
+	while (*idl && *idr &&
+	       (alfa[(unsigned char) *idl] & (CT_LET | CT_SEP | CT_NUM)) &&
+	       (alfa[(unsigned char) *idr] & (CT_LET | CT_SEP | CT_NUM)) &&
+	       *(idl++) == *(idr++))
 		++n;
 	if(!(alfa[(unsigned char) *idl] & (CT_LET | CT_SEP | CT_NUM)) &&
 	   !(alfa[(unsigned char) *idr] & (CT_LET | CT_SEP | CT_NUM)))
@@ -171,16 +175,16 @@ typedef struct {
 	int type, line;
 	char oc[2];
 	char *args;
-} record_t;
+} ins_t;
 
-enum rtype {
-	RT_END, /* end of data */
-	RT_ORG, /* org directive */
-	RT_DAT, /* data directive */
-	RT_INS, /* an actual instruction */
+enum itype {
+	IT_END, /* end of data */
+	IT_ORG, /* org directive */
+	IT_DAT, /* data directive */
+	IT_INS, /* an actual instruction */
 };
 
-arr_t records;
+arr_t inss;
 
 typedef struct {
 	char *name;
@@ -195,13 +199,14 @@ void errexit(char *msg) {
 }
 
 void assemble(char **code) {
-	arr_new(&records, sizeof(record_t));
+	arr_new(&inss, sizeof(ins_t));
 	arr_new(&labels, sizeof(label_t));
 
 	{ /* first pass */
 		int address = 0;
 		char *cur = NULL;
 		label_t label;
+		ins_t ins;
 
 		while (**code) {
 			 /* skip label and eat it if one is there
@@ -213,7 +218,7 @@ void assemble(char **code) {
 				if (cur == NULL)
 					errexit("malformed label");
 				if (!skipsp(code)) {
-					if (**code && **code != '\r' && **code != '\n')
+					if (!(alfa[**code] & (CT_NL | CT_NUL)))
 						errexit("unexpected character within label");
 					goto nextline;
 				}
@@ -227,9 +232,26 @@ void assemble(char **code) {
 			if (cur == NULL)
 				errexit("malformed instruction");
 
-			/* find it */
+			/* check for arguments */
+			ins.args = NULL;
+			if (!skipsp(code)) {
+				if (!(alfa[**code] & (CT_NL | CT_NUL)))
+					errexit("unexpected character within label");
+				goto nextline;
+			} else {
+				if (alfa[**code] & (CT_NL | CT_NUL))
+					goto nextline;
+				/* we got arguments */
+				ins.args = *code;
+				while (!(alfa[**code] & (CT_NUL | CT_NL)))
+					++*code;
+			}
+
+			/* find instructon/directive */
 			if (cmpid(cur, "org")) {
-				printf("org directive");
+				printf("org directive\n");
+				/* fixme */
+				goto nextline;
 			}
 
 			/* on to the next line */
@@ -242,7 +264,7 @@ void assemble(char **code) {
 }
 
 main() {
-	char *code = "test pest\r\n vest\n";
+	char *code = " org 0x200\ntest pest\r\n vest\n";
 
 	assemble(&code);
 
