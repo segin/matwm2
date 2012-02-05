@@ -280,6 +280,7 @@ main() {
 	char *code = " org 0x200\ntest pest\r\n vest\n";
 
 	assemble(&code);
+	cleanup();
 
 	return EXIT_SUCCESS;
 }
