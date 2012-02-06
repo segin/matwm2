@@ -134,24 +134,24 @@ local instr14 = {
 
 function comp14(v)
 	-- lua, Y U NO HAVE BITWISE OPERATORS
-	if  v.ins.a == "df" and table.getn(v.args) == 2 then
+	if  v.ins.a == "df" and v.args and table.getn(v.args) == 2 then
 		v.args[1] = v.args[1] % 0x80
 		v.args[2] = v.args[2] % 2
 		v.op = v.ins.op + (v.args[2] * 0x80) + v.args[1]
-	elseif v.ins.a == "f" and table.getn(v.args) == 1 then
+	elseif v.ins.a == "f" and v.args and table.getn(v.args) == 1 then
 		v.args[1] = v.args[1] % 0x80
 		v.op = v.ins.op + v.args[1]
-	elseif v.ins.a == "bf" and table.getn(v.args) == 2 then
+	elseif v.ins.a == "bf" and v.args and table.getn(v.args) == 2 then
 		v.args[1] = v.args[1] % 0x80
 		v.args[2] = v.args[2] % 8
 		v.op = v.ins.op + (v.args[2] * 0x80) + v.args[1]
-	elseif v.ins.a == "k8" and table.getn(v.args) == 1 then
+	elseif v.ins.a == "k8" and v.args and table.getn(v.args) == 1 then
 		v.args[1] = v.args[1] % 0x100
 		v.op = v.ins.op + v.args[1]
-	elseif v.ins.a == "k11" and table.getn(v.args) == 1 then
+	elseif v.ins.a == "k11" and v.args and table.getn(v.args) == 1 then
 		v.args[1] = v.args[1] % 0x800
 		v.op = v.ins.op + v.args[1]
-	elseif v.ins.a == "t" and table.getn(v.args) == 1 then
+	elseif v.ins.a == "t" and v.args and table.getn(v.args) == 1 then
 		v.args[1] = v.args[1] % 8
 		v.op = v.ins.op + v.args[1]
 	elseif v.ins.a == nil and v.args == nil then
