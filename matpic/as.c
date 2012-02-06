@@ -382,7 +382,6 @@ void assemble(char **code) {
 				case IT_FIL:
 					setfile(ins->file);
 					break;
-				/* file, data */
 			}
 			++ins;
 		}
