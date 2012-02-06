@@ -1,4 +1,3 @@
-fix label lookahead for data directive
 complete instruction set for 14bit chips
 make such that read stdin and write stdout
 support output to ihex
