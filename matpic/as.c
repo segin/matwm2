@@ -189,6 +189,18 @@ int getargs(char **src, int *args) {
 	}
 }
 
+int countargs(char *src) {
+	int n = 1;
+	if (!src)
+		return 0;
+	while(!(alfa[*src] & (CT_NUL | CT_NL))) {
+		if (*src == ',')
+			++n;
+		++src;
+	}
+	return n;
+}
+
 void setfile(char *fn) {
 	int i;
 	if (*fn != '"')
@@ -289,14 +301,14 @@ void assemble(char **code) {
 				arr_add(&inss, &ins);
 				goto nextline;
 			}
-			if (cmpid(cur, "data")) { /* FIXME no label lookahead this way */
-				int i, n = getargs(&argp, args);
-				for (i = 0; i < n; ++i) {
-					ins.type = IT_DAT;
-					ins.value = args[i];
+			if (cmpid(cur, "data")) {
+				int n = countargs(argp);
+				ins.type = IT_DAT;
+				ins.args = argp;
+				address += n;
+				for (; n > 0; --n) {
 					arr_add(&inss, &ins);
 				}
-				address += n;
 				goto nextline;
 			}
 			if (cmpid(cur, "file")) {
@@ -342,11 +354,10 @@ void assemble(char **code) {
 	}
 	{ /* second pass */
 		ins_t *ins = (ins_t *) inss.data;
-		int c, args[ARG_MAX];
+		int i, c, args[ARG_MAX];
 
 		initfile();
 		address = 0;
-		
 
 		while (ins->type != IT_END) {
 			switch (ins->type) {
@@ -359,7 +370,14 @@ void assemble(char **code) {
 					address = ins->address;
 					break;
 				case IT_DAT:
-					++address;
+					c = getargs(&(ins->args), args);
+					for (i = 0; i < c; ++i) {
+						ins->value = args[i];
+						++ins;
+					}
+					if (i)
+						--ins;
+					address += c;
 					break;
 				case IT_FIL:
 					setfile(ins->file);

@@ -22,6 +22,7 @@ typedef struct {
 			int address;
 		};
 		struct data {
+			char *args;
 			int value;
 		};
 		struct file {
