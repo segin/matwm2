@@ -278,7 +278,6 @@ void assemble(char *code) {
 			if (!skipsp(&code)) {
 				if (!(alfa[*code] & (CT_NL | CT_NUL)))
 					aerrexit("unexpected character within instruction");
-				goto nextline;
 			} else {
 				if (alfa[*code] & (CT_NL | CT_NUL))
 					goto nextline;
@@ -322,6 +321,7 @@ void assemble(char *code) {
 				if (getargs(&argp, args) != 1)
 					aerrexit("'line' directive wants exactly 1 argument");
 				line = args[0] - 1;
+				goto nextline;
 			}
 
 			{ /* not a directive, we'll try to find an instruction then */
