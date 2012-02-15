@@ -8,13 +8,27 @@
 #include "misc.h" /* errexit() */
 
 int main(int argc, char *argv[]) {
-	char *code;
-
 	FILE *infd = stdin;
 	FILE *outfd = stdout;
+	char *code = NULL;
 
-	while (!feof(infd)) {
-		
+	{ /* read teh fail */
+		int pos = 0, mem = 0;
+
+		while (!feof(infd)) {
+			if (ferror(infd))
+				errexit("failed to read file");
+			if (pos == mem) {
+				if (mem + BLOCK < mem)
+					errexit("wtf integer overflow");
+				code = realloc(code, mem + BLOCK);
+				mem += BLOCK;
+				if (code == NULL)
+					errexit("out of memory");
+			}
+			pos += fread((void *) code, 1, mem - pos, infd);
+		}
+		code[pos] = 0;
 	}
 
 	assemble(code);

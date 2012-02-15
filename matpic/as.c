@@ -358,6 +358,7 @@ void assemble(char *code) {
 		address = 0;
 
 		while (ins->type != IT_END) {
+			line = ins->line;
 			switch (ins->type) {
 				case IT_INS:
 					c = getargs(&(ins->ins.args), args);
