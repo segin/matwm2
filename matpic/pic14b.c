@@ -2,8 +2,6 @@
  * architecture definitions for PIC chips with 14bit instruction set *
  *********************************************************************/
 
-#include <stdlib.h> /* NULL */
-
 #include "pic14b.h"
 
 enum atype {
@@ -38,3 +36,4 @@ arch_t pic14b = {
 	.ocs = ocs14b,
 	.acmp = &acmp14b,
 };
+

@@ -5,7 +5,7 @@
  * generic string stuff *
  ************************/
 
-#include <stdlib.h> /* NULL */
+#include "host.h" /* NULL */
 
 extern char alfa[256];
 
@@ -24,3 +24,4 @@ extern int cmpid(char *idl, char *idr);
 extern int getnum(char **src, unsigned int *ret);
 
 #endif /* __STR_H__ */
+

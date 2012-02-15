@@ -2,25 +2,23 @@
  * assembler *
  *************/
 
-#include <stdlib.h> /* exit(), EXIT_FAILURE */
-#include <stdio.h> /* fprintf(), stderr */
-
+#include "host.h" /* exit(), EXIT_FAILURE, fprintf(), stderr */
 #include "as.h"
 #include "str.h"
 #include "mem.h"
 #include "arch.h"
+#include "misc.h" /* flerrexit() */
 
 int line = 1;
 char file[FN_MAX];
-char *infile = "<file>";
+char *infile = "<stdin>";
 int address = 0;
 
 arr_t inss;
 arr_t labels;
 
-void errexit(char *msg) {
-	fprintf(stderr, "%s: line %d: %s\n", file, line, msg);
-	exit(EXIT_FAILURE);
+void aerrexit(char *msg) {
+	flerrexit(file, line, msg);
 }
 
 unsigned int getval(char **src) {
@@ -35,7 +33,7 @@ unsigned int getval(char **src) {
 		++*src;
 		val = numarg(src);
 		if (**src != ')')
-			errexit("can't find ')'");
+			aerrexit("can't find ')'");
 		++*src;
 	} else if (**src == '$') {
 		val = address;
@@ -57,7 +55,7 @@ unsigned int getval(char **src) {
 				goto gotval;
 			}
 		}
-		errexit("unknown identifier");
+		aerrexit("unknown identifier");
 	}
 	gotval:
 	if (not)
@@ -182,10 +180,10 @@ int getargs(char **src, int *args) {
 		if (alfa[**src] & (CT_NUL | CT_NL))
 			return n + 1;
 		if (**src != ',')
-			errexit("your argument is invalid");
+			aerrexit("your argument is invalid");
 		++n, ++*src;
 		if (n == ARG_MAX)
-			errexit("too many arguments");
+			aerrexit("too many arguments");
 	}
 }
 
@@ -204,11 +202,11 @@ int countargs(char *src) {
 void setfile(char *fn) {
 	int i;
 	if (*fn != '"')
-		errexit("argument to file directive needs double quotes");
+		aerrexit("argument to file directive needs double quotes");
 	++fn;
 	for (i = 0; i < FN_MAX - 1; ++i) {
 		if (alfa[fn[i]] & (CT_NUL | CT_NL))
-			errexit("missing double quote");
+			aerrexit("missing double quote");
 		if (fn[i] == '"')
 			break;
 		file[i] = fn[i];
@@ -216,7 +214,7 @@ void setfile(char *fn) {
 	fn += i + 1;
 	skipsp(&fn);
 	if (!(alfa[*fn] & (CT_NUL | CT_NL)))
-		errexit("invalid crap after file directive");
+		aerrexit("invalid crap after file directive");
 	file[i] = 0;
 	line = 0; /* will be incremented soon enough */
 }
@@ -233,7 +231,7 @@ void reset(void) {
 	address = 0;
 }
 
-void assemble(char **code) {
+void assemble(char *code) {
 	arr_new(&inss, sizeof(ins_t));
 	arr_new(&labels, sizeof(label_t));
 
@@ -246,65 +244,65 @@ void assemble(char **code) {
 
 		initfile();
 
-		while (**code) {
+		while (*code) {
 			 /* skip label and eat it if one is there
 			 * also eat any preceding spaces before instruction
 			 * return if nothing or nothing but label
 			 */
-			if (!skipsp(code)) {
-				cur = getid(code);
+			if (!skipsp(&code)) {
+				cur = getid(&code);
 				if (cur == NULL)
-					errexit("malformed label");
+					aerrexit("malformed label");
 				label.name = cur;
 				label.address = address;
 				arr_add(&labels, &label);
-				if (!skipsp(code)) {
-					if (!(alfa[**code] & (CT_NL | CT_NUL)))
-						errexit("unexpected character within label");
+				if (!skipsp(&code)) {
+					if (!(alfa[*code] & (CT_NL | CT_NUL)))
+						aerrexit("unexpected character within label");
 					goto nextline;
 				} else {
-					if (alfa[**code] & (CT_NL | CT_NUL))
+					if (alfa[*code] & (CT_NL | CT_NUL))
 						goto nextline;
 				}
 			}
-			if (alfa[**code] & (CT_NL | CT_NUL))
+			if (alfa[*code] & (CT_NL | CT_NUL))
 				goto nextline;
 
 			/* eat the instruction (or directive) */
-			cur = getid(code);
+			cur = getid(&code);
 			if (cur == NULL)
-				errexit("malformed instruction");
+				aerrexit("malformed instruction");
 
 			/* check for arguments */
 			argp = NULL;
-			if (!skipsp(code)) {
-				if (!(alfa[**code] & (CT_NL | CT_NUL)))
-					errexit("unexpected character within instruction");
+			if (!skipsp(&code)) {
+				if (!(alfa[*code] & (CT_NL | CT_NUL)))
+					aerrexit("unexpected character within instruction");
 				goto nextline;
 			} else {
-				if (alfa[**code] & (CT_NL | CT_NUL))
+				if (alfa[*code] & (CT_NL | CT_NUL))
 					goto nextline;
 				/* we got arguments */
-				argp = *code;
-				while (!(alfa[**code] & (CT_NUL | CT_NL)))
-					++*code;
+				argp = code;
+				while (!(alfa[*code] & (CT_NUL | CT_NL)))
+					++code;
 			}
 
 			/* find instructon/directive */
 			ins.line = line;
 			if (cmpid(cur, "org")) {
 				if (getargs(&argp, args) != 1)
-					errexit("invalid number of arguments to org directive");
+					aerrexit("invalid number of arguments to org directive");
 				ins.type = IT_ORG;
-				ins.address = args[0];
-				address = ins.address;
+				ins.org.address = args[0];
+				address = ins.org.address;
 				arr_add(&inss, &ins);
 				goto nextline;
 			}
 			if (cmpid(cur, "data")) {
 				int n = countargs(argp);
 				ins.type = IT_DAT;
-				ins.args = argp;
+				ins.data.args = argp;
 				address += n;
 				for (; n > 0; --n) {
 					arr_add(&inss, &ins);
@@ -313,16 +311,16 @@ void assemble(char **code) {
 			}
 			if (cmpid(cur, "file")) {
 				if (argp == NULL)
-					errexit("'file' directive needs an argument");
+					aerrexit("'file' directive needs an argument");
 				setfile(argp);
 				ins.type = IT_FIL;
-				ins.file = argp;
+				ins.file.file = argp;
 				arr_add(&inss, &ins);
 				goto nextline;
 			}
 			if (cmpid(cur, "line")) {
 				if (getargs(&argp, args) != 1)
-					errexit("'line' directive wants exactly 1 argument");
+					aerrexit("'line' directive wants exactly 1 argument");
 				line = args[0] - 1;
 			}
 
@@ -331,22 +329,22 @@ void assemble(char **code) {
 				while (oc->name != NULL) {
 					if (cmpid(cur, oc->name)) {
 						ins.type = IT_INS;
-						ins.oc = oc->oc;
-						ins.atype = oc->atype;
-						ins.args = argp;
+						ins.ins.oc = oc->oc;
+						ins.ins.atype = oc->atype;
+						ins.ins.args = argp;
 						arr_add(&inss, &ins);
 						++address;
 						goto nextline;
 					}
 					++oc;
 				}
-				errexit("unknown instruction");
+				aerrexit("unknown instruction");
 			}
 
 			/* on to the next line */
 			nextline:
-			if (!skipnl(code) && **code)
-				errexit("unexpected character");
+			if (!skipnl(&code) && *code)
+				aerrexit("unexpected character");
 			++line;
 		}
 		ins.type = IT_END;
@@ -362,17 +360,17 @@ void assemble(char **code) {
 		while (ins->type != IT_END) {
 			switch (ins->type) {
 				case IT_INS:
-					c = getargs(&(ins->args), args);
-					ins->oc = arch->acmp(ins->oc, ins->atype, c, args);
+					c = getargs(&(ins->ins.args), args);
+					ins->ins.oc = arch->acmp(ins->ins.oc, ins->ins.atype, c, args);
 					++address;
 					break;
 				case IT_ORG:
-					address = ins->address;
+					address = ins->org.address;
 					break;
 				case IT_DAT:
-					c = getargs(&(ins->args), args);
+					c = getargs(&(ins->data.args), args);
 					for (i = 0; i < c; ++i) {
-						ins->value = args[i];
+						ins->data.value = args[i];
 						++ins;
 					}
 					if (i)
@@ -380,7 +378,7 @@ void assemble(char **code) {
 					address += c;
 					break;
 				case IT_FIL:
-					setfile(ins->file);
+					setfile(ins->file.file);
 					break;
 			}
 			++ins;
@@ -392,3 +390,4 @@ void cleanup(void) {
 	arr_free(&inss);
 	arr_free(&labels);
 }
+

@@ -2,15 +2,22 @@
  * assembler interface *
  ***********************/
 
-#include <stdlib.h> /* exit(), EXIT_FAILURE */
-#include <stdio.h>
-
+#include "host.h" /* EXIT_SUCCESS, errexit(), FILE, stdin, stdout, fread(),
+                     realloc(), free(), NULL */
 #include "as.h"
+#include "misc.h" /* errexit() */
 
-main() {
-	char *code = " org 0x200 \ntest file \"abc\"\n data\n Data 1, 2, 3, test, $\n data $, 10\n data $\n addwf 2, 1\n data $\n data $";
+int main(int argc, char *argv[]) {
+	char *code;
 
-	assemble(&code);
+	FILE *infd = stdin;
+	FILE *outfd = stdout;
+
+	while (!feof(infd)) {
+		
+	}
+
+	assemble(code);
 
 	{
 		int i;
@@ -19,13 +26,13 @@ main() {
 			ins = (ins_t *) ((ins_t *) inss.data) + i;
 			switch (ins->type) {
 				case IT_ORG:
-					printf(" org 0x%X\n", ins->address);
+					printf(" org 0x%X\n", ins->org.address);
 					break;
 				case IT_DAT:
-					printf(" data 0x%X\n", ins->value);
+					printf(" data 0x%X\n", ins->data.value);
 					break;
 				case IT_INS:
-					printf(" opcode 0x%X\n", ins->oc);
+					printf(" opcode 0x%X\n", ins->ins.oc);
 					break;
 			}
 		}
@@ -35,3 +42,4 @@ main() {
 
 	return EXIT_SUCCESS;
 }
+

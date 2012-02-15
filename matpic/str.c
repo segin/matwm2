@@ -2,7 +2,7 @@
  * generic string stuff *
  ************************/
 
-#include <stdlib.h> /* NULL */
+#include "host.h" /* NULL */
 #include "str.h"
 
 /* alfa[]
@@ -213,3 +213,4 @@ int getnum(char **src, unsigned int *ret) {
 	*ret = r;
 	return n;
 }
+
