@@ -1,10 +1,10 @@
 complete instruction set for 14bit chips
-make such that read stdin and write stdout
 support output to ihex
 support banksel, bankisel, pagesel pseudo instructions
 preprocessor
 interface program that pipe preprocessor to assembler
 disassembler
+db directive for store bytes separate and text with ""
 relocatable code and coff output support
 nasm style labels and local labels
 warn of duplicate labels

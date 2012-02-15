@@ -6,6 +6,7 @@
                      realloc(), free(), NULL */
 #include "as.h"
 #include "misc.h" /* errexit() */
+#include "ihex.h"
 
 int main(int argc, char *argv[]) {
 	FILE *infd = stdin;
@@ -32,6 +33,9 @@ int main(int argc, char *argv[]) {
 	}
 
 	assemble(code);
+
+	/* release the monster */
+	free(code);
 
 	{
 		int i;

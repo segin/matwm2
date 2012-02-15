@@ -16,24 +16,25 @@ enum atype {
 };
 
 oc_t ocs14b[] = {
-	{ "addwf", 0x0700, 0x0000, AT_DF },
+	{ "addwf", { 0x07, 0x00 }, { 0x00, 0x00 }, 2, AT_DF },
 	/* note to self, do not forget banksel, bankisel, pagesel */
 	{ NULL, 0, 0, 0 }, /* important, end of list */
 };
 
-int acmp14b(int oc, int atype, int argc, int *argv) {
+void acmp14b(unsigned char *oc, int atype, int argc, int *argv) {
 	switch (atype) {
 		case AT_DF:
 			if (argc != 2)
-				/* errexit("wrong number of arguments") */;
-			oc |= (argv[0] & 0xFF) | ((argv[1] & 1) << 7);
+				aerrexit("wrong number of arguments");
+			oc[1] = argv[0];
+			oc[0] = (argv[1] & 1) << 7;
 			break;
 	}
-	return oc;
 }
 
 arch_t pic14b = {
 	.ocs = ocs14b,
 	.acmp = &acmp14b,
+	.align = 2,
 };
 

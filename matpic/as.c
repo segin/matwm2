@@ -2,7 +2,7 @@
  * assembler *
  *************/
 
-#include "host.h" /* exit(), EXIT_FAILURE, fprintf(), stderr */
+#include "host.h" /* memcpy() */
 #include "as.h"
 #include "str.h"
 #include "mem.h"
@@ -293,7 +293,7 @@ void assemble(char *code) {
 				if (getargs(&argp, args) != 1)
 					aerrexit("invalid number of arguments to org directive");
 				ins.type = IT_ORG;
-				ins.org.address = args[0];
+				ins.org.address = args[0] * arch->align;
 				address = ins.org.address;
 				arr_add(&inss, &ins);
 				goto nextline;
@@ -302,10 +302,9 @@ void assemble(char *code) {
 				int n = countargs(argp);
 				ins.type = IT_DAT;
 				ins.data.args = argp;
-				address += n;
-				for (; n > 0; --n) {
+				address += n * arch->align;
+				for (; n > 0; --n)
 					arr_add(&inss, &ins);
-				}
 				goto nextline;
 			}
 			if (cmpid(cur, "file")) {
@@ -329,11 +328,12 @@ void assemble(char *code) {
 				while (oc->name != NULL) {
 					if (cmpid(cur, oc->name)) {
 						ins.type = IT_INS;
-						ins.ins.oc = oc->oc;
+						memcpy((void *) ins.ins.oc, (void *) oc->oc, sizeof(oc->oc));
+						ins.ins.len = oc->len;
 						ins.ins.atype = oc->atype;
 						ins.ins.args = argp;
 						arr_add(&inss, &ins);
-						++address;
+						address += ins.ins.len;
 						goto nextline;
 					}
 					++oc;
@@ -362,7 +362,7 @@ void assemble(char *code) {
 			switch (ins->type) {
 				case IT_INS:
 					c = getargs(&(ins->ins.args), args);
-					ins->ins.oc = arch->acmp(ins->ins.oc, ins->ins.atype, c, args);
+					arch->acmp(ins->ins.oc, ins->ins.atype, c, args);
 					++address;
 					break;
 				case IT_ORG:

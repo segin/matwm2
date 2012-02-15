@@ -15,8 +15,8 @@ typedef struct {
 	union {
 		struct ins {
 			char *args;
-			int oc;
-			int atype;
+			unsigned char oc[6];
+			int len, atype;
 		} ins;
 		struct org {
 			int address;

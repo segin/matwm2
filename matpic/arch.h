@@ -2,15 +2,18 @@
 #define __ARCH_H__
 
 #include "host.h" /* NULL (used by some who include us) */
+#include "as.h" /* aerrexit(), also for those who supposed to include us */
 
 typedef struct {
 	char *name;
-	int oc, imask, atype;
+	unsigned char oc[6], imask[6];
+	int len, atype;
 } oc_t;
 
 typedef struct {
 	oc_t *ocs;
-	int (*acmp)(int, int, int, int *);
+	int align;
+	void (*acmp)(unsigned char *, int, int, int *);
 } arch_t;
 
 extern arch_t *arch;
