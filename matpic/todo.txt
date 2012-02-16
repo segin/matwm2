@@ -1,4 +1,5 @@
 complete instruction set for 14bit chips
+add ihex thing for bigger than 16bit addresses
 support banksel, bankisel, pagesel pseudo instructions
 preprocessor
 interface program that pipe preprocessor to assembler

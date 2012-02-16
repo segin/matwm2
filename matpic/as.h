@@ -5,25 +5,24 @@
 
 #define FN_MAX 512 /* filename max length */
 
-extern int line;
 extern char file[FN_MAX];
 extern char *infile;
-extern int address;
+extern unsigned int address, line;
 
 typedef struct {
-	int type, line;
+	unsigned int type, line;
 	union {
 		struct ins {
 			char *args;
 			unsigned char oc[6];
-			int len, atype;
+			unsigned int len, atype;
 		} ins;
 		struct org {
-			int address;
+			unsigned int address;
 		} org;
 		struct data {
 			char *args;
-			int value;
+			unsigned int value;
 		} data;
 		struct file {
 			char *file;

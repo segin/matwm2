@@ -9,10 +9,9 @@
 #include "arch.h"
 #include "misc.h" /* flerrexit() */
 
-int line = 1;
 char file[FN_MAX];
 char *infile = "<stdin>";
-int address = 0;
+unsigned int address = 0, line = 1;
 
 arr_t inss;
 arr_t labels;

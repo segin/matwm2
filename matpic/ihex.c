@@ -8,7 +8,7 @@ int dosnl = 0;
 char *out;
 int pos = 0, crc;
 int mem, len;
-int addr, saddr, rtype = 0;
+unsigned int addr, saddr, rtype = 0;
 unsigned char buf[16];
 
 char hexnib[16] = {
