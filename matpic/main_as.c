@@ -36,9 +36,7 @@ int main(int argc, char *argv[]) {
 	free(code); /* release the monster */
 
 	{ /* write the fail */
-		int len;
-
-		len = getihex(&code);
+		int len = getihex(&code);
 		fwrite((void *) code, 1, len, outfd);
 	}
 
