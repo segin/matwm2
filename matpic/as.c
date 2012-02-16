@@ -176,7 +176,7 @@ int getargs(char **src, int *args) {
 		return 0;
 	while (1) {
 		args[n] = numarg(src);
-		if (alfa[**src] & (CT_NUL | CT_NL))
+		if (alfa[(unsigned char) **src] & (CT_NUL | CT_NL))
 			return n + 1;
 		if (**src != ',')
 			aerrexit("your argument is invalid");
@@ -190,7 +190,7 @@ int countargs(char *src) {
 	int n = 1;
 	if (!src)
 		return 0;
-	while(!(alfa[*src] & (CT_NUL | CT_NL))) {
+	while(!(alfa[(unsigned char) *src] & (CT_NUL | CT_NL))) {
 		if (*src == ',')
 			++n;
 		++src;
@@ -204,7 +204,7 @@ void setfile(char *fn) {
 		aerrexit("argument to file directive needs double quotes");
 	++fn;
 	for (i = 0; i < FN_MAX - 1; ++i) {
-		if (alfa[fn[i]] & (CT_NUL | CT_NL))
+		if (alfa[(unsigned char) fn[i]] & (CT_NUL | CT_NL))
 			aerrexit("missing double quote");
 		if (fn[i] == '"')
 			break;
@@ -212,7 +212,7 @@ void setfile(char *fn) {
 	}
 	fn += i + 1;
 	skipsp(&fn);
-	if (!(alfa[*fn] & (CT_NUL | CT_NL)))
+	if (!(alfa[(unsigned char) *fn] & (CT_NUL | CT_NL)))
 		aerrexit("invalid crap after file directive");
 	file[i] = 0;
 	line = 0; /* will be incremented soon enough */
@@ -263,15 +263,15 @@ void assemble(char *code) {
 				}
 				arr_add(&labels, &label);
 				if (!skipsp(&code)) {
-					if (!(alfa[*code] & (CT_NL | CT_NUL)))
+					if (!(alfa[(unsigned char) *code] & (CT_NL | CT_NUL)))
 						aerrexit("unexpected character within label");
 					goto nextline;
 				} else {
-					if (alfa[*code] & (CT_NL | CT_NUL))
+					if (alfa[(unsigned char) *code] & (CT_NL | CT_NUL))
 						goto nextline;
 				}
 			}
-			if (alfa[*code] & (CT_NL | CT_NUL))
+			if (alfa[(unsigned char) *code] & (CT_NL | CT_NUL))
 				goto nextline;
 
 			/* eat the instruction (or directive) */
@@ -282,14 +282,14 @@ void assemble(char *code) {
 			/* check for arguments */
 			argp = NULL;
 			if (!skipsp(&code)) {
-				if (!(alfa[*code] & (CT_NL | CT_NUL)))
+				if (!(alfa[(unsigned char) *code] & (CT_NL | CT_NUL)))
 					aerrexit("unexpected character within instruction");
 			} else {
-				if (alfa[*code] & (CT_NL | CT_NUL))
+				if (alfa[(unsigned char) *code] & (CT_NL | CT_NUL))
 					goto nextline;
 				/* we got arguments */
 				argp = code;
-				while (!(alfa[*code] & (CT_NUL | CT_NL)))
+				while (!(alfa[(unsigned char) *code] & (CT_NUL | CT_NL)))
 					++code;
 			}
 

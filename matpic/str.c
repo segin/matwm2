@@ -147,7 +147,7 @@ int cmpid(char *idl, char *idr) {
 	while (*idl && *idr &&
 	       (alfa[(unsigned char) *idl] & (CT_LET | CT_SEP | CT_NUM)) &&
 	       (alfa[(unsigned char) *idr] & (CT_LET | CT_SEP | CT_NUM)) &&
-	       lower[*idl] == lower[*idr])
+	       lower[(unsigned char) *idl] == lower[(unsigned char) *idr])
 		++n, ++idl, ++idr;
 	if(!(alfa[(unsigned char) *idl] & (CT_LET | CT_SEP | CT_NUM)) &&
 	   !(alfa[(unsigned char) *idr] & (CT_LET | CT_SEP | CT_NUM)))
@@ -200,7 +200,7 @@ int getnum(char **src, unsigned int *ret) {
 		octal0:;
 	}
 
-	while ((c = hexlookup[**src]) != 16) {
+	while ((c = hexlookup[(unsigned char) **src]) != 16) {
 		if (c == 17)
 			continue;
 		if (c >= base)

@@ -66,7 +66,7 @@ oc_t ocs14b[] = {
 
 	/* note to self, do not forget banksel, bankisel, pagesel */
 
-	{ NULL, 0, 0, 0 }, /* important, end of list */
+	{ NULL, { 0 }, { 0 }, 0 }, /* important, end of list */
 };
 
 void acmp14b(unsigned char *oc, int atype, int argc, int *argv) {
