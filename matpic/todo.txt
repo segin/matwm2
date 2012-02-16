@@ -1,5 +1,4 @@
 complete instruction set for 14bit chips
-support output to ihex
 support banksel, bankisel, pagesel pseudo instructions
 preprocessor
 interface program that pipe preprocessor to assembler
@@ -8,4 +7,7 @@ db directive for store bytes separate and text with ""
 relocatable code and coff output support
 nasm style labels and local labels
 warn of duplicate labels
+
+BUGS
+	if integer size on host architecture is less than 32bit all will fail
 

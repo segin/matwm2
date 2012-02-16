@@ -6,6 +6,7 @@
                      realloc(), free(), NULL */
 #include "as.h"
 #include "misc.h" /* errexit() */
+#include "mem.h" /* BLOCK */
 #include "ihex.h"
 
 int main(int argc, char *argv[]) {
@@ -22,7 +23,7 @@ int main(int argc, char *argv[]) {
 			if (pos == mem) {
 				if (mem + BLOCK < mem)
 					errexit("wtf integer overflow");
-				code = realloc(code, mem + BLOCK);
+				code = (char *) realloc((void *) code, mem + BLOCK);
 				mem += BLOCK;
 				if (code == NULL)
 					errexit("out of memory");
@@ -31,13 +32,17 @@ int main(int argc, char *argv[]) {
 		}
 		code[pos] = 0;
 	}
-
 	assemble(code);
+	free(code); /* release the monster */
 
-	/* release the monster */
-	free(code);
+	{ /* write the fail */
+		int len;
 
-	{
+		len = getihex(&code);
+		fwrite((void *) code, 1, len, outfd);
+	}
+
+/*	{
 		int i;
 		ins_t *ins;
 		for (i = 0; i < inss.count; ++i) {
@@ -54,7 +59,7 @@ int main(int argc, char *argv[]) {
 					break;
 			}
 		}
-	}
+	}*/
 
 	cleanup();
 

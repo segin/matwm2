@@ -1,4 +1,4 @@
-OBJS_MATPIC_AS  = str.o mem.o arch.o pic14b.o as.o main_as.o misc.o
+OBJS_MATPIC_AS  = str.o mem.o arch.o pic14b.o as.o main_as.o misc.o ihex.o
 
 all: matpic_as
 
