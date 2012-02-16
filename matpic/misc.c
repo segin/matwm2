@@ -10,3 +10,7 @@ void flerrexit(char *file, int line, char *msg) {
 	exit(EXIT_FAILURE);
 }
 
+void fawarn(char *file, int addr, char *msg) {
+	fprintf(stderr, "%s: %X: %s\n", file, addr, msg);
+}
+

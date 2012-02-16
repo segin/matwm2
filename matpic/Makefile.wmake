@@ -2,16 +2,16 @@ CC = wcc386
 LD = wlink
 RM = del
 
-OBJS_MATPIC_AS  = str.obj mem.obj arch.obj pic14b.obj as.obj main_as.obj misc.obj ihex.obj
+OBJS  = str.obj mem.obj arch.obj pic14b.obj as.obj main.obj misc.obj ihex.obj dis.obj
 
-all: matpic_as.exe
+all: matpic.exe
 
 .c.obj : .autodepend
 	$(CC) $(CFLAGS) $<
 
-matpic_as.exe: $(OBJS_MATPIC_AS)
+matpic.exe: $(OBJS_MATPIC_AS)
 	$(LD) name $@ file { $< }
 
 clean: .symbolic
-	$(RM) $(OBJS_MATPIC_AS) matpic_as.exe
+	$(RM) $(OBJS_MATPIC_AS) matpic.exe
 

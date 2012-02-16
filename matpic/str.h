@@ -8,6 +8,7 @@
 #include "host.h" /* NULL */
 
 extern char alfa[256];
+extern char hexlookup[256];
 
 /* symbols used in above lookup table "alfa[]" */
 #define CT_LET 1  /* letter    (a-z, A-Z) */
