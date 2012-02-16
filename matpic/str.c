@@ -147,8 +147,8 @@ int cmpid(char *idl, char *idr) {
 	while (*idl && *idr &&
 	       (alfa[(unsigned char) *idl] & (CT_LET | CT_SEP | CT_NUM)) &&
 	       (alfa[(unsigned char) *idr] & (CT_LET | CT_SEP | CT_NUM)) &&
-	       lower[*(idl++)] == lower[*(idr++)])
-		++n;
+	       lower[*idl] == lower[*idr])
+		++n, ++idl, ++idr;
 	if(!(alfa[(unsigned char) *idl] & (CT_LET | CT_SEP | CT_NUM)) &&
 	   !(alfa[(unsigned char) *idr] & (CT_LET | CT_SEP | CT_NUM)))
 		return n;

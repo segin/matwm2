@@ -1,13 +1,14 @@
-complete instruction set for 14bit chips
-add ihex thing for bigger than 16bit addresses
 support banksel, bankisel, pagesel pseudo instructions
 preprocessor
-interface program that pipe preprocessor to assembler
 disassembler
+better commandline interface
 db directive for store bytes separate and text with ""
 relocatable code and coff output support
 nasm style labels and local labels
 warn of duplicate labels
+add ihex thing for bigger than 16bit addresses
+header files for chips
+support more chips
 
 BUGS
 	if integer size on host architecture is less than 32bit all will fail

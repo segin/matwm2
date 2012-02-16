@@ -65,6 +65,7 @@ oc_t ocs14b[] = {
 	{ "tris",   { 0x00, 0x64 }, { 0xFF, 0xFC }, 2, AT_T   },
 
 	/* note to self, do not forget banksel, bankisel, pagesel */
+
 	{ NULL, 0, 0, 0 }, /* important, end of list */
 };
 
