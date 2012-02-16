@@ -26,8 +26,7 @@ void acmp14b(unsigned char *oc, int atype, int argc, int *argv) {
 		case AT_DF:
 			if (argc != 2)
 				aerrexit("wrong number of arguments");
-			oc[1] = argv[0];
-			oc[0] = (argv[1] & 1) << 7;
+			oc[1] = (argv[1] & 1) << 7 | argv[0];
 			break;
 	}
 }
