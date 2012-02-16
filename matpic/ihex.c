@@ -22,7 +22,7 @@ void sethb(unsigned char b) {
 }
 
 void endln(void) {
-	int i, res = mem + (((pos + 5) * 2) + 1);
+	int i, res = mem + (((pos + 5) * 2) + 2);
 
 	/* make sure enough memory is ready */
 	while (res > mem) {
@@ -43,6 +43,7 @@ void endln(void) {
 	for (i = 0; i < pos; ++i)
 		sethb(buf[i]);
 	sethb((crc & 0xFF) ^ 0xFF);
+	out[len++] = '\n';
 	pos = 0;
 	saddr = addr;
 }
