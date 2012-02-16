@@ -255,7 +255,7 @@ void assemble(char *code) {
 				if (cur == NULL)
 					aerrexit("malformed label");
 				label.name = cur;
-				label.address = address >> 1;
+				label.address = address / arch->align;
 				for (i = 0; i < labels.count; ++i) { /* check if already exists */
 					li = (label_t *) ((label_t *) labels.data) + i;
 					if (cmpid(li->name, cur))
