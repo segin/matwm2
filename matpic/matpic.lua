@@ -129,7 +129,7 @@ local instr14 = {
 	["sublw"] = { op=0x3C00, a="k8", m=0x0100 },
 	["xorlw"] = { op=0x3A00, a="k8" },
 	["option"] = { op=0x0062 },
-	["tris"] = { op=0x0060, a="t" },
+	["tris"] = { op=0x0064, a="t" },
 }
 
 function comp14(v)

@@ -59,6 +59,11 @@ oc_t ocs14b[] = {
 	{ "call",   { 0x20, 0x00 }, { 0xF8, 0x00 }, 2, AT_K11 },
 	{ "goto",   { 0x28, 0x00 }, { 0xF8, 0x00 }, 2, AT_K11 },
 
+	/* deprecated stuff (but still works on PIC i tested) */
+	/* tris can only go after clrwdt, or disassembler might be confused */
+	{ "option", { 0x00, 0x62 }, { 0xFF, 0xFF }, 2, AT_NA  },
+	{ "tris",   { 0x00, 0x64 }, { 0xFF, 0xFC }, 2, AT_T   },
+
 	/* note to self, do not forget banksel, bankisel, pagesel */
 	{ NULL, 0, 0, 0 }, /* important, end of list */
 };
@@ -93,6 +98,9 @@ void acmp14b(unsigned char *oc, int atype, int argc, int *argv) {
 			oc[0] |= (argv[0] & 0x700) >> 8;
 			break;
 		case AT_T:
+			if (argc != 1)
+				aerrexit("wrong number of arguments");
+			oc[1] |= argv[0] & 0x3;
 			break;
 		case AT_BS:
 			break;
