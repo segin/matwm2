@@ -81,7 +81,7 @@
 
   TODO/BUGS
     - Including file with uppercase letter in its name will fail.
-	- Still need to implement banksel.
+    - Still need to implement banksel.
     - Builtin disassembler would be nice.
     - Fix dumb manual.
     - Support 12bit and 16bit chips, only 14bit supported for now.
