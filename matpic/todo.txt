@@ -1,8 +1,8 @@
-support banksel, bankisel, pagesel pseudo instructions
 preprocessor
 disassembler
-better commandline interface
 db directive for store bytes separate and text with ""
+better commandline interface
+support banksel, bankisel, pagesel pseudo instructions
 relocatable code and coff output support
 nasm style labels and local labels
 add ihex thing for bigger than 16bit addresses
