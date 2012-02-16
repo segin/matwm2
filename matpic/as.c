@@ -240,6 +240,8 @@ void assemble(char *code) {
 		ins_t ins;
 		int args[ARG_MAX];
 		char *argp;
+		label_t *li;
+		int i;
 
 		initfile();
 
@@ -254,6 +256,11 @@ void assemble(char *code) {
 					aerrexit("malformed label");
 				label.name = cur;
 				label.address = address;
+				for (i = 0; i < labels.count; ++i) { /* check if already exists */
+					li = (label_t *) ((label_t *) labels.data) + i;
+					if (cmpid(li->name, cur))
+						aerrexit("duplicate label");
+				}
 				arr_add(&labels, &label);
 				if (!skipsp(&code)) {
 					if (!(alfa[*code] & (CT_NL | CT_NUL)))
