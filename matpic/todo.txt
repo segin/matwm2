@@ -5,7 +5,6 @@ better commandline interface
 db directive for store bytes separate and text with ""
 relocatable code and coff output support
 nasm style labels and local labels
-warn of duplicate labels
 add ihex thing for bigger than 16bit addresses
 header files for chips
 support more chips
