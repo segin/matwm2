@@ -4,6 +4,7 @@
 #include "misc.h" /* errexit() */
 #include "arch.h" /* arch */
 
+int dosnl = 0;
 char *out;
 int pos = 0, crc;
 int mem, len;
@@ -22,9 +23,12 @@ void sethb(unsigned char b) {
 }
 
 void endln(void) {
-	int i, res = mem + (((pos + 5) * 2) + 2);
+	int i, res;
 
 	/* make sure enough memory is ready */
+	res = len + (((pos + 5) * 2) + 3);
+	if (res < len)
+		errexit(":-o integer overflow");
 	while (res > mem) {
 		if (mem + BLOCK < mem)
 			errexit("integer overflow :(");
@@ -42,7 +46,9 @@ void endln(void) {
 	sethb(rtype);
 	for (i = 0; i < pos; ++i)
 		sethb(buf[i]);
-	sethb((crc & 0xFF) ^ 0xFF);
+	sethb((0x100 - crc) & 0xFF);
+	if (dosnl)
+		out[len++] = '\r';
 	out[len++] = '\n';
 	pos = 0;
 	saddr = addr;
@@ -68,13 +74,13 @@ int getihex(char **ret) {
 				addr = saddr = ins->org.address;
 				break;
 			case IT_DAT:
-				addb((ins->data.value & 0xFF00) >> 8);
-				++addr;
 				addb(ins->data.value & 0xFF);
+				++addr;
+				addb((ins->data.value & 0xFF00) >> 8);
 				++addr;
 				break;
 			case IT_INS:
-				for (i = 0; i < ins->ins.len; ++i) {
+				for (i = ins->ins.len - 1; i >= 0; --i) {
 					addb(ins->ins.oc[i]);
 					++addr;
 				}
