@@ -8,7 +8,7 @@ int dosnl = 0;
 char *out;
 int pos = 0, crc;
 int mem, len;
-unsigned int addr, saddr, rtype = 0;
+unsigned int addr, saddr, rtype;
 unsigned char buf[16];
 
 char hexnib[16] = {
@@ -65,12 +65,13 @@ int getihex(char **ret) {
 	int i;
 	ins_t *ins = (ins_t *) inss.data;
 
-	addr = saddr = mem = len = 0;
+	addr = saddr = mem = len = rtype = 0;
 	out = NULL;
 	while (ins->type != IT_END) {
 		switch (ins->type) {
 			case IT_ORG:
-				endln();
+				if (pos)
+					endln();
 				addr = saddr = ins->org.address;
 				break;
 			case IT_DAT:
@@ -89,6 +90,12 @@ int getihex(char **ret) {
 		++ins;
 	}
 	endln();
+
+	/* spit out end record */
+	rtype = 1;
+	saddr = 0;
+	endln();
+
 	out[len] = 0;
 	*ret = out;
 	return len;
