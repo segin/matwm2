@@ -42,25 +42,6 @@ int main(int argc, char *argv[]) {
 		fwrite((void *) code, 1, len, outfd);
 	}
 
-/*	{
-		int i;
-		ins_t *ins;
-		for (i = 0; i < inss.count; ++i) {
-			ins = (ins_t *) ((ins_t *) inss.data) + i;
-			switch (ins->type) {
-				case IT_ORG:
-					printf(" org 0x%X\n", ins->org.address);
-					break;
-				case IT_DAT:
-					printf(" data 0x%X\n", ins->data.value);
-					break;
-				case IT_INS:
-					printf(" opcode 0x%X\n", ins->ins.oc);
-					break;
-			}
-		}
-	}*/
-
 	cleanup();
 
 	return EXIT_SUCCESS;
