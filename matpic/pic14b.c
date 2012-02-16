@@ -68,14 +68,34 @@ void acmp14b(unsigned char *oc, int atype, int argc, int *argv) {
 		case AT_DF:
 			if (argc != 2)
 				aerrexit("wrong number of arguments");
-			oc[1] = (argv[1] & 1) << 7 | argv[0];
+			oc[1] = (argv[1] & 1) << 7 | (argv[0] & 0x7F);
 			break;
 		case AT_F:
-			if (argc != 2)
+			if (argc != 1)
 				aerrexit("wrong number of arguments");
 			oc[1] |= argv[0] & 0x7F;
 			break;
-
+		case AT_BF:
+			if (argc != 2)
+				aerrexit("wrong number of arguments");
+			oc[1] = (argv[1] & 1) << 7 | (argv[0] & 0x7F);
+			oc[0] |= (argv[1] & 6) >> 1;
+			break;
+		case AT_K8:
+			if (argc != 1)
+				aerrexit("wrong number of arguments");
+			oc[1] |= argv[0] & 0xFF;
+			break;
+		case AT_K11:
+			if (argc != 1)
+				aerrexit("wrong number of arguments");
+			oc[1] = argv[0] & 0xFF;
+			oc[0] |= (argv[0] & 0x700) >> 8;
+			break;
+		case AT_T:
+			break;
+		case AT_BS:
+			break;
 	}
 }
 
