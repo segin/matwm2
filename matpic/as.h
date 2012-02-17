@@ -35,7 +35,7 @@ enum itype {
 	IT_ORG, /* org directive */
 	IT_DAT, /* data directive */
 	IT_INS, /* an actual instruction */
-	IT_FIL, /* change of filename */
+	IT_FIL  /* change of filename */
 };
 
 extern arr_t inss;

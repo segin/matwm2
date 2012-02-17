@@ -72,7 +72,7 @@ enum ops {
 	OP_IOR,
 	OP_EOR,
 	OP_SHL,
-	OP_SHR,
+	OP_SHR
 };
 
 unsigned int numarg(char **src) {

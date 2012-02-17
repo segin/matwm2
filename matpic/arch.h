@@ -12,8 +12,8 @@ typedef struct {
 
 typedef struct {
 	oc_t *ocs;
-	int align;
 	void (*acmp)(unsigned char *, int, int, int *);
+	int align;
 } arch_t;
 
 extern arch_t *arch;

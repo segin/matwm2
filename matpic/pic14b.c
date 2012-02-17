@@ -12,7 +12,7 @@ enum atype {
 	AT_K8,
 	AT_K11,
 	AT_T, /* for tris instruction */
-	AT_BS, /* banksel */
+	AT_BS /* banksel */
 };
 
 oc_t ocs14b[] = {
@@ -109,8 +109,8 @@ void acmp14b(unsigned char *oc, int atype, int argc, int *argv) {
 }
 
 arch_t pic14b = {
-	.ocs = ocs14b,
-	.acmp = &acmp14b,
-	.align = 2,
+	ocs14b,
+	&acmp14b,
+	2
 };
 
