@@ -25,5 +25,5 @@ int main(int argc, char *argv[]) {
 	}
 	fclose(fd);
 	fclose(fd2);
-	return 0;
+	exit(0);
 }
