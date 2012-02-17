@@ -15,10 +15,7 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 	if(!(fd = fopen(argv[1], "rb")) || !(fd2 = fopen(argv[2], "wb"))) {
-		if(fd)
-			perror(argv[2]);
-		else
-			perror(argv[1]);
+		perror(argv[fd ? 2 : 1])
 		exit(1);
 	}
 	while(fread(&a, 1, 1, fd)) {
