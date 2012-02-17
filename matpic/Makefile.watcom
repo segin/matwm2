@@ -9,9 +9,9 @@ all: matpic.exe
 .c.obj : .autodepend
 	$(CC) $(CFLAGS) $<
 
-matpic.exe: $(OBJS_MATPIC_AS)
+matpic.exe: $(OBJS)
 	$(LD) name $@ file { $< }
 
 clean: .symbolic
-	$(RM) $(OBJS_MATPIC_AS) matpic.exe
+	$(RM) $(OBJS) matpic.exe
 
