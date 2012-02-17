@@ -245,8 +245,11 @@ void assemble(char *code) {
 			 */
 			if (!skipsp(&code)) {
 				cur = getid(&code);
-				if (cur == NULL)
+				if (cur == NULL) {
+					if (alfa[(unsigned char) *code] & (CT_NL | CT_NUL))
+						goto nextline;
 					aerrexit("malformed label");
+				}
 				label.name = cur;
 				label.address = address / arch->align;
 				for (i = 0; i < labels.count; ++i) { /* check if already exists */

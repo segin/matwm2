@@ -1,8 +1,12 @@
 #include "host.h" /* realloc() */
 #include "mem.h" /* BLOCK */
-#include "as.h" /* inss, address */
-#include "misc.h" /* errexit() */
+#include "as.h" /* inss */
+#include "misc.h" /* errexit(), flwarn() */
 #include "arch.h" /* arch */
+/* below includes = only for ihex input */
+#include "str.h" /* skipsp(), skipnl(), alfa[], hexlookup[] */
+#include "main.h" /* infile, line */
+#include "dis.h" /* dsym, dsym_t */
 
 int dosnl = 0;
 char *out;
@@ -99,5 +103,93 @@ int getihex(char **ret) {
 	out[len] = 0;
 	*ret = out;
 	return len;
+}
+
+void ihwarn(char *msg) {
+	flwarn(infile, line, msg);
+}
+
+int gethnum(char **src) {
+	int r, l = hexlookup[(unsigned char) **src];
+	if (l == 16) /* really check inbetween, in case we hit terminating 0 */
+		return -1;
+	r = hexlookup[(unsigned char) *((*src) + 1)];
+	if (r == 16)
+		return -1;
+	*src += 2;
+	return (l << 4) | r;
+}
+
+void readihex(char *in) {
+	int n, len, crc, rtype, addr;
+	dsym_t ds;
+
+	arr_new(&dsym, sizeof(dsym_t));
+	dstartline:
+	crc = 0;
+	--line;
+	do {
+		skipsp(&in);
+		++line;
+	} while (skipnl(&in));
+	if (*in == 0) {
+		ihwarn("no end record");
+		return;
+	}
+	if (*in != ':')
+		goto dditchline;
+	++in;
+	if ((len = gethnum(&in)) == -1)
+		goto dditchline;
+	crc += len;
+	if ((n = gethnum(&in)) == -1)
+		goto dditchline;
+	crc += n;
+	addr = n << 8;
+	if ((n = gethnum(&in)) == -1)
+		goto dditchline;
+	crc += n;
+	addr |= n;
+	rtype = gethnum(&in);
+	crc += rtype;
+	switch (rtype) {
+		case 0:
+			while (len--) {
+				n = gethnum(&in);
+				crc += n;
+				ds.addr = addr;
+				ds.value = n;
+				arr_add(&dsym, (void *) &ds);
+				++addr;
+			}
+			break;
+		case 1:
+			/* end record */
+			while (len--) {
+				n = gethnum(&in);
+				crc += n;
+			}
+			break;
+		case -1:
+			goto dditchline;
+	}
+	if ((n = gethnum(&in)) == -1)
+		goto dditchline;
+	if (((0x100 - crc) & 0xFF) != n)
+		ihwarn("checksum mismatch");
+	if (rtype == 1)
+		return;
+	skipsp(&in);
+	if (!skipnl(&in)) {
+		ihwarn("exess characters after ihex data");
+		goto dditchline;
+	}
+	++line;
+	return;
+
+	dditchline:
+	ihwarn("invalid data, skipping rest of line");
+	while(!(alfa[(unsigned char) *(in++)] & (CT_NL | CT_NUL)));
+	goto dstartline;
 }
 
