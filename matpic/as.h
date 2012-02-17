@@ -27,7 +27,7 @@ typedef struct {
 		struct file {
 			char *file;
 		} file;
-	};
+	} d;
 } ins_t;
 
 enum itype {

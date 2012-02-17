@@ -299,15 +299,15 @@ void assemble(char *code) {
 				if (getargs(&argp, args) != 1)
 					aerrexit("invalid number of arguments to org directive");
 				ins.type = IT_ORG;
-				ins.org.address = args[0] * arch->align;
-				address = ins.org.address;
+				ins.d.org.address = args[0] * arch->align;
+				address = ins.d.org.address;
 				arr_add(&inss, &ins);
 				goto nextline;
 			}
 			if (cmpid(cur, "data")) {
 				int n = countargs(argp);
 				ins.type = IT_DAT;
-				ins.data.args = argp;
+				ins.d.data.args = argp;
 				address += n * arch->align;
 				for (; n > 0; --n)
 					arr_add(&inss, &ins);
@@ -318,7 +318,7 @@ void assemble(char *code) {
 					aerrexit("'file' directive needs an argument");
 				setfile(argp);
 				ins.type = IT_FIL;
-				ins.file.file = argp;
+				ins.d.file.file = argp;
 				arr_add(&inss, &ins);
 				goto nextline;
 			}
@@ -334,12 +334,12 @@ void assemble(char *code) {
 				while (oc->name != NULL) {
 					if (cmpid(cur, oc->name)) {
 						ins.type = IT_INS;
-						memcpy((void *) ins.ins.oc, (void *) oc->oc, sizeof(oc->oc));
-						ins.ins.len = oc->len;
-						ins.ins.atype = oc->atype;
-						ins.ins.args = argp;
+						memcpy((void *) ins.d.ins.oc, (void *) oc->oc, sizeof(oc->oc));
+						ins.d.ins.len = oc->len;
+						ins.d.ins.atype = oc->atype;
+						ins.d.ins.args = argp;
 						arr_add(&inss, &ins);
-						address += ins.ins.len;
+						address += ins.d.ins.len;
 						goto nextline;
 					}
 					++oc;
@@ -367,17 +367,17 @@ void assemble(char *code) {
 			line = ins->line;
 			switch (ins->type) {
 				case IT_INS:
-					c = getargs(&(ins->ins.args), args);
-					arch->acmp(ins->ins.oc, ins->ins.atype, c, args);
+					c = getargs(&(ins->d.ins.args), args);
+					arch->acmp(ins->d.ins.oc, ins->d.ins.atype, c, args);
 					++address;
 					break;
 				case IT_ORG:
-					address = ins->org.address;
+					address = ins->d.org.address;
 					break;
 				case IT_DAT:
-					c = getargs(&(ins->data.args), args);
+					c = getargs(&(ins->d.data.args), args);
 					for (i = 0; i < c; ++i) {
-						ins->data.value = args[i];
+						ins->d.data.value = args[i];
 						++ins;
 					}
 					if (i)
@@ -385,7 +385,7 @@ void assemble(char *code) {
 					address += c;
 					break;
 				case IT_FIL:
-					setfile(ins->file.file);
+					setfile(ins->d.file.file);
 					break;
 			}
 			++ins;
