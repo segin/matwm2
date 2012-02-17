@@ -10,6 +10,10 @@
 int main(int argc, char *argv[]) {
 	FILE *fd, *fd2;
 	char a;
+	if(argc < 2) {
+		fprintf(stderr, "Not enough arguments!\n");
+		exit(1);
+	}
 	if(!(fd = fopen(argv[1], "rb")) || !(fd2 = fopen(argv[2], "wb"))) {
 		if(fd)
 			perror(argv[2]);
