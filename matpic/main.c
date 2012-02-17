@@ -5,9 +5,23 @@
 #include "host.h" /* EXIT_SUCCESS, errexit(), FILE, stdin, stdout, fread(),
                      realloc(), free(), NULL */
 #include "as.h"
+#include "dis.h"
 #include "misc.h" /* errexit() */
 #include "mem.h" /* BLOCK */
 #include "ihex.h"
+
+char *infile = "<stdin>";
+unsigned int address = 0, line = 1;
+
+void reset(void) {
+	line = 1;
+	infile = "<file>";
+	address = 0;
+	arr_free(&inss);
+	arr_free(&labels);
+	/* reset disassembler too */
+	arr_free(&dsym);
+}
 
 int main(int argc, char *argv[]) {
 	FILE *infd = stdin;

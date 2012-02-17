@@ -6,8 +6,6 @@
 #define FN_MAX 512 /* filename max length */
 
 extern char file[FN_MAX];
-extern char *infile;
-extern unsigned int address, line;
 
 typedef struct {
 	unsigned int type, line;

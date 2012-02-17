@@ -2,18 +2,17 @@
 #include "str.h" /* skipsp(), skipnl(), alfa[], hexlookup[] */
 #include "mem.h"
 #include "misc.h" /* flerrexit() */
-#include "as.h" /* file, address */
+#include "main.h" /* infile, address */
+#include "dis.h"
 
-/* we store stuff in this way cause we intend later also support coff */
-typedef struct {
-	unsigned char value;
-	unsigned int addr;
-} dsym_t;
+arr_t dsym = { NULL, 0, 0, 0 };
 
-arr_t symbols;
+void ihwarn(char *msg) {
+	flwarn(infile, line, msg);
+}
 
 void dwarn(char *msg) {
-	fawarn(file, address, msg);
+	fawarn(infile, address, msg);
 }
 
 int gethnum(char **src) {
@@ -28,16 +27,18 @@ int gethnum(char **src) {
 }
 
 void readihex(char *in) {
-	int n, len;
+	int n, len, crc = 0;
 	dsym_t ds;
 
-	arr_new(&symbols, sizeof(dsym_t));
+	arr_new(&dsym, sizeof(dsym_t));
 	dstartline:
+	--line;
 	do {
 		skipsp(&in);
+		++line;
 	} while (skipnl(&in));
 	if (*in == 0) {
-		dwarn("no end record");
+		ihwarn("no end record");
 		return;
 	}
 	if (*in != ':')
@@ -56,7 +57,7 @@ void readihex(char *in) {
 			case 0:
 				ds.addr = address;
 				ds.value = n;
-				arr_add(&symbols, (void *) &ds);
+				arr_add(&dsym, (void *) &ds);
 				++address;
 				break;
 			case 1:
@@ -66,10 +67,20 @@ void readihex(char *in) {
 				goto dditchline;
 		}
 	}
+	if ((n = gethnum(&in)) == -1)
+		goto dditchline;
+	if (((0x100 - crc) & 0xFF) != n)
+		ihwarn("checksum mismatch");
+	skipsp(&in);
+	if (!skipnl(&in)) {
+		ihwarn("exess characters after ihex data");
+		goto dditchline;
+	}
+	++line;
 	return;
 
 	dditchline:
-	dwarn("invalid data, skipping rest of line");
+	ihwarn("invalid data, skipping rest of line");
 	while(!(alfa[(unsigned char) *(in++)] & (CT_NL | CT_NUL)));
 	goto dstartline;
 }

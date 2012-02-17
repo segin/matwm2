@@ -8,13 +8,12 @@
 #include "mem.h"
 #include "arch.h"
 #include "misc.h" /* flerrexit() */
+#include "main.h" /* infile, address, line */
 
 char file[FN_MAX];
-char *infile = "<stdin>";
-unsigned int address = 0, line = 1;
 
-arr_t inss;
-arr_t labels;
+arr_t inss = { NULL, 0, 0, 0 };
+arr_t labels = { NULL, 0, 0, 0 };
 
 void aerrexit(char *msg) {
 	flerrexit(file, line, msg);
@@ -222,12 +221,6 @@ void initfile(void) {
 	int i;
 	for (i = 0; i < FN_MAX && infile[i]; ++i)
 		file[i] = infile[i];
-}
-
-void reset(void) {
-	line = 1;
-	infile = "<file>";
-	address = 0;
 }
 
 void assemble(char *code) {
