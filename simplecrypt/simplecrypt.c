@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 int main(int argc, char *argv[]) {
 	FILE *fd, *fd2;
@@ -24,4 +25,5 @@ int main(int argc, char *argv[]) {
 	}
 	fclose(fd);
 	fclose(fd2);
+	return 0;
 }
