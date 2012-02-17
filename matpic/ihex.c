@@ -72,17 +72,17 @@ int getihex(char **ret) {
 			case IT_ORG:
 				if (pos)
 					endln();
-				addr = saddr = ins->org.address;
+				addr = saddr = ins->d.org.address;
 				break;
 			case IT_DAT:
-				addb(ins->data.value & 0xFF);
+				addb(ins->d.data.value & 0xFF);
 				++addr;
-				addb((ins->data.value & 0xFF00) >> 8);
+				addb((ins->d.data.value & 0xFF00) >> 8);
 				++addr;
 				break;
 			case IT_INS:
-				for (i = ins->ins.len - 1; i >= 0; --i) {
-					addb(ins->ins.oc[i]);
+				for (i = ins->d.ins.len - 1; i >= 0; --i) {
+					addb(ins->d.ins.oc[i]);
 					++addr;
 				}
 				break;
