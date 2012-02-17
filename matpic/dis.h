@@ -11,5 +11,7 @@ typedef struct {
 
 extern arr_t dsym;
 
+int disassemble(char **ret);
+
 #endif /* __DIS_H__ */
 

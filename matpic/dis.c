@@ -9,3 +9,7 @@ void dwarn(char *msg) {
 	fawarn(infile, address, msg);
 }
 
+int disassemble(char **ret) {
+
+}
+
