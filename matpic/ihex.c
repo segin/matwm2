@@ -93,7 +93,8 @@ int getihex(char **ret) {
 		}
 		++ins;
 	}
-	endln();
+	if (pos)
+		endln();
 
 	/* spit out end record */
 	rtype = 1;
