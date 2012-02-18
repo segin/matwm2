@@ -90,6 +90,7 @@ int disassemble(char **ret) {
 		strncpy((*ret) + rpos, linebuf, lbpos);
 		rpos += lbpos;
 	}
+	(*ret)[rpos] = 0;
 	return rpos;
 }
 
