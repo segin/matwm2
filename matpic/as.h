@@ -50,7 +50,6 @@ unsigned int getval(char **src);
 extern unsigned int numarg(char **src);
 extern int getargs(char **src, int *args);
 extern void assemble(char *code);
-extern void cleanup(void);
 
 #endif /* __AS_H__ */
 

@@ -14,7 +14,7 @@ void dwarn(char *msg) {
 }
 
 void daddstr(char *s) {
-	while (linebuf[lbpos] = *(s++)) {
+	while ((linebuf[lbpos] = *(s++))) {
 		++lbpos;
 		if (lbpos > sizeof(linebuf))
 			errexit("line buffer overflow");

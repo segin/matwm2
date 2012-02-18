@@ -389,8 +389,3 @@ void assemble(char *code) {
 	}
 }
 
-void cleanup(void) {
-	arr_free(&inss);
-	arr_free(&labels);
-}
-
