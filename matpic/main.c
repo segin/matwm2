@@ -26,7 +26,25 @@ void reset(void) {
 int main(int argc, char *argv[]) {
 	FILE *infd = stdin;
 	FILE *outfd = stdout;
-	char *code = NULL;
+	char *a, *code = NULL;
+	int i, len, disasm = 0;
+
+	for (i = 0; i < argc; ++i) {
+		if (*(argv[i]) == '-') {
+			a = argv[i] + 1;
+			argv[i] = NULL;
+			while (*a) {
+				switch (*a) {
+					case 'd':
+						++disasm;
+						break;
+					default:
+						errexit("invalid argument");
+				}
+				++a;
+			}
+		}
+	}
 
 	{ /* read teh filez */
 		int pos = 0, mem = 0;
@@ -46,16 +64,17 @@ int main(int argc, char *argv[]) {
 		}
 		code[pos] = 0;
 	}
-	assemble(code);
-	free(code); /* release the monster */
 
-	{ /* writes output */
-		int len = getihex(&code);
+	if (!disasm) {
+		assemble(code);
+		free(code); /* release the monster */
+		len = getihex(&code);
+	} else {
 		readihex(code);
-		disassemble(&code);
-		fwrite((void *) code, 1, len, outfd);
+		free(code);
+		len = disassemble(&code);
 	}
-
+	fwrite((void *) code, 1, len, outfd);
 	cleanup();
 
 	return EXIT_SUCCESS;

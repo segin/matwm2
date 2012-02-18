@@ -118,14 +118,21 @@ void adis14b(unsigned char *oc, int atype) {
 			daddhex((oc[1] & 0x80) >> 7, 1);
 			break;
 		case AT_F:
+			daddhex(oc[1] & 0x7F, 2);
 			break;
 		case AT_BF:
+			daddhex(oc[1] & 0x7F, 2);
+			daddstr(", ");
+			daddhex(((oc[0] & 3) << 1) | ((oc[1] & 0x80) >> 7), 1);
 			break;
 		case AT_K8:
+			daddhex(oc[1] & 0xFF, 2);
 			break;
 		case AT_K11:
+			daddhex(((oc[0] & 7) << 8) | (oc[1] & 0xFF), 3);
 			break;
 		case AT_T:
+			daddhex(oc[1] & 3, 2);
 			break;
 	}
 }

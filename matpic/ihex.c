@@ -181,7 +181,7 @@ void readihex(char *in) {
 		goto dditchline;
 	}
 	++line;
-	return;
+	goto dstartline;
 
 	dditchline:
 	ihwarn("invalid data, skipping rest of line");

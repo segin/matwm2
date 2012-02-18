@@ -1,5 +1,4 @@
 preprocessor
-disassembler
 db directive for store bytes separate and text with ""
 better commandline interface
 support banksel, bankisel, pagesel pseudo instructions
