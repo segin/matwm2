@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
 	FILE *outfd = stdout;
 	char *code = NULL;
 
-	{ /* read teh fail */
+	{ /* read teh filez */
 		int pos = 0, mem = 0;
 
 		while (!feof(infd)) {
@@ -49,10 +49,10 @@ int main(int argc, char *argv[]) {
 	assemble(code);
 	free(code); /* release the monster */
 
-	{ /* write the fail */
+	{ /* writes output */
 		int len = getihex(&code);
 		readihex(code);
-		disassemble(NULL);
+		disassemble(&code);
 		fwrite((void *) code, 1, len, outfd);
 	}
 

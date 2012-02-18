@@ -1,4 +1,4 @@
-#include "host.h" /* NULL */
+#include "host.h" /* NULL, strlen() */
 #include "dis.h" /* dsym_t */
 #include "misc.h" /* fawarn(), errexit() */
 #include "main.h" /* infile, address */
@@ -14,13 +14,15 @@ void dwarn(char *msg) {
 }
 
 void daddstr(char *s) {
-	while (linebuf[lbpos++] = *(s++))
+	while (linebuf[lbpos] = *(s++)) {
+		++lbpos;
 		if (lbpos > sizeof(linebuf))
 			errexit("line buffer overflow");
+	}
 }
 
 void _daddhex(int n, int l) {
-	while (--l) {
+	while (l--) {
 		linebuf[lbpos++] = hexnib[(n >> (l << 2)) & 0x0F];
 		if (lbpos > sizeof(linebuf))
 			errexit("line buffer overflow");
@@ -34,20 +36,31 @@ void daddhex(int n, int l) {
 
 int disassemble(char **ret) {
 	dsym_t *sym = (dsym_t *) dsym.data;
-	int i, c = dsym.count;
+	int i, j, c = dsym.count;
 	oc_t *oc;
 	unsigned char inop[6];
+	unsigned int mem = 0, rpos = 0;
 
+	*ret = NULL;
 	while (c) {
 		oc = arch->ocs;
 		lbpos = 0;
+		_daddhex(address, 4);
+		daddstr(" (");
 		while (oc->name != NULL) {
 			if (oc->len > c) /* this is to prevent disaster */
 				goto docf;
 			for (i = 0; ((sym + arch->insord[i])->value & oc->imask[i]) == oc->oc[i] && i < oc->len; ++i);
 			if (i == oc->len) {
+				for (j = 0; j < oc->len; ++j)
+					inop[j] = (sym + arch->insord[j])->value;
+				for (i = 0; i < oc->len; ++i)
+					_daddhex(inop[i], 2);
+				daddstr("): ");
 				daddstr(oc->name);
 				daddstr(" ");
+				arch->adis(inop, oc->atype);
+				address += oc->len / arch->align;
 				sym += oc->len;
 				c -= oc->len;
 				break;
@@ -56,11 +69,27 @@ int disassemble(char **ret) {
 			++oc;
 		}
 		if (i != oc->len) {
+			for (j = 0; j < arch->align; ++j)
+				inop[j] = (sym + arch->insord[j])->value;
+			daddstr("): ");
+			dwarn("invalid opcode");
 			daddstr("[invalid opcode]");
+			++address;
 			sym += arch->align;
 			c -= arch->align;
 		}
-		printf("%s\n", linebuf);
+		daddstr("\n");
+		while (rpos + lbpos > mem) {
+			if (mem + BLOCK < mem)
+				errexit("integer overflow :(");
+			mem += BLOCK;
+			*ret = (char *) realloc((void *) *ret, mem);
+			if (*ret == NULL)
+				errexit("out of memory");
+		}
+		strncpy((*ret) + rpos, linebuf, lbpos);
+		rpos += lbpos;
 	}
+	return rpos;
 }
 
