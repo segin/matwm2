@@ -51,6 +51,8 @@ int main(int argc, char *argv[]) {
 
 	{ /* write the fail */
 		int len = getihex(&code);
+		readihex(code);
+		disassemble(NULL);
 		fwrite((void *) code, 1, len, outfd);
 	}
 

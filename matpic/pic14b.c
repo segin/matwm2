@@ -15,6 +15,8 @@ enum atype {
 	AT_BS /* banksel */
 };
 
+int insord[4] = { 1, 0, 3, 2 };
+
 oc_t ocs14b[] = {
 	/* byte operatios */
 	{ "clrw",   { 0x01, 0x00 }, { 0xFF, 0x80 }, 2, AT_NA  },
@@ -108,9 +110,31 @@ void acmp14b(unsigned char *oc, int atype, int argc, int *argv) {
 	}
 }
 
+void adis14b(unsigned char *oc, int atype) {
+	switch (atype) {
+		case AT_DF:
+			daddhex(oc[1] & 0x7F, 2);
+			daddstr(", ");
+			daddhex((oc[1] & 0x80) >> 7, 1);
+			break;
+		case AT_F:
+			break;
+		case AT_BF:
+			break;
+		case AT_K8:
+			break;
+		case AT_K11:
+			break;
+		case AT_T:
+			break;
+	}
+}
+
 arch_t pic14b = {
+	insord,
 	ocs14b,
 	&acmp14b,
+	&adis14b,
 	2
 };
 

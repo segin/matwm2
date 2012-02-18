@@ -2,7 +2,8 @@
 #define __ARCH_H__
 
 #include "host.h" /* NULL (used by some who include us) */
-#include "as.h" /* aerrexit(), also for those who supposed to include us */
+#include "as.h"         /* aerrexit(), also for those who supposed to include us */
+#include "dis.h" /* daddstr(), daddhex() -- ^ */
 
 typedef struct {
 	char *name;
@@ -11,8 +12,10 @@ typedef struct {
 } oc_t;
 
 typedef struct {
+	int *insord;
 	oc_t *ocs;
 	void (*acmp)(unsigned char *, int, int, int *);
+	void (*adis)(unsigned char *oc, int atype);
 	int align;
 } arch_t;
 

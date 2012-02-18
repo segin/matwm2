@@ -9,6 +9,7 @@
 
 extern char alfa[256];
 extern char hexlookup[256];
+extern char hexnib[16];
 
 /* symbols used in above lookup table "alfa[]" */
 #define CT_LET 1  /* letter    (a-z, A-Z) */
