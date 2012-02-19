@@ -14,7 +14,7 @@ string_t out;
 int pos = 0, lnpos, crc;
 char lnbuf[(IHLL << 1) + 14] = { ':' };
 unsigned char buf[IHLL];
-unsigned int addr, saddr, rtype;
+unsigned int saddr, rtype;
 
 void sethb(unsigned char b) {
 	lnbuf[lnpos++] = hexnib[(b & 0xF0) >> 4];
@@ -39,7 +39,7 @@ void endln(void) {
 	lnbuf[lnpos++] = '\n';
 	vstr_addl(&out, lnbuf, lnpos);
 	pos = 0;
-	saddr = addr;
+	saddr = address;
 }
 
 void addb(unsigned char b) {
@@ -53,25 +53,26 @@ int getihex(char **ret) {
 	int i;
 	ins_t *ins = (ins_t *) inss.data;
 
-	addr = saddr = rtype = 0;
+	address = saddr = rtype = 0;
 	vstr_new(&out);
+	line = 1;
 	while (ins->type != IT_END) {
 		switch (ins->type) {
 			case IT_ORG:
 				if (pos)
 					endln();
-				addr = saddr = ins->d.org.address;
+				address = saddr = ins->d.org.address;
 				break;
 			case IT_DAT:
 				addb(ins->d.data.value & 0xFF);
-				++addr;
+				++address;
 				addb((ins->d.data.value & 0xFF00) >> 8);
-				++addr;
+				++address;
 				break;
 			case IT_INS:
 				for (i = 0; i < ins->d.ins.len; ++i) {
 					addb(ins->d.ins.oc[arch->insord[i]]);
-					++addr;
+					++address;
 				}
 				break;
 		}

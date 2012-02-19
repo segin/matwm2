@@ -5,7 +5,7 @@
 #include "misc.h"
 
 char *infile = "<stdin>";
-unsigned int address = 0, line = 1;
+unsigned int address, line;
 
 void cleanup(void) {
 	arr_free(&inss);
@@ -61,7 +61,7 @@ unsigned int getval(char **src) {
 		++*src;
 	} else if(!getnum(src, &val)) {
 		int i;
-		label_t *label;
+		label_t *label, lnl; /* lnl = last non local */
 		char *id;
 
 		id = getid(src);

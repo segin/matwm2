@@ -45,6 +45,7 @@ int disassemble(char **ret) {
 	while (c) {
 		oc = arch->ocs;
 		lbpos = 0;
+		address = sym->addr;
 		_daddhex(address, 8);
 		daddstr(" (");
 		while (oc->name != NULL) {
@@ -60,7 +61,6 @@ int disassemble(char **ret) {
 				daddstr(oc->name);
 				daddstr(" ");
 				arch->adis(inop, oc->atype);
-				address += oc->len / arch->align;
 				sym += oc->len;
 				c -= oc->len;
 				break;

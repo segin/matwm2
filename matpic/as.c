@@ -123,6 +123,8 @@ void assemble(char *code) {
 		unsigned int addrl;
 
 		initfile();
+		line = 1;
+		address = 0;
 		while (*code) {
 			ins.line = line;
 			addrl = address; /* case there is a label we have the address at start of line */
