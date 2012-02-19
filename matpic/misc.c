@@ -216,10 +216,6 @@ int getword(char **src, char **word) {
 	if (**src == '.') {
 		prop |= WP_LOCAL;
 		++*src;
-	} else if (alfa[(unsigned char) **src] & CT_PPC) {
-		prop |= WP_PPC;
-		while (alfa[(unsigned char) **src] & (CT_PPC | CT_SPC))
-			++*src;
 	}
 	*word = getid(src);
 	if (skipsp(src))

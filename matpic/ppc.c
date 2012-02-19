@@ -1,7 +1,20 @@
 #include "mem.h"
-#include "str.h" /* alfa[] */
+#include "str.h" /* skipsp(), alfa[] */
 
 arr_t defines;
+
+int getprefix(char **src) {
+	char *p = *src;
+	int n = 0;
+	skipsp(&p);
+	while (alfa[(unsigned char) *p] & (CT_PPC))
+		++p;
+	if (n) {
+		*src = p;
+		skipsp(src);
+	}
+	return n;
+}
 
 /* preprocess(in, ret)
  *
