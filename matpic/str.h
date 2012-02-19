@@ -18,6 +18,7 @@ extern char hexnib[16];
 #define CT_SEP 8  /* separator ('_') */
 #define CT_NL  16 /* newline   ('\r' or '\n') */
 #define CT_NUL 32 /* nul/0     ('\0') */
+#define CT_PPC 64 /* # or % */
 
 extern int skipsp(char **src);
 extern int skipnl(char **src);

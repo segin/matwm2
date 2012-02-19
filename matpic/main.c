@@ -11,9 +11,6 @@
 #include "ihex.h"
 #include "ppc.h"
 
-char *infile = "<stdin>";
-unsigned int address = 0, line = 1;
-
 int main(int argc, char *argv[]) {
 	FILE *infd = stdin;
 	FILE *outfd = stdout;

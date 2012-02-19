@@ -1,11 +1,10 @@
 #include "host.h" /* realloc() */
 #include "mem.h" /* BLOCK, string_t stuff */
 #include "as.h" /* inss */
-#include "misc.h" /* errexit(), flwarn() */
+#include "misc.h" /* errexit(), flwarn(), infile, line */
 #include "arch.h" /* arch */
 /* below includes = only for ihex input */
 #include "str.h" /* skipsp(), skipnl(), alfa[], hexlookup[], hexnib[] */
-#include "main.h" /* infile, line */
 #include "dis.h" /* dsym, dsym_t */
 
 #define IHLL 16

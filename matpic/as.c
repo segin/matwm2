@@ -7,8 +7,7 @@
 #include "str.h"
 #include "mem.h"
 #include "arch.h"
-#include "misc.h" /* flerrexit(), getargs() */
-#include "main.h" /* infile, address, line */
+#include "misc.h" /* flerrexit(), getargs(), infile, address, line */
 
 char file[FN_MAX];
 
@@ -21,7 +20,7 @@ void aerrexit(char *msg) {
 
 int countargs(char *src) {
 	int n = 1;
-	if (!src)
+	if (src == NULL)
 		return 0;
 	while(!(alfa[(unsigned char) *src] & (CT_NUL | CT_NL))) {
 		if (*src == ',')
@@ -57,130 +56,127 @@ void initfile(void) {
 		file[i] = infile[i];
 }
 
+int insfind(char *lp, char *ip, char *argp) {
+	oc_t *oc = arch->ocs;
+	ins_t ins;
+	int args[ARG_MAX];
+
+	if (cmpid(ip, "org")) {
+		if (getargs(&argp, args) != 1)
+			aerrexit("invalid number of arguments to org directive");
+		ins.type = IT_ORG;
+		ins.d.org.address = args[0] * arch->align;
+		address = ins.d.org.address;
+		arr_add(&inss, &ins);
+		return 1;
+	}
+	if (cmpid(ip, "file")) {
+		if (argp == NULL)
+			aerrexit("'file' directive needs an argument");
+		setfile(argp);
+		ins.type = IT_FIL;
+		ins.d.file.file = argp;
+		arr_add(&inss, &ins);
+		return 1;
+	}
+	if (cmpid(ip, "line")) {
+		if (getargs(&argp, args) != 1)
+			aerrexit("'line' directive wants exactly 1 argument");
+		line = args[0] - 1;
+		return 1;
+	}
+	if (cmpid(ip, "data")) {
+		int n = countargs(argp);
+		ins.type = IT_DAT;
+		ins.d.data.args = argp;
+		address += n * arch->align;
+		for (; n > 0; --n)
+			arr_add(&inss, &ins);
+		return 1;
+	}
+
+	while (oc->name != NULL) {
+		if (cmpid(ip, oc->name)) {
+			ins.type = IT_INS;
+			memcpy((void *) ins.d.ins.oc, (void *) oc->oc, sizeof(oc->oc));
+			ins.d.ins.len = oc->len;
+			ins.d.ins.atype = oc->atype;
+			ins.d.ins.args = argp;
+			arr_add(&inss, &ins);
+			address += ins.d.ins.len;
+			return 1;
+		}
+		++oc;
+	}
+	return 0;
+}
+
 void assemble(char *code) {
 	arr_new(&inss, sizeof(ins_t));
 	arr_new(&labels, sizeof(label_t));
 
 	{ /* first pass */
-		char *cur = NULL;
-		label_t label;
+		label_t label, *li;
 		ins_t ins;
-		int args[ARG_MAX];
-		char *argp;
-		label_t *li;
-		int i;
+		char *lp, *ip, *argp;
+		int wp, i;
+		unsigned int addrl;
 
 		initfile();
-
 		while (*code) {
-			 /* skip label and eat it if one is there
-			 * also eat any preceding spaces before instruction
-			 * return if nothing or nothing but label
-			 */
-			if (!skipsp(&code)) {
-				cur = getid(&code);
-				if (cur == NULL) {
-					if (alfa[(unsigned char) *code] & (CT_NL | CT_NUL))
-						goto nextline;
-					aerrexit("malformed label");
+			ins.line = line;
+			addrl = address; /* case there is a label we have the address at start of line */
+			lp = NULL;
+			argp = NULL;
+			wp = getword(&code, &ip);
+			if (wp & (WP_LABEL | WP_LOCAL)) { /* we have label and we're sure about it */
+				if (!(wp & WP_TSPC) && !(alfa[(unsigned char) *code] & (CT_NL | CT_NUL)))
+					aerrexit("invalid character in local label"); /* can only happen with local label */
+				lp = ip;
+				wp = getword(&code, &ip);
+			}
+			if (ip == NULL) {
+				if (!(alfa[(unsigned char) *code] & (CT_NL | CT_NUL)))
+					aerrexit("invalid identifier");
+				goto endln;
+			}
+			if (!(alfa[(unsigned char) *code] & (CT_NL | CT_NUL))) {
+				if (wp & WP_TSPC)
+					argp = code;
+				else aerrexit("invalid identifier");
+			}
+			if (insfind(lp, ip, argp))
+				goto endln;
+			if (lp == NULL && !(wp & WP_PSPC)) {
+				lp = ip;
+				wp = getword(&code, &ip);
+				if (ip == NULL) {
+					if (!(alfa[(unsigned char) *code] & (CT_NL | CT_NUL)))
+						aerrexit("invalid identifier");
+					goto endln;
 				}
-				label.name = cur;
-				label.address = address / arch->align;
+				if (!(alfa[(unsigned char) *code] & (CT_NL | CT_NUL))) {
+					if (wp & WP_TSPC)
+						argp = code;
+					else aerrexit("invalid identifier");
+				}
+				if (!insfind(lp, ip, argp))
+					aerrexit("no such instruction/directive");
+			}
+			endln:
+			if (lp != NULL) { /* we has a lebel */
+				label.name = lp;
+				label.address = addrl / arch->align;
 				for (i = 0; i < labels.count; ++i) { /* check if already exists */
 					li = (label_t *) ((label_t *) labels.data) + i;
-					if (cmpid(li->name, cur))
+					if (cmpid(li->name, lp))
 						aerrexit("duplicate label");
 				}
 				arr_add(&labels, &label);
-				if (!skipsp(&code)) {
-					if (!(alfa[(unsigned char) *code] & (CT_NL | CT_NUL)))
-						aerrexit("unexpected character within label");
-					goto nextline;
-				} else {
-					if (alfa[(unsigned char) *code] & (CT_NL | CT_NUL))
-						goto nextline;
-				}
 			}
-			if (alfa[(unsigned char) *code] & (CT_NL | CT_NUL))
-				goto nextline;
-
-			/* eat the instruction (or directive) */
-			cur = getid(&code);
-			if (cur == NULL)
-				aerrexit("malformed instruction");
-
-			/* check for arguments */
-			argp = NULL;
-			if (!skipsp(&code)) {
-				if (!(alfa[(unsigned char) *code] & (CT_NL | CT_NUL)))
-					aerrexit("unexpected character within instruction");
-			} else {
-				if (alfa[(unsigned char) *code] & (CT_NL | CT_NUL))
-					goto nextline;
-				/* we got arguments */
-				argp = code;
-				while (!(alfa[(unsigned char) *code] & (CT_NUL | CT_NL)))
-					++code;
-			}
-
-			/* find instructon/directive */
-			ins.line = line;
-			if (cmpid(cur, "org")) {
-				if (getargs(&argp, args) != 1)
-					aerrexit("invalid number of arguments to org directive");
-				ins.type = IT_ORG;
-				ins.d.org.address = args[0] * arch->align;
-				address = ins.d.org.address;
-				arr_add(&inss, &ins);
-				goto nextline;
-			}
-			if (cmpid(cur, "data")) {
-				int n = countargs(argp);
-				ins.type = IT_DAT;
-				ins.d.data.args = argp;
-				address += n * arch->align;
-				for (; n > 0; --n)
-					arr_add(&inss, &ins);
-				goto nextline;
-			}
-			if (cmpid(cur, "file")) {
-				if (argp == NULL)
-					aerrexit("'file' directive needs an argument");
-				setfile(argp);
-				ins.type = IT_FIL;
-				ins.d.file.file = argp;
-				arr_add(&inss, &ins);
-				goto nextline;
-			}
-			if (cmpid(cur, "line")) {
-				if (getargs(&argp, args) != 1)
-					aerrexit("'line' directive wants exactly 1 argument");
-				line = args[0] - 1;
-				goto nextline;
-			}
-
-			{ /* not a directive, we'll try to find an instruction then */
-				oc_t *oc = arch->ocs;
-				while (oc->name != NULL) {
-					if (cmpid(cur, oc->name)) {
-						ins.type = IT_INS;
-						memcpy((void *) ins.d.ins.oc, (void *) oc->oc, sizeof(oc->oc));
-						ins.d.ins.len = oc->len;
-						ins.d.ins.atype = oc->atype;
-						ins.d.ins.args = argp;
-						arr_add(&inss, &ins);
-						address += ins.d.ins.len;
-						goto nextline;
-					}
-					++oc;
-				}
-				aerrexit("unknown instruction");
-			}
-
-			/* on to the next line */
-			nextline:
-			if (!skipnl(&code) && *code)
-				aerrexit("unexpected character");
+			while (!(alfa[(unsigned char) *code] & (CT_NUL | CT_NL)))
+				++code;
+			skipnl(&code);
 			++line;
 		}
 		ins.type = IT_END;

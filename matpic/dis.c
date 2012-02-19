@@ -1,7 +1,6 @@
 #include "host.h" /* NULL, strlen() */
 #include "dis.h" /* dsym_t */
-#include "misc.h" /* fawarn(), errexit() */
-#include "main.h" /* infile, address */
+#include "misc.h" /* fawarn(), errexit(), infile, address */
 #include "arch.h"
 #include "str.h" /* hexnib[] */
 #include "mem.h" /* string_t stuff */
@@ -46,7 +45,7 @@ int disassemble(char **ret) {
 	while (c) {
 		oc = arch->ocs;
 		lbpos = 0;
-		_daddhex(address, 4);
+		_daddhex(address, 8);
 		daddstr(" (");
 		while (oc->name != NULL) {
 			if (oc->len > c) /* this is to prevent disaster */

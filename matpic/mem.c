@@ -38,7 +38,7 @@ void vstr_new(string_t *s) {
 }
 
 void vstr_addl(string_t *s, char *str, int len) {
-	while (s->res < s->len + len) {
+	while (s->res < s->len + len + 1) {
 		if (s->res + BLOCK < s->res)
 			errexit("integer overflow :(");
 		s->res += BLOCK;

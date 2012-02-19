@@ -1,8 +1,11 @@
 #include "host.h" /* exit(), EXIT_FAILURE, fprintf(), stderr */
 #include "as.h"
 #include "dis.h"
-#include "main.h"
 #include "str.h" /* skipsp(), getnum(), getid(), cmpid(), alfa[] */
+#include "misc.h"
+
+char *infile = "<stdin>";
+unsigned int address = 0, line = 1;
 
 void cleanup(void) {
 	arr_free(&inss);
@@ -191,7 +194,7 @@ unsigned int numarg(char **src) {
 int getargs(char **src, int *args) {
 	int n = 0;
 
-	if (!*src)
+	if (*src == NULL)
 		return 0;
 	while (1) {
 		args[n] = numarg(src);
@@ -203,5 +206,28 @@ int getargs(char **src, int *args) {
 		if (n == ARG_MAX)
 			aerrexit("too many arguments");
 	}
+}
+
+int getword(char **src, char **word) {
+	int prop = 0;
+
+	if (skipsp(src))
+		prop |= WP_PSPC;
+	if (**src == '.') {
+		prop |= WP_LOCAL;
+		++*src;
+	} else if (alfa[(unsigned char) **src] & CT_PPC) {
+		prop |= WP_PPC;
+		while (alfa[(unsigned char) **src] & (CT_PPC | CT_SPC))
+			++*src;
+	}
+	*word = getid(src);
+	if (skipsp(src))
+		prop |= WP_TSPC;
+	if (**src == ':') {
+		prop |= WP_LABEL | WP_TSPC; /* we don't require spaces after : */
+		++*src;
+	}
+	return prop;
 }
 

@@ -2,12 +2,27 @@ red me
 
 this is about C version of matpic_as, lua file is older test implementation
 there ought to be an interface implemented that handles combining matpic_as and preprocessor etc
+
+to build, either copy Makefile.watcom to Makefile and run "wmake" if you are using openwatcom
+or on linux/unix copy or link Makefile.nix to Makefile and run "make"
+synopsis
+	matpic [-d|p|P|t]
+	cat <infile> | matpic [-d|p|P|t] > <outfile>
+options
+	-d	disassemble
+  	-p	only preprocess
+	-P	don't preprocess
+	-t	after assembling instead of giving ihex output, disassemble again
+input file is read from stdin, output written to stdout
 + - * / % & | ^ << >> ~ behave as in C, but strictly left to right
 ! is also supported as alias to ~ bitwise not operator
 $ is the address at start of line
 identifiers can be described by regex as /[a-zA-Z_][a-zA-Z0-9]*/
-an identifier at start of line, before any space is considered a label
-if one happens to be behind whitespace, it is an instruction or directive
+lines are divided as follows:
+	[<label>] [<instruction> [<argument>, <...>]]
+if an identifier is neither a directive or instruction and present before any whitespace, it's considered a label
+if an identifier is followed by a (and before any instruction/directive) ':' it's considered a label
+if an identifier starts with a '.' it's considered a local label (they don't work yet tho as of this writing)
 following directives exist:
 	org <origin>: set origin
 	data <value>, <value>: put stray words into bytecode
