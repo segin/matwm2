@@ -4,6 +4,7 @@
 #include "main.h" /* infile, address */
 #include "arch.h"
 #include "str.h" /* hexnib[] */
+#include "vstr.h"
 
 arr_t dsym = { NULL, 0, 0, 0 };
 char linebuf[512];
@@ -39,9 +40,9 @@ int disassemble(char **ret) {
 	int i, j, c = dsym.count;
 	oc_t *oc;
 	unsigned char inop[6];
-	unsigned int mem = 0, rpos = 0;
+	string_t rb;
 
-	*ret = NULL;
+	vstr_new(&rb);
 	while (c) {
 		oc = arch->ocs;
 		lbpos = 0;
@@ -79,18 +80,9 @@ int disassemble(char **ret) {
 			c -= arch->align;
 		}
 		daddstr("\n");
-		while (rpos + lbpos > mem) {
-			if (mem + BLOCK < mem)
-				errexit("integer overflow :(");
-			mem += BLOCK;
-			*ret = (char *) realloc((void *) *ret, mem);
-			if (*ret == NULL)
-				errexit("out of memory");
-		}
-		strncpy((*ret) + rpos, linebuf, lbpos);
-		rpos += lbpos;
+		vstr_addl(&rb, linebuf, lbpos);
 	}
-	(*ret)[rpos] = 0;
-	return rpos;
+	*ret = rb.data;
+	return rb.len;
 }
 

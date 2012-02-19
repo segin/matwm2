@@ -7,38 +7,28 @@
 #include "str.h" /* skipsp(), skipnl(), alfa[], hexlookup[], hexnib[] */
 #include "main.h" /* infile, line */
 #include "dis.h" /* dsym, dsym_t */
+#include "vstr.h"
+
+#define IHLL 16
 
 int dosnl = 0;
-char *out;
-int pos = 0, crc;
-int mem, len;
+string_t out;
+int pos = 0, lnpos, crc;
+char lnbuf[(IHLL << 1) + 14] = { ':' };
+unsigned char buf[IHLL];
 unsigned int addr, saddr, rtype;
-unsigned char buf[16];
 
 void sethb(unsigned char b) {
-	*(out + (len++)) = hexnib[(b & 0xF0) >> 4];
-	*(out + (len++)) = hexnib[b & 0xF];
+	lnbuf[lnpos++] = hexnib[(b & 0xF0) >> 4];
+	lnbuf[lnpos++] = hexnib[b & 0xF];
 	crc += b;
 }
 
 void endln(void) {
-	int i, res;
+	int i;
 
-	/* make sure enough memory is ready */
-	res = len + (((pos + 5) * 2) + 3);
-	if (res < len)
-		errexit(":-o integer overflow");
-	while (res > mem) {
-		if (mem + BLOCK < mem)
-			errexit("integer overflow :(");
-		mem += BLOCK;
-		out = (char *) realloc((void *) out, mem);
-		if (out == NULL)
-			errexit("out of memory");
-	}
-	/* write line */
-	out[len++] = ':';
 	crc = 0;
+	lnpos = 1;
 	sethb(pos);
 	sethb((saddr & 0xFF00) >> 8);
 	sethb(saddr & 0xFF);
@@ -47,8 +37,9 @@ void endln(void) {
 		sethb(buf[i]);
 	sethb((0x100 - crc) & 0xFF);
 	if (dosnl)
-		out[len++] = '\r';
-	out[len++] = '\n';
+		lnbuf[lnpos++] = '\r';
+	lnbuf[lnpos++] = '\n';
+	vstr_addl(&out, lnbuf, lnpos);
 	pos = 0;
 	saddr = addr;
 }
@@ -64,8 +55,8 @@ int getihex(char **ret) {
 	int i;
 	ins_t *ins = (ins_t *) inss.data;
 
-	addr = saddr = mem = len = rtype = 0;
-	out = NULL;
+	addr = saddr = rtype = 0;
+	vstr_new(&out);
 	while (ins->type != IT_END) {
 		switch (ins->type) {
 			case IT_ORG:
@@ -92,13 +83,12 @@ int getihex(char **ret) {
 		endln();
 
 	/* spit out end record */
-	rtype = 1;
+	rtype = 1; /* if u think u got better way to do this by just append string, don't forget about the (optional) DOS newlines */
 	saddr = 0;
 	endln();
 
-	out[len] = 0;
-	*ret = out;
-	return len;
+	*ret = out.data;
+	return out.len;
 }
 
 void ihwarn(char *msg) {

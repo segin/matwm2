@@ -15,7 +15,7 @@
  * number to text function anyway.
  */
 
-#include <string.h> /* memcpy() */
+#include <string.h> /* memcpy(), strlen() */
 
 #endif /* __HOST_H__ */
 
