@@ -5,7 +5,11 @@
 
 #define FN_MAX 512 /* filename max length */
 
-extern char file[FN_MAX];
+
+typedef struct {
+	char *name;
+	int address;
+} label_t;
 
 typedef struct {
 	unsigned int type, line;
@@ -25,6 +29,9 @@ typedef struct {
 		struct file {
 			char *file;
 		} file;
+		struct lab {
+			label_t *ptr;
+		} lab;
 	} d;
 } ins_t;
 
@@ -33,16 +40,13 @@ enum itype {
 	IT_ORG, /* org directive */
 	IT_DAT, /* data directive */
 	IT_INS, /* an actual instruction */
-	IT_FIL  /* change of filename */
+	IT_FIL, /* change of filename */
+	IT_LAB  /* non-local label */
 };
 
+extern char file[FN_MAX];
+extern label_t *cnl; /* current non-local label */
 extern arr_t inss;
-
-typedef struct {
-	char *name;
-	int address;
-} label_t;
-
 extern arr_t labels;
 
 void aerrexit(char *msg);

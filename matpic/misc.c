@@ -1,5 +1,5 @@
 #include "host.h" /* exit(), EXIT_FAILURE, fprintf(), stderr */
-#include "as.h"
+#include "as.h" /* cnl (and other things) */
 #include "dis.h"
 #include "str.h" /* skipsp(), getnum(), getid(), cmpid(), alfa[] */
 #include "misc.h"
@@ -61,7 +61,7 @@ unsigned int getval(char **src) {
 		++*src;
 	} else if(!getnum(src, &val)) {
 		int i;
-		label_t *label, lnl; /* lnl = last non local */
+		label_t *label, *lnl; /* lnl = last non local */
 		char *id;
 
 		id = getid(src);
@@ -71,6 +71,10 @@ unsigned int getval(char **src) {
 		/* get label or fail */
 		for (i = 0; i < labels.count; ++i) {
 			label = (label_t *) ((label_t *) labels.data) + i;
+			if (*(label->name) == '.') {
+				if(lnl != cnl)
+					continue;
+			} else lnl = label;
 			if (cmpid(label->name, id)) {
 				val = label->address;
 				goto gotval;

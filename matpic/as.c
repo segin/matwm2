@@ -10,6 +10,7 @@
 #include "misc.h" /* flerrexit(), getargs(), infile, address, line */
 
 char file[FN_MAX];
+label_t *cnl = NULL;
 
 arr_t inss = { NULL, 0, 0, 0 };
 arr_t labels = { NULL, 0, 0, 0 };
@@ -61,6 +62,7 @@ int insfind(char *lp, char *ip, char *argp) {
 	ins_t ins;
 	int args[ARG_MAX];
 
+	ins.line = line;
 	if (cmpid(ip, "org")) {
 		if (getargs(&argp, args) != 1)
 			aerrexit("invalid number of arguments to org directive");
@@ -149,21 +151,23 @@ void assemble(char *code) {
 			}
 			if (insfind(lp, ip, argp))
 				goto endln;
-			if (lp == NULL && !(wp & WP_PSPC)) {
-				lp = ip;
-				wp = getword(&code, &ip);
-				if (ip == NULL) {
-					if (!(alfa[(unsigned char) *code] & (CT_NL | CT_NUL)))
-						aerrexit("invalid identifier");
-					goto endln;
-				}
-				if (!(alfa[(unsigned char) *code] & (CT_NL | CT_NUL))) {
-					if (wp & WP_TSPC)
-						argp = code;
-					else aerrexit("invalid identifier");
-				}
-				if (!insfind(lp, ip, argp))
-					aerrexit("no such instruction/directive");
+			if (lp == NULL) {
+				if (!(wp & WP_PSPC)) {
+					lp = ip;
+					wp = getword(&code, &ip);
+					if (ip == NULL) {
+						if (!(alfa[(unsigned char) *code] & (CT_NL | CT_NUL)))
+							aerrexit("invalid identifier");
+						goto endln;
+					}
+					if (!(alfa[(unsigned char) *code] & (CT_NL | CT_NUL))) {
+						if (wp & WP_TSPC)
+							argp = code;
+						else aerrexit("invalid identifier");
+					}
+					if (!insfind(lp, ip, argp))
+						aerrexit("no such instruction/directive");
+				} else aerrexit("no such instruction/directive");
 			}
 			endln:
 			if (lp != NULL) { /* we has a lebel */
@@ -175,6 +179,11 @@ void assemble(char *code) {
 						aerrexit("duplicate label");
 				}
 				arr_add(&labels, &label);
+				if (*lp != '.') {
+					ins.type = IT_LAB;
+					ins.d.lab.ptr = (label_t *) labels.data + labels.count - 1;
+					arr_add(&inss, &ins);
+				}
 			}
 			while (!(alfa[(unsigned char) *code] & (CT_NUL | CT_NL)))
 				++code;
@@ -215,9 +224,13 @@ void assemble(char *code) {
 				case IT_FIL:
 					setfile(ins->d.file.file);
 					break;
+				case IT_LAB:
+					cnl = ins->d.lab.ptr;
+					break;
 			}
 			++ins;
 		}
+		cnl = NULL; /* so getval() is not confused when used from other functions */
 	}
 }
 
