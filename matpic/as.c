@@ -2,7 +2,7 @@
  * assembler *
  *************/
 
-#include "host.h" /* memcpy() */
+#include "host.h" /* memcpy(), strlen() */
 #include "as.h"
 #include "str.h"
 #include "mem.h"
@@ -10,7 +10,6 @@
 #include "misc.h" /* flerrexit(), getargs(), infile, address, line */
 
 char file[FN_MAX];
-label_t *cnl = NULL;
 
 arr_t inss = { NULL, 0, 0, 0 };
 arr_t labels = { NULL, 0, 0, 0 };
@@ -52,9 +51,11 @@ void setfile(char *fn) {
 }
 
 void initfile(void) {
-	int i;
-	for (i = 0; i < FN_MAX && infile[i]; ++i)
-		file[i] = infile[i];
+	int len = strlen(infile);
+	if (len > FN_MAX - 1)
+		len = FN_MAX;
+	memcpy((void *) file, (void *) infile, len);
+	file[len] = 0;
 }
 
 int insfind(char *lp, char *ip, char *argp) {
@@ -180,9 +181,8 @@ void assemble(char *code) {
 				}
 				arr_add(&labels, &label);
 				if (*lp != '.') {
-					ins.type = IT_LAB;
-					ins.d.lab.ptr = (label_t *) labels.data + labels.count - 1;
-					arr_add(&inss, &ins);
+					cnl = lp;
+					
 				}
 			}
 			while (!(alfa[(unsigned char) *code] & (CT_NUL | CT_NL)))
@@ -223,9 +223,6 @@ void assemble(char *code) {
 					break;
 				case IT_FIL:
 					setfile(ins->d.file.file);
-					break;
-				case IT_LAB:
-					cnl = ins->d.lab.ptr;
 					break;
 			}
 			++ins;

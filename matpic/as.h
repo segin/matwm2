@@ -29,9 +29,6 @@ typedef struct {
 		struct file {
 			char *file;
 		} file;
-		struct lab {
-			label_t *ptr;
-		} lab;
 	} d;
 } ins_t;
 
@@ -41,11 +38,9 @@ enum itype {
 	IT_DAT, /* data directive */
 	IT_INS, /* an actual instruction */
 	IT_FIL, /* change of filename */
-	IT_LAB  /* non-local label */
 };
 
 extern char file[FN_MAX];
-extern label_t *cnl; /* current non-local label */
 extern arr_t inss;
 extern arr_t labels;
 
