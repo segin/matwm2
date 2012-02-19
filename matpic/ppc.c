@@ -52,13 +52,9 @@ int preprocess(char *in, char **ret) {
 	}
 
 	vstr_new(&out);
+	vstr_add(&out, in);
 
-	
-
-/*
 	*ret = out.data;
 	return out.len;
-*/
-	return strlen(in);
 }
 

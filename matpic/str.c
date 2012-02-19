@@ -61,20 +61,26 @@ int skipsp(char **src) {
 /* skipnl(src)
  *
  * description
- *   advances *src until a non-newline character is found
+ *   advances *src past the next newline
  *
  * arguments
  *   char * src: zero terminated string
  *
  * return value
  *   int
- *   number of characters skipped
+ *   1 if a newline was skipped
+ *
+ * notes
+ *   if there is no newline but there are '\r' characters
+ *   then *src will be advanced past those
  */
 int skipnl(char **src) {
 	int n = 0;
 
-	while (alfa[(unsigned char) **src] & CT_NL)
-		++n, ++(*src);
+	while (**src == '\r')
+		++(*src);
+	if (**src == '\n')
+		++(*src), ++n;
 	return n;
 }
 
