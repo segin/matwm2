@@ -1,5 +1,5 @@
 #include "host.h" /* realloc() */
-#include "mem.h" /* BLOCK */
+#include "mem.h" /* BLOCK, string_t stuff */
 #include "as.h" /* inss */
 #include "misc.h" /* errexit(), flwarn() */
 #include "arch.h" /* arch */
@@ -7,7 +7,6 @@
 #include "str.h" /* skipsp(), skipnl(), alfa[], hexlookup[], hexnib[] */
 #include "main.h" /* infile, line */
 #include "dis.h" /* dsym, dsym_t */
-#include "vstr.h"
 
 #define IHLL 16
 

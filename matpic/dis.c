@@ -4,7 +4,7 @@
 #include "main.h" /* infile, address */
 #include "arch.h"
 #include "str.h" /* hexnib[] */
-#include "vstr.h"
+#include "mem.h" /* string_t stuff */
 
 arr_t dsym = { NULL, 0, 0, 0 };
 char linebuf[512];
