@@ -9,6 +9,7 @@ precedence order
 support banksel, bankisel, pagesel pseudo instructions
 support calling local labels from outside their scope with label.locallabel type format
 changing default radix
+split a line with backquote before newline (preproc)
 better commandline interface
 relocatable code and coff output support
 add ihex thing for bigger than 16bit addresses
