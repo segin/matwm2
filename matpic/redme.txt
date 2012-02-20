@@ -1,8 +1,6 @@
 red me
 
 this is about C version of matpic, lua file is older test implementation
-there ought to be an interface implemented that handles combining matpic_as and preprocessor etc
-
 to build, either copy Makefile.watcom to Makefile and run "wmake" if you are using openwatcom
 or on linux/unix copy or link Makefile.nix to Makefile and run "make"
 synopsis
@@ -14,6 +12,8 @@ options
 	-P	don't preprocess
 	-t	after assembling instead of giving ihex output, disassemble again
 input file is read from stdin, output written to stdout
+comments can be started with ";", they end together with the line
+multiline or part-of line comments can be started with "/*" and ended with "*/", they can also be nested
 + - * / % & | ^ << >> ~ behave as in C, but strictly left to right
 ! is also supported as alias to ~ bitwise not operator
 $ is the address at start of line
