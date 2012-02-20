@@ -35,6 +35,7 @@ void vstr_new(string_t *s) {
 	s->data = NULL;
 	s->len = 0;
 	s->res = 0;
+	vstr_add(s, ""); /* so to be sure it is not NULL */
 }
 
 void vstr_addl(string_t *s, char *str, int len) {

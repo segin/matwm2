@@ -6,7 +6,10 @@
 arr_t defines;
 
 int ppfind(char *lp, char *ip, char *argp) {
+	if (cmpid(ip, "define")) {
 
+		return 1;
+	}
 	return 0;
 }
 
