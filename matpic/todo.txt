@@ -4,18 +4,17 @@ multiline macros
 db directive for store bytes separate and text with ""
 preprocessor variables
 const, equ, dw, dd, dq, etc
-logic operators
 something like cblock
-message/warning/error directives
-better commandline interface
+precedence order
 support banksel, bankisel, pagesel pseudo instructions
-relocatable code and coff output support
 support calling local labels from outside their scope with label.locallabel type format
+changing default radix
+better commandline interface
+relocatable code and coff output support
 add ihex thing for bigger than 16bit addresses
 header files for chips
 support more chips
 fancy disassembler output that can be re-assembled as-is option
-changing default radix
 
 BUGS
 	if integer size on host architecture is less than 32bit all will fail

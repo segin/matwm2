@@ -12,11 +12,13 @@ extern void cleanup(void);
 extern void errexit(char *msg);
 extern void flerrexit(char *file, int line, char *msg);
 extern void flwarn(char *file, int line, char *msg);
+extern void flmsg(char *file, int line, char *msg);
 extern void fawarn(char *file, int addr, char *msg);
 extern unsigned int getval(char **src);
 extern unsigned int numarg(char **src);
 extern int getargs(char **src, int *args);
 extern int getword(char **src, char **word);
+extern char *getstr(char **in);
 
 /* getword return value is a bit map with following properties */
 #define WP_LOCAL 1  /* identifier preceded by "." */

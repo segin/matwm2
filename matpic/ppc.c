@@ -146,6 +146,42 @@ int ppfind(char *lp, char *ip, char *argp) {
 		arr_add(&defines, &def);
 		return 1;
 	}
+	if (cmpid(ip, "msg")) {
+		char *msg;
+		if (!argp)
+			aerrexit("too few arguments for msg directive");
+		msg = getstr(&argp);
+		skipsp(&argp);
+		if (msg == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
+			aerrexit("syntax error on msg directive");
+		flmsg(file, line, msg);
+		free(msg);
+		return 1;
+	}
+	if (cmpid(ip, "error")) {
+		char *msg;
+		if (!argp)
+			aerrexit("too few arguments for msg directive");
+		msg = getstr(&argp);
+		skipsp(&argp);
+		if (msg == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
+			aerrexit("syntax error on msg directive");
+		flerrexit(file, line, msg);
+		free(msg);
+		return 1;
+	}
+	if (cmpid(ip, "warn")) {
+		char *msg;
+		if (!argp)
+			aerrexit("too few arguments for msg directive");
+		msg = getstr(&argp);
+		skipsp(&argp);
+		if (msg == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
+			aerrexit("syntax error on msg directive");
+		flwarn(file, line, msg);
+		free(msg);
+		return 1;
+	}
 	return 0;
 }
 

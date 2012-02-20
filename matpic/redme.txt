@@ -3,6 +3,7 @@ red me
 this is about C version of matpic, lua file is older test implementation
 to build, either copy Makefile.watcom to Makefile and run "wmake" if you are using openwatcom
 or on linux/unix copy or link Makefile.nix to Makefile and run "make"
+currently only 14bit PIC chips are supported
 synopsis
 	matpic [-d|p|P|t]
 	cat <infile> | matpic [-d|p|P|t] > <outfile>
@@ -14,8 +15,7 @@ options
 input file is read from stdin, output written to stdout
 comments can be started with ";", they end together with the line
 multiline or part-of line comments can be started with "/*" and ended with "*/", they can also be nested
-+ - * / % & | ^ << >> ~ behave as in C, but strictly left to right
-! is also supported as alias to ~ bitwise not operator
++ - * / % & | ^ << >> ~ ! == != > < >= <= behave as in C, but strictly left to right
 $ is the address at start of line
 identifiers can be described by regex as /[a-zA-Z_][a-zA-Z0-9]*/
 lines are divided as follows:
@@ -30,6 +30,12 @@ following directives exist:
 	file "<filename>": tell assembler what file it is working on (also sets next line # to 1)
 		filenames with double quotes or newlines and stuff in them are not support (no escape codes)
 	line <line #>: tell assembler what the next line is numbered
+also there is preprocessor directives:
+	define, if, ifdef, ifndef, else, endif: behave mostly like C
+	msg "<message>": show a message
+	warning "<message>" show a threatning message
+	error "<message>": show a message and exit
+	they don't need # like in C (though it is allowed, you even can use % like in nasm)
 integer notation supports the following prefixes:
 	none at all: decimal
 	0d: decimal

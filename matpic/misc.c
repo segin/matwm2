@@ -22,31 +22,36 @@ void reset(void) {
 }
 
 void errexit(char *msg) {
-	fprintf(stderr, "%s\n", msg);
+	fprintf(stderr, "error: %s\n", msg);
 	exit(EXIT_FAILURE);
 }
 
 void flerrexit(char *file, int line, char *msg) {
-	fprintf(stderr, "%s: line %d: %s\n", file, line, msg);
+	fprintf(stderr, "%s: line %d: error: %s\n", file, line, msg);
 	exit(EXIT_FAILURE);
 }
 
 void flwarn(char *file, int line, char *msg) {
-	fprintf(stderr, "%s: line %d: %s\n", file, line, msg);
-	exit(EXIT_FAILURE);
+	fprintf(stderr, "%s: line %d: warning: %s\n", file, line, msg);
 }
 
 void fawarn(char *file, int addr, char *msg) {
-	fprintf(stderr, "%s: %X: %s\n", file, addr, msg);
+	fprintf(stderr, "%s: 0x%X: warning: %s\n", file, addr, msg);
+}
+
+void flmsg(char *file, int line, char *msg) {
+	fprintf(stderr, "%s: line %d: message: %s\n", file, line, msg);
 }
 
 unsigned int getval(char **src) {
 	unsigned int val;
-	int not = 0;
+	char *ns, *ne;
 
 	skipsp(src);
-	while (**src == '!' || **src == '~')
-		++not, ++*src;
+	ns = *src;
+	while (**src == '!' || **src == '~' || alfa[(unsigned char) **src] & CT_SPC)
+		++*src;
+	ne = *src;
 	skipsp(src);
 	if (**src == '(') {
 		++*src;
@@ -82,8 +87,11 @@ unsigned int getval(char **src) {
 		aerrexit("unknown identifier");
 	}
 	gotval:
-	if (not)
-		val = ~val;
+	while (ns != ne--) {
+		if (*ne == '!')
+			val = !val;
+		else val = ~val;
+	}
 	return val;
 }
 
@@ -97,7 +105,15 @@ enum ops {
 	OP_IOR,
 	OP_EOR,
 	OP_SHL,
-	OP_SHR
+	OP_SHR,
+	OP_LAND,
+	OP_LOR,
+	OP_LT,
+	OP_GT,
+	OP_LTE,
+	OP_GTE,
+	OP_EQ,
+	OP_NE
 };
 
 unsigned int numarg(char **src) {
@@ -129,10 +145,20 @@ unsigned int numarg(char **src) {
 				++*src;
 				break;
 			case '&':
+				if (*((*src) + 1) == '&') {
+					op = OP_LAND;
+					*src += 2;
+					break;
+				}
 				op = OP_AND;
 				++*src;
 				break;
 			case '|':
+				if (*((*src) + 1) == '|') {
+					op = OP_LOR;
+					*src += 2;
+					break;
+				}
 				op = OP_IOR;
 				++*src;
 				break;
@@ -146,14 +172,40 @@ unsigned int numarg(char **src) {
 					*src += 2;
 					break;
 				}
-				return lval;
+				if (*((*src) + 1) == '=') {
+					op = OP_LTE;
+					*src += 2;
+					break;
+				}
+				op = OP_LT;
+				++*src;
+				break;
 			case '>':
 				if (*((*src) + 1) == '>') {
 					op = OP_SHR;
 					*src += 2;
 					break;
 				}
-				return lval;
+				if (*((*src) + 1) == '=') {
+					op = OP_GTE;
+					*src += 2;
+					break;
+				}
+				op = OP_GT;
+				++*src;
+				break;
+			case '=':
+				if (*((*src) + 1) == '=')
+					++*src;
+				op = OP_EQ;
+				++*src;
+				break;
+			case '!':
+				if (*((*src) + 1) == '=') {
+					op = OP_NE;
+					*src += 2;
+					break;
+				}
 			default:
 				return lval;
 		}
@@ -190,6 +242,31 @@ unsigned int numarg(char **src) {
 				break;
 			case OP_SHR:
 				lval >>= rval;
+				break;
+			case OP_LAND:
+				lval = lval && rval;
+				break;
+			case OP_LOR:
+				lval = lval || rval;
+				break;
+			case OP_LT:
+				lval = lval < rval;
+				break;
+			case OP_LTE:
+				lval = lval <= rval;
+				break;
+			case OP_GT:
+				lval = lval > rval;
+				break;
+			case OP_GTE:
+				lval = lval >= rval;
+				break;
+			case OP_EQ:
+				lval = lval == rval;
+				break;
+			case OP_NE:
+				lval = lval != rval;
+				break;
 		}
 	}
 }
@@ -232,36 +309,110 @@ int getword(char **src, char **word) {
 	return prop;
 }
 
+int egethex(char **s) {
+	int n, r = 0, c = 2;
+	while (c--) {
+		r <<= 4;
+		n = hexlookup[(unsigned char) **s];
+		if (n == 16)
+			return n;
+		r |= n;
+		++*s;
+	}
+	return n;
+}
+
 char *getstr(char **in) {
 	string_t ret;
-	char *p, b[2] = { 0, 0 };
-	int esc = 0;
+	char *p, b[5] = { 0, 0, 0, 0, 0 };
+	int n;
 	if (**in != '"')
 		return NULL;
 	vstr_new(&ret);
 	++*in;
 	p = *in;
-	while (!(alfa[(unsigned char) *p] & (CT_NUL | CT_NL)) && (!esc && *p != '"')) {
-		if (esc) {
-			vstr_addl(&ret, p, p - *in);
+	while (!(alfa[(unsigned char) *p] & (CT_NUL | CT_NL)) && *p != '"') {
+		if (*p == '\\' && !(alfa[(unsigned char) p[1]] & (CT_NUL | CT_NL))) {
+			vstr_addl(&ret, *in, p - *in);
 			*in = p + 1;
+			++p;
 			switch (*p) {
-				case 'r':
-					vstr_add(&ret, "\r");
+				case 'a':
+					vstr_add(&ret, "\x07");
+					break;
+				case 'b':
+					vstr_add(&ret, "\x08");
+					break;
+				case 't':
+					vstr_add(&ret, "\x09");
 					break;
 				case 'n':
-					vstr_add(&ret, "\n");
+					vstr_add(&ret, "\x0A");
+					break;
+				case 'v':
+					vstr_add(&ret, "\x0B");
+					break;
+				case 'f':
+					vstr_add(&ret, "\x0C");
+					break;
+				case 'r':
+					vstr_add(&ret, "\x0D");
+					break;
+				case 'e':
+					vstr_add(&ret, "\x1B");
+					break;
+				case 'U':
+					++p;
+					b[0] = egethex(&p);
+					b[1] = egethex(&p);
+					b[2] = egethex(&p);
+					b[3] = egethex(&p);
+					vstr_add(&ret, b);
+					--p;
+					break;
+				case 'u':
+					++p;
+					b[0] = egethex(&p);
+					b[1] = egethex(&p);
+					b[2] = 0;
+					vstr_add(&ret, b);
+					--p;
+					break;
+				case 'x':
+					++p;
+					b[0] = egethex(&p);
+					b[1] = 0;
+					vstr_add(&ret, b);
+					--p;
+					break;
+				case '0':
+				case '1':
+				case '2':
+				case '3':
+					b[0] = ((*p) - 48);
+					++p;
+					if ((n = hexlookup[(unsigned char) *p]) < 8) {
+						b[0] = (b[0] << 3) | n;
+						++p;
+						if ((n = hexlookup[(unsigned char) *p]) < 8)
+							b[0] = (b[0] << 3) | n;
+							++p;
+					}
+					b[1] = 0;
+					vstr_add(&ret, b);
+					--p;
 					break;
 				default:
 					*b = *p;
 					vstr_add(&ret, b);
 			}
-			esc = 0;
-		} else if (*p == '\\')
-			esc = 1;
-		++p;
+			++p;
+			*in = p;
+		} else ++p;
 	}
-	vstr_addl(&ret, p, p - *in);
+	vstr_addl(&ret, *in, p - *in);
+	*in = p;
+	++*in;
 	return ret.data;
 }
 
