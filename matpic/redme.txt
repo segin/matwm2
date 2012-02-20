@@ -1,6 +1,6 @@
 red me
 
-this is about C version of matpic_as, lua file is older test implementation
+this is about C version of matpic, lua file is older test implementation
 there ought to be an interface implemented that handles combining matpic_as and preprocessor etc
 
 to build, either copy Makefile.watcom to Makefile and run "wmake" if you are using openwatcom
@@ -22,7 +22,8 @@ lines are divided as follows:
 	[<label>] [<instruction> [<argument>, <...>]]
 if an identifier is neither a directive or instruction and present before any whitespace, it's considered a label
 if an identifier is followed by a (and before any instruction/directive) ':' it's considered a label
-if an identifier starts with a '.' it's considered a local label (they don't work yet tho as of this writing)
+if an identifier starts with a '.' it's considered a local label (it can also be given a : at the end)
+more dots before a local label make it local to a local label and so on
 following directives exist:
 	org <origin>: set origin
 	data <value>, <value>: put stray words into bytecode

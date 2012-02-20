@@ -8,6 +8,7 @@ add ihex thing for bigger than 16bit addresses
 header files for chips
 support more chips
 fancy disassembler output that can be re-assembled as-is option
+changing default radix
 
 BUGS
 	if integer size on host architecture is less than 32bit all will fail
