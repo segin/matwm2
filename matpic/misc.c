@@ -232,3 +232,36 @@ int getword(char **src, char **word) {
 	return prop;
 }
 
+char *getstr(char **in) {
+	string_t ret;
+	char *p, b[2] = { 0, 0 };
+	int esc = 0;
+	if (**in != '"')
+		return NULL;
+	vstr_new(&ret);
+	++*in;
+	p = *in;
+	while (!(alfa[(unsigned char) *p] & (CT_NUL | CT_NL)) && (!esc && *p != '"')) {
+		if (esc) {
+			vstr_addl(&ret, p, p - *in);
+			*in = p + 1;
+			switch (*p) {
+				case 'r':
+					vstr_add(&ret, "\r");
+					break;
+				case 'n':
+					vstr_add(&ret, "\n");
+					break;
+				default:
+					*b = *p;
+					vstr_add(&ret, b);
+			}
+			esc = 0;
+		} else if (*p == '\\')
+			esc = 1;
+		++p;
+	}
+	vstr_addl(&ret, p, p - *in);
+	return ret.data;
+}
+
