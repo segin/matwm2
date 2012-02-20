@@ -9,7 +9,6 @@ int level, ignore; /* depth & state of if/ifdef/ifndef directives */
 int str, esc;
 string_t out;
 string_t tmp;
-string_t tmp2;
 
 void strcheck(char c) {
 	switch (c) {
@@ -35,18 +34,30 @@ char *deffind(char *name) {
 
 	for (i = 0; i < defines.count; ++i, ++def)
 		if (cmpid(def->name, name))
-			ret = def->arg; /* don't break, so we can overload macros */
+			ret = def->val; /* don't break, so we can overload macros */
 	return ret;
 }
 
-void ppsub(char *in) {
-	char *s, *d;
-	int c;
-	start:
-	c = 0;
-	tmp.len = 0;
-	esc = str = 0;
+void _ppsub(char *in);
 
+int __ppsub(char *name) {
+	define_t *def = ((define_t *) defines.data) + defines.count - 1;
+	int i;
+
+	for (i = 0; i < defines.count; ++i, --def) /* go backwards for overloads */
+		if (cmpid(def->name, name) && !def->active) {
+			def->active = 1;
+			_ppsub(def->val);
+			def->active = 0;
+			break;
+		}
+	return i != defines.count;
+}
+
+void _ppsub(char *in) {
+	char *s;
+	int c;
+	esc = str = 0;
 	while (!(alfa[(unsigned char) *in] & (CT_NL | CT_NUL))) {
 		s = in;
 		while (!(alfa[(unsigned char) *in] & (CT_NL | CT_NUL | CT_LET | CT_SEP))) {
@@ -57,21 +68,17 @@ void ppsub(char *in) {
 		}
 		vstr_addl(&tmp, s, in - s);
 		s = in;
-		if (!str && (d = deffind(in)) != NULL) {
-			vstr_addl(&tmp, d, idlen(d));
-			getid(&in);
+		getid(&in);
+		if (!str && __ppsub(s))
 			++c;
-		} else {
-			getid(&in);
-			vstr_addl(&tmp, s, in - s);
-		}
+		else vstr_addl(&tmp, s, in - s);
 	}
-	if (c) {
-		tmp2.len = 0;
-		vstr_addl(&tmp2, tmp.data, tmp.len);
-		in = tmp2.data;
-		goto start;
-	}
+}
+
+char *ppsub(char *in) {
+	tmp.len = 0;
+	_ppsub(in);
+	return tmp.data;
 }
 
 int ppfind(char *lp, char *ip, char *argp) {
@@ -82,8 +89,7 @@ int ppfind(char *lp, char *ip, char *argp) {
 	if (cmpid(ip, "if")) {
 		if (argp == NULL)
 			aerrexit("too few arguments for if directive");
-		ppsub(argp);
-		argp = tmp.data; /* we not allowed to change .data */
+		argp = ppsub(argp);
 		if (getargs(&argp, args) != 1)
 			aerrexit("too many arguments for if directive");
 		++level;
@@ -135,7 +141,8 @@ int ppfind(char *lp, char *ip, char *argp) {
 		wp = getword(&argp, &def.name);
 		if (def.name == NULL || (!(wp & WP_TSPC) && !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL))))
 			aerrexit("syntax error on define directive");
-		def.arg = argp;
+		def.val = argp;
+		def.active = 0;
 		arr_add(&defines, &def);
 		return 1;
 	}
@@ -263,13 +270,11 @@ int preprocess(char *in, char **ret) {
 	initfile();
 	vstr_new(&out);
 	vstr_new(&tmp);
-	vstr_new(&tmp2);
 	arr_new(&defines, sizeof(define_t));
 	line = 1;
 	level = ignore = 0;
 	n = _preprocess(in, ret);
 	vstr_free(&tmp);
-	vstr_free(&tmp2);
 	arr_free(&defines);
 	return n;
 }

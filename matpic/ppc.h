@@ -4,7 +4,8 @@
 #include "mem.h"
 
 typedef struct {
-	char *name, *arg;
+	char *name, *val;
+	int active;
 } define_t;
 
 extern arr_t defines;
