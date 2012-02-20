@@ -1,5 +1,12 @@
-preprocessor
+include directive
+arguments to macros like cpp (separate from multiline macros, so they can be used more like constants than like an instruction)
+multiline macros
 db directive for store bytes separate and text with ""
+preprocessor variables
+const, equ, dw, dd, dq, etc
+logic operators
+something like cblock
+message/warning/error directives
 better commandline interface
 support banksel, bankisel, pagesel pseudo instructions
 relocatable code and coff output support
