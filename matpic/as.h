@@ -6,10 +6,14 @@
 #define FN_MAX 512 /* filename max length */
 
 
-typedef struct {
+typedef struct label_t label_t;
+
+struct label_t {
 	char *name;
 	int address;
-} label_t;
+	int local;
+	int parent; /* tried to keep this as pointer first, big mistake */
+};
 
 typedef struct {
 	unsigned int type, line;
@@ -29,6 +33,9 @@ typedef struct {
 		struct file {
 			char *file;
 		} file;
+		struct lbl {
+			int lbl;
+		} lbl;
 	} d;
 } ins_t;
 
@@ -38,11 +45,13 @@ enum itype {
 	IT_DAT, /* data directive */
 	IT_INS, /* an actual instruction */
 	IT_FIL, /* change of filename */
+	IT_LBL  /* last label encountered */
 };
 
 extern char file[FN_MAX];
 extern arr_t inss;
 extern arr_t labels;
+extern int llbl; /* last label */
 
 void aerrexit(char *msg);
 unsigned int getval(char **src);

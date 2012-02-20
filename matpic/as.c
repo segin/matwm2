@@ -10,6 +10,7 @@
 #include "misc.h" /* flerrexit(), getargs(), infile, address, line */
 
 char file[FN_MAX];
+int llbl = -1;
 
 arr_t inss = { NULL, 0, 0, 0 };
 arr_t labels = { NULL, 0, 0, 0 };
@@ -174,16 +175,24 @@ void assemble(char *code) {
 			if (lp != NULL) { /* we has a lebel */
 				label.name = lp;
 				label.address = addrl / arch->align;
+				for (label.local = 0; *lp == '.'; ++label.local, ++lp);
+				label.parent = -1;
+				for (i = labels.count - 1; i >= 0; --i) { /* find owner */
+					li = (label_t *) ((label_t *) labels.data) + i;
+					if (li->local < label.local) {
+						label.parent = i;
+						break;
+					}
+				}
 				for (i = 0; i < labels.count; ++i) { /* check if already exists */
 					li = (label_t *) ((label_t *) labels.data) + i;
-					if (cmpid(li->name, lp))
+					if (cmpid(li->name, label.name) && label.parent == li->parent)
 						aerrexit("duplicate label");
 				}
 				arr_add(&labels, &label);
-				if (*lp != '.') {
-					cnl = lp;
-					
-				}
+				ins.type = IT_LBL;
+				ins.d.lbl.lbl = labels.count - 1;
+				arr_add(&inss, &ins);
 			}
 			while (!(alfa[(unsigned char) *code] & (CT_NUL | CT_NL)))
 				++code;
@@ -224,10 +233,13 @@ void assemble(char *code) {
 				case IT_FIL:
 					setfile(ins->d.file.file);
 					break;
+				case IT_LBL:
+					llbl = ins->d.lbl.lbl;
+					break;
 			}
 			++ins;
 		}
-		cnl = NULL; /* so getval() is not confused when used from other functions */
 	}
+	llbl = -1; /* important */
 }
 

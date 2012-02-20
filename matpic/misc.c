@@ -60,8 +60,8 @@ unsigned int getval(char **src) {
 		val = address;
 		++*src;
 	} else if(!getnum(src, &val)) {
-		int i;
-		label_t *label;
+		int i, j;
+		label_t *label = (label_t *) labels.data;
 		char *id;
 
 		id = getid(src);
@@ -70,9 +70,14 @@ unsigned int getval(char **src) {
 
 		/* get label or fail */
 		for (i = 0; i < labels.count; ++i) {
-			label = (label_t *) ((label_t *) labels.data) + i;
-			if (cmpid(label->name, id)) {
-				val = label->address;
+			/* FIXME support label.local type format */
+			if (cmpid(label[i].name, id)) {
+				for (j = llbl; j >= 0; --j)
+					if (label[j].local < label[i].local)
+						break;
+				if (label[i].parent != j)
+					continue;
+				val = label[i].address;
 				goto gotval;
 			}
 		}
