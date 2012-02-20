@@ -37,8 +37,10 @@ void setfile(char *fn) {
 		aerrexit("argument to file directive needs double quotes");
 	++fn;
 	for (i = 0; i < FN_MAX - 1; ++i) {
-		if (alfa[(unsigned char) fn[i]] & (CT_NUL | CT_NL))
+		if (alfa[(unsigned char) fn[i]] & (CT_NUL | CT_NL)) {
+			file[i] = 0;
 			aerrexit("missing double quote");
+		}
 		if (fn[i] == '"')
 			break;
 		file[i] = fn[i];

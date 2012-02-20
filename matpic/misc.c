@@ -410,6 +410,8 @@ char *getstr(char **in) {
 			*in = p;
 		} else ++p;
 	}
+	if (*p != '"')
+		aerrexit("missing \"");
 	vstr_addl(&ret, *in, p - *in);
 	*in = p;
 	++*in;
