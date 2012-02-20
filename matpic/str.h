@@ -23,6 +23,7 @@ extern char hexnib[16];
 extern int skipsp(char **src);
 extern int skipnl(char **src);
 extern char *getid(char **src);
+extern int idlen(char *src);
 extern int cmpid(char *idl, char *idr);
 extern int getnum(char **src, unsigned int *ret);
 

@@ -102,6 +102,15 @@ char *getid(char **src) {
 	return ret;
 }
 
+int idlen(char *src) {
+	int ret = 0;
+
+	if (alfa[(unsigned char) *src] & (CT_LET | CT_SEP))
+		while (alfa[(unsigned char) *src] & (CT_LET | CT_SEP | CT_NUM))
+			++ret;
+	return ret;
+}
+
 /* lower[]
  *
  * description

@@ -11,13 +11,13 @@
 
 string_t out;
 int pos = 0, lnpos, crc;
-char lnbuf[(IHLL << 1) + 14] = { ':' };
+char ihlnbuf[(IHLL << 1) + 14] = { ':' };
 unsigned char buf[IHLL];
 unsigned int saddr, rtype;
 
 void sethb(unsigned char b) {
-	lnbuf[lnpos++] = hexnib[(b & 0xF0) >> 4];
-	lnbuf[lnpos++] = hexnib[b & 0xF];
+	ihlnbuf[lnpos++] = hexnib[(b & 0xF0) >> 4];
+	ihlnbuf[lnpos++] = hexnib[b & 0xF];
 	crc += b;
 }
 
@@ -34,9 +34,9 @@ void endln(void) {
 		sethb(buf[i]);
 	sethb((0x100 - crc) & 0xFF);
 	if (dosnl)
-		lnbuf[lnpos++] = '\r';
-	lnbuf[lnpos++] = '\n';
-	vstr_addl(&out, lnbuf, lnpos);
+		ihlnbuf[lnpos++] = '\r';
+	ihlnbuf[lnpos++] = '\n';
+	vstr_addl(&out, ihlnbuf, lnpos);
 	pos = 0;
 	saddr = address;
 }

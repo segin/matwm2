@@ -6,7 +6,6 @@
 #include "mem.h" /* string_t stuff */
 
 arr_t dsym = { NULL, 0, 0, 0 };
-char linebuf[512];
 int lbpos;
 
 void dwarn(char *msg) {

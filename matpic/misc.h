@@ -1,19 +1,22 @@
 #ifndef __MISC_H__
 #define __MISC_H__
 
+#define LBSIZE 2048
+
 extern char *infile;
 extern unsigned int address, line;
 extern int dosnl;
+extern char linebuf[LBSIZE];
 
-void cleanup(void);
-void errexit(char *msg);
-void flerrexit(char *file, int line, char *msg);
-void flwarn(char *file, int line, char *msg);
-void fawarn(char *file, int addr, char *msg);
-unsigned int getval(char **src);
-unsigned int numarg(char **src);
-int getargs(char **src, int *args);
-int getword(char **src, char **word);
+extern void cleanup(void);
+extern void errexit(char *msg);
+extern void flerrexit(char *file, int line, char *msg);
+extern void flwarn(char *file, int line, char *msg);
+extern void fawarn(char *file, int addr, char *msg);
+extern unsigned int getval(char **src);
+extern unsigned int numarg(char **src);
+extern int getargs(char **src, int *args);
+extern int getword(char **src, char **word);
 
 /* getword return value is a bit map with following properties */
 #define WP_LOCAL 1  /* identifier preceded by "." */

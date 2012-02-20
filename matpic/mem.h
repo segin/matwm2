@@ -25,9 +25,9 @@ typedef struct {
 #include "host.h" /* strlen() */
 #define vstr_add(s, str) (vstr_addl(s, str, strlen(str)))
 
-void vstr_new(string_t *s);
-void vstr_addl(string_t *s, char *str, int len);
-void vstr_free(string_t *s);
+extern void vstr_new(string_t *s);
+extern void vstr_addl(string_t *s, char *str, int len);
+extern void vstr_free(string_t *s);
 
 #endif /* __MEM_H__ */
 

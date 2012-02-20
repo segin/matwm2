@@ -53,6 +53,7 @@ void vstr_addl(string_t *s, char *str, int len) {
 }
 
 void vstr_free(string_t *s) {
+	free(s->data);
 	s->data = NULL;
 	s->len = 0;
 	s->res = 0;

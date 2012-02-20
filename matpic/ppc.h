@@ -9,7 +9,7 @@ typedef struct {
 
 extern arr_t defines;
 
-int preprocess(char *in, char **ret);
+extern int preprocess(char *in, char **ret);
 
 #endif /* __PPC_H__ */
 

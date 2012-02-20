@@ -1,11 +1,13 @@
 #include "mem.h"
 #include "str.h" /* skipsp(), alfa[], etc */
-#include "misc.h" /* getword() */
+#include "misc.h" /* getword(), linebuf */
 #include "as.h" /* aerrexit(), initfile() */
 #include "ppc.h"
 
 arr_t defines = { NULL, 0, 0, 0 };
 int level, ignore; /* depth & state of if/ifdef/ifndef directives */
+string_t out;
+string_t tmp;
 
 char *deffind(char *name) {
 	define_t *def = ((define_t *) defines.data);
@@ -95,27 +97,23 @@ int getprefix(char **src) {
 	return n;
 }
 
-/* preprocess(in, ret)
- *
- * description
- *   strips comments from in (on the string itself replaces them with space)
- *   evaluates preprocessor directives and builds with them preprocessed data
- *   on a new string, which *ret will point to
- *
- * arguments
- *   char * in: zero terminated string to be preprocessed
- *   char ** ret: *ret is set to pointer with preprocessed data
- *
- * return value
- *   int
- *   length of *ret
- */
-int preprocess(char *in, char **ret) {
-	string_t out;
+void ppsub(char *in) {
+	char *s = in, *d;
+	while (!(alfa[(unsigned char) *in] & (CT_NL | CT_NUL))) {
+		while (!(alfa[(unsigned char) *in] & (CT_NL | CT_NUL | CT_LET | CT_SEP | CT_NUM)))
+			++in;
+		vstr_addl(&tmp, s, in - s);
+		if ((d = deffind(in)) != NULL) {
+			vstr_addl(&tmp, d, idlen(d));
+			getid(&in);
+		}
+	}
+}
+
+int _preprocess(char *in, char **ret) {
 	char *lnstart, *lp, *ip, *argp;
 	int wp, r, pps;
 
-	initfile();
 	/* strip comments */
 	{
 		char *p = in;
@@ -145,12 +143,7 @@ int preprocess(char *in, char **ret) {
 		}
 	}
 
-	vstr_new(&out);
-	arr_new(&defines, sizeof(define_t));
 	/* this very similar to assemble() */
-	line = 1;
-	level = 0;
-	ignore = 0;
 	while (*in) {
 		lnstart = in;
 		lp = NULL;
@@ -200,5 +193,31 @@ int preprocess(char *in, char **ret) {
 
 	*ret = out.data;
 	return out.len;
+}
+
+/* preprocess(in, ret)
+ *
+ * description
+ *   strips comments from in (on the string itself replaces them with space)
+ *   evaluates preprocessor directives and builds with them preprocessed data
+ *   on a new string, which *ret will point to
+ *
+ * arguments
+ *   char * in: zero terminated string to be preprocessed
+ *   char ** ret: *ret is set to pointer with preprocessed data
+ *
+ * return value
+ *   int
+ *   length of *ret
+ */
+int preprocess(char *in, char **ret) {
+	initfile();
+	vstr_new(&out);
+	vstr_new(&tmp);
+	arr_new(&defines, sizeof(define_t));
+	line = 1;
+	level = 0;
+	ignore = 0;
+	return _preprocess(in, ret);
 }
 
