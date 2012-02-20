@@ -71,8 +71,8 @@ int main(int argc, char *argv[]) {
 		} if (ppm == 2) { /* no preprocess */
 			pcode = code;
 		} else preprocess(code, &pcode);
-		assemble(pcode);
 		free(code); /* release the monster */
+		assemble(pcode);
 		free(pcode);
 		len = getihex(&code);
 	}
@@ -84,6 +84,7 @@ int main(int argc, char *argv[]) {
 	done:
 	fwrite((void *) code, 1, len, outfd);
 	cleanup();
+	free(code);
 
 	return EXIT_SUCCESS;
 }

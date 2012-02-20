@@ -6,9 +6,27 @@
 
 arr_t defines = { NULL, 0, 0, 0 };
 int level, ignore; /* depth & state of if/ifdef/ifndef directives */
+int str, esc;
 string_t out;
 string_t tmp;
 string_t tmp2;
+
+void strcheck(char c) {
+	switch (c) {
+		case '\\':
+			if (str)
+				++esc;
+			return;
+		case '"':
+			if (!(str && esc) || str & 2)
+				str ^= 1;
+			break;
+		case '\'':
+			str ^= 2;
+			break;
+	}
+	esc = 0;
+}
 
 char *deffind(char *name) {
 	define_t *def = ((define_t *) defines.data);
@@ -17,7 +35,7 @@ char *deffind(char *name) {
 
 	for (i = 0; i < defines.count; ++i, ++def)
 		if (cmpid(def->name, name))
-			ret = def->arg;
+			ret = def->arg; /* don't break, so we can overload macros */
 	return ret;
 }
 
@@ -27,13 +45,19 @@ void ppsub(char *in) {
 	start:
 	c = 0;
 	tmp.len = 0;
+	esc = str = 0;
+
 	while (!(alfa[(unsigned char) *in] & (CT_NL | CT_NUL))) {
 		s = in;
-		while (!(alfa[(unsigned char) *in] & (CT_NL | CT_NUL | CT_LET | CT_SEP)))
+		while (!(alfa[(unsigned char) *in] & (CT_NL | CT_NUL | CT_LET | CT_SEP))) {
+			if (esc)
+				esc = 0;
+			else strcheck(*in);
 			++in;
+		}
 		vstr_addl(&tmp, s, in - s);
 		s = in;
-		if ((d = deffind(in)) != NULL) {
+		if (!str && (d = deffind(in)) != NULL) {
 			vstr_addl(&tmp, d, idlen(d));
 			getid(&in);
 			++c;
@@ -59,7 +83,8 @@ int ppfind(char *lp, char *ip, char *argp) {
 		if (argp == NULL)
 			aerrexit("too few arguments for if directive");
 		ppsub(argp);
-		if (getargs(&tmp.data, args) != 1)
+		argp = tmp.data; /* we not allowed to change .data */
+		if (getargs(&argp, args) != 1)
 			aerrexit("too many arguments for if directive");
 		++level;
 		if (!ignore && !args[0])
@@ -139,9 +164,10 @@ int _preprocess(char *in, char **ret) {
 		char *p = in;
 		int iscomment = 0, nestcomment = 0, str = 0;
 
+		esc = str = 0;
 		while (*p) {
-			if (!iscomment && !nestcomment && (p[0] != '\\' || p[0] != '\'') && p[1] == '"')
-				str ^= 1;
+			if (!iscomment && !nestcomment)
+				strcheck(*p);
 			if (!str) {
 				if (p[0] == '/' && p[1] == '*') {
 					++nestcomment;
@@ -240,11 +266,11 @@ int preprocess(char *in, char **ret) {
 	vstr_new(&tmp2);
 	arr_new(&defines, sizeof(define_t));
 	line = 1;
-	level = 0;
-	ignore = 0;
+	level = ignore = 0;
 	n = _preprocess(in, ret);
 	vstr_free(&tmp);
 	vstr_free(&tmp2);
+	arr_free(&defines);
 	return n;
 }
 

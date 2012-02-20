@@ -14,8 +14,6 @@ void cleanup(void) {
 	arr_free(&inss);
 	arr_free(&labels);
 	arr_free(&dsym);
-	arr_free(&dsym);
-	arr_free(&defines);
 }
 
 void reset(void) {
