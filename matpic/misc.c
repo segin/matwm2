@@ -1,26 +1,25 @@
 #include "host.h" /* exit(), EXIT_FAILURE, fprintf(), stderr */
 #include "as.h" /* cnl (and other things) */
 #include "dis.h"
+#include "ppc.h"
 #include "str.h" /* skipsp(), getnum(), getid(), cmpid(), alfa[] */
 #include "misc.h"
 
 char *infile = "<stdin>";
 unsigned int address, line;
+int dosnl = 0;
 
 void cleanup(void) {
 	arr_free(&inss);
 	arr_free(&labels);
 	arr_free(&dsym);
+	arr_free(&dsym);
+	arr_free(&defines);
 }
 
 void reset(void) {
-	line = 1;
 	infile = "<file>";
-	address = 0;
-	arr_free(&inss);
-	arr_free(&labels);
-	/* reset disassembler too */
-	arr_free(&dsym);
+	cleanup();
 }
 
 void errexit(char *msg) {
@@ -216,6 +215,10 @@ int getargs(char **src, int *args) {
 int getword(char **src, char **word) {
 	int prop = 0;
 
+	if (src == NULL || *src == NULL) {
+		*word = NULL;
+		return 0;
+	}
 	if (skipsp(src))
 		prop |= WP_PSPC;
 	if (**src == '.')

@@ -9,7 +9,6 @@
 
 #define IHLL 16
 
-int dosnl = 0;
 string_t out;
 int pos = 0, lnpos, crc;
 char lnbuf[(IHLL << 1) + 14] = { ':' };

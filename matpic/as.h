@@ -53,10 +53,8 @@ extern arr_t inss;
 extern arr_t labels;
 extern int llbl; /* last label */
 
+void initfile(void);
 void aerrexit(char *msg);
-unsigned int getval(char **src);
-extern unsigned int numarg(char **src);
-extern int getargs(char **src, int *args);
 extern void assemble(char *code);
 
 #endif /* __AS_H__ */

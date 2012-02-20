@@ -1,13 +1,82 @@
 #include "mem.h"
 #include "str.h" /* skipsp(), alfa[], etc */
 #include "misc.h" /* getword() */
-#include "as.h" /* aerrexit() */
+#include "as.h" /* aerrexit(), initfile() */
+#include "ppc.h"
 
-arr_t defines;
+arr_t defines = { NULL, 0, 0, 0 };
+int level, ignore; /* depth & state of if/ifdef/ifndef directives */
+
+char *deffind(char *name) {
+	define_t *def = ((define_t *) defines.data);
+	char *ret = NULL;
+	int i;
+
+	for (i = 0; i < defines.count; ++i, ++def)
+		if (cmpid(def->name, name))
+			ret = def->arg;
+	return ret;
+}
 
 int ppfind(char *lp, char *ip, char *argp) {
-	if (cmpid(ip, "define")) {
+	char *s;
+	int wp;
+	int args[ARG_MAX];
 
+	if (cmpid(ip, "if")) {
+		if (getargs(&argp, args) != 1)
+			aerrexit("wrong number of arguments for if directive");
+		++level;
+		if (!ignore && !args[0])
+			ignore = level;
+		return 1;
+	}
+	if (cmpid(ip, "ifdef")) {
+		wp = getword(&argp, &s);
+		if (s == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
+			aerrexit("syntax error on ifdef directive");
+		++level;
+		if (!ignore && deffind(s) == NULL)
+			ignore = level;
+		return 1;
+	}
+	if (cmpid(ip, "ifndef")) {
+		wp = getword(&argp, &s);
+		if (s == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
+			aerrexit("syntax error on ifndef directive");
+		++level;
+		if (!ignore && deffind(s) != NULL)
+			ignore = level;
+		return 1;
+	}
+	if (cmpid(ip, "endif")) {
+		if (argp != NULL)
+			aerrexit("syntax error on endif directive");
+		if (!level)
+			aerrexit("endif without prior if/ifdef/ifndef");
+		if (level == ignore)
+			ignore = 0;
+		--level;
+		return 1;
+	}
+	if (cmpid(ip, "else")) {
+		if (argp != NULL)
+			aerrexit("syntax error on else directive");
+		if (!level)
+			aerrexit("else without prior if/ifdef/ifndef");
+		if (level == ignore || !ignore)
+			ignore = (ignore ? 0 : level);
+		return 1;
+	}
+	if (ignore)
+		return 0;
+	if (cmpid(ip, "define")) {
+		define_t def;
+		wp = getword(&argp, &def.name);
+		if (def.name == NULL || (!(wp & WP_TSPC) && !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL))))
+			aerrexit("syntax error on define directive");
+		def.arg = argp;
+		arr_add(&defines, &def);
 		return 1;
 	}
 	return 0;
@@ -18,7 +87,7 @@ int getprefix(char **src) {
 	int n = 0;
 	skipsp(&p);
 	while (alfa[(unsigned char) *p] & (CT_PPC))
-		++p;
+		++p, ++n;
 	if (n) {
 		*src = p;
 		skipsp(src);
@@ -43,10 +112,10 @@ int getprefix(char **src) {
  */
 int preprocess(char *in, char **ret) {
 	string_t out;
-	int level = 0, ignore = 0; /* depth & state of if/ifdef/ifndef directives */
 	char *lnstart, *lp, *ip, *argp;
 	int wp, r, pps;
 
+	initfile();
 	/* strip comments */
 	{
 		char *p = in;
@@ -77,8 +146,11 @@ int preprocess(char *in, char **ret) {
 	}
 
 	vstr_new(&out);
+	arr_new(&defines, sizeof(define_t));
 	/* this very similar to assemble() */
 	line = 1;
+	level = 0;
+	ignore = 0;
 	while (*in) {
 		lnstart = in;
 		lp = NULL;
@@ -122,6 +194,7 @@ int preprocess(char *in, char **ret) {
 		skipnl(&in);
 		if (!r && !ignore)
 			vstr_addl(&out, lnstart, in - lnstart);
+		else vstr_add(&out, dosnl ? "\r\n" : "\n");
 		++line;
 	}
 

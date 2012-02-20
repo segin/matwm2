@@ -3,12 +3,15 @@
 
 extern char *infile;
 extern unsigned int address, line;
+extern int dosnl;
 
 void cleanup(void);
 void errexit(char *msg);
 void flerrexit(char *file, int line, char *msg);
 void flwarn(char *file, int line, char *msg);
 void fawarn(char *file, int addr, char *msg);
+unsigned int getval(char **src);
+unsigned int numarg(char **src);
 int getargs(char **src, int *args);
 int getword(char **src, char **word);
 
