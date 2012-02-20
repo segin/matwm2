@@ -8,6 +8,7 @@ arr_t defines = { NULL, 0, 0, 0 };
 int level, ignore; /* depth & state of if/ifdef/ifndef directives */
 string_t out;
 string_t tmp;
+string_t tmp2;
 
 char *deffind(char *name) {
 	define_t *def = ((define_t *) defines.data);
@@ -20,14 +21,46 @@ char *deffind(char *name) {
 	return ret;
 }
 
+void ppsub(char *in) {
+	char *s, *d;
+	int c;
+	start:
+	c = 0;
+	tmp.len = 0;
+	while (!(alfa[(unsigned char) *in] & (CT_NL | CT_NUL))) {
+		s = in;
+		while (!(alfa[(unsigned char) *in] & (CT_NL | CT_NUL | CT_LET | CT_SEP)))
+			++in;
+		vstr_addl(&tmp, s, in - s);
+		s = in;
+		if ((d = deffind(in)) != NULL) {
+			vstr_addl(&tmp, d, idlen(d));
+			getid(&in);
+			++c;
+		} else {
+			getid(&in);
+			vstr_addl(&tmp, s, in - s);
+		}
+	}
+	if (c) {
+		tmp2.len = 0;
+		vstr_addl(&tmp2, tmp.data, tmp.len);
+		in = tmp2.data;
+		goto start;
+	}
+}
+
 int ppfind(char *lp, char *ip, char *argp) {
 	char *s;
 	int wp;
 	int args[ARG_MAX];
 
 	if (cmpid(ip, "if")) {
-		if (getargs(&argp, args) != 1)
-			aerrexit("wrong number of arguments for if directive");
+		if (argp == NULL)
+			aerrexit("too few arguments for if directive");
+		ppsub(argp);
+		if (getargs(&tmp.data, args) != 1)
+			aerrexit("too many arguments for if directive");
 		++level;
 		if (!ignore && !args[0])
 			ignore = level;
@@ -95,19 +128,6 @@ int getprefix(char **src) {
 		skipsp(src);
 	}
 	return n;
-}
-
-void ppsub(char *in) {
-	char *s = in, *d;
-	while (!(alfa[(unsigned char) *in] & (CT_NL | CT_NUL))) {
-		while (!(alfa[(unsigned char) *in] & (CT_NL | CT_NUL | CT_LET | CT_SEP | CT_NUM)))
-			++in;
-		vstr_addl(&tmp, s, in - s);
-		if ((d = deffind(in)) != NULL) {
-			vstr_addl(&tmp, d, idlen(d));
-			getid(&in);
-		}
-	}
 }
 
 int _preprocess(char *in, char **ret) {
@@ -185,9 +205,11 @@ int _preprocess(char *in, char **ret) {
 		while (!(alfa[(unsigned char) *in] & (CT_NUL | CT_NL)))
 			++in;
 		skipnl(&in);
-		if (!r && !ignore)
-			vstr_addl(&out, lnstart, in - lnstart);
-		else vstr_add(&out, dosnl ? "\r\n" : "\n");
+		if (!r && !ignore) {
+			ppsub(lnstart);
+			vstr_addl(&out, tmp.data, tmp.len);
+		}
+		vstr_add(&out, dosnl ? "\r\n" : "\n");
 		++line;
 	}
 
@@ -211,13 +233,18 @@ int _preprocess(char *in, char **ret) {
  *   length of *ret
  */
 int preprocess(char *in, char **ret) {
+	int n;
 	initfile();
 	vstr_new(&out);
 	vstr_new(&tmp);
+	vstr_new(&tmp2);
 	arr_new(&defines, sizeof(define_t));
 	line = 1;
 	level = 0;
 	ignore = 0;
-	return _preprocess(in, ret);
+	n = _preprocess(in, ret);
+	vstr_free(&tmp);
+	vstr_free(&tmp2);
+	return n;
 }
 

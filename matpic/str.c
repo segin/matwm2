@@ -107,7 +107,7 @@ int idlen(char *src) {
 
 	if (alfa[(unsigned char) *src] & (CT_LET | CT_SEP))
 		while (alfa[(unsigned char) *src] & (CT_LET | CT_SEP | CT_NUM))
-			++ret;
+			++ret, ++src;
 	return ret;
 }
 
