@@ -34,7 +34,7 @@ also there is preprocessor directives:
 	define, if, ifdef, ifndef, else, endif: behave mostly like C
 	msg "<message>": show a message
 	warning "<message>" show a threatning message
-	error "<message>": show a message and exit
+	error "<message>": show a deadly message
 	they don't need # like in C (though it is allowed, you even can use % like in nasm)
 integer notation supports the following prefixes:
 	none at all: decimal
