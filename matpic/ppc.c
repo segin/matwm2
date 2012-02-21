@@ -2,6 +2,7 @@
 #include "str.h" /* skipsp(), alfa[], etc */
 #include "misc.h" /* getword(), linebuf */
 #include "as.h" /* aerrexit(), initfile() */
+#include "host.h" /* readfile() */
 #include "ppc.h"
 
 arr_t defines = { NULL, 0, 0, 0 };
@@ -80,6 +81,8 @@ char *ppsub(char *in) {
 	_ppsub(in);
 	return tmp.data;
 }
+
+void _preprocess(char *in);
 
 int ppfind(char *lp, char *ip, char *argp) {
 	char *s;
@@ -182,6 +185,22 @@ int ppfind(char *lp, char *ip, char *argp) {
 		free(msg);
 		return 1;
 	}
+	if (cmpid(ip, "include")) {
+		char *fn, *file;
+		if (!argp)
+			aerrexit("too few arguments for msg directive");
+		fn = getstr(&argp);
+		skipsp(&argp);
+		if (fn == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
+			aerrexit("syntax error on include directive");
+		file = readfile(fn);
+		if (!file)
+			aerrexit("failed to include file");
+		free(fn);
+		_preprocess(file);
+		free(file);
+		return 1;
+	}
 	return 0;
 }
 
@@ -198,7 +217,7 @@ int getprefix(char **src) {
 	return n;
 }
 
-int _preprocess(char *in, char **ret) {
+void _preprocess(char *in) {
 	char *lnstart, *lp, *ip, *argp;
 	int wp, r, pps;
 
@@ -281,9 +300,6 @@ int _preprocess(char *in, char **ret) {
 		vstr_add(&out, dosnl ? "\r\n" : "\n");
 		++line;
 	}
-
-	*ret = out.data;
-	return out.len;
 }
 
 /* preprocess(in, ret)
@@ -302,16 +318,16 @@ int _preprocess(char *in, char **ret) {
  *   length of *ret
  */
 int preprocess(char *in, char **ret) {
-	int n;
 	initfile();
 	vstr_new(&out);
 	vstr_new(&tmp);
 	arr_new(&defines, sizeof(define_t));
 	line = 1;
 	level = ignore = 0;
-	n = _preprocess(in, ret);
+	_preprocess(in);
 	vstr_free(&tmp);
 	arr_free(&defines);
-	return n;
+	*ret = out.data;
+	return out.len;
 }
 

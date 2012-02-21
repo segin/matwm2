@@ -17,5 +17,7 @@
 
 #include <string.h> /* memcpy(), strlen() */
 
+extern char *readfile(char *path);
+
 #endif /* __HOST_H__ */
 
