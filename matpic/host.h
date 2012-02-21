@@ -15,7 +15,7 @@
  * number to text function anyway.
  */
 
-#include <string.h> /* memcpy(), strlen() */
+#include <string.h> /* memcpy(), strlen(), strcpy() */
 
 extern char *readfile(char *path);
 

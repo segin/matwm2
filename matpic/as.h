@@ -53,6 +53,7 @@ extern arr_t inss;
 extern arr_t labels;
 extern int llbl; /* last label */
 
+extern void setfile(char *fn);
 extern void initfile(void);
 extern void aerrexit(char *msg);
 extern void assemble(char *code);

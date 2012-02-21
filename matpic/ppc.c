@@ -1,8 +1,8 @@
 #include "mem.h"
 #include "str.h" /* skipsp(), alfa[], etc */
 #include "misc.h" /* getword(), linebuf */
-#include "as.h" /* aerrexit(), initfile() */
-#include "host.h" /* readfile() */
+#include "as.h" /* aerrexit(), initfile(), setfile() */
+#include "host.h" /* readfile(), strcpy() */
 #include "ppc.h"
 
 arr_t defines = { NULL, 0, 0, 0 };
@@ -186,19 +186,28 @@ int ppfind(char *lp, char *ip, char *argp) {
 		return 1;
 	}
 	if (cmpid(ip, "include")) {
-		char *fn, *file;
+		char *fn, *data, ofile[FN_MAX];
 		if (!argp)
 			aerrexit("too few arguments for msg directive");
 		fn = getstr(&argp);
 		skipsp(&argp);
 		if (fn == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
 			aerrexit("syntax error on include directive");
-		file = readfile(fn);
-		if (!file)
+		data = readfile(fn);
+		if (data == NULL)
 			aerrexit("failed to include file");
+		strcpy(ofile, file);
+		strcpy(file, fn);
+		vstr_add(&out, "file \"");
+		vstr_add(&out, fn);
+		vstr_add(&out, dosnl ? "\"\r\n" : "\"\n");
 		free(fn);
-		_preprocess(file);
-		free(file);
+		_preprocess(data);
+		free(data);
+		strcpy(file, ofile);
+		vstr_add(&out, "file \"");
+		vstr_add(&out, file);
+		vstr_add(&out, dosnl ? "\"\r\n" : "\"\n");
 		return 1;
 	}
 	return 0;

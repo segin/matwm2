@@ -8,10 +8,6 @@
 arr_t dsym = { NULL, 0, 0, 0 };
 int lbpos;
 
-void dwarn(char *msg) {
-	fawarn(infile, address, msg);
-}
-
 void daddstr(char *s) {
 	while ((linebuf[lbpos] = *(s++))) {
 		++lbpos;
@@ -71,7 +67,7 @@ int disassemble(char **ret) {
 			for (j = 0; j < arch->align; ++j)
 				inop[j] = (sym + arch->insord[j])->value;
 			daddstr("): ");
-			dwarn("invalid opcode");
+			fawarn(infile, line, "invalid opcode");
 			daddstr("[invalid opcode]");
 			++address;
 			sym += arch->align;
