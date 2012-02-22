@@ -15,12 +15,12 @@ unsigned int saddr;
 
 void endln(ioh_t *out) {
 	int i;
-	mfprintf(out, ":%2x%4x02", pos, saddr);
+	mfprintf(out, ":%2x%4x00", pos, saddr);
 	for (i = 0; i < pos; ++i)
 		mfprintf(out, "%2x", buf[i]);
 	mfprintf(out, "%2x", (0x100 - (crc + pos)) & 0xFF);
 	mfprint(out, "\n");
-	crc = 2; /* record type */
+	crc = 0;
 	pos = 0;
 	saddr = address;
 }
@@ -37,7 +37,7 @@ void getihex(ioh_t *out) {
 	ins_t *ins = (ins_t *) inss.data;
 
 	address = saddr = 0;
-	crc = 2; /* record type */
+	crc = 0;
 	line = 1;
 	while (ins->type != IT_END) {
 		switch (ins->type) {
@@ -49,6 +49,7 @@ void getihex(ioh_t *out) {
 				crc += address & 0xFF;
 				break;
 			case IT_DAT:
+				/* FIXME if data != 16bit */
 				addb(out, ins->d.data.value & 0xFF);
 				++address;
 				addb(out, (ins->d.data.value & 0xFF00) >> 8);
@@ -99,21 +100,21 @@ void readihex(char *in) {
 		return;
 	}
 	if (*in != ':')
-		goto dditchline;
+		goto dinval;
 	++in;
 	if ((len = gethnum(&in)) == -1)
-		goto dditchline;
+		goto dinval;
 	crc += len;
 	if ((n = gethnum(&in)) == -1)
-		goto dditchline;
+		goto dinval;
 	crc += n;
 	addr = n << 8;
 	if ((n = gethnum(&in)) == -1)
-		goto dditchline;
+		goto dinval;
 	crc += n;
 	addr |= n;
 	if ((rtype = gethnum(&in)) == -1)
-		goto dditchline;
+		goto dinval;
 	crc += rtype;
 	switch (rtype) {
 		case 0:
@@ -134,10 +135,10 @@ void readihex(char *in) {
 			}
 			break;
 		case -1:
-			goto dditchline;
+			goto dinval;
 	}
 	if ((n = gethnum(&in)) == -1)
-		goto dditchline;
+		goto dinval;
 	if (((0x100 - crc) & 0xFF) != n)
 		ihwarn("checksum mismatch");
 	if (rtype == 1)
@@ -145,13 +146,16 @@ void readihex(char *in) {
 	skipsp(&in);
 	if (!skipnl(&in)) {
 		ihwarn("exess characters after ihex data");
-		goto dditchline;
+		goto dnextline;
 	}
 	++line;
 	goto dstartline;
 
-	dditchline:
+	dinval:
 	ihwarn("invalid data, skipping rest of line");
+	dnextline:
 	while(!(alfa[(unsigned char) *(in++)] & (CT_NL | CT_NUL)));
+	skipnl(&in);
+	++line;
 	goto dstartline;
 }
