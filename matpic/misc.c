@@ -7,7 +7,6 @@
 
 char *infile = "<stdin>";
 unsigned int address, line;
-int dosnl = 0;
 char linebuf[LBSIZE]; /* used by disassembler and preprocessor */
 
 void cleanup(void) {

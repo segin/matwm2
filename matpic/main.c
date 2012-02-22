@@ -11,11 +11,11 @@
 #include "ppc.h"
 
 int main(int argc, char *argv[]) {
-	FILE *outfd = stdout;
 	char *a, *code = NULL, *pcode;
 	int i, len;
 	/* teh command line options */
 	int disasm = 0, ppm = 0, through = 0;
+	ioh_t *out = mfdopen(1);
 
 	for (i = 0; i < argc; ++i) {
 		if (*(argv[i]) == '-') {
@@ -54,17 +54,15 @@ int main(int argc, char *argv[]) {
 		free(code); /* release the monster */
 		assemble(pcode);
 		free(pcode);
-		len = getihex(&code);
+		getihex(out);
 	}
 	if (disasm || through) {
 		readihex(code);
 		free(code);
-		disassemble(mfdopen(1));
+		disassemble(out);
 	}
 	done:
-/*	fwrite((void *) code, 1, len, outfd);*/
 	cleanup();
-	free(code);
 
 	return EXIT_SUCCESS;
 }

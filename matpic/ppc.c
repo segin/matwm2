@@ -200,14 +200,14 @@ int ppfind(char *lp, char *ip, char *argp) {
 		strcpy(file, fn);
 		vstr_add(&out, "file \"");
 		vstr_add(&out, fn);
-		vstr_add(&out, dosnl ? "\"\r\n" : "\"\n");
+		vstr_add(&out, "\"\n");
 		free(fn);
 		_preprocess(data);
 		free(data);
 		strcpy(file, ofile);
 		vstr_add(&out, "file \"");
 		vstr_add(&out, file);
-		vstr_add(&out, dosnl ? "\"\r\n" : "\"\n");
+		vstr_add(&out, "\"\n");
 		return 1;
 	}
 	return 0;
@@ -306,7 +306,7 @@ void _preprocess(char *in) {
 			ppsub(lnstart);
 			vstr_addl(&out, tmp.data, tmp.len);
 		}
-		vstr_add(&out, dosnl ? "\r\n" : "\n");
+		vstr_add(&out, "\n");
 		++line;
 	}
 }

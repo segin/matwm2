@@ -3,7 +3,6 @@
 #include "misc.h" /* fawarn(), errexit(), infile, address */
 #include "arch.h"
 #include "str.h" /* hexnib[] */
-#include "mem.h" /* string_t stuff */
 #include "io.h"
 
 arr_t dsym = { NULL, 0, 0, 0 };
