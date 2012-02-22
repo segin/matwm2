@@ -226,4 +226,3 @@ int getnum(char **src, unsigned int *ret) {
 	*ret = r;
 	return n;
 }
-

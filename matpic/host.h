@@ -20,4 +20,3 @@
 extern char *readfile(char *path);
 
 #endif /* __HOST_H__ */
-

@@ -28,4 +28,3 @@ extern int cmpid(char *idl, char *idr);
 extern int getnum(char **src, unsigned int *ret);
 
 #endif /* __STR_H__ */
-

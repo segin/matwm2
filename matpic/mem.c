@@ -58,4 +58,3 @@ void vstr_free(string_t *s) {
 	s->len = 0;
 	s->res = 0;
 }
-

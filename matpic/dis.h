@@ -16,4 +16,3 @@ extern void daddhex(int n, int l);
 extern int disassemble(char **ret);
 
 #endif /* __DIS_H__ */
-

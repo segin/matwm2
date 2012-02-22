@@ -144,4 +144,3 @@ arch_t pic14b = {
 	&adis14b,
 	2
 };
-

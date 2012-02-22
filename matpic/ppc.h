@@ -13,4 +13,3 @@ extern arr_t defines;
 extern int preprocess(char *in, char **ret);
 
 #endif /* __PPC_H__ */
-

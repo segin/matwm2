@@ -6,4 +6,3 @@
 extern arch_t pic14b;
 
 #endif /* __PIC14B_H__ */
-

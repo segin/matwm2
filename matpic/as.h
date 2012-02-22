@@ -59,4 +59,3 @@ extern void aerrexit(char *msg);
 extern void assemble(char *code);
 
 #endif /* __AS_H__ */
-

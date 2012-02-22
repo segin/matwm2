@@ -22,4 +22,3 @@ typedef struct {
 extern arch_t *arch;
 
 #endif /* __ARCH_H__ */
-

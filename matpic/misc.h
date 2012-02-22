@@ -27,4 +27,3 @@ extern char *getstr(char **in);
 #define WP_TSPC  8  /* there are trailing spaces */
 
 #endif /* __MISC_H__ */
-

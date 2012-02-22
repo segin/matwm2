@@ -30,4 +30,3 @@ extern void vstr_addl(string_t *s, char *str, int len);
 extern void vstr_free(string_t *s);
 
 #endif /* __MEM_H__ */
-

@@ -176,4 +176,3 @@ void readihex(char *in) {
 	while(!(alfa[(unsigned char) *(in++)] & (CT_NL | CT_NUL)));
 	goto dstartline;
 }
-

@@ -30,4 +30,3 @@ extern char *readfile(char *path) {
 
 	return ret;
 }
-

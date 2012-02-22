@@ -417,4 +417,3 @@ char *getstr(char **in) {
 	++*in;
 	return ret.data;
 }
-

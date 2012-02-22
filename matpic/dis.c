@@ -79,4 +79,3 @@ int disassemble(char **ret) {
 	*ret = rb.data;
 	return rb.len;
 }
-

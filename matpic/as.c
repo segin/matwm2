@@ -244,4 +244,3 @@ void assemble(char *code) {
 	}
 	llbl = -1; /* important */
 }
-
