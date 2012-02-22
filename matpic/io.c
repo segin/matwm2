@@ -127,10 +127,8 @@ int mvafprintf(ioh_t *h, char *fmt, va_list ap) {
 						return -1;
 					break;
 			}
-			++fmt;
-			start = fmt;
-		}
-		++fmt;
+			start = ++fmt;
+		} else ++fmt;
 	}
 	if (mfwrite(h, start, fmt - start) < 0)
 		return -1;

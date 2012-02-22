@@ -2,6 +2,7 @@
 #define __DIS_H__
 
 #include "mem.h"
+#include "io.h"
 
 /* we store stuff in this way cause we intend later also support coff */
 typedef struct {
@@ -13,6 +14,6 @@ extern arr_t dsym;
 
 extern void daddstr(char *s);
 extern void daddhex(int n, int l);
-extern int disassemble(char **ret);
+extern void disassemble(ioh_t *out);
 
 #endif /* __DIS_H__ */

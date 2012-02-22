@@ -59,10 +59,10 @@ int main(int argc, char *argv[]) {
 	if (disasm || through) {
 		readihex(code);
 		free(code);
-		len = disassemble(&code);
+		disassemble(mfdopen(1));
 	}
 	done:
-	fwrite((void *) code, 1, len, outfd);
+/*	fwrite((void *) code, 1, len, outfd);*/
 	cleanup();
 	free(code);
 

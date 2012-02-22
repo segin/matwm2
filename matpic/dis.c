@@ -4,6 +4,7 @@
 #include "arch.h"
 #include "str.h" /* hexnib[] */
 #include "mem.h" /* string_t stuff */
+#include "io.h"
 
 arr_t dsym = { NULL, 0, 0, 0 };
 int lbpos;
@@ -29,20 +30,17 @@ void daddhex(int n, int l) {
 	_daddhex(n, l);
 }
 
-int disassemble(char **ret) {
+void disassemble(ioh_t *out) {
 	dsym_t *sym = (dsym_t *) dsym.data;
 	int i, j, c = dsym.count;
 	oc_t *oc;
 	unsigned char inop[6];
-	string_t rb;
 
-	vstr_new(&rb);
 	while (c) {
 		oc = arch->ocs;
 		lbpos = 0;
 		address = sym->addr;
-		_daddhex(address, 8);
-		daddstr(" (");
+		mfprintf(out, "%8x (");
 		while (oc->name != NULL) {
 			if (oc->len > c) /* this is to prevent disaster */
 				goto docf;
@@ -51,11 +49,10 @@ int disassemble(char **ret) {
 				for (j = 0; j < oc->len; ++j)
 					inop[j] = (sym + arch->insord[j])->value;
 				for (i = 0; i < oc->len; ++i)
-					_daddhex(inop[i], 2);
-				daddstr("): ");
-				daddstr(oc->name);
-				daddstr(" ");
+					mfprintf(out, "%2x", inop[i]);
+				mfprintf(out, "): %s ", oc->name);
 				arch->adis(inop, oc->atype);
+				mfprint(out, "\n");
 				sym += oc->len;
 				c -= oc->len;
 				break;
@@ -66,16 +63,11 @@ int disassemble(char **ret) {
 		if (i != oc->len) {
 			for (j = 0; j < arch->align; ++j)
 				inop[j] = (sym + arch->insord[j])->value;
-			daddstr("): ");
+			mfprint(out, "): [invalid opcode]\n");
 			fawarn(infile, line, "invalid opcode");
-			daddstr("[invalid opcode]");
 			++address;
 			sym += arch->align;
 			c -= arch->align;
 		}
-		daddstr("\n");
-		vstr_addl(&rb, linebuf, lbpos);
 	}
-	*ret = rb.data;
-	return rb.len;
 }
