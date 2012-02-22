@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
 			ioh_t *memout = mmemopen(0);
 			preprocess(memout, code);
 			free(code);
-			mfprint(memout, "\0");
+			mfwrite(memout, "\0", 1);
 			code = mmemget(memout);
 			mfclose(memout);
 		}
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
 		if (through) {
 			ioh_t *memout = mmemopen(0);
 			getihex(memout);
-			mfprint(memout, "\0");
+			mfwrite(memout, "\0", 1);
 			code = mmemget(memout);
 			mfclose(memout);
 		} else getihex(out);

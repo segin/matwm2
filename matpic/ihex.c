@@ -112,7 +112,8 @@ void readihex(char *in) {
 		goto dditchline;
 	crc += n;
 	addr |= n;
-	rtype = gethnum(&in);
+	if ((rtype = gethnum(&in)) == -1)
+		goto dditchline;
 	crc += rtype;
 	switch (rtype) {
 		case 0:
