@@ -6,26 +6,24 @@
 #include "io.h"
 
 arr_t dsym = { NULL, 0, 0, 0 };
-int lbpos;
 
 void disassemble(ioh_t *out) {
 	dsym_t *sym = (dsym_t *) dsym.data;
-	int i, j, c = dsym.count;
+	int i, c = dsym.count;
 	oc_t *oc;
 	unsigned char inop[6];
 
 	while (c) {
 		oc = arch->ocs;
-		lbpos = 0;
 		address = sym->addr;
-		mfprintf(out, "%8x (");
+		mfprintf(out, "%8x (", address >> arch->align);
 		while (oc->name != NULL) {
 			if (oc->len > c) /* this is to prevent disaster */
 				goto docf;
 			for (i = 0; ((sym + arch->insord[i])->value & oc->imask[i]) == oc->oc[i] && i < oc->len; ++i);
 			if (i == oc->len) {
-				for (j = 0; j < oc->len; ++j)
-					inop[j] = (sym + arch->insord[j])->value;
+				for (i = 0; i < oc->len; ++i)
+					inop[i] = (sym + arch->insord[i])->value;
 				for (i = 0; i < oc->len; ++i)
 					mfprintf(out, "%2x", inop[i]);
 				mfprintf(out, "): %s ", oc->name);
@@ -39,8 +37,8 @@ void disassemble(ioh_t *out) {
 			++oc;
 		}
 		if (i != oc->len) {
-			for (j = 0; j < arch->align; ++j)
-				inop[j] = (sym + arch->insord[j])->value;
+			for (i = 0; i < arch->align; ++i)
+				inop[i] = (sym + arch->insord[i])->value;
 			mfprint(out, "): [invalid opcode]\n");
 			fawarn(infile, line, "invalid opcode");
 			++address;
