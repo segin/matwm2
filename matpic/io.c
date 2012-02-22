@@ -185,7 +185,7 @@ int _mmemread(ioh_t *h, char *data, int len) {
 	mmemdata_t *d = (mmemdata_t *) h->data;
 	if (len > d->len - d->pos)
 		len = d->len - d->pos;
-	memcpy((void *) d->ptr + d->pos, data, len);
+	memcpy((void *) ((char *) d->ptr + d->pos), data, len);
 	return len;
 }
 
