@@ -5,8 +5,6 @@
 
 extern char *infile;
 extern unsigned int address, line;
-extern int dosnl;
-extern char linebuf[LBSIZE];
 
 extern void cleanup(void);
 extern void errexit(char *msg);

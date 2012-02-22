@@ -9,18 +9,18 @@
 
 #define IHLL 16
 
-int pos = 0, lnpos, crc;
+int pos = 0, crc;
 unsigned char buf[IHLL];
-unsigned int saddr, rtype;
+unsigned int saddr;
 
 void endln(ioh_t *out) {
 	int i;
-	crc = 0;
-	mfprintf(out, ":%2x%4x%2x", pos, saddr, rtype);
+	mfprintf(out, ":%2x%4x02", pos, saddr);
 	for (i = 0; i < pos; ++i)
 		mfprintf(out, "%2x", buf[i]);
-	mfprintf(out, "%2x", (0x100 - crc) & 0xFF);
+	mfprintf(out, "%2x", (0x100 - (crc + pos)) & 0xFF);
 	mfprint(out, "\n");
+	crc = 2; /* record type */
 	pos = 0;
 	saddr = address;
 }
@@ -36,7 +36,8 @@ void getihex(ioh_t *out) {
 	int i;
 	ins_t *ins = (ins_t *) inss.data;
 
-	address = saddr = rtype = 0;
+	address = saddr = 0;
+	crc = 2; /* record type */
 	line = 1;
 	while (ins->type != IT_END) {
 		switch (ins->type) {
@@ -44,6 +45,8 @@ void getihex(ioh_t *out) {
 				if (pos)
 					endln(out);
 				address = saddr = ins->d.org.address;
+				crc += address >> 8;
+				crc += address & 0xFF;
 				break;
 			case IT_DAT:
 				addb(out, ins->d.data.value & 0xFF);
@@ -52,10 +55,9 @@ void getihex(ioh_t *out) {
 				++address;
 				break;
 			case IT_INS:
-				for (i = 0; i < ins->d.ins.len; ++i) {
+				for (i = 0; i < ins->d.ins.len; ++i)
 					addb(out, ins->d.ins.oc[arch->insord[i]]);
-					++address;
-				}
+				address += ins->d.ins.len;
 				break;
 		}
 		++ins;
