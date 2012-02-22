@@ -110,29 +110,25 @@ void acmp14b(unsigned char *oc, int atype, int argc, int *argv) {
 	}
 }
 
-void adis14b(unsigned char *oc, int atype) {
+void adis14b(ioh_t *out, unsigned char *oc, int atype) {
 	switch (atype) {
 		case AT_DF:
-			daddhex(oc[1] & 0x7F, 2);
-			daddstr(", ");
-			daddhex((oc[1] & 0x80) >> 7, 1);
+			mfprintf(out, "%2x, %i", oc[1] & 0x7F, (oc[1] & 0x80) >> 7);
 			break;
 		case AT_F:
-			daddhex(oc[1] & 0x7F, 2);
+			mfprintf(out, "%2x", oc[1] & 0x7F);
 			break;
 		case AT_BF:
-			daddhex(oc[1] & 0x7F, 2);
-			daddstr(", ");
-			daddhex(((oc[0] & 3) << 1) | ((oc[1] & 0x80) >> 7), 1);
+			mfprintf(out, "%2x, %i", oc[1] & 0x7F, ((oc[0] & 3) << 1) | ((oc[1] & 0x80) >> 7));
 			break;
 		case AT_K8:
-			daddhex(oc[1] & 0xFF, 2);
+				mfprintf(out, "%2x", oc[1] & 0xFF);
 			break;
 		case AT_K11:
-			daddhex(((oc[0] & 7) << 8) | (oc[1] & 0xFF), 3);
+			mfprintf(out, "%3x", ((oc[0] & 7) << 8) | (oc[1] & 0xFF));
 			break;
 		case AT_T:
-			daddhex(oc[1] & 3, 2);
+			mfprintf(out, "%i", oc[1] & 3);
 			break;
 	}
 }
