@@ -2,6 +2,7 @@
 #define __PPC_H__
 
 #include "mem.h"
+#include "io.h"
 
 typedef struct {
 	char *name, *val;
@@ -10,6 +11,6 @@ typedef struct {
 
 extern arr_t defines;
 
-extern int preprocess(char *in, char **ret);
+extern void preprocess(ioh_t *out, char *in);
 
 #endif /* __PPC_H__ */

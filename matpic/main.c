@@ -11,8 +11,8 @@
 #include "ppc.h"
 
 int main(int argc, char *argv[]) {
-	char *a, *code = NULL, *pcode;
-	int i, len;
+	char *a, *code;
+	int i;
 	/* teh command line options */
 	int disasm = 0, ppm = 0, through = 0;
 	ioh_t *out = mfdopen(1);
@@ -46,15 +46,26 @@ int main(int argc, char *argv[]) {
 	code = readfile(NULL);
 	if (!disasm) {
 		if (ppm == 1) { /* only preprocess */
-			len = preprocess(code, &code);
+			preprocess(out, code);
+			free(code);
 			goto done;
-		} if (ppm == 2) { /* no preprocess */
-			pcode = code;
-		} else preprocess(code, &pcode);
+		} if (ppm == 0) { /* normal preprocess */
+			ioh_t *memout = mmemopen(0);
+			preprocess(memout, code);
+			free(code);
+			mfprint(memout, "\0");
+			code = mmemget(memout);
+			mfclose(memout);
+		}
+		assemble(code);
 		free(code); /* release the monster */
-		assemble(pcode);
-		free(pcode);
-		getihex(out);
+		if (through) {
+			ioh_t *memout = mmemopen(0);
+			getihex(memout);
+			mfprint(memout, "\0");
+			code = mmemget(memout);
+			mfclose(memout);
+		} else getihex(out);
 	}
 	if (disasm || through) {
 		readihex(code);
@@ -63,6 +74,7 @@ int main(int argc, char *argv[]) {
 	}
 	done:
 	cleanup();
+	mfclose(out);
 
 	return EXIT_SUCCESS;
 }

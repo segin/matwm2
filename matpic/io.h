@@ -25,8 +25,11 @@ extern int mprintnum(ioh_t *h, unsigned int n, int b, int p);
 extern int mfprintf(ioh_t *h, char *fmt, ...);
 extern int mvafprintf(ioh_t *h, char *fmt, va_list l);
 extern ioh_t *mfdopen(int fd);
-extern ioh_t *mmemopen(void);
+extern ioh_t *mmemopen(int options);
 extern char *mmemget(ioh_t *h);
 extern int mmemlen(ioh_t *h);
+
+/* mmemopen() options */
+#define MMO_FREE 1
 
 #endif /* __IO_H__ */

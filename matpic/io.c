@@ -176,7 +176,7 @@ ioh_t *mfdopen(int fd) {
 
 typedef struct {
 	char *ptr;
-	int pos, len;
+	int pos, len, options;
 } mmemdata_t;
 
 int _mmemread(ioh_t *h, char *data, int len) {
@@ -201,12 +201,14 @@ int _mmemwrite(ioh_t *h, char *data, int len) {
 }
 
 void _mmemclose(ioh_t *h) {
-	free((void *) ((mmemdata_t *) h->data)->ptr);
+	mmemdata_t *d = (mmemdata_t *) h->data;
+	if (d->options & MMO_FREE)
+		free((void *) ((mmemdata_t *) h->data)->ptr);
 	free(h->data);
 	free((void *) h);
 }
 
-ioh_t *mmemopen(void) {
+ioh_t *mmemopen(int options) {
 	ioh_t *new = (ioh_t *) malloc(sizeof(ioh_t));
 	mmemdata_t d;
 	if (new == NULL)
@@ -217,6 +219,7 @@ ioh_t *mmemopen(void) {
 	d.ptr = NULL;
 	d.pos = 0;
 	d.len = 0;
+	d.options = options;
 	memcpy(new->data, (void *) &d, sizeof(mmemdata_t));
 	new->read = &_mmemread;
 	new->write = &_mmemwrite;

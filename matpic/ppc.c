@@ -4,11 +4,11 @@
 #include "as.h" /* aerrexit(), initfile(), setfile() */
 #include "host.h" /* readfile(), strcpy() */
 #include "ppc.h"
+#include "io.h"
 
 arr_t defines = { NULL, 0, 0, 0 };
 int level, ignore; /* depth & state of if/ifdef/ifndef directives */
 int str, esc;
-string_t out;
 string_t tmp;
 
 void strcheck(char c) {
@@ -82,9 +82,9 @@ char *ppsub(char *in) {
 	return tmp.data;
 }
 
-void _preprocess(char *in);
+void _preprocess(ioh_t *out, char *in);
 
-int ppfind(char *lp, char *ip, char *argp) {
+int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 	char *s;
 	int wp;
 	int args[ARG_MAX];
@@ -187,6 +187,7 @@ int ppfind(char *lp, char *ip, char *argp) {
 	}
 	if (cmpid(ip, "include")) {
 		char *fn, *data, ofile[FN_MAX];
+		int oline;
 		if (!argp)
 			aerrexit("too few arguments for msg directive");
 		fn = getstr(&argp);
@@ -198,16 +199,15 @@ int ppfind(char *lp, char *ip, char *argp) {
 			aerrexit("failed to include file");
 		strcpy(ofile, file);
 		strcpy(file, fn);
-		vstr_add(&out, "file \"");
-		vstr_add(&out, fn);
-		vstr_add(&out, "\"\n");
+		mfprintf(out, "file \"%s\"\n", fn);
+		oline = line;
+		line = 1;
 		free(fn);
-		_preprocess(data);
+		_preprocess(out, data);
 		free(data);
 		strcpy(file, ofile);
-		vstr_add(&out, "file \"");
-		vstr_add(&out, file);
-		vstr_add(&out, "\"\n");
+		mfprintf(out, "file \"%s\"\nline %u\n", file, line);
+		line = oline;
 		return 1;
 	}
 	return 0;
@@ -226,7 +226,7 @@ int getprefix(char **src) {
 	return n;
 }
 
-void _preprocess(char *in) {
+void _preprocess(ioh_t *out, char *in) {
 	char *lnstart, *lp, *ip, *argp;
 	int wp, r, pps;
 
@@ -284,7 +284,7 @@ void _preprocess(char *in) {
 				argp = in;
 			else if (pps) aerrexit("invalid preprocessor directive");
 		}
-		if ((r = ppfind(lp, ip, argp)))
+		if ((r = ppfind(out, lp, ip, argp)))
 			goto endln;
 		if (lp == NULL && !(wp & WP_PSPC)) {
 			lp = ip;
@@ -296,7 +296,7 @@ void _preprocess(char *in) {
 					argp = in;
 				else goto endln;
 			}
-			r = ppfind(lp, ip, argp);
+			r = ppfind(out, lp, ip, argp);
 		}
 		endln:
 		while (!(alfa[(unsigned char) *in] & (CT_NUL | CT_NL)))
@@ -304,9 +304,9 @@ void _preprocess(char *in) {
 		skipnl(&in);
 		if (!r && !ignore) {
 			ppsub(lnstart);
-			vstr_addl(&out, tmp.data, tmp.len);
+			mfwrite(out, tmp.data, tmp.len);
 		}
-		vstr_add(&out, "\n");
+		mfprint(out, "\n");
 		++line;
 	}
 }
@@ -326,16 +326,13 @@ void _preprocess(char *in) {
  *   int
  *   length of *ret
  */
-int preprocess(char *in, char **ret) {
+void preprocess(ioh_t *out, char *in) {
 	initfile();
-	vstr_new(&out);
 	vstr_new(&tmp);
 	arr_new(&defines, sizeof(define_t));
 	line = 1;
 	level = ignore = 0;
-	_preprocess(in);
+	_preprocess(out, in);
 	vstr_free(&tmp);
 	arr_free(&defines);
-	*ret = out.data;
-	return out.len;
 }
