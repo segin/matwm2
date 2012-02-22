@@ -16,7 +16,7 @@ void disassemble(ioh_t *out) {
 	while (c) {
 		oc = arch->ocs;
 		address = sym->addr;
-		mfprintf(out, "%8x (", address >> arch->align);
+		mfprintf(out, "%8x (", address / arch->align);
 		while (oc->name != NULL) {
 			if (oc->len > c) /* this is to prevent disaster */
 				goto docf;
