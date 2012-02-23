@@ -19,4 +19,3 @@ fancy disassembler output that can be re-assembled as-is option
 
 BUGS
 	if integer size on host architecture is less than 32bit all will fail
-
