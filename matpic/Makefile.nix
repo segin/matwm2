@@ -1,3 +1,5 @@
+CFLAGS += -g -Wall -ansi -pedantic
+
 OBJS = str.o mem.o arch.o pic14b.o as.o main.o misc.o ihex.o dis.o ppc.o host.o io.o
 
 all: matpic

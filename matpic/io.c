@@ -87,6 +87,7 @@ int mfprintf(ioh_t *h, char *fmt, ...) {
 int mvafprintf(ioh_t *h, char *fmt, va_list ap) {
 	char *start, *s;
 	unsigned int p, n;
+	unsigned char c;
 
 	start = fmt;
 	while (*fmt) {
@@ -101,16 +102,24 @@ int mvafprintf(ioh_t *h, char *fmt, va_list ap) {
 				++fmt;
 			}
 			switch (*fmt) {
+				case 'c':
+					c = va_arg(ap, unsigned int);
+					mfwrite(h, (char *) &c, 1);
+					break;
 				case 's':
 					s = va_arg(ap, char *);
+					if (s == NULL)
+						s = "[NULL]";
 					if (mfprint(h, s) < 0)
 						return -1;
 					break;
 				case 'x':
+				case 'X':
 					n = va_arg(ap, unsigned int);
 					mfprintnum(h, n, 16, p);
 					break;
 				case 'i':
+				case 'd':
 					n = va_arg(ap, int);
 					mfprintsnum(h, n, 10, p);
 					break;
@@ -138,6 +147,14 @@ int mvafprintf(ioh_t *h, char *fmt, va_list ap) {
 /******************
  * stdio wrappers *
  ******************/
+
+ioh_t *mstdin, *mstdout, *mstderr;
+
+void mstdio_init(void) {
+	mstdin = mfdopen(0);
+	mstdout = mfdopen(1);
+	mstderr = mfdopen(2);
+}
 
 #include <unistd.h>
 

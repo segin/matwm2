@@ -7,14 +7,7 @@
 
 #include <stdlib.h> /* NULL, realloc(), free(),
                        EXIT_FAILURE, EXIT_SUCCESS, exit() */
-#include <stdio.h>  /* fread(), fwrite(), fopen(), fclose(), feof(), ferror(),
-                       stdin, stdout, stderr */
-/* Also used from stdio.h is fprintf() on platform where this are missing
- * it might be easier to change misc.c as not to use it.
- * I intend to already do this in feature release, as i expect to want my own
- * number to text function anyway.
- */
-
+#include <stdio.h>  /* fread(), fopen(), fclose(), feof(), ferror() */
 #include <string.h> /* memcpy(), strlen(), strcpy() */
 
 extern char *readfile(char *path);

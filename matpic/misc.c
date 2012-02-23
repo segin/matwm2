@@ -1,4 +1,4 @@
-#include "host.h" /* exit(), EXIT_FAILURE, fprintf(), stderr */
+#include "host.h" /* exit(), EXIT_FAILURE */
 #include "as.h" /* cnl (and other things) */
 #include "dis.h"
 #include "ppc.h"
@@ -21,25 +21,25 @@ void reset(void) {
 }
 
 void errexit(char *msg) {
-	fprintf(stderr, "error: %s\n", msg);
+	mfprintf(mstderr, "error: %s\n", msg);
 	exit(EXIT_FAILURE);
 }
 
 void flerrexit(char *file, int line, char *msg) {
-	fprintf(stderr, "%s: line %d: error: %s\n", file, line, msg);
+	mfprintf(mstderr, "%s: line %u: error: %s\n", file, line, msg);
 	exit(EXIT_FAILURE);
 }
 
 void flwarn(char *file, int line, char *msg) {
-	fprintf(stderr, "%s: line %d: warning: %s\n", file, line, msg);
+	mfprintf(mstderr, "%s: line %u: warning: %s\n", file, line, msg);
 }
 
 void fawarn(char *file, int addr, char *msg) {
-	fprintf(stderr, "%s: 0x%X: warning: %s\n", file, addr, msg);
+	mfprintf(mstderr, "%s: 0x%X: warning: %s\n", file, addr, msg);
 }
 
 void flmsg(char *file, int line, char *msg) {
-	fprintf(stderr, "%s: line %d: message: %s\n", file, line, msg);
+	mfprintf(mstderr, "%s: line %d: message: %s\n", file, line, msg);
 }
 
 unsigned int getval(char **src) {

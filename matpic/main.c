@@ -15,8 +15,8 @@ int main(int argc, char *argv[]) {
 	int i;
 	/* teh command line options */
 	int disasm = 0, ppm = 0, through = 0;
-	ioh_t *out = mfdopen(1);
 
+	mstdio_init();
 	for (i = 0; i < argc; ++i) {
 		if (*(argv[i]) == '-') {
 			a = argv[i] + 1;
@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
 	code = readfile(NULL);
 	if (!disasm) {
 		if (ppm == 1) { /* only preprocess */
-			preprocess(out, code);
+			preprocess(mstdout, code);
 			free(code);
 			goto done;
 		} if (ppm == 0) { /* normal preprocess */
@@ -65,16 +65,15 @@ int main(int argc, char *argv[]) {
 			mfwrite(memout, "\0", 1);
 			code = mmemget(memout);
 			mfclose(memout);
-		} else getihex(out);
+		} else getihex(mstdout);
 	}
 	if (disasm || through) {
 		readihex(code);
 		free(code);
-		disassemble(out);
+		disassemble(mstdout);
 	}
 	done:
 	cleanup();
-	mfclose(out);
 
 	return EXIT_SUCCESS;
 }

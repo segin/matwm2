@@ -24,7 +24,13 @@ extern int mprintsnum(ioh_t *h, unsigned int n, int b, int p);
 extern int mprintnum(ioh_t *h, unsigned int n, int b, int p);
 extern int mfprintf(ioh_t *h, char *fmt, ...);
 extern int mvafprintf(ioh_t *h, char *fmt, va_list l);
+
+/* file descriptor wrappers */
+extern ioh_t *mstdin, *mstdout, *mstderr;
+extern void mstdio_init(void);
 extern ioh_t *mfdopen(int fd);
+
+/* memory wrappers */
 extern ioh_t *mmemopen(int options);
 extern char *mmemget(ioh_t *h);
 extern int mmemlen(ioh_t *h);
