@@ -2,12 +2,12 @@
  * assembler *
  *************/
 
-#include "host.h" /* memcpy(), strlen() */
+#include <string.h> /* memcpy(), strlen() */
 #include "as.h"
 #include "str.h"
 #include "mem.h"
 #include "arch.h"
-#include "misc.h" /* flerrexit(), getargs(), infile, address, line */
+#include "misc.h" /* getargs(), infile, address, line */
 
 char file[FN_MAX];
 int llbl = -1;
@@ -15,8 +15,34 @@ int llbl = -1;
 arr_t inss = { NULL, 0, 0, 0 };
 arr_t labels = { NULL, 0, 0, 0 };
 
-void aerrexit(char *msg) {
-	flerrexit(file, line, msg);
+void setfile(char *fn) {
+	int i;
+	if (*fn != '"')
+		flerrexit("argument to file directive needs double quotes");
+	++fn;
+	for (i = 0; i < FN_MAX - 1; ++i) {
+		if (alfa[(unsigned char) fn[i]] & (CT_NUL | CT_NL)) {
+			file[i] = 0;
+			flerrexit("missing double quote");
+		}
+		if (fn[i] == '"')
+			break;
+		file[i] = fn[i];
+	}
+	fn += i + 1;
+	skipsp(&fn);
+	if (!(alfa[(unsigned char) *fn] & (CT_NUL | CT_NL)))
+		flerrexit("invalid crap after file directive");
+	file[i] = 0;
+	line = 0; /* will be incremented soon enough */
+}
+
+void initfile(void) {
+	int len = strlen(infile);
+	if (len > FN_MAX - 1)
+		len = FN_MAX;
+	memcpy((void *) file, (void *) infile, len);
+	file[len] = 0;
 }
 
 int countargs(char *src) {
@@ -31,36 +57,6 @@ int countargs(char *src) {
 	return n;
 }
 
-void setfile(char *fn) {
-	int i;
-	if (*fn != '"')
-		aerrexit("argument to file directive needs double quotes");
-	++fn;
-	for (i = 0; i < FN_MAX - 1; ++i) {
-		if (alfa[(unsigned char) fn[i]] & (CT_NUL | CT_NL)) {
-			file[i] = 0;
-			aerrexit("missing double quote");
-		}
-		if (fn[i] == '"')
-			break;
-		file[i] = fn[i];
-	}
-	fn += i + 1;
-	skipsp(&fn);
-	if (!(alfa[(unsigned char) *fn] & (CT_NUL | CT_NL)))
-		aerrexit("invalid crap after file directive");
-	file[i] = 0;
-	line = 0; /* will be incremented soon enough */
-}
-
-void initfile(void) {
-	int len = strlen(infile);
-	if (len > FN_MAX - 1)
-		len = FN_MAX;
-	memcpy((void *) file, (void *) infile, len);
-	file[len] = 0;
-}
-
 int insfind(char *lp, char *ip, char *argp) {
 	oc_t *oc = arch->ocs;
 	ins_t ins;
@@ -69,7 +65,7 @@ int insfind(char *lp, char *ip, char *argp) {
 	ins.line = line;
 	if (cmpid(ip, "org")) {
 		if (getargs(&argp, args) != 1)
-			aerrexit("invalid number of arguments to org directive");
+			flerrexit("invalid number of arguments to org directive");
 		ins.type = IT_ORG;
 		ins.d.org.address = args[0] * arch->align;
 		address = ins.d.org.address;
@@ -78,7 +74,7 @@ int insfind(char *lp, char *ip, char *argp) {
 	}
 	if (cmpid(ip, "file")) {
 		if (argp == NULL)
-			aerrexit("'file' directive needs an argument");
+			flerrexit("'file' directive needs an argument");
 		setfile(argp);
 		ins.type = IT_FIL;
 		ins.d.file.file = argp;
@@ -87,7 +83,7 @@ int insfind(char *lp, char *ip, char *argp) {
 	}
 	if (cmpid(ip, "line")) {
 		if (getargs(&argp, args) != 1)
-			aerrexit("'line' directive wants exactly 1 argument");
+			flerrexit("'line' directive wants exactly 1 argument");
 		line = args[0] - 1;
 		return 1;
 	}
@@ -139,19 +135,19 @@ void assemble(char *code) {
 			wp = getword(&code, &ip);
 			if (wp & (WP_LABEL | WP_LOCAL)) { /* we have label and we're sure about it */
 				if (!(wp & WP_TSPC) && !(alfa[(unsigned char) *code] & (CT_NL | CT_NUL)))
-					aerrexit("invalid character in local label"); /* can only happen with local label */
+					flerrexit("invalid character in local label"); /* can only happen with local label */
 				lp = ip;
 				wp = getword(&code, &ip);
 			}
 			if (ip == NULL) {
 				if (!(alfa[(unsigned char) *code] & (CT_NL | CT_NUL)))
-					aerrexit("invalid identifier");
+					flerrexit("invalid identifier");
 				goto endln;
 			}
 			if (!(alfa[(unsigned char) *code] & (CT_NL | CT_NUL))) {
 				if (wp & WP_TSPC)
 					argp = code;
-				else aerrexit("invalid identifier");
+				else flerrexit("invalid identifier");
 			}
 			if (insfind(lp, ip, argp))
 				goto endln;
@@ -161,17 +157,17 @@ void assemble(char *code) {
 					wp = getword(&code, &ip);
 					if (ip == NULL) {
 						if (!(alfa[(unsigned char) *code] & (CT_NL | CT_NUL)))
-							aerrexit("invalid identifier");
+							flerrexit("invalid identifier");
 						goto endln;
 					}
 					if (!(alfa[(unsigned char) *code] & (CT_NL | CT_NUL))) {
 						if (wp & WP_TSPC)
 							argp = code;
-						else aerrexit("invalid identifier");
+						else flerrexit("invalid identifier");
 					}
 					if (!insfind(lp, ip, argp))
-						aerrexit("no such instruction/directive");
-				} else aerrexit("no such instruction/directive");
+						flerrexit("no such instruction/directive");
+				} else flerrexit("no such instruction/directive");
 			}
 			endln:
 			if (lp != NULL) { /* we has a lebel */
@@ -189,7 +185,7 @@ void assemble(char *code) {
 				for (i = 0; i < labels.count; ++i) { /* check if already exists */
 					li = (label_t *) ((label_t *) labels.data) + i;
 					if (cmpid(li->name, label.name) && label.parent == li->parent)
-						aerrexit("duplicate label");
+						flerrexit("duplicate label");
 				}
 				arr_add(&labels, &label);
 				ins.type = IT_LBL;

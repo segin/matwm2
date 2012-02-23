@@ -5,6 +5,8 @@
  * generic memory stuff *
  ************************/
 
+#include <string.h> /* strlen() */
+
 #define BLOCK 2048  /* amount of memory to allocate in one go */
 #define ARG_MAX 256 /* maximum number of arguments */
 
@@ -22,7 +24,6 @@ typedef struct {
 	int len, res;
 } string_t;
 
-#include "host.h" /* strlen() */
 #define vstr_add(s, str) (vstr_addl(s, str, strlen(str)))
 
 extern void vstr_new(string_t *s);

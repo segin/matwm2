@@ -12,8 +12,6 @@ typedef struct {
 
 extern arr_t dsym;
 
-extern void daddstr(char *s);
-extern void daddhex(int n, int l);
 extern void disassemble(ioh_t *out);
 
 #endif /* __DIS_H__ */

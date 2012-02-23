@@ -2,7 +2,8 @@
  * generic memory stuff *
  ************************/
 
-#include "host.h" /* realloc(), free(), NULL, memcpy() */
+#include <stdlib.h> /* realloc(), free(), NULL */
+#include <string.h> /* memcpy() */
 #include "misc.h" /* errexit() */
 #include "mem.h"
 

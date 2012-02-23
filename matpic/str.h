@@ -5,7 +5,7 @@
  * generic string stuff *
  ************************/
 
-#include "host.h" /* NULL */
+#include <stdlib.h> /* NULL */
 
 extern char alfa[256];
 extern char hexlookup[256];

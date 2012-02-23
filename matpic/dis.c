@@ -1,4 +1,4 @@
-#include "host.h" /* NULL, strlen() */
+#include <stdlib.h> /* NULL */
 #include "dis.h" /* dsym_t */
 #include "misc.h" /* fawarn(), errexit(), infile, address */
 #include "arch.h"
@@ -28,7 +28,6 @@ void disassemble(ioh_t *out) {
 					mfprintf(out, "%2x", inop[i]);
 				mfprintf(out, "): %s ", oc->name);
 				arch->adis(out, inop, oc->atype);
-				mfprint(out, "\n");
 				sym += oc->len;
 				c -= oc->len;
 				break;
@@ -38,12 +37,13 @@ void disassemble(ioh_t *out) {
 		}
 		if (i != oc->len) {
 			for (i = 0; i < arch->align; ++i)
-				inop[i] = (sym + arch->insord[i])->value;
-			mfprint(out, "): [invalid opcode]\n");
-			fawarn(infile, line, "invalid opcode");
-			++address;
+				mfprintf(out, "%2x", inop[i]);
+			mfprint(out, "): data \n");
+			for (i = 0; i < arch->align; ++i)
+				mfprintf(out, "%2x", inop[arch->insord[i]]);
 			sym += arch->align;
 			c -= arch->align;
 		}
+		mfprint(out, "\n");
 	}
 }

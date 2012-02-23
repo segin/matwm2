@@ -4,14 +4,27 @@
 
 #include "io.h"
 
+char hex[16] = {
+	'0', '1', '2', '3', '4', '5', '6', '7',
+	'8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
+};
+
 int mfread(ioh_t *h, char *data, int len) {
+	if (h == NULL)
+		return -1;
+	if (h->read == NULL)
+		return -1;
 	return h->read(h, data, len);
 }
 
 int mfwrite(ioh_t *h, char *data, int len) {
+	if (h == NULL)
+		return -1;
+	if (h->write == NULL)
+		return -1;
 	while (len--) {
 		if (*data == '\n') {
-			if (h->dosnl)
+			if (h->options & MFO_DOSNL)
 				h->buf[h->pos++] = '\r';
 			h->buf[h->pos++] = '\n';
 			if (mfflush(h) != 0)
@@ -26,12 +39,27 @@ int mfwrite(ioh_t *h, char *data, int len) {
 	return 0;
 }
 
+int mfseek(ioh_t *h, int off, int whence) {
+	if (h == NULL)
+		return -1;
+	if (h->seek == NULL)
+		return -1;
+	return h->seek(h, off, whence);
+}
+
 void mfclose(ioh_t *h) {
+	if (h == NULL)
+		return;
 	mfflush(h);
-	h->close(h);
+	if (h->close != NULL)
+		h->close(h);
+	free(h->data);
+	free((void *) h);
 }
 
 int mfflush(ioh_t *h) {
+	if (h == NULL)
+		return -1;
 	if (h->write(h, h->buf, h->pos) < 0)
 		return -1;
 	h->pos = 0;
@@ -41,11 +69,6 @@ int mfflush(ioh_t *h) {
 int mfprint(ioh_t *h, char *data) {
 	return mfwrite(h, data, strlen(data));
 }
-
-char hex[16] = {
-	'0', '1', '2', '3', '4', '5', '6', '7',
-	'8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
-};
 
 int mfprintsnum(ioh_t *h, int n, int b, int p) {
 	char rev[24]; /* best stay above 22 */
@@ -144,6 +167,31 @@ int mvafprintf(ioh_t *h, char *fmt, va_list ap) {
 	return 0;
 }
 
+/* generic constructor */
+ioh_t *_mcbopen(void *d, int len, int options,
+                int (*read)(ioh_t *, char *, int),
+                int (*write)(ioh_t *, char *, int),
+                int (*seek)(ioh_t *, int, int),
+                void (*close)(ioh_t *)) {
+	ioh_t *new = (ioh_t *) malloc(sizeof(ioh_t));
+	if (new == NULL)
+		return NULL;
+	new->data = malloc(len);
+	if (new->data == NULL) {
+		free(new);
+		return NULL;
+	}
+	if (d != NULL)
+		memcpy(new->data, d, len);
+	new->read = read;
+	new->write = write;
+	new->seek = seek;
+	new->close = close;
+	new->pos = 0;
+	new->options = 0;
+	return new;
+}
+
 /******************
  * stdio wrappers *
  ******************/
@@ -167,24 +215,35 @@ int _mfdwrite(ioh_t *h, char *data, int len) {
 }
 
 void _mfdclose(ioh_t *h) {
-	free(h->data);
-	free((void *) h);
+
 }
 
 ioh_t *mfdopen(int fd) {
-	ioh_t *new = (ioh_t *) malloc(sizeof(ioh_t));
-	if (new == NULL)
+	return _mcbopen((int *) &fd, sizeof(int), 0, &_mfdread, &_mfdwrite, NULL, &_mfdclose);
+}
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+ioh_t *mfopen(char *fn, int mode) {
+	int fd, o = 0;
+	if (mode & MFM_RW)
+		o = O_RDWR;
+	else if (mode & MFM_RD)
+		o = O_RDONLY;
+	else if (mode & MFM_WR)
+		o = O_WRONLY;
+	if (mode & MFM_CREAT)
+		o |= O_CREAT;
+	if (mode & MFM_TRUNC)
+		o |= O_TRUNC;
+	if (mode & MFM_APPEND)
+		o |= O_APPEND;
+	fd = open(fn, o);
+	if (fd < 0)
 		return NULL;
-	new->data = (void *) malloc(sizeof(int));
-	if (new->data == NULL)
-		return NULL;
-	*(int *) new->data = fd;
-	new->read = &_mfdread;
-	new->write = &_mfdwrite;
-	new->close = &_mfdclose;
-	new->pos = 0;
-	new->dosnl = 0;
-	return new;
+	return mfdopen(fd);
 }
 
 /*******************
@@ -198,6 +257,8 @@ typedef struct {
 
 int _mmemread(ioh_t *h, char *data, int len) {
 	mmemdata_t *d = (mmemdata_t *) h->data;
+	if (d->ptr == NULL)
+		return 0;
 	if (len > d->len - d->pos)
 		len = d->len - d->pos;
 	memcpy((void *) ((char *) d->ptr + d->pos), data, len);
@@ -210,7 +271,7 @@ int _mmemwrite(ioh_t *h, char *data, int len) {
 	if (d->len < len)
 		return -1;
 	d->ptr = (char *) realloc((void *) d->ptr, d->len);
-	if (h->data == NULL)
+	if (d->ptr == NULL)
 		return -1;
 	memcpy((char *) d->ptr + d->pos, data, len);
 	d->pos += len;
@@ -221,29 +282,15 @@ void _mmemclose(ioh_t *h) {
 	mmemdata_t *d = (mmemdata_t *) h->data;
 	if (d->options & MMO_FREE)
 		free((void *) ((mmemdata_t *) h->data)->ptr);
-	free(h->data);
-	free((void *) h);
 }
 
 ioh_t *mmemopen(int options) {
-	ioh_t *new = (ioh_t *) malloc(sizeof(ioh_t));
 	mmemdata_t d;
-	if (new == NULL)
-		return NULL;
-	new->data = malloc(sizeof(mmemdata_t));
-	if (new->data == NULL)
-		return NULL;
 	d.ptr = NULL;
 	d.pos = 0;
 	d.len = 0;
 	d.options = options;
-	memcpy(new->data, (void *) &d, sizeof(mmemdata_t));
-	new->read = &_mmemread;
-	new->write = &_mmemwrite;
-	new->close = &_mmemclose;
-	new->pos = 0;
-	new->dosnl = 0;
-	return new;
+	return _mcbopen((void *) &d, sizeof(mmemdata_t), 0, &_mmemread, &_mmemwrite, NULL, &_mmemclose);
 }
 
 char *mmemget(ioh_t *h) {

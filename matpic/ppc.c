@@ -1,8 +1,9 @@
+#include <stdlib.h> /* NULL */
+#include <string.h> /* strcpy() */
 #include "mem.h"
 #include "str.h" /* skipsp(), alfa[], etc */
-#include "misc.h" /* getword(), linebuf */
-#include "as.h" /* aerrexit(), initfile(), setfile() */
-#include "host.h" /* readfile(), strcpy() */
+#include "misc.h" /* getword(), readfile */
+#include "as.h" /* flerrexit(), initfile(), setfile() */
 #include "ppc.h"
 #include "io.h"
 
@@ -91,10 +92,10 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 
 	if (cmpid(ip, "if")) {
 		if (argp == NULL)
-			aerrexit("too few arguments for if directive");
+			flerrexit("too few arguments for if directive");
 		argp = ppsub(argp);
 		if (getargs(&argp, args) != 1)
-			aerrexit("too many arguments for if directive");
+			flerrexit("too many arguments for if directive");
 		++level;
 		if (!ignore && !args[0])
 			ignore = level;
@@ -103,7 +104,7 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 	if (cmpid(ip, "ifdef")) {
 		wp = getword(&argp, &s);
 		if (s == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
-			aerrexit("syntax error on ifdef directive");
+			flerrexit("syntax error on ifdef directive");
 		++level;
 		if (!ignore && deffind(s) == NULL)
 			ignore = level;
@@ -112,7 +113,7 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 	if (cmpid(ip, "ifndef")) {
 		wp = getword(&argp, &s);
 		if (s == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
-			aerrexit("syntax error on ifndef directive");
+			flerrexit("syntax error on ifndef directive");
 		++level;
 		if (!ignore && deffind(s) != NULL)
 			ignore = level;
@@ -120,9 +121,9 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 	}
 	if (cmpid(ip, "endif")) {
 		if (argp != NULL)
-			aerrexit("syntax error on endif directive");
+			flerrexit("syntax error on endif directive");
 		if (!level)
-			aerrexit("endif without prior if/ifdef/ifndef");
+			flerrexit("endif without prior if/ifdef/ifndef");
 		if (level == ignore)
 			ignore = 0;
 		--level;
@@ -130,9 +131,9 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 	}
 	if (cmpid(ip, "else")) {
 		if (argp != NULL)
-			aerrexit("syntax error on else directive");
+			flerrexit("syntax error on else directive");
 		if (!level)
-			aerrexit("else without prior if/ifdef/ifndef");
+			flerrexit("else without prior if/ifdef/ifndef");
 		if (level == ignore || !ignore)
 			ignore = (ignore ? 0 : level);
 		return 1;
@@ -143,7 +144,7 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 		define_t def;
 		wp = getword(&argp, &def.name);
 		if (def.name == NULL || (!(wp & WP_TSPC) && !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL))))
-			aerrexit("syntax error on define directive");
+			flerrexit("syntax error on define directive");
 		def.val = argp;
 		def.active = 0;
 		arr_add(&defines, &def);
@@ -152,36 +153,36 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 	if (cmpid(ip, "msg")) {
 		char *msg;
 		if (!argp)
-			aerrexit("too few arguments for msg directive");
+			flerrexit("too few arguments for msg directive");
 		msg = getstr(&argp);
 		skipsp(&argp);
 		if (msg == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
-			aerrexit("syntax error on msg directive");
-		flmsg(file, line, msg);
+			flerrexit("syntax error on msg directive");
+		flmsg(msg);
 		free(msg);
 		return 1;
 	}
 	if (cmpid(ip, "error")) {
 		char *msg;
 		if (!argp)
-			aerrexit("too few arguments for msg directive");
+			flerrexit("too few arguments for msg directive");
 		msg = getstr(&argp);
 		skipsp(&argp);
 		if (msg == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
-			aerrexit("syntax error on msg directive");
-		flerrexit(file, line, msg);
+			flerrexit("syntax error on msg directive");
+		flerrexit(msg);
 		free(msg);
 		return 1;
 	}
 	if (cmpid(ip, "warn")) {
 		char *msg;
 		if (!argp)
-			aerrexit("too few arguments for msg directive");
+			flerrexit("too few arguments for msg directive");
 		msg = getstr(&argp);
 		skipsp(&argp);
 		if (msg == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
-			aerrexit("syntax error on msg directive");
-		flwarn(file, line, msg);
+			flerrexit("syntax error on msg directive");
+		flwarn(msg);
 		free(msg);
 		return 1;
 	}
@@ -189,14 +190,14 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 		char *fn, *data, ofile[FN_MAX];
 		int oline;
 		if (!argp)
-			aerrexit("too few arguments for msg directive");
+			flerrexit("too few arguments for msg directive");
 		fn = getstr(&argp);
 		skipsp(&argp);
 		if (fn == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
-			aerrexit("syntax error on include directive");
+			flerrexit("syntax error on include directive");
 		data = readfile(fn);
 		if (data == NULL)
-			aerrexit("failed to include file");
+			flerrexit("failed to include file");
 		strcpy(ofile, file);
 		strcpy(file, fn);
 		mfprintf(out, "file \"%s\"\n", fn);
@@ -270,19 +271,19 @@ void _preprocess(ioh_t *out, char *in) {
 		wp = getword(&in, &ip);
 		if (wp & (WP_LABEL | WP_LOCAL)) { /* we have label and we're sure about it */
 			if (!(wp & WP_TSPC) && !(alfa[(unsigned char) *in] & (CT_NL | CT_NUL)))
-				aerrexit("invalid character in local label"); /* can only happen with local label */
+				flerrexit("invalid character in local label"); /* can only happen with local label */
 			lp = ip;
 			wp = getword(&in, &ip);
 		}
 		if (ip == NULL) {
 			if (pps && !(alfa[(unsigned char) *in] & (CT_NL | CT_NUL)))
-				aerrexit("invalid preprocessor directive");
+				flerrexit("invalid preprocessor directive");
 			goto endln;
 		}
 		if (!(alfa[(unsigned char) *in] & (CT_NL | CT_NUL))) {
 			if (wp & WP_TSPC)
 				argp = in;
-			else if (pps) aerrexit("invalid preprocessor directive");
+			else if (pps) flerrexit("invalid preprocessor directive");
 		}
 		if ((r = ppfind(out, lp, ip, argp)))
 			goto endln;

@@ -1,4 +1,5 @@
-#include "host.h" /* realloc() */
+#include <stdlib.h> /* realloc() */
+#include "mem.h" /* BLOCK */
 #include "as.h" /* inss */
 #include "misc.h" /* errexit(), flwarn(), infile, line */
 #include "arch.h" /* arch */
@@ -9,9 +10,9 @@
 
 #define IHLL 16
 
-int pos = 0, crc;
-unsigned char buf[IHLL];
 unsigned int saddr;
+unsigned char buf[IHLL];
+int pos = 0, crc;
 
 void endln(ioh_t *out) {
 	int i;
@@ -68,10 +69,6 @@ void getihex(ioh_t *out) {
 	mfprint(out, ":00000001FF\n");
 }
 
-void ihwarn(char *msg) {
-	flwarn(infile, line, msg);
-}
-
 int gethnum(char **src) {
 	int r, l = hexlookup[(unsigned char) **src];
 	if (l == 16) /* really check inbetween, in case we hit terminating 0 */
@@ -96,7 +93,7 @@ void readihex(char *in) {
 		++line;
 	} while (skipnl(&in));
 	if (*in == 0) {
-		ihwarn("no end record");
+		flwarn("no end record");
 		return;
 	}
 	if (*in != ':')
@@ -140,19 +137,19 @@ void readihex(char *in) {
 	if ((n = gethnum(&in)) == -1)
 		goto dinval;
 	if (((0x100 - crc) & 0xFF) != n)
-		ihwarn("checksum mismatch");
+		flwarn("checksum mismatch");
 	if (rtype == 1)
 		return;
 	skipsp(&in);
 	if (!skipnl(&in)) {
-		ihwarn("exess characters after ihex data");
+		flwarn("exess characters after ihex data");
 		goto dnextline;
 	}
 	++line;
 	goto dstartline;
 
 	dinval:
-	ihwarn("invalid data, skipping rest of line");
+	flwarn("invalid data, skipping rest of line");
 	dnextline:
 	while(!(alfa[(unsigned char) *(in++)] & (CT_NL | CT_NUL)));
 	skipnl(&in);

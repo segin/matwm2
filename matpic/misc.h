@@ -1,17 +1,19 @@
 #ifndef __MISC_H__
 #define __MISC_H__
 
-#define LBSIZE 2048
-
 extern char *infile;
 extern unsigned int address, line;
 
 extern void cleanup(void);
-extern void errexit(char *msg);
-extern void flerrexit(char *file, int line, char *msg);
-extern void flwarn(char *file, int line, char *msg);
-extern void flmsg(char *file, int line, char *msg);
-extern void fawarn(char *file, int addr, char *msg);
+extern void reset(void);
+
+void errexit(char *fmt, ...);
+extern void flerrexit(char *fmt, ...);
+extern void flwarn(char *fmt, ...);
+extern void flmsg(char *msg);
+
+extern char *readfile(char *path);
+
 extern unsigned int getval(char **src);
 extern unsigned int numarg(char **src);
 extern int getargs(char **src, int *args);

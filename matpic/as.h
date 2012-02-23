@@ -55,7 +55,6 @@ extern int llbl; /* last label */
 
 extern void setfile(char *fn);
 extern void initfile(void);
-extern void aerrexit(char *msg);
 extern void assemble(char *code);
 
 #endif /* __AS_H__ */

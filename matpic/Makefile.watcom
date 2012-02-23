@@ -2,7 +2,7 @@ CC = wcc386
 LD = wlink
 RM = del
 
-OBJS  = str.obj mem.obj arch.obj pic14b.obj as.obj main.obj misc.obj ihex.obj dis.obj ppc.obj host.obj io.obj
+OBJS  = str.obj mem.obj arch.obj pic14b.obj as.obj main.obj misc.obj ihex.obj dis.obj ppc.obj io.obj
 
 all: matpic.exe
 

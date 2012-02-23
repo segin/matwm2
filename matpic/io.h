@@ -8,12 +8,15 @@ typedef struct ioh_t ioh_t;
 struct ioh_t {
 	int (*write)(ioh_t *, char *, int);
 	int (*read)(ioh_t *, char *, int);
+	int (*seek)(ioh_t *, int, int);
 	void (*close)(ioh_t *);
 	void *data;
 	char buf[2048];
 	int pos;
-	int dosnl;
+	int options;
 };
+
+#define MFO_DOSNL 1
 
 extern int mfread(ioh_t *h, char *data, int len);
 extern int mfwrite(ioh_t *h, char *data, int len);
@@ -25,10 +28,22 @@ extern int mprintnum(ioh_t *h, unsigned int n, int b, int p);
 extern int mfprintf(ioh_t *h, char *fmt, ...);
 extern int mvafprintf(ioh_t *h, char *fmt, va_list l);
 
+#define MSEEK_SET 0
+#define MSEEK_CUR 1
+#define MSEEK_END 2
+
 /* file descriptor wrappers */
 extern ioh_t *mstdin, *mstdout, *mstderr;
 extern void mstdio_init(void);
 extern ioh_t *mfdopen(int fd);
+extern ioh_t *mfopen(char *fn, int mode);
+
+#define MFM_RD 1
+#define MFM_WR 2
+#define MFM_RW 3
+#define MFM_CREAT 4
+#define MFM_TRUNC 8
+#define MFM_APPEND 16
 
 /* memory wrappers */
 extern ioh_t *mmemopen(int options);

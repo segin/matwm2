@@ -1,8 +1,8 @@
 #ifndef __ARCH_H__
 #define __ARCH_H__
 
-#include "host.h" /* NULL (used by some who include us) */
-#include "as.h"   /* aerrexit(), also for those who supposed to include us */
+#include <stdlib.h> /* NULL (used by some who include us) */
+#include "misc.h"   /* flerrexit(), also for those who supposed to include us */
 #include "io.h"
 
 typedef struct {

@@ -1,5 +1,5 @@
-#include "host.h" /* exit(), EXIT_FAILURE */
-#include "as.h" /* cnl (and other things) */
+#include <stdlib.h> /* exit(), EXIT_FAILURE */
+#include "as.h" /* file, line, cnl, and other things i think */
 #include "dis.h"
 #include "ppc.h"
 #include "str.h" /* skipsp(), getnum(), getid(), cmpid(), alfa[] */
@@ -7,7 +7,6 @@
 
 char *infile = "<stdin>";
 unsigned int address, line;
-char linebuf[LBSIZE]; /* used by disassembler and preprocessor */
 
 void cleanup(void) {
 	arr_free(&inss);
@@ -20,26 +19,63 @@ void reset(void) {
 	cleanup();
 }
 
-void errexit(char *msg) {
-	mfprintf(mstderr, "error: %s\n", msg);
+void vaflwarn(char *pro, char *fmt, va_list ap) {
+	mfprintf(mstderr, pro, file, line);
+	mvafprintf(mstderr, fmt, ap);
+	mfprint(mstderr, "\n");
+}
+
+void errexit(char *fmt, ...) {
+	va_list ap;
+	va_start(ap, fmt);
+	vaflwarn("error: ", fmt, ap);
+	va_end(ap);
 	exit(EXIT_FAILURE);
 }
 
-void flerrexit(char *file, int line, char *msg) {
-	mfprintf(mstderr, "%s: line %u: error: %s\n", file, line, msg);
+void flerrexit(char *fmt, ...) {
+	va_list ap;
+	va_start(ap, fmt);
+	vaflwarn("%s: line %d: error: ", fmt, ap);
+	va_end(ap);
 	exit(EXIT_FAILURE);
 }
 
-void flwarn(char *file, int line, char *msg) {
-	mfprintf(mstderr, "%s: line %u: warning: %s\n", file, line, msg);
+void flwarn(char *fmt, ...) {
+	va_list ap;
+	va_start(ap, fmt);
+	vaflwarn("%s: line %d: warning: ", fmt, ap);
+	va_end(ap);
 }
 
-void fawarn(char *file, int addr, char *msg) {
-	mfprintf(mstderr, "%s: 0x%X: warning: %s\n", file, addr, msg);
-}
-
-void flmsg(char *file, int line, char *msg) {
+void flmsg(char *msg) {
 	mfprintf(mstderr, "%s: line %d: message: %s\n", file, line, msg);
+}
+
+char *readfile(char *path) {
+	int pos = 0, mem = 0, r = 0;
+	ioh_t *infd = mstdin;
+	char *ret = NULL;
+	if (path != NULL) {
+		infd = mfopen(path, MFM_RD);
+		if (infd == NULL)
+			return ret;
+	}
+	if (infd == NULL)
+		errexit("failed to open file \"%s\"", path);
+	do {
+		pos += r;
+		if (mem + BLOCK < mem)
+			errexit("wtf integer overflow");
+		mem += BLOCK;
+		ret = (char *) realloc((void *) ret, mem + 1); /* + 1 for ending 0 */
+		if (ret == NULL)
+			errexit("out of memory");
+	} while((r = mfread(infd, ret + pos, BLOCK)) > 0);
+	ret[pos] = 0;
+	if (path != NULL)
+		mfclose(infd);
+	return ret;
 }
 
 unsigned int getval(char **src) {
@@ -56,7 +92,7 @@ unsigned int getval(char **src) {
 		++*src;
 		val = numarg(src);
 		if (**src != ')')
-			aerrexit("missing ')'");
+			flerrexit("missing ')'");
 		++*src;
 	} else if (**src == '$') {
 		val = address;
@@ -83,7 +119,7 @@ unsigned int getval(char **src) {
 				goto gotval;
 			}
 		}
-		aerrexit("unknown identifier");
+		flerrexit("unknown identifier");
 	}
 	gotval:
 	while (ns != ne--) {
@@ -280,10 +316,10 @@ int getargs(char **src, int *args) {
 		if (alfa[(unsigned char) **src] & (CT_NUL | CT_NL))
 			return n + 1;
 		if (**src != ',')
-			aerrexit("your argument is invalid");
+			flerrexit("your argument is invalid");
 		++n, ++*src;
 		if (n == ARG_MAX)
-			aerrexit("too many arguments");
+			flerrexit("too many arguments");
 	}
 }
 
@@ -410,7 +446,7 @@ char *getstr(char **in) {
 		} else ++p;
 	}
 	if (*p != '"')
-		aerrexit("missing \"");
+		flerrexit("missing \"");
 	vstr_addl(&ret, *in, p - *in);
 	*in = p;
 	++*in;

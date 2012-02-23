@@ -2,13 +2,13 @@
  * assembler interface *
  ***********************/
 
-#include "host.h" /* EXIT_SUCCESS, errexit(), FILE, stdout, fwrite(), readfile(), free(), NULL */
+#include <stdlib.h> /* free(), NULL */
+#include "ppc.h"
 #include "as.h"
 #include "dis.h"
-#include "misc.h" /* errexit(), cleanup() */
-#include "mem.h" /* BLOCK */
 #include "ihex.h"
-#include "ppc.h"
+#include "misc.h" /* errexit(), cleanup(), readfile() */
+#include "io.h"
 
 int main(int argc, char *argv[]) {
 	char *a, *code;
