@@ -46,7 +46,7 @@ int insfind(char *lp, char *ip, char *argp) {
 		if (argp == NULL)
 			flerrexit("'file' directive needs an argument");
 		clearfile();
-		file = getstr(&argp);
+		file = getstr(&argp, 0);
 		if (!(alfa[(unsigned char) *argp] & (CT_NUL | CT_NL)))
 			flerrexit("invalid data after file directive");
 		line = 0; /* will be incremented soon enough */
@@ -206,7 +206,7 @@ void assemble(char *code) {
 				case IT_FIL:
 					clearfile();
 					s = ins->d.file.file;
-					file = getstr(&s);
+					file = getstr(&s, 0);
 					break;
 				case IT_LBL:
 					llbl = ins->d.lbl.lbl;

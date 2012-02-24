@@ -138,179 +138,209 @@ unsigned int getval(char **src) {
 }
 
 enum ops {
-	OP_ADD,
-	OP_SUB,
+	OP_NOP,
 	OP_MUL,
 	OP_DIV,
 	OP_MOD,
-	OP_AND,
-	OP_IOR,
-	OP_EOR,
+	OP_ADD,
+	OP_SUB,
 	OP_SHL,
 	OP_SHR,
-	OP_LAND,
-	OP_LOR,
+	OP_AND,
+	OP_EOR,
+	OP_IOR,
 	OP_LT,
 	OP_GT,
 	OP_LTE,
 	OP_GTE,
 	OP_EQ,
-	OP_NE
+	OP_NE,
+	OP_LAND,
+	OP_LOR
 };
 
+unsigned int calc(int op, unsigned int lval, unsigned int rval) {
+	switch (op) {
+		case OP_ADD:
+			lval += rval;
+			break;
+		case OP_SUB:
+			lval -= rval;
+			break;
+		case OP_MUL:
+			lval *= rval;
+			break;
+		case OP_DIV:
+			lval /= rval;
+			break;
+		case OP_MOD:
+			lval %= rval;
+			break;
+		case OP_AND:
+			lval &= rval;
+			break;
+		case OP_IOR:
+			lval |= rval;
+			break;
+		case OP_EOR:
+			lval ^= rval;
+			break;
+		case OP_SHL:
+			lval <<= rval;
+			break;
+		case OP_SHR:
+			lval >>= rval;
+			break;
+		case OP_LAND:
+			lval = lval && rval;
+			break;
+		case OP_LOR:
+			lval = lval || rval;
+			break;
+		case OP_LT:
+			lval = lval < rval;
+			break;
+		case OP_LTE:
+			lval = lval <= rval;
+			break;
+		case OP_GT:
+			lval = lval > rval;
+			break;
+		case OP_GTE:
+			lval = lval >= rval;
+			break;
+		case OP_EQ:
+			lval = lval == rval;
+			break;
+		case OP_NE:
+			lval = lval != rval;
+			break;
+	}
+	return lval;
+}
+
+#define CALC_MAX 512
+
+void _calc(unsigned int *lval, unsigned int *op, int len, int pre_min, int pre_max) {
+	int i, j;
+	for (i = 0, j = 0; i < len; ++i) {
+		if (op[i] >= pre_min && op[i] <= pre_max)
+			lval[j] = calc(op[i], lval[j], lval[i + 1]);
+		else if (op[i] > pre_max)
+			j = i + 1;
+	}
+}
+
 unsigned int numarg(char **src) {
-	unsigned int lval, rval, op;
+	unsigned int i, lval[CALC_MAX], op[CALC_MAX];
 
-	lval = getval(src);
-
-	while(1) {
+	for (i = 0; i < CALC_MAX; ++i) {
+		lval[i] = getval(src);
 		skipsp(src);
 		switch (**src) {
 			case '+':
-				op = OP_ADD;
+				op[i] = OP_ADD;
 				++*src;
 				break;
 			case '-':
-				op = OP_SUB;
+				op[i] = OP_SUB;
 				++*src;
 				break;
 			case '*':
-				op = OP_MUL;
+				op[i] = OP_MUL;
 				++*src;
 				break;
 			case '/':
-				op = OP_DIV;
+				op[i] = OP_DIV;
 				++*src;
 				break;
 			case '%':
-				op = OP_MOD;
+				op[i] = OP_MOD;
 				++*src;
 				break;
 			case '&':
 				if (*((*src) + 1) == '&') {
-					op = OP_LAND;
+					op[i] = OP_LAND;
 					*src += 2;
 					break;
 				}
-				op = OP_AND;
+				op[i] = OP_AND;
 				++*src;
 				break;
 			case '|':
 				if (*((*src) + 1) == '|') {
-					op = OP_LOR;
+					op[i] = OP_LOR;
 					*src += 2;
 					break;
 				}
-				op = OP_IOR;
+				op[i] = OP_IOR;
 				++*src;
 				break;
 			case '^':
-				op = OP_EOR;
+				op[i] = OP_EOR;
 				++*src;
 				break;
 			case '<':
 				if (*((*src) + 1) == '<') {
-					op = OP_SHL;
+					op[i] = OP_SHL;
 					*src += 2;
 					break;
 				}
 				if (*((*src) + 1) == '=') {
-					op = OP_LTE;
+					op[i] = OP_LTE;
 					*src += 2;
 					break;
 				}
-				op = OP_LT;
+				op[i] = OP_LT;
 				++*src;
 				break;
 			case '>':
 				if (*((*src) + 1) == '>') {
-					op = OP_SHR;
+					op[i] = OP_SHR;
 					*src += 2;
 					break;
 				}
 				if (*((*src) + 1) == '=') {
-					op = OP_GTE;
+					op[i] = OP_GTE;
 					*src += 2;
 					break;
 				}
-				op = OP_GT;
+				op[i] = OP_GT;
 				++*src;
 				break;
 			case '=':
 				if (*((*src) + 1) == '=')
 					++*src;
-				op = OP_EQ;
+				op[i] = OP_EQ;
 				++*src;
 				break;
 			case '!':
 				if (*((*src) + 1) == '=') {
-					op = OP_NE;
+					op[i] = OP_NE;
 					*src += 2;
 					break;
 				}
 			default:
-				return lval;
-		}
-
-		rval = getval(src);
-
-		switch (op) {
-			case OP_ADD:
-				lval += rval;
-				break;
-			case OP_SUB:
-				lval -= rval;
-				break;
-			case OP_MUL:
-				lval *= rval;
-				break;
-			case OP_DIV:
-				lval /= rval;
-				break;
-			case OP_MOD:
-				lval %= rval;
-				break;
-			case OP_AND:
-				lval &= rval;
-				break;
-			case OP_IOR:
-				lval |= rval;
-				break;
-			case OP_EOR:
-				lval ^= rval;
-				break;
-			case OP_SHL:
-				lval <<= rval;
-				break;
-			case OP_SHR:
-				lval >>= rval;
-				break;
-			case OP_LAND:
-				lval = lval && rval;
-				break;
-			case OP_LOR:
-				lval = lval || rval;
-				break;
-			case OP_LT:
-				lval = lval < rval;
-				break;
-			case OP_LTE:
-				lval = lval <= rval;
-				break;
-			case OP_GT:
-				lval = lval > rval;
-				break;
-			case OP_GTE:
-				lval = lval >= rval;
-				break;
-			case OP_EQ:
-				lval = lval == rval;
-				break;
-			case OP_NE:
-				lval = lval != rval;
-				break;
+				op[i] = OP_NOP;
+				goto end;
 		}
 	}
+	end:
+	if (i == CALC_MAX)
+		flerrexit("constant too complex");
+
+	_calc(lval, op, i, OP_MUL, OP_MOD);
+	_calc(lval, op, i, OP_ADD, OP_SUB);
+	_calc(lval, op, i, OP_SHL, OP_SHR);
+	_calc(lval, op, i, OP_AND, OP_AND);
+	_calc(lval, op, i, OP_EOR, OP_EOR);
+	_calc(lval, op, i, OP_IOR, OP_IOR);
+	_calc(lval, op, i, OP_LT, OP_GTE);
+	_calc(lval, op, i, OP_EQ, OP_NE);
+	_calc(lval, op, i, OP_LAND, OP_LAND);
+	_calc(lval, op, i, OP_LOR, OP_LOR);
+
+	return lval[0];
 }
 
 int getargs(char **src, int *args) {
@@ -364,7 +394,7 @@ int egethex(char **s) {
 	return n;
 }
 
-char *getstr(char **in) {
+char *getstr(char **in, int esc) {
 	string_t ret;
 	char *p, b[5] = { 0, 0, 0, 0, 0 };
 	int n;
@@ -374,7 +404,7 @@ char *getstr(char **in) {
 	++*in;
 	p = *in;
 	while (!(alfa[(unsigned char) *p] & (CT_NUL | CT_NL)) && *p != '"') {
-		if (*p == '\\' && !(alfa[(unsigned char) p[1]] & (CT_NUL | CT_NL))) {
+		if (esc && *p == '\\' && !(alfa[(unsigned char) p[1]] & (CT_NUL | CT_NL))) {
 			vstr_addl(&ret, *in, p - *in);
 			*in = p + 1;
 			++p;

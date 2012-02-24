@@ -152,7 +152,7 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 		char *msg;
 		if (!argp)
 			flerrexit("too few arguments for msg directive");
-		msg = getstr(&argp);
+		msg = getstr(&argp, 1);
 		skipsp(&argp);
 		if (msg == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
 			flerrexit("syntax error on msg directive");
@@ -164,7 +164,7 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 		char *msg;
 		if (!argp)
 			flerrexit("too few arguments for msg directive");
-		msg = getstr(&argp);
+		msg = getstr(&argp, 1);
 		skipsp(&argp);
 		if (msg == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
 			flerrexit("syntax error on msg directive");
@@ -176,7 +176,7 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 		char *msg;
 		if (!argp)
 			flerrexit("too few arguments for msg directive");
-		msg = getstr(&argp);
+		msg = getstr(&argp, 1);
 		skipsp(&argp);
 		if (msg == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
 			flerrexit("syntax error on msg directive");
@@ -185,14 +185,16 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 		return 1;
 	}
 	if (cmpid(ip, "include")) {
-		char *data, *ofile = file;
+		char *data, *ofile = file, *s = argp;
 		int oline = line;
 		if (!argp)
 			flerrexit("too few arguments for msg directive");
-		file = getstr(&argp);
+		file = getstr(&argp, 0);
 		if (file == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
 			flerrexit("syntax error on include directive");
-		data = readfile(file);
+		s = getstr(&s, 1);
+		data = readfile(s);
+		free(s);
 		if (data == NULL)
 			flerrexit("failed to include file '%s'", file);
 		mfprintf(out, "file \"%s\"\n", file);
