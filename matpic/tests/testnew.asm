@@ -51,6 +51,8 @@
  endif
 
 ; enum 0, w, f ; test enum
+define w 0
+define f 1
 
  ; testing all instructions
  addwf 0x7F, w
@@ -87,6 +89,12 @@
  goto 0x7FF
  ; lets test enum again
 ;  enum 15, a, b, c, enum, define
+define a 15
+define b 16
+define c 17
+define enum 18
+define define 19
+
  iorlw a
  movlw b
  retfie

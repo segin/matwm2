@@ -214,8 +214,10 @@ int getnum(char **src, unsigned int *ret) {
 	}
 
 	while ((c = hexlookup[(unsigned char) **src]) != 16) {
-		if (c == 17)
+		if (c == 17) {
+			++*src;
 			continue;
+		}
 		if (c >= base)
 			goto endnum;
 		r *= base;
