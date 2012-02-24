@@ -316,7 +316,7 @@ void _preprocess(ioh_t *out, char *in) {
 
 	{ /* fix escaped newlines and remove dos newlines */
 		char *p, *c;
-		int i;
+		int i, nl = 0;
 		p = c = in;
 		while (*c) {
 			switch (*c) {
@@ -326,10 +326,15 @@ void _preprocess(ioh_t *out, char *in) {
 						++i;
 					if (c[1] == '\n')
 						c += i + 1;
+						++nl;
 					break;
 				case '\r':
 					/* dos newlines will be added by mfwrite(), if the user wants them in output */
 					++c;
+					break;
+				case '\n':
+					while (nl--)
+						*(p++) = '\n';
 			}
 			*p = *c;
 			++p, ++c;
