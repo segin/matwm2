@@ -55,9 +55,9 @@ void getihex(ioh_t *out) {
 				}
 				break;
 			case IT_INS:
+				address += ins->d.ins.len;
 				for (i = 0; i < ins->d.ins.len; ++i)
 					addb(out, ins->d.ins.oc[arch->insord[i]]);
-				address += ins->d.ins.len;
 				break;
 		}
 		++ins;
