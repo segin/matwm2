@@ -1,7 +1,7 @@
 #include <stdlib.h> /* NULL, exit(), EXIT_FAILURE */
 #include "as.h" /* inss, labels, llbl */
 #include "dis.h" /* dsym */
-#include "str.h" /* skipsp(), getnum(), getid(), cmpid(), alfa[] */
+#include "str.h" /* skipsp(), getnum(), getid(), cmpid(), alfa[], lower[] */
 #include "misc.h"
 
 char *file = NULL;
@@ -85,6 +85,26 @@ char *readfile(char *path) {
 	return ret;
 }
 
+int cmplid(char **idlp, char *idr) {
+	int n = 0;
+	char *idl = *idlp;
+
+	while (*idl && *idr && *idl != '.' &&
+	       (alfa[(unsigned char) *idl] & (CT_LET | CT_SEP | CT_NUM)) &&
+	       (alfa[(unsigned char) *idr] & (CT_LET | CT_SEP | CT_NUM)) &&
+	       lower[(unsigned char) *idl] == lower[(unsigned char) *idr])
+		++n, ++idl, ++idr;
+	if((!(alfa[(unsigned char) *idl] & (CT_LET | CT_SEP | CT_NUM)) || *idl == '.') &&
+	   !(alfa[(unsigned char) *idr] & (CT_LET | CT_SEP | CT_NUM))) {
+		if (*idl == '.') {
+			*idlp = idl;
+			return 2;
+		}
+		return 1;
+	}
+	return 0;
+}
+
 unsigned int getval(char **src) {
 	unsigned int val;
 	char *ns, *ne;
@@ -105,7 +125,7 @@ unsigned int getval(char **src) {
 		val = address;
 		++*src;
 	} else if(!getnum(src, &val)) {
-		int i, j;
+		int i, j, r, l = -1, local = 0;
 		label_t *label = (label_t *) labels.data;
 		char *id;
 
@@ -114,14 +134,38 @@ unsigned int getval(char **src) {
 			goto gotval;
 
 		/* get label or fail */
+		while (*id == '.')
+			++id, ++local;
 		for (i = 0; i < labels.count; ++i) {
-			/* FIXME support label.local type format */
-			if (cmpid(label[i].name, id)) {
+			if (cmpid(id, label[i].name) && label[i].local == local) {
 				for (j = llbl; j >= 0; --j)
 					if (label[j].local < label[i].local)
 						break;
 				if (label[i].parent != j)
 					continue;
+			}
+			val = label[i].address;
+			goto gotval;
+		}
+		for (i = 0; i < labels.count; ++i) {
+			if (l != -1 && label[i].local < l)
+				break;
+			if ((r = cmplid(&id, label[i].name))) {
+				if (l == -1) {
+					if (label[i].local != local)
+						continue;
+					for (j = llbl; j >= 0; --j)
+						if (label[j].local < label[i].local)
+							break;
+					if (label[i].parent != j)
+						continue;
+				}
+				if (r & 2) {
+					while (*id == '.')
+						++id, ++local;
+					l = label[i].local;
+					continue;
+				}
 				val = label[i].address;
 				goto gotval;
 			}

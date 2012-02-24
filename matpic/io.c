@@ -321,3 +321,15 @@ int mmemlen(ioh_t *h) {
 	mfflush(h);
 	return ((mmemdata_t *) h->data)->len;
 }
+
+char *msprintf(char *fmt, ...) {
+	ioh_t *h = mmemopen(0);
+	char *ret;
+	va_list ap;
+	va_start(ap, fmt);
+	mvafprintf(h, fmt, ap);
+	va_end(ap);
+	ret = mmemget(h);
+	mfclose(h);
+	return ret;
+}

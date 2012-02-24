@@ -49,6 +49,7 @@ extern ioh_t *mfopen(char *fn, int mode);
 extern ioh_t *mmemopen(int options);
 extern char *mmemget(ioh_t *h);
 extern int mmemlen(ioh_t *h);
+extern char *msprintf(char *fmt, ...);
 
 /* mmemopen() options */
 #define MMO_FREE 1

@@ -8,6 +8,7 @@
 #include <stdlib.h> /* NULL */
 
 extern char alfa[256];
+extern unsigned char lower[256];
 extern char hexlookup[256];
 extern char hexnib[16];
 

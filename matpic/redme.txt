@@ -25,6 +25,7 @@ if an identifier is neither a directive or instruction and present before any wh
 if an identifier is followed by a (and before any instruction/directive) ':' it's considered a label
 if an identifier starts with a '.' it's considered a local label (it can also be given a : at the end)
 more dots before a local label make it local to a local label and so on
+you can call a local label out of its scope like label.locallabel
 following directives exist:
 	org <origin>: set origin
 	data <value>, <value>: put stray words into bytecode

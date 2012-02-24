@@ -145,9 +145,9 @@ void assemble(char *code) {
 			}
 			endln:
 			if (lp != NULL) { /* we has a lebel */
+				for (label.local = 0; *lp == '.'; ++label.local, ++lp);
 				label.name = lp;
 				label.address = addrl / arch->align;
-				for (label.local = 0; *lp == '.'; ++label.local, ++lp);
 				label.parent = -1;
 				for (i = labels.count - 1; i >= 0; --i) { /* find owner */
 					li = (label_t *) ((label_t *) labels.data) + i;
@@ -158,7 +158,7 @@ void assemble(char *code) {
 				}
 				for (i = 0; i < labels.count; ++i) { /* check if already exists */
 					li = (label_t *) ((label_t *) labels.data) + i;
-					if (cmpid(li->name, label.name) && label.parent == li->parent)
+					if (cmpid(li->name, label.name) && label.parent == li->parent && label.local == li->local)
 						flerrexit("duplicate label");
 				}
 				arr_add(&labels, &label);
