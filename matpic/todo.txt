@@ -6,6 +6,7 @@ const, equ, dw, dd, dq, etc
 something like cblock
 support banksel, bankisel, pagesel pseudo instructions
 changing default radix
+include search path
 better commandline interface
 relocatable code and coff output support
 add ihex thing for bigger than 16bit addresses

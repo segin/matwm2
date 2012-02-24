@@ -29,6 +29,7 @@ int mfwrite(ioh_t *h, char *data, int len) {
 			h->buf[h->pos++] = '\n';
 			if (mfflush(h) != 0)
 				return -1;
+			++data;
 			continue;
 		}
 		h->buf[h->pos++] = *(data++);
