@@ -94,7 +94,7 @@ char hexnib[16] = {
 int skipsp(char **src) {
 	int n = 0;
 
-	while (alfa[(unsigned char) **src] & CT_SPC)
+	while (ctype(**src) & CT_SPC)
 		++n, ++(*src);
 	return n;
 }
@@ -142,9 +142,9 @@ int skipnl(char **src) {
 char *getid(char **src) {
 	char *ret = NULL;
 
-	if (alfa[(unsigned char) **src] & (CT_LET | CT_SEP)) {
+	if (ctype(**src) & (CT_LET | CT_SEP)) {
 		ret = *src;
-		while (alfa[(unsigned char) **src] & (CT_LET | CT_SEP | CT_NUM))
+		while (ctype(**src) & (CT_LET | CT_SEP | CT_NUM))
 			++(*src);
 	}
 	return ret;
@@ -168,12 +168,12 @@ int cmpid(char *idl, char *idr) {
 	int n = 0;
 
 	while (*idl && *idr &&
-	       (alfa[(unsigned char) *idl] & (CT_LET | CT_SEP | CT_NUM)) &&
-	       (alfa[(unsigned char) *idr] & (CT_LET | CT_SEP | CT_NUM)) &&
+	       (ctype(*idl) & (CT_LET | CT_SEP | CT_NUM)) &&
+	       (ctype(*idr) & (CT_LET | CT_SEP | CT_NUM)) &&
 	       lower[(unsigned char) *idl] == lower[(unsigned char) *idr])
 		++n, ++idl, ++idr;
-	if(!(alfa[(unsigned char) *idl] & (CT_LET | CT_SEP | CT_NUM)) &&
-	   !(alfa[(unsigned char) *idr] & (CT_LET | CT_SEP | CT_NUM)))
+	if(!(ctype(*idl) & (CT_LET | CT_SEP | CT_NUM)) &&
+	   !(ctype(*idr) & (CT_LET | CT_SEP | CT_NUM)))
 		return n;
 	return 0;
 }
@@ -181,8 +181,8 @@ int cmpid(char *idl, char *idr) {
 int idlen(char *src) {
 	int ret = 0;
 
-	if (alfa[(unsigned char) *src] & (CT_LET | CT_SEP))
-		while (alfa[(unsigned char) *src] & (CT_LET | CT_SEP | CT_NUM))
+	if (ctype(*src) & (CT_LET | CT_SEP))
+		while (ctype(*src) & (CT_LET | CT_SEP | CT_NUM))
 			++ret, ++src;
 	return ret;
 }

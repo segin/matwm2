@@ -12,6 +12,8 @@ extern unsigned char lower[256];
 extern char hexlookup[256];
 extern char hexnib[16];
 
+#define ctype(a) alfa[(unsigned char) a]
+
 /* symbols used in above lookup table "alfa[]" */
 #define CT_LET 1  /* letter    (a-z, A-Z) */
 #define CT_NUM 2  /* number    (0-9) */

@@ -14,6 +14,7 @@ extern void flwarn(char *fmt, ...);
 extern void flmsg(char *msg);
 
 extern char *readfile(char *path);
+extern char *strldup(char *s, int len);
 
 extern unsigned int numarg(char **src);
 extern int getargs(char **src, int *args);

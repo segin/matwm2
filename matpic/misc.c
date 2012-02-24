@@ -1,7 +1,8 @@
-#include <stdlib.h> /* NULL, exit(), EXIT_FAILURE */
+#include <stdlib.h> /* NULL, exit(), EXIT_FAILURE, malloc() */
+#include <string.h> /* strlen() */
 #include "as.h" /* inss, labels, llbl */
 #include "dis.h" /* dsym */
-#include "str.h" /* skipsp(), getnum(), getid(), cmpid(), alfa[], lower[] */
+#include "str.h" /* skipsp(), getnum(), getid(), cmpid(), ctype(), lower[] */
 #include "misc.h"
 
 char *file = NULL;
@@ -81,12 +82,12 @@ int cmplid(char **idlp, char *idr) {
 	char *idl = *idlp;
 
 	while (*idl && *idr && *idl != '.' &&
-	       (alfa[(unsigned char) *idl] & (CT_LET | CT_SEP | CT_NUM)) &&
-	       (alfa[(unsigned char) *idr] & (CT_LET | CT_SEP | CT_NUM)) &&
+	       (ctype(*idl) & (CT_LET | CT_SEP | CT_NUM)) &&
+	       (ctype(*idr) & (CT_LET | CT_SEP | CT_NUM)) &&
 	       lower[(unsigned char) *idl] == lower[(unsigned char) *idr])
 		++n, ++idl, ++idr;
-	if((!(alfa[(unsigned char) *idl] & (CT_LET | CT_SEP | CT_NUM)) || *idl == '.') &&
-	   !(alfa[(unsigned char) *idr] & (CT_LET | CT_SEP | CT_NUM))) {
+	if((!(ctype(*idl) & (CT_LET | CT_SEP | CT_NUM)) || *idl == '.') &&
+	   !(ctype(*idr) & (CT_LET | CT_SEP | CT_NUM))) {
 		if (*idl == '.') {
 			*idlp = idl;
 			return 2;
@@ -96,13 +97,21 @@ int cmplid(char **idlp, char *idr) {
 	return 0;
 }
 
+char *strldup(char *s, int len) {
+	char *ret = malloc(len + 1);
+	if (ret != NULL)
+		strncpy(ret, s, len);
+	ret[len] = 0;
+	return ret;
+}
+
 unsigned int getval(char **src) {
 	unsigned int val;
 	char *ns, *ne;
 
 	skipsp(src);
 	ns = *src;
-	while (**src == '!' || **src == '~' || alfa[(unsigned char) **src] & CT_SPC)
+	while (**src == '!' || **src == '~' || ctype(**src) & CT_SPC)
 		++*src;
 	ne = *src;
 	skipsp(src);
@@ -385,7 +394,7 @@ int getargs(char **src, int *args) {
 		return 0;
 	while (1) {
 		args[n] = numarg(src);
-		if (alfa[(unsigned char) **src] & (CT_NUL | CT_NL))
+		if (ctype(**src) & (CT_NUL | CT_NL))
 			return n + 1;
 		if (**src != ',')
 			flerrexit("your argument is invalid");
@@ -438,8 +447,8 @@ char *getstr(char **in, int esc) {
 	vstr_new(&ret);
 	++*in;
 	p = *in;
-	while (!(alfa[(unsigned char) *p] & (CT_NUL | CT_NL)) && *p != '"') {
-		if (esc && *p == '\\' && !(alfa[(unsigned char) p[1]] & (CT_NUL | CT_NL))) {
+	while (!(ctype(*p) & (CT_NUL | CT_NL)) && *p != '"') {
+		if (esc && *p == '\\' && !(ctype(p[1]) & (CT_NUL | CT_NL))) {
 			vstr_addl(&ret, *in, p - *in);
 			*in = p + 1;
 			++p;

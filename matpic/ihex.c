@@ -3,7 +3,7 @@
 #include "misc.h" /* errexit(), flwarn(), infile, line */
 #include "arch.h" /* arch */
 /* below includes = only for ihex input */
-#include "str.h" /* skipsp(), skipnl(), alfa[], hexlookup[], hexnib[] */
+#include "str.h" /* skipsp(), skipnl(), ctype, hexlookup[], hexnib[] */
 #include "dis.h" /* dsym, dsym_t */
 #include "io.h"
 
@@ -150,7 +150,7 @@ void readihex(char *in) {
 	dinval:
 	flwarn("invalid data, skipping rest of line");
 	dnextline:
-	while(!(alfa[(unsigned char) *(in++)] & (CT_NL | CT_NUL)));
+	while(!(ctype(*(in++)) & (CT_NL | CT_NUL)));
 	skipnl(&in);
 	++line;
 	goto dstartline;

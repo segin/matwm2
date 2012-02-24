@@ -19,7 +19,7 @@ int countargs(char *src) {
 	int n = 1;
 	if (src == NULL)
 		return 0;
-	while(!(alfa[(unsigned char) *src] & (CT_NUL | CT_NL))) {
+	while(!(ctype(*src) & (CT_NUL | CT_NL))) {
 		if (*src == ',')
 			++n;
 		++src;
@@ -54,7 +54,7 @@ int insfind(char *lp, char *ip, char *argp) {
 		file = getstr(&argp, 0);
 		if (file == NULL)
 			errexit("syntax error on file directive");
-		if (!(alfa[(unsigned char) *argp] & (CT_NUL | CT_NL)))
+		if (!(ctype(*argp) & (CT_NUL | CT_NL)))
 			flerrexit("invalid data after file directive");
 		return 1;
 	}
@@ -111,17 +111,17 @@ void assemble(char *code) {
 			argp = NULL;
 			wp = getword(&code, &ip);
 			if (wp & (WP_LABEL | WP_LOCAL)) { /* we have label and we're sure about it */
-				if (!(wp & WP_TSPC) && !(alfa[(unsigned char) *code] & (CT_NL | CT_NUL)))
+				if (!(wp & WP_TSPC) && !(ctype(*code) & (CT_NL | CT_NUL)))
 					flerrexit("invalid character in local label"); /* can only happen with local label */
 				lp = ip;
 				wp = getword(&code, &ip);
 			}
 			if (ip == NULL) {
-				if (!(alfa[(unsigned char) *code] & (CT_NL | CT_NUL)))
+				if (!(ctype(*code) & (CT_NL | CT_NUL)))
 					flerrexit("invalid identifier");
 				goto endln;
 			}
-			if (!(alfa[(unsigned char) *code] & (CT_NL | CT_NUL))) {
+			if (!(ctype(*code) & (CT_NL | CT_NUL))) {
 				if (wp & WP_TSPC)
 					argp = code;
 				else flerrexit("invalid identifier");
@@ -133,11 +133,11 @@ void assemble(char *code) {
 					lp = ip;
 					wp = getword(&code, &ip);
 					if (ip == NULL) {
-						if (!(alfa[(unsigned char) *code] & (CT_NL | CT_NUL)))
+						if (!(ctype(*code) & (CT_NL | CT_NUL)))
 							flerrexit("invalid identifier");
 						goto endln;
 					}
-					if (!(alfa[(unsigned char) *code] & (CT_NL | CT_NUL))) {
+					if (!(ctype(*code) & (CT_NL | CT_NUL))) {
 						if (wp & WP_TSPC)
 							argp = code;
 						else flerrexit("invalid identifier");
@@ -169,7 +169,7 @@ void assemble(char *code) {
 				ins.d.lbl.lbl = labels.count - 1;
 				arr_add(&inss, &ins);
 			}
-			while (!(alfa[(unsigned char) *code] & (CT_NUL | CT_NL)))
+			while (!(ctype(*code) & (CT_NUL | CT_NL)))
 				++code;
 			skipnl(&code);
 			++line;

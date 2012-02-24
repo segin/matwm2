@@ -1,6 +1,6 @@
 #include <stdlib.h> /* NULL */
 #include "mem.h"
-#include "str.h" /* skipsp(), alfa[], etc */
+#include "str.h" /* skipsp(), ctype(), etc */
 #include "misc.h" /* flerrexit(), getword(), readfile(), getstr(), clearfile(), file */
 #include "ppc.h"
 #include "io.h"
@@ -38,46 +38,79 @@ char *deffind(char *name) {
 	return ret;
 }
 
-void _ppsub(char *in);
+void _ppsub(char *in, define_t *parent, int argc, char *argv[]) {
+	char *s, *id;
+	char *_argv[ARG_MAX];
+	int _argc, i;
+	define_t *def;
 
-int __ppsub(char *name) {
-	define_t *def = ((define_t *) defines.data) + defines.count - 1;
-	int i;
-
-	for (i = 0; i < defines.count; ++i, --def) /* go backwards for overloads */
-		if (cmpid(def->name, name) && !def->active) {
-			def->active = 1;
-			_ppsub(def->val);
-			def->active = 0;
-			break;
-		}
-	return i != defines.count;
-}
-
-void _ppsub(char *in) {
-	char *s;
-	int c;
 	esc = str = 0;
-	while (!(alfa[(unsigned char) *in] & (CT_NL | CT_NUL))) {
+	while (!(ctype(*in) & (CT_NL | CT_NUL))) {
 		s = in;
-		while (!(alfa[(unsigned char) *in] & (CT_NL | CT_NUL | CT_LET | CT_SEP))) {
+		while (!(ctype(*in) & (CT_NL | CT_NUL | CT_LET | CT_SEP))) {
 			if (esc)
 				esc = 0;
 			else strcheck(*in);
 			++in;
 		}
 		vstr_addl(&tmp, s, in - s);
-		s = in;
+		id = in;
 		getid(&in);
-		if (!str && __ppsub(s))
-			++c;
-		else vstr_addl(&tmp, s, in - s);
+
+		if (parent != NULL && argc) {
+			if (parent->argc < argc)
+				flerrexit("too many arguments for macro");
+			for (i = 0; i < argc; ++i) {
+				if (cmpid(id, parent->argv[i])) {
+					_ppsub(argv[i], NULL, 0, NULL);
+					break;
+				}
+			}
+			if (i != argc)
+				continue;
+		}
+
+		_argc = 0;
+		if (*in == '(') {
+			++in;
+			while (!(ctype(*in) & (CT_NL | CT_NUL)) && *in != ')') {
+				s = in;
+				while (!(ctype(*in) & (CT_NL | CT_NUL)) && *in != ',' && *in != ')')
+					++in;
+				_argv[_argc] = strldup(s, in - s);
+				if (_argv[_argc] == NULL)
+					errexit("strldup() failure");
+				if (*in == ',')
+					++in;
+				++_argc;
+				if (_argc == ARG_MAX)
+					flerrexit("too many arguments for macro");
+			}
+			if (*in != ')')
+				flerrexit("missing ')'");
+			++in;
+		}
+		if (!str) {
+			def = ((define_t *) defines.data) + defines.count - 1;
+			for (i = 0; i < defines.count; ++i, --def) /* go backwards for overloads */
+				if (cmpid(def->name, id) && !def->active) {
+					def->active = 1;
+					_ppsub(def->val, def, _argc, _argv);
+					def->active = 0;
+					break;
+				}
+		}
+		if (str || i == defines.count)
+			vstr_addl(&tmp, id, in - id);
 	}
+
+	for (--argc; argc >= 0; --argc)
+		free(argv[argc]);
 }
 
 char *ppsub(char *in) {
 	tmp.len = 0;
-	_ppsub(in);
+	_ppsub(in, NULL, 0, NULL);
 	return tmp.data;
 }
 
@@ -101,7 +134,7 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 	}
 	if (cmpid(ip, "ifdef")) {
 		wp = getword(&argp, &s);
-		if (s == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
+		if (s == NULL || !(ctype(*argp) & (CT_NL | CT_NUL)))
 			flerrexit("syntax error on ifdef directive");
 		++level;
 		if (!ignore && deffind(s) == NULL)
@@ -110,7 +143,7 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 	}
 	if (cmpid(ip, "ifndef")) {
 		wp = getword(&argp, &s);
-		if (s == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
+		if (s == NULL || !(ctype(*argp) & (CT_NL | CT_NUL)))
 			flerrexit("syntax error on ifndef directive");
 		++level;
 		if (!ignore && deffind(s) != NULL)
@@ -149,7 +182,7 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 			while (1) {
 				getword(&argp, &s);
 				if (s == NULL && *argp != ')')
-					errexit("syntax error in macro parameter list");
+					flerrexit("syntax error in macro parameter list");
 				def.argv[def.argc] = s;
 				++(def.argc);
 				if (*argp == ')') {
@@ -157,17 +190,17 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 					break;
 				}
 				if (*argp != ',')
-					errexit("syntax error in macro parameter list");
+					flerrexit("syntax error in macro parameter list");
 				++argp;
 				if (def.argc == ARG_MAX)
-					errexit("too many arguments for macro");
+					flerrexit("too many arguments for macro");
 			}
 			++(def.argc);
-			if (!skipsp(&argp) && !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
-				errexit("syntax error on define directive");
+			if (!skipsp(&argp) && !(ctype(*argp) & (CT_NL | CT_NUL)))
+				flerrexit("syntax error on define directive");
 		} else {
 			def.argc = 0;
-			if (!(wp & WP_TSPC) && !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
+			if (!(wp & WP_TSPC) && !(ctype(*argp) & (CT_NL | CT_NUL)))
 				flerrexit("syntax error on define directive");
 		}
 		def.val = argp;
@@ -180,7 +213,7 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 			flerrexit("too few arguments for msg directive");
 		s = getstr(&argp, 1);
 		skipsp(&argp);
-		if (s == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
+		if (s == NULL || !(ctype(*argp) & (CT_NL | CT_NUL)))
 			flerrexit("syntax error on msg directive");
 		flmsg(s);
 		free(s);
@@ -191,7 +224,7 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 			flerrexit("too few arguments for msg directive");
 		s = getstr(&argp, 1);
 		skipsp(&argp);
-		if (s == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
+		if (s == NULL || !(ctype(*argp) & (CT_NL | CT_NUL)))
 			flerrexit("syntax error on msg directive");
 		flerrexit(s);
 		free(s);
@@ -202,7 +235,7 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 			flerrexit("too few arguments for msg directive");
 		s = getstr(&argp, 1);
 		skipsp(&argp);
-		if (s == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
+		if (s == NULL || !(ctype(*argp) & (CT_NL | CT_NUL)))
 			flerrexit("syntax error on msg directive");
 		flwarn(s);
 		free(s);
@@ -214,7 +247,7 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 		if (!argp)
 			flerrexit("too few arguments for msg directive");
 		file = getstr(&argp, 0);
-		if (file == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
+		if (file == NULL || !(ctype(*argp) & (CT_NL | CT_NUL)))
 			flerrexit("syntax error on include directive");
 		s = getstr(&s, 1);
 		data = readfile(s);
@@ -238,7 +271,7 @@ int getprefix(char **src) {
 	char *p = *src;
 	int n = 0;
 	skipsp(&p);
-	while (alfa[(unsigned char) *p] & (CT_PPC))
+	while (ctype(*p) & (CT_PPC))
 		++p, ++n;
 	if (n) {
 		*src = p;
@@ -269,7 +302,7 @@ void _preprocess(ioh_t *out, char *in) {
 					++p;
 				}
 				if (iscomment || nestcomment) {
-					if (alfa[(unsigned char) *p] & CT_NL)
+					if (ctype(*p) & CT_NL)
 						iscomment = 0;
 					else *p = ' ';
 				} else if (*p == ';') {
@@ -313,17 +346,17 @@ void _preprocess(ioh_t *out, char *in) {
 		pps = getprefix(&in);
 		wp = getword(&in, &ip);
 		if (wp & (WP_LABEL | WP_LOCAL)) { /* we have label and we're sure about it */
-			if (!(wp & WP_TSPC) && !(alfa[(unsigned char) *in] & (CT_NL | CT_NUL)))
+			if (!(wp & WP_TSPC) && !(ctype(*in) & (CT_NL | CT_NUL)))
 				flerrexit("invalid character in local label"); /* can only happen with local label */
 			lp = ip;
 			wp = getword(&in, &ip);
 		}
 		if (ip == NULL) {
-			if (pps && !(alfa[(unsigned char) *in] & (CT_NL | CT_NUL)))
+			if (pps && !(ctype(*in) & (CT_NL | CT_NUL)))
 				flerrexit("invalid preprocessor directive");
 			goto endln;
 		}
-		if (!(alfa[(unsigned char) *in] & (CT_NL | CT_NUL))) {
+		if (!(ctype(*in) & (CT_NL | CT_NUL))) {
 			if (wp & WP_TSPC)
 				argp = in;
 			else if (pps) flerrexit("invalid preprocessor directive");
@@ -335,7 +368,7 @@ void _preprocess(ioh_t *out, char *in) {
 			wp = getword(&in, &ip);
 			if (ip == NULL)
 				goto endln;
-			if (!(alfa[(unsigned char) *in] & (CT_NL | CT_NUL))) {
+			if (!(ctype(*in) & (CT_NL | CT_NUL))) {
 				if (wp & WP_TSPC)
 					argp = in;
 				else goto endln;
@@ -343,7 +376,7 @@ void _preprocess(ioh_t *out, char *in) {
 			r = ppfind(out, lp, ip, argp);
 		}
 		endln:
-		while (!(alfa[(unsigned char) *in] & (CT_NUL | CT_NL)))
+		while (!(ctype(*in) & (CT_NUL | CT_NL)))
 			++in;
 		skipnl(&in);
 		if (!r && !ignore) {
