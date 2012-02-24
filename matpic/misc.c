@@ -5,23 +5,14 @@
 #include "misc.h"
 
 char *file = NULL;
-char *infile = NULL;
+char *infile = "<stdin>";
 
 unsigned int address, line;
-
-void clearfile(void) {
-	if (file != infile || file == NULL) {
-		free(file);
-		file = "<stdin>";
-	}
-	infile = file;
-}
 
 void cleanup(void) {
 	arr_free(&inss);
 	arr_free(&labels);
 	arr_free(&dsym);
-	clearfile();
 }
 
 void vaflwarn(char *pro, char *fmt, va_list ap) {

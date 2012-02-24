@@ -49,8 +49,11 @@ int insfind(char *lp, char *ip, char *argp) {
 		ins.type = IT_FIL;
 		ins.d.file.file = argp;
 		arr_add(&inss, &ins);
-		clearfile();
+		if (file != infile)
+			free(file);
 		file = getstr(&argp, 0);
+		if (file == NULL)
+			errexit("syntax error on file directive");
 		if (!(alfa[(unsigned char) *argp] & (CT_NUL | CT_NL)))
 			flerrexit("invalid data after file directive");
 		return 1;
@@ -98,7 +101,7 @@ void assemble(char *code) {
 		int wp, i;
 		unsigned int addrl;
 
-		clearfile();
+		file = infile;
 		line = 1;
 		address = 0;
 		while (*code) {
@@ -179,7 +182,7 @@ void assemble(char *code) {
 		int i, c, args[ARG_MAX];
 		char *s;
 
-		clearfile();
+		file = infile;
 		address = 0;
 
 		while (ins->type != IT_END) {
@@ -204,7 +207,8 @@ void assemble(char *code) {
 					address += c;
 					break;
 				case IT_FIL:
-					clearfile();
+					if (file != infile)
+						free(file);
 					s = ins->d.file.file;
 					file = getstr(&s, 1);
 					break;
@@ -216,5 +220,6 @@ void assemble(char *code) {
 		}
 	}
 	llbl = -1; /* important */
-	clearfile();
+	if (file != infile)
+		free(file);
 }

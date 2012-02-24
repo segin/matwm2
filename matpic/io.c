@@ -256,7 +256,7 @@ ioh_t *mfopen(char *fn, int mode) {
 		o |= O_TRUNC;
 	if (mode & MFM_APPEND)
 		o |= O_APPEND;
-	fd = open(fn, o);
+	fd = open(fn, o, 0644);
 	if (fd < 0)
 		return NULL;
 	return mfdopen(fd, 1);

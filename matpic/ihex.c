@@ -82,7 +82,7 @@ void readihex(char *in) {
 	int n, len, crc, rtype, addr;
 	dsym_t ds;
 
-	clearfile();
+	file = infile;
 	arr_new(&dsym, sizeof(dsym_t));
 	dstartline:
 	crc = 0;

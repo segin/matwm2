@@ -347,7 +347,7 @@ void _preprocess(ioh_t *out, char *in) {
  *   length of *ret
  */
 void preprocess(ioh_t *out, char *in) {
-	clearfile();
+	file = infile;
 	vstr_new(&tmp);
 	arr_new(&defines, sizeof(define_t));
 	line = 1;
@@ -355,5 +355,4 @@ void preprocess(ioh_t *out, char *in) {
 	_preprocess(out, in);
 	vstr_free(&tmp);
 	arr_free(&defines);
-	clearfile();
 }

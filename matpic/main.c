@@ -7,18 +7,19 @@
 #include "as.h"
 #include "dis.h"
 #include "ihex.h"
-#include "misc.h" /* errexit(), cleanup(), readfile() */
+#include "misc.h" /* errexit(), cleanup(), readfile(), file, infile */
 #include "io.h"
 
 int main(int argc, char *argv[]) {
 	char *a, *code;
 	int i;
+	ioh_t *out = out;
 	/* teh command line options */
 	int disasm = 0, ppm = 0, through = 0;
 
 	mstdio_init();
-	clearfile();
-	for (i = 0; i < argc; ++i) {
+	out = mstdout;
+	for (i = 1; i < argc; ++i) {
 		if (*(argv[i]) == '-') {
 			a = argv[i] + 1;
 			argv[i] = NULL;
@@ -41,15 +42,25 @@ int main(int argc, char *argv[]) {
 				}
 				++a;
 			}
+		} else {
+			if (file != NULL) {
+				if (out != mstdout)
+					errexit("too many arguments");
+				out = mfopen(argv[i], MFM_WR | MFM_CREAT | MFM_TRUNC);
+				if (out == NULL)
+					errexit("cannot open output file '%s'", argv[i]);
+			} else {
+				file = infile = argv[i]; /* only setting file to check against it later */
+			}
 		}
 	}
 
-	code = readfile(NULL);
+	code = readfile(file);
 	if (code == NULL)
-		errexit("failed to read file '%s'", file);
+		errexit("failed to read file '%s'", infile);
 	if (!disasm) {
 		if (ppm == 1) { /* only preprocess */
-			preprocess(mstdout, code);
+			preprocess(out, code);
 			free(code);
 			goto done;
 		} if (ppm == 0) { /* normal preprocess */
@@ -72,12 +83,12 @@ int main(int argc, char *argv[]) {
 			mfclose(memout);
 			if (code == NULL)
 				errexit("error error");
-		} else getihex(mstdout);
+		} else getihex(out);
 	}
 	if (disasm || through) {
 		readihex(code);
 		free(code);
-		disassemble(mstdout);
+		disassemble(out);
 	}
 	done:
 	cleanup();
