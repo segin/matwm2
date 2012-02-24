@@ -38,7 +38,7 @@ void disassemble(ioh_t *out) {
 		if (i != oc->len) {
 			for (i = 0; i < arch->align; ++i)
 				mfprintf(out, "%2x", inop[i]);
-			mfprint(out, "): data 0x\n");
+			mfprint(out, "): data 0x");
 			for (i = 0; i < arch->align; ++i)
 				mfprintf(out, "%2x", inop[arch->dord[i]]);
 			sym += arch->align;

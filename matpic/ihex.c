@@ -18,6 +18,8 @@ void endln(ioh_t *out) {
 	mfprintf(out, ":%2x%4x00", pos, saddr);
 	for (i = 0; i < pos; ++i)
 		mfprintf(out, "%2x", buf[i]);
+	crc += saddr >> 8;
+	crc += saddr & 0xFF;
 	mfprintf(out, "%2x", (0x100 - (crc + pos)) & 0xFF);
 	mfprint(out, "\n");
 	crc = 0;
@@ -45,13 +47,11 @@ void getihex(ioh_t *out) {
 				if (pos)
 					endln(out);
 				address = saddr = ins->d.org.address;
-				crc += address >> 8;
-				crc += address & 0xFF;
 				break;
 			case IT_DAT:
 				for (i = 0; i < arch->dlen; ++i) {
 					addb(out, (ins->d.data.value & (0xFF << (8 * arch->dord[i]))) >> (8 * arch->dord[i]));
-					++address;
+					address += arch->dlen;
 				}
 				break;
 			case IT_INS:
