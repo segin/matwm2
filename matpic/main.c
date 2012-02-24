@@ -60,6 +60,8 @@ int main(int argc, char *argv[]) {
 			code = mmemget(memout);
 			mfclose(memout);
 		}
+		if (code == NULL)
+			errexit("error error");
 		assemble(code);
 		free(code); /* release the monster */
 		if (through) {
@@ -68,6 +70,8 @@ int main(int argc, char *argv[]) {
 			mfwrite(memout, "\0", 1);
 			code = mmemget(memout);
 			mfclose(memout);
+			if (code == NULL)
+				errexit("error error");
 		} else getihex(mstdout);
 	}
 	if (disasm || through) {

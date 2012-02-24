@@ -309,11 +309,15 @@ ioh_t *mmemopen(int options) {
 }
 
 char *mmemget(ioh_t *h) {
+	if (h == NULL)
+		return NULL;
 	mfflush(h);
 	return ((mmemdata_t *) h->data)->ptr;
 }
 
 int mmemlen(ioh_t *h) {
+	if (h == NULL)
+		return -1;
 	mfflush(h);
 	return ((mmemdata_t *) h->data)->len;
 }
