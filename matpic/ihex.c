@@ -1,4 +1,3 @@
-#include <stdlib.h> /* realloc() */
 #include "mem.h" /* BLOCK */
 #include "as.h" /* inss */
 #include "misc.h" /* errexit(), flwarn(), infile, line */
@@ -83,6 +82,7 @@ void readihex(char *in) {
 	int n, len, crc, rtype, addr;
 	dsym_t ds;
 
+	clearfile();
 	arr_new(&dsym, sizeof(dsym_t));
 	dstartline:
 	crc = 0;

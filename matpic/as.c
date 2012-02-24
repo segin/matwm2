@@ -2,48 +2,18 @@
  * assembler *
  *************/
 
-#include <string.h> /* memcpy(), strlen() */
+#include <stdlib.h> /* NULL */
+#include <string.h> /* memcpy() */
 #include "as.h"
 #include "str.h"
 #include "mem.h"
 #include "arch.h"
-#include "misc.h" /* getargs(), infile, address, line */
+#include "misc.h" /* getargs(), clearfile(), getstr(), file, address, line */
 
-char file[FN_MAX];
 int llbl = -1;
 
 arr_t inss = { NULL, 0, 0, 0 };
 arr_t labels = { NULL, 0, 0, 0 };
-
-void setfile(char *fn) {
-	int i;
-	if (*fn != '"')
-		flerrexit("argument to file directive needs double quotes");
-	++fn;
-	for (i = 0; i < FN_MAX - 1; ++i) {
-		if (alfa[(unsigned char) fn[i]] & (CT_NUL | CT_NL)) {
-			file[i] = 0;
-			flerrexit("missing double quote");
-		}
-		if (fn[i] == '"')
-			break;
-		file[i] = fn[i];
-	}
-	fn += i + 1;
-	skipsp(&fn);
-	if (!(alfa[(unsigned char) *fn] & (CT_NUL | CT_NL)))
-		flerrexit("invalid crap after file directive");
-	file[i] = 0;
-	line = 0; /* will be incremented soon enough */
-}
-
-void initfile(void) {
-	int len = strlen(infile);
-	if (len > FN_MAX - 1)
-		len = FN_MAX;
-	memcpy((void *) file, (void *) infile, len);
-	file[len] = 0;
-}
 
 int countargs(char *src) {
 	int n = 1;
@@ -75,7 +45,11 @@ int insfind(char *lp, char *ip, char *argp) {
 	if (cmpid(ip, "file")) {
 		if (argp == NULL)
 			flerrexit("'file' directive needs an argument");
-		setfile(argp);
+		clearfile();
+		file = getstr(&argp);
+		if (!(alfa[(unsigned char) *argp] & (CT_NUL | CT_NL)))
+			flerrexit("invalid data after file directive");
+		line = 0; /* will be incremented soon enough */
 		ins.type = IT_FIL;
 		ins.d.file.file = argp;
 		arr_add(&inss, &ins);
@@ -124,7 +98,7 @@ void assemble(char *code) {
 		int wp, i;
 		unsigned int addrl;
 
-		initfile();
+		clearfile();
 		line = 1;
 		address = 0;
 		while (*code) {
@@ -203,8 +177,9 @@ void assemble(char *code) {
 	{ /* second pass */
 		ins_t *ins = (ins_t *) inss.data;
 		int i, c, args[ARG_MAX];
+		char *s;
 
-		initfile();
+		clearfile();
 		address = 0;
 
 		while (ins->type != IT_END) {
@@ -229,7 +204,9 @@ void assemble(char *code) {
 					address += c;
 					break;
 				case IT_FIL:
-					setfile(ins->d.file.file);
+					clearfile();
+					s = ins->d.file.file;
+					file = getstr(&s);
 					break;
 				case IT_LBL:
 					llbl = ins->d.lbl.lbl;
@@ -239,4 +216,5 @@ void assemble(char *code) {
 		}
 	}
 	llbl = -1; /* important */
+	clearfile();
 }

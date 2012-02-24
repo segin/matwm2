@@ -1,22 +1,27 @@
-#include <stdlib.h> /* exit(), EXIT_FAILURE */
-#include "as.h" /* file, line, cnl, and other things i think */
-#include "dis.h"
-#include "ppc.h"
+#include <stdlib.h> /* NULL, exit(), EXIT_FAILURE */
+#include "as.h" /* inss, labels, llbl */
+#include "dis.h" /* dsym */
 #include "str.h" /* skipsp(), getnum(), getid(), cmpid(), alfa[] */
 #include "misc.h"
 
-char *infile = "<stdin>";
+char *file = NULL;
+char *infile = NULL;
+
 unsigned int address, line;
+
+void clearfile(void) {
+	if (file != infile || file == NULL) {
+		free(file);
+		file = "<stdin>";
+	}
+	infile = file;
+}
 
 void cleanup(void) {
 	arr_free(&inss);
 	arr_free(&labels);
 	arr_free(&dsym);
-}
-
-void reset(void) {
-	infile = "<file>";
-	cleanup();
+	clearfile();
 }
 
 void vaflwarn(char *pro, char *fmt, va_list ap) {
@@ -452,5 +457,6 @@ char *getstr(char **in) {
 	vstr_addl(&ret, *in, p - *in);
 	*in = p;
 	++*in;
+	skipsp(in);
 	return ret.data;
 }

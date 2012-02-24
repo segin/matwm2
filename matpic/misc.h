@@ -1,13 +1,14 @@
 #ifndef __MISC_H__
 #define __MISC_H__
 
-extern char *infile;
+extern char *file;
 extern unsigned int address, line;
 
+extern void clearfile(void);
 extern void cleanup(void);
 extern void reset(void);
 
-void errexit(char *fmt, ...);
+extern void errexit(char *fmt, ...);
 extern void flerrexit(char *fmt, ...);
 extern void flwarn(char *fmt, ...);
 extern void flmsg(char *msg);

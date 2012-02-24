@@ -17,6 +17,7 @@ int main(int argc, char *argv[]) {
 	int disasm = 0, ppm = 0, through = 0;
 
 	mstdio_init();
+	clearfile();
 	for (i = 0; i < argc; ++i) {
 		if (*(argv[i]) == '-') {
 			a = argv[i] + 1;
@@ -44,6 +45,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	code = readfile(NULL);
+	if (code == NULL)
+		errexit("failed to read file '%s'", file);
 	if (!disasm) {
 		if (ppm == 1) { /* only preprocess */
 			preprocess(mstdout, code);

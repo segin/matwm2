@@ -3,9 +3,6 @@
 
 #include "mem.h"
 
-#define FN_MAX 512 /* filename max length */
-
-
 typedef struct label_t label_t;
 
 struct label_t {
@@ -48,13 +45,10 @@ enum itype {
 	IT_LBL  /* last label encountered */
 };
 
-extern char file[FN_MAX];
 extern arr_t inss;
 extern arr_t labels;
 extern int llbl; /* last label */
 
-extern void setfile(char *fn);
-extern void initfile(void);
 extern void assemble(char *code);
 
 #endif /* __AS_H__ */

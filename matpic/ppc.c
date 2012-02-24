@@ -1,9 +1,7 @@
 #include <stdlib.h> /* NULL */
-#include <string.h> /* strcpy() */
 #include "mem.h"
 #include "str.h" /* skipsp(), alfa[], etc */
-#include "misc.h" /* getword(), readfile */
-#include "as.h" /* flerrexit(), initfile(), setfile() */
+#include "misc.h" /* flerrexit(), getword(), readfile(), getstr(), clearfile(), file */
 #include "ppc.h"
 #include "io.h"
 
@@ -187,28 +185,24 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 		return 1;
 	}
 	if (cmpid(ip, "include")) {
-		char *fn, *data, ofile[FN_MAX];
-		int oline;
+		char *data, *ofile = file;
+		int oline = line;
 		if (!argp)
 			flerrexit("too few arguments for msg directive");
-		fn = getstr(&argp);
-		skipsp(&argp);
-		if (fn == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
+		file = getstr(&argp);
+		if (file == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
 			flerrexit("syntax error on include directive");
-		data = readfile(fn);
+		data = readfile(file);
 		if (data == NULL)
-			flerrexit("failed to include file");
-		strcpy(ofile, file);
-		strcpy(file, fn);
-		mfprintf(out, "file \"%s\"\n", fn);
-		oline = line;
+			flerrexit("failed to include file '%s'", file);
+		mfprintf(out, "file \"%s\"\n", file);
 		line = 1;
-		free(fn);
 		_preprocess(out, data);
 		free(data);
-		strcpy(file, ofile);
-		mfprintf(out, "file \"%s\"\nline %u\n", file, line);
+		free(file);
+		file = ofile;
 		line = oline;
+		mfprintf(out, "file \"%s\"\nline %u\n", file, oline);
 		return 1;
 	}
 	return 0;
@@ -328,7 +322,7 @@ void _preprocess(ioh_t *out, char *in) {
  *   length of *ret
  */
 void preprocess(ioh_t *out, char *in) {
-	initfile();
+	clearfile();
 	vstr_new(&tmp);
 	arr_new(&defines, sizeof(define_t));
 	line = 1;
@@ -336,4 +330,5 @@ void preprocess(ioh_t *out, char *in) {
 	_preprocess(out, in);
 	vstr_free(&tmp);
 	arr_free(&defines);
+	clearfile();
 }

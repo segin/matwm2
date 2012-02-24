@@ -1,4 +1,4 @@
-#include <stdlib.h> /* malloc(), free() */
+#include <stdlib.h> /* malloc(), realloc(), free(), NULL */
 #include <string.h> /* strlen(), memcpy() */
 #include <stdarg.h>
 
