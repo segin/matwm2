@@ -7,7 +7,7 @@
 000006:  077f  addwf	0x7f, w
 000007:  05ff  andwf	0x7f, f
 000008:  01ff  clrf	0x7f
-000009:  0100  dw	0x100
+000009:  0100  dw	0x100  ;unknown opcode
 00000a:  097f  comf	0x7f, w
 00000b:  03ff  decf	0x7f, f
 00000c:  0b7f  decfsz	0x7f, w
@@ -45,5 +45,5 @@
 0000b7:  3fff  addlw	0xff
 0000b8:  0000  nop
 0000b9:  1010  bcf	0x10, 0
-0000ba:  0034  dw	0x34
-0000bb:  000a  dw	0xa
+0000ba:  0034  dw	0x34  ;unknown opcode
+0000bb:  000a  dw	0xa  ;unknown opcode

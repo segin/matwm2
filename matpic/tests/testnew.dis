@@ -45,5 +45,5 @@
 0000b7:  3fff  addlw	0xff
 0000b8:  0000  nop
 0000b9:  1010  bcf	0x10, 0
-0000ba:  001c  dw	0x1c  ;unknown opcode
+0000ba:  0034  dw	0x34  ;unknown opcode
 0000bb:  000a  dw	0xa  ;unknown opcode

@@ -106,5 +106,5 @@ define define 19
  option
  tris 0x7
  ; testing data, and some math
- data 0x3FFF, 0, 0x1010, 5 + 5 * 5 - (3 * (4 + 3)) / 3 + 6 ^ 1 | 0b11000 & 0b11011 << 2 >> 1, 10
+ data 0x3FFF, 0, 0x1010, (((((((((5 + 5) * 5) - 3) * (4 + 3) / 3) + 6) ^ 1) | 0b11000) & 0b11011) << 2) >> 1, 10
 
