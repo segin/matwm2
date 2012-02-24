@@ -257,6 +257,29 @@ void _preprocess(ioh_t *out, char *in) {
 		}
 	}
 
+	{ /* fix escaped newlines and remove dos newlines */
+		char *p, *c;
+		int i;
+		p = c = in;
+		while (*c) {
+			switch (*c) {
+				case '\\':
+					i = 1;
+					while (c[i] == '\r')
+						++i;
+					if (c[1] == '\n')
+						c += i + 1;
+					break;
+				case '\r':
+					/* dos newlines will be added by mfwrite(), if the user wants them in output */
+					++c;
+			}
+			*p = *c;
+			++p, ++c;
+		}
+		*p = 0;
+	}
+
 	/* this very similar to assemble() */
 	while (*in) {
 		lnstart = in;

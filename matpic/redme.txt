@@ -15,6 +15,7 @@ options
 input file is read from stdin, output written to stdout
 comments can be started with ";", they end together with the line
 multiline or part-of line comments can be started with "/*" and ended with "*/", they can also be nested
+if there is a backslash ("\") before a newline, the newline will be ignored
 + - * / % & | ^ << >> ~ ! == != > < >= <= () behave as in C,
  except that &, ^ and | have higher precedence than the comparison operators (<, >, <=, >=, ==, !=)
 $ is the address at start of line
