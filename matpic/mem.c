@@ -16,7 +16,7 @@ void arr_new(arr_t *a, int size) {
 
 void arr_add(arr_t *a, void *data) {
 	if (a->space < (a->count + 1) * a->size) {
-		a->data = realloc(a->data, (((a->size * a->count) % BLOCK) + 1) * BLOCK);
+		a->data = realloc(a->data, (((a->size * (a->count + 1)) % BLOCK) + 1) * BLOCK);
 		if (a->data == NULL)
 			errexit("out of memory\n");
 	}

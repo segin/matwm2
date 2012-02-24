@@ -6,7 +6,8 @@
 
 typedef struct {
 	char *name, *val;
-	int active;
+	int active, argc;
+	char *argv[ARG_MAX];
 } define_t;
 
 extern arr_t defines;

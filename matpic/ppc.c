@@ -141,47 +141,71 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 	if (cmpid(ip, "define")) {
 		define_t def;
 		wp = getword(&argp, &def.name);
-		if (def.name == NULL || (!(wp & WP_TSPC) && !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL))))
+		if (def.name == NULL)
 			flerrexit("syntax error on define directive");
+		if  (!(wp & WP_TSPC) && *argp == '(') {
+			def.argc = 0;
+			++argp;
+			while (1) {
+				getword(&argp, &s);
+				if (s == NULL && *argp != ')')
+					errexit("syntax error in macro parameter list");
+				def.argv[def.argc] = s;
+				++(def.argc);
+				if (*argp == ')') {
+					++argp;
+					break;
+				}
+				if (*argp != ',')
+					errexit("syntax error in macro parameter list");
+				++argp;
+				if (def.argc == ARG_MAX)
+					errexit("too many arguments for macro");
+			}
+			++(def.argc);
+			if (!skipsp(&argp) && !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
+				errexit("syntax error on define directive");
+		} else {
+			def.argc = 0;
+			if (!(wp & WP_TSPC) && !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
+				flerrexit("syntax error on define directive");
+		}
 		def.val = argp;
 		def.active = 0;
 		arr_add(&defines, &def);
 		return 1;
 	}
 	if (cmpid(ip, "msg")) {
-		char *msg;
 		if (!argp)
 			flerrexit("too few arguments for msg directive");
-		msg = getstr(&argp, 1);
+		s = getstr(&argp, 1);
 		skipsp(&argp);
-		if (msg == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
+		if (s == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
 			flerrexit("syntax error on msg directive");
-		flmsg(msg);
-		free(msg);
+		flmsg(s);
+		free(s);
 		return 1;
 	}
 	if (cmpid(ip, "error")) {
-		char *msg;
 		if (!argp)
 			flerrexit("too few arguments for msg directive");
-		msg = getstr(&argp, 1);
+		s = getstr(&argp, 1);
 		skipsp(&argp);
-		if (msg == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
+		if (s == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
 			flerrexit("syntax error on msg directive");
-		flerrexit(msg);
-		free(msg);
+		flerrexit(s);
+		free(s);
 		return 1;
 	}
 	if (cmpid(ip, "warn")) {
-		char *msg;
 		if (!argp)
 			flerrexit("too few arguments for msg directive");
-		msg = getstr(&argp, 1);
+		s = getstr(&argp, 1);
 		skipsp(&argp);
-		if (msg == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
+		if (s == NULL || !(alfa[(unsigned char) *argp] & (CT_NL | CT_NUL)))
 			flerrexit("syntax error on msg directive");
-		flwarn(msg);
-		free(msg);
+		flwarn(s);
+		free(s);
 		return 1;
 	}
 	if (cmpid(ip, "include")) {
