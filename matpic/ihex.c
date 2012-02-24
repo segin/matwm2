@@ -50,11 +50,10 @@ void getihex(ioh_t *out) {
 				crc += address & 0xFF;
 				break;
 			case IT_DAT:
-				/* FIXME if data != 16bit */
-				addb(out, ins->d.data.value & 0xFF);
-				++address;
-				addb(out, (ins->d.data.value & 0xFF00) >> 8);
-				++address;
+				for (i = 0; i < arch->dlen; ++i) {
+					addb(out, (ins->d.data.value & (0xFF << (8 * arch->dord[i]))) >> (8 * arch->dord[i]));
+					++address;
+				}
 				break;
 			case IT_INS:
 				for (i = 0; i < ins->d.ins.len; ++i)

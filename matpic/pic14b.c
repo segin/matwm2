@@ -15,7 +15,8 @@ enum atype {
 	AT_BS /* banksel */
 };
 
-int insord[4] = { 1, 0, 3, 2 };
+int insord14b[4] = { 1, 0, 3, 2 };
+int dord14b[2] = { 0, 1 };
 
 oc_t ocs14b[] = {
 	/* byte operatios */
@@ -113,19 +114,19 @@ void acmp14b(unsigned char *oc, int atype, int argc, int *argv) {
 void adis14b(ioh_t *out, unsigned char *oc, int atype) {
 	switch (atype) {
 		case AT_DF:
-			mfprintf(out, "%2x, %i", oc[1] & 0x7F, (oc[1] & 0x80) >> 7);
+			mfprintf(out, "0x%2x, %i", oc[1] & 0x7F, (oc[1] & 0x80) >> 7);
 			break;
 		case AT_F:
-			mfprintf(out, "%2x", oc[1] & 0x7F);
+			mfprintf(out, "0x%2x", oc[1] & 0x7F);
 			break;
 		case AT_BF:
-			mfprintf(out, "%2x, %i", oc[1] & 0x7F, ((oc[0] & 3) << 1) | ((oc[1] & 0x80) >> 7));
+			mfprintf(out, "0x%2x, %i", oc[1] & 0x7F, ((oc[0] & 3) << 1) | ((oc[1] & 0x80) >> 7));
 			break;
 		case AT_K8:
-				mfprintf(out, "%2x", oc[1] & 0xFF);
+				mfprintf(out, "0x%2x", oc[1] & 0xFF);
 			break;
 		case AT_K11:
-			mfprintf(out, "%3x", ((oc[0] & 7) << 8) | (oc[1] & 0xFF));
+			mfprintf(out, "0x%3x", ((oc[0] & 7) << 8) | (oc[1] & 0xFF));
 			break;
 		case AT_T:
 			mfprintf(out, "%i", oc[1] & 3);
@@ -134,9 +135,11 @@ void adis14b(ioh_t *out, unsigned char *oc, int atype) {
 }
 
 arch_t pic14b = {
-	insord,
 	ocs14b,
 	&acmp14b,
 	&adis14b,
-	2
+	insord14b,
+	dord14b,
+	2,
+	2,
 };

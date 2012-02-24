@@ -45,4 +45,3 @@ integer notation supports the following prefixes:
 	0: octal
 underscores within integers are ignored (but not in prefix plz)
 utf-8 in labels / macro names etc are allowed
-

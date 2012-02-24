@@ -65,12 +65,14 @@ char *readfile(char *path) {
 		errexit("failed to open file \"%s\"", path);
 	do {
 		pos += r;
-		if (mem + BLOCK < mem)
-			errexit("wtf integer overflow");
-		mem += BLOCK;
-		ret = (char *) realloc((void *) ret, mem + 1); /* + 1 for ending 0 */
-		if (ret == NULL)
-			errexit("out of memory");
+		if (mem < pos + BLOCK) {
+			if (mem + BLOCK < mem)
+				errexit("wtf integer overflow");
+			mem += BLOCK;
+			ret = (char *) realloc((void *) ret, mem + 1); /* + 1 for ending 0 */
+			if (ret == NULL)
+				errexit("out of memory");
+		}
 	} while((r = mfread(infd, ret + pos, BLOCK)) > 0);
 	ret[pos] = 0;
 	if (path != NULL)

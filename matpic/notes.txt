@@ -12,4 +12,3 @@ If they are 00 it gets a little more comlicated:
 	Otherwise (opcode & 0x0E00 != 0), there is a file and destination argument.
 
 Note to self: try clrf with bit 7 == 0 and see if it clears w too.
-

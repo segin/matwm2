@@ -9,4 +9,3 @@ matpic: $(OBJS)
 
 clean:
 	$(RM) $(OBJS) matpic
-

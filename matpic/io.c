@@ -188,7 +188,7 @@ ioh_t *_mcbopen(void *d, int len, int options,
 	new->seek = seek;
 	new->close = close;
 	new->pos = 0;
-	new->options = 0;
+	new->options = options;
 	return new;
 }
 
@@ -199,28 +199,43 @@ ioh_t *_mcbopen(void *d, int len, int options,
 ioh_t *mstdin, *mstdout, *mstderr;
 
 void mstdio_init(void) {
-	mstdin = mfdopen(0);
-	mstdout = mfdopen(1);
-	mstderr = mfdopen(2);
+	mstdin = mfdopen(0, 0);
+	mstdout = mfdopen(1, 0);
+	mstderr = mfdopen(2, 0);
 }
 
 #include <unistd.h>
 
+typedef struct {
+	int fd, close;
+} mfddata_t;
+
 int _mfdread(ioh_t *h, char *data, int len) {
-	return read(*(int *) h->data, data, len);
+	mfddata_t *d = (mfddata_t *) h->data;
+	return read(d->fd, data, len);
 }
 
 int _mfdwrite(ioh_t *h, char *data, int len) {
-	return write(*(int *) h->data, data, len);
+	mfddata_t *d = (mfddata_t *) h->data;
+	return write(d->fd, data, len);
 }
 
 void _mfdclose(ioh_t *h) {
-
+	mfddata_t *d = (mfddata_t *) h->data;
+	if (d->close)
+		close(d->fd);
 }
 
-ioh_t *mfdopen(int fd) {
-	return _mcbopen((int *) &fd, sizeof(int), 0, &_mfdread, &_mfdwrite, NULL, &_mfdclose);
+ioh_t *mfdopen(int fd, int close) {
+	mfddata_t d;
+	d.fd = fd;
+	d.close = close;
+	return _mcbopen(&d, sizeof(mfddata_t), 0, &_mfdread, &_mfdwrite, NULL, &_mfdclose);
 }
+
+/*************
+ * file open *
+ *************/
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -243,7 +258,7 @@ ioh_t *mfopen(char *fn, int mode) {
 	fd = open(fn, o);
 	if (fd < 0)
 		return NULL;
-	return mfdopen(fd);
+	return mfdopen(fd, 1);
 }
 
 /*******************

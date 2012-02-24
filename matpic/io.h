@@ -6,8 +6,8 @@
 typedef struct ioh_t ioh_t;
 
 struct ioh_t {
-	int (*write)(ioh_t *, char *, int);
 	int (*read)(ioh_t *, char *, int);
+	int (*write)(ioh_t *, char *, int);
 	int (*seek)(ioh_t *, int, int);
 	void (*close)(ioh_t *);
 	void *data;
@@ -35,7 +35,7 @@ extern int mvafprintf(ioh_t *h, char *fmt, va_list l);
 /* file descriptor wrappers */
 extern ioh_t *mstdin, *mstdout, *mstderr;
 extern void mstdio_init(void);
-extern ioh_t *mfdopen(int fd);
+extern ioh_t *mfdopen(int fd, int close);
 extern ioh_t *mfopen(char *fn, int mode);
 
 #define MFM_RD 1

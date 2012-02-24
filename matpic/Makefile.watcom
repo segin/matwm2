@@ -14,4 +14,3 @@ matpic.exe: $(OBJS)
 
 clean: .symbolic
 	$(RM) $(OBJS) matpic.exe
-
