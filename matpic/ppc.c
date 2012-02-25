@@ -7,10 +7,12 @@
 
 arr_t defines = { NULL, 0, 0, 0 };
 arr_t macros = { NULL, 0, 0, 0 };
-macro_t *cmacro;
+
+arglist_t *defargs;
+arglist_t *macargs;
 
 int level, ignore; /* depth & state of if/ifdef/ifndef directives */
-int str, esc, macro, maclvl;
+int str, esc, macro, explvl;
 
 void strcheck(char c) {
 	switch (c) {
@@ -50,13 +52,13 @@ macro_t *macrofind(char *name) {
 	return NULL;
 }
 
-char *sppsub(char *in, char end);
+char *sppsub(char *in, macro_t *mac, char end);
 
-void _ppsub(ioh_t *out, char *in, define_t *parent, int argc, char *argv[], char end) {
+void _ppsub(ioh_t *out, char *in, macro_t *mac, define_t *parent, char end) {
 	char *s, *id;
-	char *_argv[ARG_MAX];
-	int _argc, i;
+	int i;
 	define_t *def;
+	arglist_t args, *argt;
 
 	macro = esc = str = 0;
 	while (!(ctype(*in) & (CT_NL | CT_NUL)) && *in != end) {
@@ -71,7 +73,7 @@ void _ppsub(ioh_t *out, char *in, define_t *parent, int argc, char *argv[], char
 		if (!str && *in == '[') {
 			char *p;
 			++in;
-			p = id = sppsub(in, ']');
+			p = id = sppsub(in, mac, ']');
 			mfprintf(out, "%u", numarg(&p));
 			if (*p)
 				flerrexit("exess data in preprocessor evaluation group");
@@ -86,49 +88,52 @@ void _ppsub(ioh_t *out, char *in, define_t *parent, int argc, char *argv[], char
 		id = in;
 		getid(&in);
 		if (!str) {
-			if (parent != NULL && argc) {
-				for (i = 0; i < argc; ++i) {
+			if (parent != NULL && defargs->argc) {
+				for (i = 0; i < defargs->argc; ++i) {
 					if (cmpid(id, parent->argv[i])) {
-						_ppsub(out, argv[i], NULL, 0, NULL, 0);
+						_ppsub(out, defargs->argv[i], mac, NULL, 0);
 						break;
 					}
 				}
-				if (i != argc)
+				if (i != defargs->argc)
 					continue;
 			}
 
 			if ((def = deffind(id)) != NULL) {
-				_argc = 0;
+				args.argc = 0;
 				if (*in == '(') {
 					++in;
 					while (!(ctype(*in) & (CT_NL | CT_NUL)) && *in != ')') {
 						s = in;
-						if (_argc + 1 < def->argc)
+						if (args.argc + 1 < def->argc)
 							while (!(ctype(*in) & (CT_NL | CT_NUL)) && *in != ',' && *in != ')')
 								++in;
 						else while (!(ctype(*in) & (CT_NL | CT_NUL)) && *in != ')')
 								++in;
-						_argv[_argc] = strldup(s, in - s);
-						if (_argv[_argc] == NULL)
+						args.argv[args.argc] = strldup(s, in - s);
+						if (args.argv[args.argc] == NULL)
 							errexit("strldup() failure");
 						if (*in == ',')
 							++in;
-						++_argc;
-						if (_argc == ARG_MAX)
+						++args.argc;
+						if (args.argc == ARG_MAX)
 							flerrexit("too many arguments for macro");
 					}
 					if (*in != ')')
 						flerrexit("missing ')'");
 					++in;
 				}
-				if (_argc < def->argc)
+				if (defargs != NULL && defargs->argc < def->argc)
 					flerrexit("too few arguments for macro");
 
+				argt = defargs;
+				defargs = &args;
 				def->active = 1;
-				_ppsub(out, def->val, def, _argc, _argv, 0);
+				_ppsub(out, def->val, mac, def, 0);
 				def->active = 0;
-				for (--argc; argc >= 0; --argc)
-					free(argv[argc]);
+				defargs = argt;
+				for (--args.argc; args.argc >= 0; --args.argc)
+					free(args.argv[args.argc]);
 				continue;
 			}
 		}
@@ -136,16 +141,16 @@ void _ppsub(ioh_t *out, char *in, define_t *parent, int argc, char *argv[], char
 	}
 }
 
-void ppsub(ioh_t *out, char *in, char end) {
-	_ppsub(out, in, NULL, 0, NULL, end);
+void ppsub(ioh_t *out, char *in, macro_t *mac, char end) {
+	_ppsub(out, in, mac, NULL, end);
 }
 
-char *sppsub(char *in, char end) {
+char *sppsub(char *in, macro_t *mac, char end) {
 	char *ret;
 	ioh_t *h = mmemopen(0);
 	if (h == NULL)
 		errexit("mmemopen() failed");
-	ppsub(h, in, end);
+	ppsub(h, in, mac, end);
 	mfwrite(h, "\0", 1);
 	ret = mmemget(h);
 	if (ret == NULL)
@@ -154,30 +159,67 @@ char *sppsub(char *in, char end) {
 	return ret;
 }
 
-void _preprocess(ioh_t *out, char *in, int lvl);
+void _preprocess(ioh_t *out, char *in, macro_t *mac, int lvl);
 
-int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
+int ppfind(ioh_t *out, char *lp, char *ip, char *argp, macro_t *mac) {
 	char *s;
 	int wp;
-	int args[ARG_MAX];
 
-	if (cmpid(ip, "endm")) {
+	if (!ignore && cmpid(ip, "endm")) {
 		if (macro) {
-			macro = 0;
+			--macro;
 			return 1;
 		}
-		if (maclvl > 0) {
-			--maclvl;
+		if (explvl > 0) {
+			--explvl;
 			return 1;
 		}
 		errexit("endm without prior macro directive");
 	}
-	if (macro)
+	if (cmpid(ip, "macro")) {
+		macro_t mac, *p;
+		if (macro) {
+			++macro;
+			return 1;
+		}
+		if (lp == NULL)
+			flerrexit("macro definition need be preceded by a label");
+		mac.argc = 0;
+		mac.name = lp;
+		while (1) {
+			getword(&argp, &s);
+			if (s == NULL)
+				flerrexit("syntax error in macro parameter list");
+			if (s != NULL) {
+				mac.argv[mac.argc] = s;
+				++(mac.argc);
+			}
+			if (ctype(*argp) & (CT_NL | CT_NUL))
+				break;
+			if (*argp != ',')
+				flerrexit("syntax error in macro parameter list");
+			++argp;
+			if (mac.argc == ARG_MAX)
+				flerrexit("too many arguments for macro");
+		}
+		if (!skipsp(&argp) && !(ctype(*argp) & (CT_NL | CT_NUL)))
+			flerrexit("syntax error on macro directive");
+		if (!*argp)
+			flerrexit("end of file after macro");
+		mac.val = argp + 1;
+		if ((p = macrofind(mac.name)) != NULL)
+			memcpy(p, &mac, sizeof(macro_t));
+		else arr_add(&macros, &mac);
+		++macro;
 		return 1;
+	}
+	if (macro)
+		return 0;
 	if (cmpid(ip, "if")) {
+		int args[ARG_MAX];
 		if (argp == NULL)
 			flerrexit("too few arguments for if directive");
-		s = argp = sppsub(argp, 0);
+		s = argp = sppsub(argp, mac, 0);
 		if (getargs(&argp, args) != 1)
 			flerrexit("too many arguments for if directive");
 		++level;
@@ -235,7 +277,7 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 			++argp;
 			while (1) {
 				getword(&argp, &s);
-				if (s == NULL && *argp != ')')
+				if (s == NULL)
 					flerrexit("syntax error in macro parameter list");
 				if (s != NULL) {
 					def.argv[def.argc] = s;
@@ -312,7 +354,7 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 			flerrexit("failed to include file '%s'", file);
 		mfprintf(out, "file \"%s\"\n", file);
 		line = 1;
-		_preprocess(out, data, maclvl);
+		_preprocess(out, data, mac, explvl);
 		free(data);
 		free(file);
 		file = ofile;
@@ -320,45 +362,12 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 		mfprintf(out, "file \"%s\"\nline %u\n", file, oline + 1);
 		return 1;
 	}
-	if (cmpid(ip, "macro")) {
-		macro_t mac, *p;
-		if (lp == NULL)
-			flerrexit("macro definition need be preceded by a label");
-		mac.argc = 0;
-		mac.name = lp;
-		while (1) {
-			getword(&argp, &s);
-			if (s == NULL && *argp != ')')
-				flerrexit("syntax error in macro parameter list");
-			if (s != NULL) {
-				mac.argv[mac.argc] = s;
-				++(mac.argc);
-			}
-			if (ctype(*argp) & (CT_NL | CT_NUL))
-				break;
-			if (*argp != ',')
-				flerrexit("syntax error in macro parameter list");
-			++argp;
-			if (mac.argc == ARG_MAX)
-				flerrexit("too many arguments for macro");
-		}
-		if (!skipsp(&argp) && !(ctype(*argp) & (CT_NL | CT_NUL)))
-			flerrexit("syntax error on define directive");
-		if (!*argp)
-			flerrexit("end of file after macro");
-		mac.val = argp + 1;
-		if ((p = macrofind(mac.name)) != NULL)
-			memcpy(p, &mac, sizeof(macro_t));
-		else arr_add(&macros, &mac);
-		macro = 1;
-		return 1;
-	}
 	{
 		macro_t *mac;
 		if ((mac = macrofind(ip)) != NULL) {
-			++maclvl;
-			_preprocess(out, mac->val, maclvl);
-			mfprintf(out, "line %i\n", line + 1);
+			++explvl;
+			_preprocess(out, mac->val, mac, explvl);
+			mfprintf(out, "line %i", line + 1);
 			return 1;
 		}
 	}
@@ -378,7 +387,7 @@ int getprefix(char **src) {
 	return n;
 }
 
-void _preprocess(ioh_t *out, char *in, int lvl) {
+void _preprocess(ioh_t *out, char *in, macro_t *mac, int lvl) {
 	char *lnstart, *lp, *ip, *argp;
 	int wp, r, pps;
 
@@ -466,7 +475,7 @@ void _preprocess(ioh_t *out, char *in, int lvl) {
 				argp = in;
 			else if (pps) flerrexit("invalid preprocessor directive");
 		}
-		if ((r = ppfind(out, lp, ip, argp)))
+		if ((r = ppfind(out, lp, ip, argp, mac)))
 			goto endln;
 		if (lp == NULL && !(wp & WP_PSPC)) {
 			lp = ip;
@@ -478,16 +487,16 @@ void _preprocess(ioh_t *out, char *in, int lvl) {
 					argp = in;
 				else goto endln;
 			}
-			r = ppfind(out, lp, ip, argp);
+			r = ppfind(out, lp, ip, argp, mac);
 		}
 		endln:
 		while (!(ctype(*in) & (CT_NUL | CT_NL)))
 			++in;
 		skipnl(&in);
-		if (!r && !ignore)
-			ppsub(out, lnstart, 0);
+		if (!r && !ignore && !macro)
+			ppsub(out, lnstart, mac, 0);
 		mfprint(out, "\n");
-		if (maclvl < lvl)
+		if (explvl < lvl)
 			return;
 		if (!lvl)
 			++line;
@@ -499,24 +508,18 @@ void _preprocess(ioh_t *out, char *in, int lvl) {
  * description
  *   strips comments from in (on the string itself replaces them with space)
  *   evaluates preprocessor directives and builds with them preprocessed data
- *   on a new string, which *ret will point to
+ *   that will be sent to out i/o handle
  *
- * arguments
- *   char * in: zero terminated string to be preprocessed
- *   char ** ret: *ret is set to pointer with preprocessed data
- *
- * return value
- *   int
- *   length of *ret
  */
 void preprocess(ioh_t *out, char *in) {
 	file = infile;
+	defargs = NULL;
+	macargs = NULL;
 	arr_new(&defines, sizeof(define_t));
 	arr_new(&macros, sizeof(macro_t));
 	line = 1;
-	maclvl = level = ignore = 0;
-	cmacro = NULL;
-	_preprocess(out, in, 0);
+	explvl = level = ignore = 0;
+	_preprocess(out, in, NULL, 0);
 	arr_free(&macros);
 	arr_free(&defines);
 }

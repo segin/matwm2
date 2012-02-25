@@ -16,6 +16,11 @@ typedef struct {
 	char *argv[ARG_MAX];
 } macro_t;
 
+typedef struct {
+	char *argv[ARG_MAX];
+	int argc;
+} arglist_t;
+
 extern arr_t defines;
 extern arr_t macros;
 
