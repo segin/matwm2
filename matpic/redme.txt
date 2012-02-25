@@ -18,6 +18,7 @@ if there is a backslash ("\") before a newline, the newline will be ignored
 + - * / % & | ^ << >> ~ ! == != > < >= <= () behave as in C,
  except that &, ^ and | have higher precedence than the comparison operators (<, >, <=, >=, ==, !=)
 $ is the address at start of line
+expressions between square braclets (i.e. [1+2]) are evaluated in the preprocessor
 identifiers can be described by regex as /[a-zA-Z_][a-zA-Z0-9]*/
 lines are divided as follows:
 	[<label>] [<instruction> [<argument>, <...>]]

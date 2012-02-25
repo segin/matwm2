@@ -1,6 +1,5 @@
 multiline macros
 something like cblock
-preprocessor variables
 db directive for store bytes separate and text with ""
 const, equ, dw, dd, dq, etc
 support banksel, bankisel, pagesel pseudo instructions

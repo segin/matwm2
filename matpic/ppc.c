@@ -47,13 +47,21 @@ void _ppsub(ioh_t *out, char *in, define_t *parent, int argc, char *argv[]) {
 	esc = str = 0;
 	while (!(ctype(*in) & (CT_NL | CT_NUL))) {
 		s = in;
-		while (!(ctype(*in) & (CT_NL | CT_NUL | CT_LET | CT_SEP))) {
+		while (!(ctype(*in) & (CT_NL | CT_NUL | CT_LET | CT_SEP)) && *in != '[') {
 			if (esc)
 				esc = 0;
 			else strcheck(*in);
 			++in;
 		}
 		mfwrite(out, s, in - s);
+		if (!str && *in == '[') {
+			++in;
+			mfprintf(out, "%u", numarg(&in));
+			if (*in != ']')
+				flerrexit("expected ']' after expression");
+			++in;
+			continue;
+		}
 		id = in;
 		getid(&in);
 		if (!str) {
