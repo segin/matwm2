@@ -184,11 +184,11 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 				if (s == NULL && *argp != ')')
 					flerrexit("syntax error in macro parameter list");
 				def.argv[def.argc] = s;
-				++(def.argc);
 				if (*argp == ')') {
 					++argp;
 					break;
 				}
+				++(def.argc);
 				if (*argp != ',')
 					flerrexit("syntax error in macro parameter list");
 				++argp;
