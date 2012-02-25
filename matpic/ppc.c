@@ -11,7 +11,6 @@ macro_t macro = { NULL }; /* it is important that name == NULL */
 
 int level, ignore; /* depth & state of if/ifdef/ifndef directives */
 int str, esc;
-ioh_t *tmp;
 
 void strcheck(char c) {
 	switch (c) {
@@ -39,14 +38,16 @@ define_t *deffind(char *name) {
 	return NULL;
 }
 
-void _ppsub(ioh_t *out, char *in, define_t *parent, int argc, char *argv[]) {
+char *sppsub(char *in, char end);
+
+void _ppsub(ioh_t *out, char *in, define_t *parent, int argc, char *argv[], char end) {
 	char *s, *id;
 	char *_argv[ARG_MAX];
 	int _argc, i;
 	define_t *def;
 
 	esc = str = 0;
-	while (!(ctype(*in) & (CT_NL | CT_NUL))) {
+	while (!(ctype(*in) & (CT_NL | CT_NUL)) && *in != end) {
 		s = in;
 		while (!(ctype(*in) & (CT_NL | CT_NUL | CT_LET | CT_SEP)) && *in != '[') {
 			if (esc)
@@ -56,8 +57,13 @@ void _ppsub(ioh_t *out, char *in, define_t *parent, int argc, char *argv[]) {
 		}
 		mfwrite(out, s, in - s);
 		if (!str && *in == '[') {
+			char *p;
 			++in;
-			mfprintf(out, "%u", numarg(&in));
+			p = id = sppsub(in, ']');
+			mfprintf(out, "%u", numarg(&p));
+			free(id);
+			while (!(ctype(*in) & (CT_NL | CT_NUL)) && *in != ']')
+				++in;
 			if (*in != ']')
 				flerrexit("expected ']' after expression");
 			++in;
@@ -69,7 +75,7 @@ void _ppsub(ioh_t *out, char *in, define_t *parent, int argc, char *argv[]) {
 			if (parent != NULL && argc) {
 				for (i = 0; i < argc; ++i) {
 					if (cmpid(id, parent->argv[i])) {
-						_ppsub(out, argv[i], NULL, 0, NULL);
+						_ppsub(out, argv[i], NULL, 0, NULL, 0);
 						break;
 					}
 				}
@@ -105,30 +111,32 @@ void _ppsub(ioh_t *out, char *in, define_t *parent, int argc, char *argv[]) {
 					flerrexit("too few arguments for macro");
 
 				def->active = 1;
-				_ppsub(out, def->val, def, _argc, _argv);
+				_ppsub(out, def->val, def, _argc, _argv, 0);
 				def->active = 0;
+				for (--argc; argc >= 0; --argc)
+					free(argv[argc]);
 				continue;
 			}
 		}
 		mfwrite(out, id, in - id);
 	}
-
-	for (--argc; argc >= 0; --argc)
-		free(argv[argc]);
 }
 
-void ppsub(ioh_t *out, char *in) {
-	_ppsub(out, in, NULL, 0, NULL);
+void ppsub(ioh_t *out, char *in, char end) {
+	_ppsub(out, in, NULL, 0, NULL, end);
 }
 
-char *sppsub(char *in) {
+char *sppsub(char *in, char end) {
 	char *ret;
-	mmemtrunc(tmp);
-	ppsub(tmp, in);
-	mfwrite(tmp, "\0", 1);
-	ret = mmemget(tmp);
+	ioh_t *h = mmemopen(0);
+	if (h == NULL)
+		errexit("mmemopen() failed");
+	ppsub(h, in, end);
+	mfwrite(h, "\0", 1);
+	ret = mmemget(h);
 	if (ret == NULL)
 		errexit("out of memory");
+	mfclose(h);
 	return ret;
 }
 
@@ -142,12 +150,13 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 	if (cmpid(ip, "if")) {
 		if (argp == NULL)
 			flerrexit("too few arguments for if directive");
-		argp = sppsub(argp);
+		s = argp = sppsub(argp, 0);
 		if (getargs(&argp, args) != 1)
 			flerrexit("too many arguments for if directive");
 		++level;
 		if (!ignore && !args[0])
 			ignore = level;
+		free(s);
 		return 1;
 	}
 	if (cmpid(ip, "ifdef")) {
@@ -436,7 +445,7 @@ void _preprocess(ioh_t *out, char *in) {
 			++in;
 		skipnl(&in);
 		if (!r && !ignore)
-			ppsub(out, lnstart);
+			ppsub(out, lnstart, 0);
 		mfprint(out, "\n");
 		++line;
 	}
@@ -459,15 +468,11 @@ void _preprocess(ioh_t *out, char *in) {
  */
 void preprocess(ioh_t *out, char *in) {
 	file = infile;
-	tmp = mmemopen(MMO_FREE);
-	if (tmp == NULL)
-		errexit("mmemopen() failed");
 	arr_new(&defines, sizeof(define_t));
 	arr_new(&macros, sizeof(macro_t));
 	line = 1;
 	level = ignore = 0;
 	_preprocess(out, in);
-	mfclose(tmp);
 	arr_free(&macros);
 	arr_free(&defines);
 }
