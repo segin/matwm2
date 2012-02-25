@@ -18,7 +18,6 @@ typedef struct {
 
 extern arr_t defines;
 extern arr_t macros;
-extern arr_t vars;
 
 extern void preprocess(ioh_t *out, char *in);
 

@@ -7,6 +7,7 @@
 
 arr_t defines = { NULL, 0, 0, 0 };
 arr_t macros = { NULL, 0, 0, 0 };
+macro_t macro = { NULL }; /* it is important that name == NULL */
 
 int level, ignore; /* depth & state of if/ifdef/ifndef directives */
 int str, esc;
@@ -193,8 +194,8 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 		wp = getword(&argp, &def.name);
 		if (def.name == NULL)
 			flerrexit("syntax error on define directive");
+		def.argc = 0;
 		if  (!(wp & WP_TSPC) && *argp == '(') {
-			def.argc = 0;
 			++argp;
 			while (1) {
 				getword(&argp, &s);
@@ -217,7 +218,6 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 			if (!skipsp(&argp) && !(ctype(*argp) & (CT_NL | CT_NUL)))
 				flerrexit("syntax error on define directive");
 		} else {
-			def.argc = 0;
 			if (!(wp & WP_TSPC) && !(ctype(*argp) & (CT_NL | CT_NUL)))
 				flerrexit("syntax error on define directive");
 		}
@@ -287,6 +287,31 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 	if (cmpid(ip, "macro")) {
 		if (lp == NULL)
 			flerrexit("macro definition need be preceded by a label");
+		macro.argc = 0;
+		macro.name = lp;
+		while (1) {
+			getword(&argp, &s);
+			if (s == NULL && *argp != ')')
+				flerrexit("syntax error in macro parameter list");
+			if (s != NULL) {
+				macro.argv[macro.argc] = s;
+				++(macro.argc);
+			}
+			if (ctype(*argp) & (CT_NL | CT_NUL))
+				break;
+			if (*argp != ',')
+				flerrexit("syntax error in macro parameter list");
+			++argp;
+			if (macro.argc == ARG_MAX)
+				flerrexit("too many arguments for macro");
+		}
+		if (!skipsp(&argp) && !(ctype(*argp) & (CT_NL | CT_NUL)))
+			flerrexit("syntax error on define directive");
+		if (!*argp)
+			flerrexit("end of file after macro");
+		macro.active = 0;
+		macro.val = argp + 1;
+		arr_add(&macros, &macro);
 		return 1;
 	}
 	return 0;
