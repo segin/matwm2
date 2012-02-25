@@ -56,49 +56,53 @@ void _ppsub(char *in, define_t *parent, int argc, char *argv[]) {
 		vstr_addl(&tmp, s, in - s);
 		id = in;
 		getid(&in);
-
-		if (parent != NULL && argc) {
-			if (parent->argc < argc)
-				flerrexit("too many arguments for macro");
-			for (i = 0; i < argc; ++i) {
-				if (cmpid(id, parent->argv[i])) {
-					_ppsub(argv[i], NULL, 0, NULL);
-					break;
-				}
-			}
-			if (i != argc)
-				continue;
-		}
-
-		_argc = 0;
-		if (*in == '(') {
-			++in;
-			while (!(ctype(*in) & (CT_NL | CT_NUL)) && *in != ')') {
-				s = in;
-				while (!(ctype(*in) & (CT_NL | CT_NUL)) && *in != ',' && *in != ')')
-					++in;
-				_argv[_argc] = strldup(s, in - s);
-				if (_argv[_argc] == NULL)
-					errexit("strldup() failure");
-				if (*in == ',')
-					++in;
-				++_argc;
-				if (_argc == ARG_MAX)
-					flerrexit("too many arguments for macro");
-			}
-			if (*in != ')')
-				flerrexit("missing ')'");
-			++in;
-		}
 		if (!str) {
+			if (parent != NULL && argc) {
+				for (i = 0; i < argc; ++i) {
+					if (cmpid(id, parent->argv[i])) {
+						_ppsub(argv[i], NULL, 0, NULL);
+						break;
+					}
+				}
+				if (i != argc)
+					continue;
+			}
+
 			def = ((define_t *) defines.data) + defines.count - 1;
 			for (i = 0; i < defines.count; ++i, --def) /* go backwards for overloads */
-				if (cmpid(def->name, id) && !def->active) {
-					def->active = 1;
-					_ppsub(def->val, def, _argc, _argv);
-					def->active = 0;
+				if (cmpid(def->name, id) && !def->active)
 					break;
+			if (i < defines.count) {
+				_argc = 0;
+				if (*in == '(') {
+					++in;
+					while (!(ctype(*in) & (CT_NL | CT_NUL)) && *in != ')') {
+						s = in;
+						if (_argc + 1 < def->argc)
+							while (!(ctype(*in) & (CT_NL | CT_NUL)) && *in != ',' && *in != ')')
+								++in;
+						else while (!(ctype(*in) & (CT_NL | CT_NUL)) && *in != ')')
+								++in;
+						_argv[_argc] = strldup(s, in - s);
+						if (_argv[_argc] == NULL)
+							errexit("strldup() failure");
+						if (*in == ',')
+							++in;
+						++_argc;
+						if (_argc == ARG_MAX)
+							flerrexit("too many arguments for macro");
+					}
+					if (*in != ')')
+						flerrexit("missing ')'");
+					++in;
 				}
+				if (_argc < def->argc)
+					flerrexit("too few arguments for macro");
+
+				def->active = 1;
+				_ppsub(def->val, def, _argc, _argv);
+				def->active = 0;
+			}
 		}
 		if (str || i == defines.count)
 			vstr_addl(&tmp, id, in - id);
@@ -183,19 +187,20 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 				getword(&argp, &s);
 				if (s == NULL && *argp != ')')
 					flerrexit("syntax error in macro parameter list");
-				def.argv[def.argc] = s;
+				if (s != NULL) {
+					def.argv[def.argc] = s;
+					++(def.argc);
+				}
 				if (*argp == ')') {
 					++argp;
 					break;
 				}
-				++(def.argc);
 				if (*argp != ',')
 					flerrexit("syntax error in macro parameter list");
 				++argp;
 				if (def.argc == ARG_MAX)
 					flerrexit("too many arguments for macro");
 			}
-			++(def.argc);
 			if (!skipsp(&argp) && !(ctype(*argp) & (CT_NL | CT_NUL)))
 				flerrexit("syntax error on define directive");
 		} else {

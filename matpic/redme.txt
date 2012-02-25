@@ -34,6 +34,9 @@ following directives exist:
 	line <line #>: tell assembler what the next line is numbered
 also there is preprocessor directives:
 	define, if, ifdef, ifndef, else, endif: behave mostly like C
+		with exception of the use of arguments in macros, in a case like
+			define macro(a, b) (a + b)
+		passing extra arguments after b, will add those to b, including commas
 	msg "<message>": show a message
 	warning "<message>" show a threatning message
 	error "<message>": show a deadly message
