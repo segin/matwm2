@@ -323,6 +323,15 @@ int mmemlen(ioh_t *h) {
 	return ((mmemdata_t *) h->data)->len;
 }
 
+void mmemtrunc(ioh_t *h) {
+	mmemdata_t *d;
+	if (h == NULL)
+		return;
+	d = (mmemdata_t *) h->data;
+	d->pos = d->len = 0;
+	h->pos = 0;
+}
+
 char *msprintf(char *fmt, ...) {
 	ioh_t *h = mmemopen(0);
 	char *ret;

@@ -6,9 +6,11 @@
 #include "io.h"
 
 arr_t defines = { NULL, 0, 0, 0 };
+arr_t macros = { NULL, 0, 0, 0 };
+
 int level, ignore; /* depth & state of if/ifdef/ifndef directives */
 int str, esc;
-string_t tmp;
+ioh_t *tmp;
 
 void strcheck(char c) {
 	switch (c) {
@@ -27,18 +29,16 @@ void strcheck(char c) {
 	esc = 0;
 }
 
-char *deffind(char *name) {
+define_t *deffind(char *name) {
 	define_t *def = ((define_t *) defines.data);
-	char *ret = NULL;
 	int i;
-
 	for (i = 0; i < defines.count; ++i, ++def)
 		if (cmpid(def->name, name))
-			ret = def->val; /* don't break, so we can overload macros */
-	return ret;
+			return def;
+	return NULL;
 }
 
-void _ppsub(char *in, define_t *parent, int argc, char *argv[]) {
+void _ppsub(ioh_t *out, char *in, define_t *parent, int argc, char *argv[]) {
 	char *s, *id;
 	char *_argv[ARG_MAX];
 	int _argc, i;
@@ -53,14 +53,14 @@ void _ppsub(char *in, define_t *parent, int argc, char *argv[]) {
 			else strcheck(*in);
 			++in;
 		}
-		vstr_addl(&tmp, s, in - s);
+		mfwrite(out, s, in - s);
 		id = in;
 		getid(&in);
 		if (!str) {
 			if (parent != NULL && argc) {
 				for (i = 0; i < argc; ++i) {
 					if (cmpid(id, parent->argv[i])) {
-						_ppsub(argv[i], NULL, 0, NULL);
+						_ppsub(out, argv[i], NULL, 0, NULL);
 						break;
 					}
 				}
@@ -68,11 +68,7 @@ void _ppsub(char *in, define_t *parent, int argc, char *argv[]) {
 					continue;
 			}
 
-			def = ((define_t *) defines.data) + defines.count - 1;
-			for (i = 0; i < defines.count; ++i, --def) /* go backwards for overloads */
-				if (cmpid(def->name, id) && !def->active)
-					break;
-			if (i < defines.count) {
+			if ((def = deffind(id)) != NULL) {
 				_argc = 0;
 				if (*in == '(') {
 					++in;
@@ -100,22 +96,31 @@ void _ppsub(char *in, define_t *parent, int argc, char *argv[]) {
 					flerrexit("too few arguments for macro");
 
 				def->active = 1;
-				_ppsub(def->val, def, _argc, _argv);
+				_ppsub(out, def->val, def, _argc, _argv);
 				def->active = 0;
+				continue;
 			}
 		}
-		if (str || i == defines.count)
-			vstr_addl(&tmp, id, in - id);
+		mfwrite(out, id, in - id);
 	}
 
 	for (--argc; argc >= 0; --argc)
 		free(argv[argc]);
 }
 
-char *ppsub(char *in) {
-	tmp.len = 0;
-	_ppsub(in, NULL, 0, NULL);
-	return tmp.data;
+void ppsub(ioh_t *out, char *in) {
+	_ppsub(out, in, NULL, 0, NULL);
+}
+
+char *sppsub(char *in) {
+	char *ret;
+	mmemtrunc(tmp);
+	ppsub(tmp, in);
+	mfwrite(tmp, "\0", 1);
+	ret = mmemget(tmp);
+	if (ret == NULL)
+		errexit("out of memory");
+	return ret;
 }
 
 void _preprocess(ioh_t *out, char *in);
@@ -128,7 +133,7 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 	if (cmpid(ip, "if")) {
 		if (argp == NULL)
 			flerrexit("too few arguments for if directive");
-		argp = ppsub(argp);
+		argp = sppsub(argp);
 		if (getargs(&argp, args) != 1)
 			flerrexit("too many arguments for if directive");
 		++level;
@@ -176,7 +181,7 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 	if (ignore)
 		return 0;
 	if (cmpid(ip, "define")) {
-		define_t def;
+		define_t def, *p;
 		wp = getword(&argp, &def.name);
 		if (def.name == NULL)
 			flerrexit("syntax error on define directive");
@@ -210,7 +215,9 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 		}
 		def.val = argp;
 		def.active = 0;
-		arr_add(&defines, &def);
+		if ((p = deffind(def.name)) != NULL)
+			memcpy(p, &def, sizeof(define_t));
+		else arr_add(&defines, &def);
 		return 1;
 	}
 	if (cmpid(ip, "msg")) {
@@ -267,6 +274,11 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp) {
 		file = ofile;
 		line = oline;
 		mfprintf(out, "file \"%s\"\nline %u\n", file, oline);
+		return 1;
+	}
+	if (cmpid(ip, "macro")) {
+		if (lp == NULL)
+			flerrexit("macro definition need be preceded by a label");
 		return 1;
 	}
 	return 0;
@@ -390,10 +402,8 @@ void _preprocess(ioh_t *out, char *in) {
 		while (!(ctype(*in) & (CT_NUL | CT_NL)))
 			++in;
 		skipnl(&in);
-		if (!r && !ignore) {
-			ppsub(lnstart);
-			mfwrite(out, tmp.data, tmp.len);
-		}
+		if (!r && !ignore)
+			ppsub(out, lnstart);
 		mfprint(out, "\n");
 		++line;
 	}
@@ -416,11 +426,15 @@ void _preprocess(ioh_t *out, char *in) {
  */
 void preprocess(ioh_t *out, char *in) {
 	file = infile;
-	vstr_new(&tmp);
+	tmp = mmemopen(MMO_FREE);
+	if (tmp == NULL)
+		errexit("mmemopen() failed");
 	arr_new(&defines, sizeof(define_t));
+	arr_new(&macros, sizeof(macro_t));
 	line = 1;
 	level = ignore = 0;
 	_preprocess(out, in);
-	vstr_free(&tmp);
+	mfclose(tmp);
+	arr_free(&macros);
 	arr_free(&defines);
 }
