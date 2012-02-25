@@ -333,8 +333,9 @@ void _preprocess(ioh_t *out, char *in) {
 					++c;
 					break;
 				case '\n':
-					while (nl--)
-						*(p++) = '\n';
+					if (nl)
+						while (nl--)
+							*(p++) = '\n';
 			}
 			*p = *c;
 			++p, ++c;
