@@ -7,6 +7,7 @@
 
 arr_t defines = { NULL, 0, 0, 0 };
 arr_t macros = { NULL, 0, 0, 0 };
+macro_t *cmacro;
 
 int level, ignore; /* depth & state of if/ifdef/ifndef directives */
 int str, esc, macro, maclvl;
@@ -23,6 +24,9 @@ void strcheck(char c) {
 			break;
 		case '\'':
 			str ^= 2;
+			break;
+		case '\n':
+			str = 0;
 			break;
 	}
 	esc = 0;
@@ -511,6 +515,7 @@ void preprocess(ioh_t *out, char *in) {
 	arr_new(&macros, sizeof(macro_t));
 	line = 1;
 	maclvl = level = ignore = 0;
+	cmacro = NULL;
 	_preprocess(out, in, 0);
 	arr_free(&macros);
 	arr_free(&defines);
