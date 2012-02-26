@@ -43,7 +43,7 @@ also there is preprocessor directives:
 	error "<message>": show a deadly message
 	they don't need # like in C (though it is allowed, you even can use % like in nasm)
 special case of preprocessor is multiline macro, synopsis:
-	<label> macro [<argument name>, <...>]
+	macro <identifier> [<argument name>, <...>]
 they are ended with:
 	endm
 nesting of multiline macros r supported

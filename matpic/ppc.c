@@ -139,9 +139,9 @@ void _ppsub(ioh_t *out, char *in, macro_t *mac, define_t *parent, char end) {
 
 				argt = defargs;
 				defargs = &args;
-				def->active = 1;
+				++def->active;
 				_ppsub(out, def->val, mac, def, 0);
-				def->active = 0;
+				--def->active;
 				defargs = argt;
 				for (--args.argc; args.argc >= 0; --args.argc)
 					free(args.argv[args.argc]);
@@ -172,6 +172,11 @@ char *sppsub(char *in, macro_t *mac, char end) {
 
 void _preprocess(ioh_t *out, char *in, macro_t *mac, int lvl);
 
+/*
+ * return 1 = handled directive but not label
+ * return 2 = handled directive
+ */
+
 int ppfind(ioh_t *out, char *lp, char *ip, char *argp, char *next, macro_t *mac) {
 	char *s;
 	int wp;
@@ -193,19 +198,20 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp, char *next, macro_t *mac)
 			++macro;
 			return 1;
 		}
-		if (lp == NULL)
-			flerrexit("macro definition need be preceded by a label");
-		mac.name = lp;
+		if (argp == NULL)
+			flerrexit("macro directive needs more arguments");
+		wp = getword(&argp, &mac.name);
+		if (mac.name == NULL)
+			flerrexit("syntax error on macro directive");
+		mac.active = 0;
 		mac.argc = 0;
-		if (argp != NULL) {
+		if (wp & WP_TSPC && !(ctype(*argp) & (CT_NL | CT_NUL)))
 			while (1) {
 				getword(&argp, &s);
 				if (s == NULL)
 					flerrexit("syntax error in macro parameter list");
-				if (s != NULL) {
-					mac.argv[mac.argc] = s;
-					++mac.argc;
-				}
+				mac.argv[mac.argc] = s;
+				++mac.argc;
 				if (ctype(*argp) & (CT_NL | CT_NUL))
 					break;
 				if (*argp != ',')
@@ -214,17 +220,14 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp, char *next, macro_t *mac)
 				if (mac.argc == ARG_MAX)
 					flerrexit("too many arguments for macro");
 			}
-			if (!skipsp(&argp) && !(ctype(*argp) & (CT_NL | CT_NUL)))
-				flerrexit("syntax error on macro directive");
-			if (!*argp)
-				flerrexit("end of file after macro");
-		}
+		if (!(ctype(*argp) & (CT_NL | CT_NUL)))
+			flerrexit("syntax error on macro directive");
 		mac.val = next;
 		if ((p = macrofind(mac.name)) != NULL)
 			memcpy(p, &mac, sizeof(macro_t));
 		else arr_add(&macros, &mac);
 		++macro;
-		return 1;
+		return 2;
 	}
 	if (macro)
 		return 0;
@@ -353,14 +356,16 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp, char *next, macro_t *mac)
 		return 1;
 	}
 	if (cmpid(ip, "include")) {
-		char *data, *ofile = file, *s = argp;
+		char *data, *ofile = file, *s;
 		int oline = line;
 		if (argp == NULL)
 			flerrexit("too few arguments for msg directive");
-		file = getstr(&argp, 0);
-		if (file == NULL || !(ctype(*argp) & (CT_NL | CT_NUL)))
+		s = argp;
+		s = getstr(&s, 0);
+		if (s == NULL || !(ctype(*argp) & (CT_NL | CT_NUL)))
 			flerrexit("syntax error on include directive");
-		s = getstr(&s, 1);
+		file = s;
+		s = getstr(&argp, 1);
 		data = readfile(s);
 		free(s);
 		if (data == NULL)
@@ -379,8 +384,9 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp, char *next, macro_t *mac)
 		macro_t *mac;
 		arglist_t args, *argt;
 		if ((mac = macrofind(ip)) != NULL) {
+			if (mac->active)
+				return 0;
 			args.argc = 0;
-
 			if (argp != NULL)
 				while (!(ctype(*argp) & (CT_NL | CT_NUL))) {
 					s = argp;
@@ -403,7 +409,9 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp, char *next, macro_t *mac)
 			argt = macargs;
 			macargs = &args;
 			++explvl;
+			++mac->active;
 			_preprocess(out, mac->val, mac, explvl);
+			--mac->active;
 			macargs = argt;
 			mfprintf(out, "line %i", line + 1);
 			for (--args.argc; args.argc >= 0; --args.argc)
@@ -538,6 +546,8 @@ void _preprocess(ioh_t *out, char *in, macro_t *mac, int lvl) {
 			r = ppfind(out, lp, ip, argp, next, mac);
 		}
 		endln:
+		if (lp != NULL && r & 1)
+			mfprint(out, lp);
 		in = next;
 		if (!r && !ignore && !macro)
 			ppsub(out, lnstart, mac, 0);
