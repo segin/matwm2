@@ -172,12 +172,7 @@ char *sppsub(char *in, macro_t *mac, char end) {
 
 void _preprocess(ioh_t *out, char *in, macro_t *mac, int lvl);
 
-/*
- * return 1 = handled directive but not label
- * return 2 = handled directive
- */
-
-int ppfind(ioh_t *out, char *lp, char *ip, char *argp, char *next, macro_t *mac) {
+int ppfind(ioh_t *out, char *ip, char *argp, char *next, macro_t *mac) {
 	char *s;
 	int wp;
 
@@ -227,7 +222,7 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp, char *next, macro_t *mac)
 			memcpy(p, &mac, sizeof(macro_t));
 		else arr_add(&macros, &mac);
 		++macro;
-		return 2;
+		return 1;
 	}
 	if (macro)
 		return 0;
@@ -518,7 +513,7 @@ void _preprocess(ioh_t *out, char *in, macro_t *mac, int lvl) {
 		}
 		if (ip == NULL) {
 			if (pps && !(ctype(*in) & (CT_NL | CT_NUL)))
-				flerrexit("invalid preprocessor directive");
+				flwarn("invalid preprocessor directive");
 			goto endln;
 		}
 		if (!(ctype(*in) & (CT_NL | CT_NUL))) {
@@ -526,11 +521,12 @@ void _preprocess(ioh_t *out, char *in, macro_t *mac, int lvl) {
 				argp = in;
 			else {
 				if (pps)
-					flerrexit("invalid preprocessor directive");
+					flwarn("invalid preprocessor directive");
 				goto endln;
 			}
 		}
-		if ((r = ppfind(out, lp, ip, argp, next, mac)))
+		r = ppfind(out, ip, argp, next, mac);
+/*		if ((r = ppfind(out, ip, argp, next, mac)))
 			goto endln;
 		if (lp == NULL && !(wp & WP_PSPC)) {
 			lp = ip;
@@ -544,12 +540,16 @@ void _preprocess(ioh_t *out, char *in, macro_t *mac, int lvl) {
 				else goto endln;
 			}
 			r = ppfind(out, lp, ip, argp, next, mac);
-		}
+		}*/
 		endln:
-		if (lp != NULL && r & 1)
-			mfprint(out, lp);
+		if (pps && !r)
+			flwarn("unhandled preprocessor directive");
+		if (lp != NULL) {
+			mfwrite(out, lp, idlen(lp));
+			mfwrite(out, ":", 1);
+		}
 		in = next;
-		if (!r && !ignore && !macro)
+		if (!r && !ignore && !macro && !pps)
 			ppsub(out, lnstart, mac, 0);
 		mfprint(out, "\n");
 		if (explvl < lvl)
