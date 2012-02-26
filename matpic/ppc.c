@@ -172,7 +172,7 @@ char *sppsub(char *in, macro_t *mac, char end) {
 
 void _preprocess(ioh_t *out, char *in, macro_t *mac, int lvl);
 
-int ppfind(ioh_t *out, char *lp, char *ip, char *argp, macro_t *mac) {
+int ppfind(ioh_t *out, char *lp, char *ip, char *argp, char *next, macro_t *mac) {
 	char *s;
 	int wp;
 
@@ -197,27 +197,29 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp, macro_t *mac) {
 			flerrexit("macro definition need be preceded by a label");
 		mac.name = lp;
 		mac.argc = 0;
-		while (1) {
-			getword(&argp, &s);
-			if (s == NULL)
-				flerrexit("syntax error in macro parameter list");
-			if (s != NULL) {
-				mac.argv[mac.argc] = s;
-				++mac.argc;
+		if (argp != NULL) {
+			while (1) {
+				getword(&argp, &s);
+				if (s == NULL)
+					flerrexit("syntax error in macro parameter list");
+				if (s != NULL) {
+					mac.argv[mac.argc] = s;
+					++mac.argc;
+				}
+				if (ctype(*argp) & (CT_NL | CT_NUL))
+					break;
+				if (*argp != ',')
+					flerrexit("syntax error in macro parameter list");
+				++argp;
+				if (mac.argc == ARG_MAX)
+					flerrexit("too many arguments for macro");
 			}
-			if (ctype(*argp) & (CT_NL | CT_NUL))
-				break;
-			if (*argp != ',')
-				flerrexit("syntax error in macro parameter list");
-			++argp;
-			if (mac.argc == ARG_MAX)
-				flerrexit("too many arguments for macro");
+			if (!skipsp(&argp) && !(ctype(*argp) & (CT_NL | CT_NUL)))
+				flerrexit("syntax error on macro directive");
+			if (!*argp)
+				flerrexit("end of file after macro");
 		}
-		if (!skipsp(&argp) && !(ctype(*argp) & (CT_NL | CT_NUL)))
-			flerrexit("syntax error on macro directive");
-		if (!*argp)
-			flerrexit("end of file after macro");
-		mac.val = argp + 1;
+		mac.val = next;
 		if ((p = macrofind(mac.name)) != NULL)
 			memcpy(p, &mac, sizeof(macro_t));
 		else arr_add(&macros, &mac);
@@ -280,6 +282,8 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp, macro_t *mac) {
 		return 0;
 	if (cmpid(ip, "define")) {
 		define_t def, *p;
+		if (argp == NULL)
+			flerrexit("too few arguments for define directive");
 		wp = getword(&argp, &def.name);
 		if (def.name == NULL)
 			flerrexit("syntax error on define directive");
@@ -306,10 +310,8 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp, macro_t *mac) {
 			}
 			if (!skipsp(&argp) && !(ctype(*argp) & (CT_NL | CT_NUL)))
 				flerrexit("syntax error on define directive");
-		} else {
-			if (!(wp & WP_TSPC) && !(ctype(*argp) & (CT_NL | CT_NUL)))
-				flerrexit("syntax error on define directive");
-		}
+		} else if (!(wp & WP_TSPC) && !(ctype(*argp) & (CT_NL | CT_NUL)))
+			flerrexit("syntax error on define directive");
 		def.val = argp;
 		def.active = 0;
 		if ((p = deffind(def.name)) != NULL)
@@ -318,7 +320,7 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp, macro_t *mac) {
 		return 1;
 	}
 	if (cmpid(ip, "msg")) {
-		if (!argp)
+		if (argp == NULL)
 			flerrexit("too few arguments for msg directive");
 		s = getstr(&argp, 1);
 		skipsp(&argp);
@@ -329,7 +331,7 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp, macro_t *mac) {
 		return 1;
 	}
 	if (cmpid(ip, "error")) {
-		if (!argp)
+		if (argp == NULL)
 			flerrexit("too few arguments for msg directive");
 		s = getstr(&argp, 1);
 		skipsp(&argp);
@@ -340,7 +342,7 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp, macro_t *mac) {
 		return 1;
 	}
 	if (cmpid(ip, "warn")) {
-		if (!argp)
+		if (argp == NULL)
 			flerrexit("too few arguments for msg directive");
 		s = getstr(&argp, 1);
 		skipsp(&argp);
@@ -353,7 +355,7 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp, macro_t *mac) {
 	if (cmpid(ip, "include")) {
 		char *data, *ofile = file, *s = argp;
 		int oline = line;
-		if (!argp)
+		if (argp == NULL)
 			flerrexit("too few arguments for msg directive");
 		file = getstr(&argp, 0);
 		if (file == NULL || !(ctype(*argp) & (CT_NL | CT_NUL)))
@@ -379,23 +381,23 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp, macro_t *mac) {
 		if ((mac = macrofind(ip)) != NULL) {
 			args.argc = 0;
 
-			while (!(ctype(*argp) & (CT_NL | CT_NUL))) {
-				s = argp;
-				if (args.argc + 1 < mac->argc)
-					while (!(ctype(*argp) & (CT_NL | CT_NUL)) && *argp != ',')
+			if (argp != NULL)
+				while (!(ctype(*argp) & (CT_NL | CT_NUL))) {
+					s = argp;
+					if (args.argc + 1 < mac->argc)
+						while (!(ctype(*argp) & (CT_NL | CT_NUL)) && *argp != ',')
+							++argp;
+					else while (!(ctype(*argp) & (CT_NL | CT_NUL)))
 						++argp;
-				else while (!(ctype(*argp) & (CT_NL | CT_NUL)))
-					++argp;
-				args.argv[args.argc] = strldup(s, argp - s);
-				if (args.argv[args.argc] == NULL)
-					errexit("strldup() failure");
-				if (*argp == ',')
-					++argp;
-				++args.argc;
-				if (args.argc == ARG_MAX)
-					flerrexit("too many arguments for macro");
-			}
-
+					args.argv[args.argc] = strldup(s, argp - s);
+					if (args.argv[args.argc] == NULL)
+						errexit("strldup() failure");
+					if (*argp == ',')
+						++argp;
+					++args.argc;
+					if (args.argc == ARG_MAX)
+						flerrexit("too many arguments for macro");
+				}
 			if (args.argc < mac->argc)
 				flerrexit("too few arguments for macro");
 			argt = macargs;
@@ -426,7 +428,7 @@ int getprefix(char **src) {
 }
 
 void _preprocess(ioh_t *out, char *in, macro_t *mac, int lvl) {
-	char *lnstart, *lp, *ip, *argp;
+	char *lnstart, *lp, *ip, *argp, *next;
 	int wp, r, pps;
 
 	/* strip comments */
@@ -491,10 +493,13 @@ void _preprocess(ioh_t *out, char *in, macro_t *mac, int lvl) {
 
 	/* this very similar to assemble() */
 	while (*in) {
-		lnstart = in;
+		next = lnstart = in;
 		lp = NULL;
 		argp = NULL;
 		r = 0;
+		while (!(ctype(*next) & (CT_NUL | CT_NL)))
+			++next;
+		skipnl(&next);
 		pps = getprefix(&in);
 		wp = getword(&in, &ip);
 		if (wp & (WP_LABEL | WP_LOCAL)) { /* we have label and we're sure about it */
@@ -511,26 +516,29 @@ void _preprocess(ioh_t *out, char *in, macro_t *mac, int lvl) {
 		if (!(ctype(*in) & (CT_NL | CT_NUL))) {
 			if (wp & WP_TSPC)
 				argp = in;
-			else if (pps) flerrexit("invalid preprocessor directive");
+			else {
+				if (pps)
+					flerrexit("invalid preprocessor directive");
+				goto endln;
+			}
 		}
-		if ((r = ppfind(out, lp, ip, argp, mac)))
+		if ((r = ppfind(out, lp, ip, argp, next, mac)))
 			goto endln;
 		if (lp == NULL && !(wp & WP_PSPC)) {
 			lp = ip;
 			wp = getword(&in, &ip);
 			if (ip == NULL)
 				goto endln;
+			argp = NULL;
 			if (!(ctype(*in) & (CT_NL | CT_NUL))) {
 				if (wp & WP_TSPC)
 					argp = in;
 				else goto endln;
 			}
-			r = ppfind(out, lp, ip, argp, mac);
+			r = ppfind(out, lp, ip, argp, next, mac);
 		}
 		endln:
-		while (!(ctype(*in) & (CT_NUL | CT_NL)))
-			++in;
-		skipnl(&in);
+		in = next;
 		if (!r && !ignore && !macro)
 			ppsub(out, lnstart, mac, 0);
 		mfprint(out, "\n");

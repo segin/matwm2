@@ -132,6 +132,7 @@ void assemble(char *code) {
 				if (!(wp & WP_PSPC)) {
 					lp = ip;
 					wp = getword(&code, &ip);
+					argp = NULL;
 					if (ip == NULL) {
 						if (!(ctype(*code) & (CT_NL | CT_NUL)))
 							flerrexit("invalid identifier");

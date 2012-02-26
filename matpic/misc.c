@@ -401,6 +401,9 @@ int getargs(char **src, int *args) {
 		++n, ++*src;
 		if (n == ARG_MAX)
 			flerrexit("too many arguments");
+		skipsp(src);
+		if (ctype(**src) & (CT_NUL | CT_NL))
+			flerrexit("expression expected");
 	}
 }
 
