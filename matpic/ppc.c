@@ -404,6 +404,8 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp, macro_t *mac) {
 			_preprocess(out, mac->val, mac, explvl);
 			macargs = argt;
 			mfprintf(out, "line %i", line + 1);
+			for (--args.argc; args.argc >= 0; --args.argc)
+				free(args.argv[args.argc]);
 			return 1;
 		}
 	}
