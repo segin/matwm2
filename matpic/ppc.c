@@ -88,10 +88,21 @@ void _ppsub(ioh_t *out, char *in, macro_t *mac, define_t *parent, char end) {
 		id = in;
 		getid(&in);
 		if (!str) {
+			if (mac != NULL && macargs->argc) {
+				for (i = 0; i < macargs->argc; ++i) {
+					if (cmpid(id, mac->argv[i])) {
+						_ppsub(out, macargs->argv[i], NULL, NULL, 0);
+						break;
+					}
+				}
+				if (i != macargs->argc)
+					continue;
+			}
+
 			if (parent != NULL && defargs->argc) {
 				for (i = 0; i < defargs->argc; ++i) {
 					if (cmpid(id, parent->argv[i])) {
-						_ppsub(out, defargs->argv[i], mac, NULL, 0);
+						_ppsub(out, defargs->argv[i], NULL, NULL, 0);
 						break;
 					}
 				}
@@ -99,7 +110,7 @@ void _ppsub(ioh_t *out, char *in, macro_t *mac, define_t *parent, char end) {
 					continue;
 			}
 
-			if ((def = deffind(id)) != NULL) {
+			if ((def = deffind(id)) != NULL && !def->active) {
 				args.argc = 0;
 				if (*in == '(') {
 					++in;
@@ -123,7 +134,7 @@ void _ppsub(ioh_t *out, char *in, macro_t *mac, define_t *parent, char end) {
 						flerrexit("missing ')'");
 					++in;
 				}
-				if (defargs != NULL && defargs->argc < def->argc)
+				if (args.argc < def->argc)
 					flerrexit("too few arguments for macro");
 
 				argt = defargs;
@@ -174,7 +185,7 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp, macro_t *mac) {
 			--explvl;
 			return 1;
 		}
-		errexit("endm without prior macro directive");
+		flerrexit("endm without prior macro directive");
 	}
 	if (cmpid(ip, "macro")) {
 		macro_t mac, *p;
@@ -184,15 +195,15 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp, macro_t *mac) {
 		}
 		if (lp == NULL)
 			flerrexit("macro definition need be preceded by a label");
-		mac.argc = 0;
 		mac.name = lp;
+		mac.argc = 0;
 		while (1) {
 			getword(&argp, &s);
 			if (s == NULL)
 				flerrexit("syntax error in macro parameter list");
 			if (s != NULL) {
 				mac.argv[mac.argc] = s;
-				++(mac.argc);
+				++mac.argc;
 			}
 			if (ctype(*argp) & (CT_NL | CT_NUL))
 				break;
@@ -281,7 +292,7 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp, macro_t *mac) {
 					flerrexit("syntax error in macro parameter list");
 				if (s != NULL) {
 					def.argv[def.argc] = s;
-					++(def.argc);
+					++def.argc;
 				}
 				if (*argp == ')') {
 					++argp;
@@ -364,9 +375,34 @@ int ppfind(ioh_t *out, char *lp, char *ip, char *argp, macro_t *mac) {
 	}
 	{
 		macro_t *mac;
+		arglist_t args, *argt;
 		if ((mac = macrofind(ip)) != NULL) {
+			args.argc = 0;
+
+			while (!(ctype(*argp) & (CT_NL | CT_NUL))) {
+				s = argp;
+				if (args.argc + 1 < mac->argc)
+					while (!(ctype(*argp) & (CT_NL | CT_NUL)) && *argp != ',')
+						++argp;
+				else while (!(ctype(*argp) & (CT_NL | CT_NUL)))
+					++argp;
+				args.argv[args.argc] = strldup(s, argp - s);
+				if (args.argv[args.argc] == NULL)
+					errexit("strldup() failure");
+				if (*argp == ',')
+					++argp;
+				++args.argc;
+				if (args.argc == ARG_MAX)
+					flerrexit("too many arguments for macro");
+			}
+
+			if (args.argc < mac->argc)
+				flerrexit("too few arguments for macro");
+			argt = macargs;
+			macargs = &args;
 			++explvl;
 			_preprocess(out, mac->val, mac, explvl);
+			macargs = argt;
 			mfprintf(out, "line %i", line + 1);
 			return 1;
 		}
