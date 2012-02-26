@@ -42,6 +42,12 @@ also there is preprocessor directives:
 	warning "<message>" show a threatning message
 	error "<message>": show a deadly message
 	they don't need # like in C (though it is allowed, you even can use % like in nasm)
+special case of preprocessor is multiline macro, synopsis:
+	<label> macro [<argument name>, <...>]
+they are ended with:
+	endm
+nesting of multiline macros r supported
+macro arguments won't be expanded in macros expanded inside the macro
 integer notation supports the following prefixes:
 	none at all: decimal
 	0d: decimal
