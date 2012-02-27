@@ -8,7 +8,6 @@ support banksel, bankisel, pagesel pseudo instructions
 changing default radix
 include search path
 relocatable code and coff output support
-maybe suffix notation for integers
 add ihex thing for bigger than 16bit addresses
 header files for chips
 support more chips

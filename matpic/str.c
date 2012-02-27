@@ -189,32 +189,97 @@ int idlen(char *src) {
 
 int getnum(char **src, unsigned int *ret) {
 	unsigned int c, r = 0;
-	int n = 0, base = 10;
+	int n = 0, base = 10, sfx = 0;
+	char *s;
 
-	if (**src == '0') {
-		switch(*(++*src)) {
+	if (**src == '$') {
+		s = (*src) + 1;
+		while (*s == '_')
+			++s;
+		if (hexlookup[(unsigned char) *s] != 16) {
+			base = 16;
+			++*src;
+		}
+	} else if (**src == '0') {
+		switch(*++*src) {
 			case 'x':
 			case 'X':
+			case 'h':
+			case 'H':
 				base = 16;
 				break;
 			case 'b':
 			case 'B':
+				if (base == 16)
+					goto oct0;
+			case 'y':
+			case 'Y':
 				base = 2;
 				break;
 			case 'd':
 			case 'D':
+				if (base == 16)
+					goto oct0;
+			case 't':
+			case 'T':
 				base = 10;
 				break;
 			case 'o':
 			case 'O':
+			case 'q':
+			case 'Q':
 				base = 8;
 				break;
 			default:
 				base = 8;
-				goto octal0;
+				goto oct0;
 		}
 		++*src;
-		octal0:;
+	} else { /* check for suffix notation */
+		oct0:
+		s = *src;
+		while ((c = hexlookup[(unsigned char) *s]) != 16)
+			++s;
+		sfx = 1;
+		switch(*s) {
+			case 'h':
+			case 'H':
+			case 'x':
+			case 'X':
+				base = 16;
+				break;
+			case 'y':
+			case 'Y':
+				base = 2;
+				break;
+			case 't':
+			case 'T':
+				base = 10;
+				break;
+			case 'o':
+			case 'O':
+			case 'q':
+			case 'Q':
+				base = 8;
+				break;
+			default:
+				if (base == 16 || s == *src) {
+					sfx = 0;
+					break;
+				}
+				switch (*(s - 1)) {
+					case 'b':
+					case 'B':
+						base = 2;
+						break;
+					case 'd':
+					case 'D':
+						base = 10;
+						break;
+					default:
+						sfx = 0;
+				}
+		}
 	}
 
 	while ((c = hexlookup[(unsigned char) **src]) != 16) {
@@ -229,6 +294,8 @@ int getnum(char **src, unsigned int *ret) {
 		++*src, ++n;
 	}
 	endnum:
+	if (sfx)
+		++*src;
 	*ret = r;
 	return n;
 }

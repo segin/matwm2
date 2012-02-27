@@ -40,8 +40,9 @@ also there is preprocessor directives:
 		passing extra arguments after b, will add those to b, including commas
 	xdefine, undef and rep do what they does in nasm
 	msg "<message>": show a message
-	warning "<message>" show a threatning message
+	warning "<message>": show a threatning message
 	error "<message>": show a deadly message
+	nocount: stop counting lines until next file or line directive
 	they don't need # like in C (though it is allowed, you even can use % like in nasm)
 special case of preprocessor is multiline macro, synopsis:
 	macro <identifier> [<argument name>, <...>]
@@ -51,10 +52,16 @@ nesting of multiline macros r supported
 macro arguments won't be expanded in macros expanded inside the macro
 integer notation supports the following prefixes:
 	none at all: decimal
-	0d: decimal
-	0x: hexadecimal
-	0b: binary
-	0o: octal
+	0d, 0t: decimal
+	$, 0x, 0h: hexadecimal
+	0b, 0y: binary
+	0o, 0q: octal
 	0: octal
+and the following suffixes:
+	d, t: decimal
+	x, h: hex
+	b, y: binary
+	o, q: octal
+b and d suffix and 0b and 0d suffix are ignored if the default radix is hex
 underscores within integers are ignored (but not in prefix plz)
 utf-8 in labels / macro names etc are allowed
