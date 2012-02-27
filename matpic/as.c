@@ -11,6 +11,7 @@
 #include "misc.h" /* getargs(), clearfile(), getstr(), file, address, line */
 
 int llbl, count;
+unsigned int addrl;
 
 arr_t inss = { NULL, 0, 0, 0 };
 arr_t labels = { NULL, 0, 0, 0 };
@@ -28,11 +29,35 @@ int countargs(char *src) {
 }
 
 int insfind(char *lp, char *ip, char *argp) {
-	oc_t *oc = arch->ocs;
-	ins_t ins;
 	int args[ARG_MAX];
+	oc_t *oc = arch->ocs;
+	label_t label, *li;
+	ins_t ins;
 
 	ins.line = line;
+	if (lp != NULL) { /* we has a lebel */
+		int i;
+		for (label.local = 0; *lp == '.'; ++label.local, ++lp);
+		label.name = lp;
+		label.address = addrl / arch->align;
+		label.parent = -1;
+		for (i = labels.count - 1; i >= 0; --i) { /* find owner */
+			li = (label_t *) ((label_t *) labels.data) + i;
+			if (li->local < label.local) {
+				label.parent = i;
+				break;
+			}
+		}
+		for (i = 0; i < labels.count; ++i) { /* check if already exists */
+			li = (label_t *) ((label_t *) labels.data) + i;
+			if (cmpid(li->name, label.name) && label.parent == li->parent && label.local == li->local)
+				flerrexit("duplicate label");
+		}
+		arr_add(&labels, &label);
+		ins.type = IT_LBL;
+		ins.d.lbl.lbl = labels.count - 1;
+		arr_add(&inss, &ins);
+	}
 	if (cmpid(ip, "org")) {
 		if (getargs(&argp, args) != 1)
 			flerrexit("invalid number of arguments to org directive");
@@ -81,6 +106,14 @@ int insfind(char *lp, char *ip, char *argp) {
 			arr_add(&inss, &ins);
 		return 1;
 	}
+	if (cmpid(ip, "equ")) {
+		if (getargs(&argp, args) != 1)
+			flerrexit("'equ' directive wants exactly 1 argument");
+		if (labels.count == 0)
+			flerrexit("'equ' before label");
+		((label_t *) labels.data + labels.count - 1)->address = args[0];
+		return 1;
+	}
 
 	while (oc->name != NULL) {
 		if (cmpid(ip, oc->name)) {
@@ -103,11 +136,9 @@ void assemble(char *code) {
 	arr_new(&labels, sizeof(label_t));
 
 	{ /* first pass */
-		label_t label, *li;
 		ins_t ins;
 		char *lp, *ip, *argp;
-		int wp, i;
-		unsigned int addrl;
+		int wp;
 
 		file = infile;
 		line = 1;
@@ -158,28 +189,6 @@ void assemble(char *code) {
 				} else flerrexit("no such instruction/directive");
 			}
 			endln:
-			if (lp != NULL) { /* we has a lebel */
-				for (label.local = 0; *lp == '.'; ++label.local, ++lp);
-				label.name = lp;
-				label.address = addrl / arch->align;
-				label.parent = -1;
-				for (i = labels.count - 1; i >= 0; --i) { /* find owner */
-					li = (label_t *) ((label_t *) labels.data) + i;
-					if (li->local < label.local) {
-						label.parent = i;
-						break;
-					}
-				}
-				for (i = 0; i < labels.count; ++i) { /* check if already exists */
-					li = (label_t *) ((label_t *) labels.data) + i;
-					if (cmpid(li->name, label.name) && label.parent == li->parent && label.local == li->local)
-						flerrexit("duplicate label");
-				}
-				arr_add(&labels, &label);
-				ins.type = IT_LBL;
-				ins.d.lbl.lbl = labels.count - 1;
-				arr_add(&inss, &ins);
-			}
 			while (!(ctype(*code) & (CT_NUL | CT_NL)))
 				++code;
 			skipnl(&code);
