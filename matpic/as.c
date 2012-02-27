@@ -28,36 +28,39 @@ int countargs(char *src) {
 	return n;
 }
 
+void addlabel(char *lp) {
+	label_t label, *li;
+	ins_t ins;
+	int i;
+	/* we has a lebel */
+	for (label.local = 0; *lp == '.'; ++label.local, ++lp);
+	label.name = lp;
+	label.address = addrl / arch->align;
+	label.parent = -1;
+	for (i = labels.count - 1; i >= 0; --i) { /* find owner */
+		li = (label_t *) ((label_t *) labels.data) + i;
+		if (li->local < label.local) {
+			label.parent = i;
+			break;
+		}
+	}
+	for (i = 0; i < labels.count; ++i) { /* check if already exists */
+		li = (label_t *) ((label_t *) labels.data) + i;
+		if (cmpid(li->name, label.name) && label.parent == li->parent && label.local == li->local)
+			flerrexit("duplicate label");
+	}
+	arr_add(&labels, &label);
+	ins.type = IT_LBL;
+	ins.d.lbl.lbl = labels.count - 1;
+	arr_add(&inss, &ins);
+}
+
 int insfind(char *lp, char *ip, char *argp) {
 	int args[ARG_MAX];
 	oc_t *oc = arch->ocs;
-	label_t label, *li;
 	ins_t ins;
 
 	ins.line = line;
-	if (lp != NULL) { /* we has a lebel */
-		int i;
-		for (label.local = 0; *lp == '.'; ++label.local, ++lp);
-		label.name = lp;
-		label.address = addrl / arch->align;
-		label.parent = -1;
-		for (i = labels.count - 1; i >= 0; --i) { /* find owner */
-			li = (label_t *) ((label_t *) labels.data) + i;
-			if (li->local < label.local) {
-				label.parent = i;
-				break;
-			}
-		}
-		for (i = 0; i < labels.count; ++i) { /* check if already exists */
-			li = (label_t *) ((label_t *) labels.data) + i;
-			if (cmpid(li->name, label.name) && label.parent == li->parent && label.local == li->local)
-				flerrexit("duplicate label");
-		}
-		arr_add(&labels, &label);
-		ins.type = IT_LBL;
-		ins.d.lbl.lbl = labels.count - 1;
-		arr_add(&inss, &ins);
-	}
 	if (cmpid(ip, "org")) {
 		if (getargs(&argp, args) != 1)
 			flerrexit("invalid number of arguments to org directive");
@@ -155,6 +158,7 @@ void assemble(char *code) {
 				if (!(wp & WP_TSPC) && !(ctype(*code) & (CT_NL | CT_NUL)))
 					flerrexit("invalid character in local label"); /* can only happen with local label */
 				lp = ip;
+				addlabel(lp);
 				wp = getword(&code, &ip);
 			}
 			if (ip == NULL) {
@@ -172,6 +176,7 @@ void assemble(char *code) {
 			if (lp == NULL) {
 				if (!(wp & WP_PSPC)) {
 					lp = ip;
+					addlabel(lp);
 					wp = getword(&code, &ip);
 					argp = NULL;
 					if (ip == NULL) {
