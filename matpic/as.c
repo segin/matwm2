@@ -55,7 +55,7 @@ void addlabel(char *lp) {
 	arr_add(&inss, &ins);
 }
 
-int insfind(char *lp, char *ip, char *argp) {
+int insfind(char *ip, char *argp) {
 	int args[ARG_MAX];
 	oc_t *oc = arch->ocs;
 	ins_t ins;
@@ -171,7 +171,7 @@ void assemble(char *code) {
 					argp = code;
 				else flerrexit("invalid identifier");
 			}
-			if (insfind(lp, ip, argp))
+			if (insfind(ip, argp))
 				goto endln;
 			if (lp == NULL) {
 				if (!(wp & WP_PSPC)) {
@@ -189,7 +189,7 @@ void assemble(char *code) {
 							argp = code;
 						else flerrexit("invalid identifier");
 					}
-					if (!insfind(lp, ip, argp))
+					if (!insfind(ip, argp))
 						flerrexit("no such instruction/directive");
 				} else flerrexit("no such instruction/directive");
 			}
