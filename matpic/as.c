@@ -10,7 +10,7 @@
 #include "arch.h"
 #include "misc.h" /* getargs(), clearfile(), getstr(), file, address, line */
 
-int llbl = -1;
+int llbl, count;
 
 arr_t inss = { NULL, 0, 0, 0 };
 arr_t labels = { NULL, 0, 0, 0 };
@@ -45,6 +45,7 @@ int insfind(char *lp, char *ip, char *argp) {
 	if (cmpid(ip, "file")) {
 		if (argp == NULL)
 			flerrexit("'file' directive needs an argument");
+		count = 1;
 		line = 0; /* will be incremented soon enough */
 		ins.type = IT_FIL;
 		ins.d.file.file = argp;
@@ -61,7 +62,14 @@ int insfind(char *lp, char *ip, char *argp) {
 	if (cmpid(ip, "line")) {
 		if (getargs(&argp, args) != 1)
 			flerrexit("'line' directive wants exactly 1 argument");
+		count = 1;
 		line = args[0] - 1;
+		return 1;
+	}
+	if (cmpid(ip, "nocount")) {
+		if (argp != NULL)
+			flerrexit("too many arguments for nocount directive");
+		count = 0;
 		return 1;
 	}
 	if (cmpid(ip, "data")) {
@@ -104,6 +112,8 @@ void assemble(char *code) {
 		file = infile;
 		line = 1;
 		address = 0;
+		llbl = -1;
+		count = 1;
 		while (*code) {
 			ins.line = line;
 			addrl = address; /* case there is a label we have the address at start of line */
@@ -173,7 +183,8 @@ void assemble(char *code) {
 			while (!(ctype(*code) & (CT_NUL | CT_NL)))
 				++code;
 			skipnl(&code);
-			++line;
+			if (count)
+				++line;
 		}
 		ins.type = IT_END;
 		arr_add(&inss, &ins);

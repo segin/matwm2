@@ -38,7 +38,7 @@ also there is preprocessor directives:
 		with exception of the use of arguments in macros, in a case like
 			define macro(a, b) (a + b)
 		passing extra arguments after b, will add those to b, including commas
-	xdefine and undef do what they does in nasm
+	xdefine, undef and rep do what they does in nasm
 	msg "<message>": show a message
 	warning "<message>" show a threatning message
 	error "<message>": show a deadly message

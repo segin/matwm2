@@ -1,6 +1,4 @@
 variable arguments for multiline macros
-preprocessor loops
-	rep
 	rotate
 xmacro
 something like cblock (perhaps implemented as macro)

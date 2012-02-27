@@ -12,7 +12,8 @@ arglist_t *defargs;
 arglist_t *macargs;
 
 int level, ignore; /* depth & state of if/ifdef/ifndef directives */
-int str, esc, macro, explvl;
+int str, esc, macro, explvl, rep0, rep;
+char *repstart;
 
 void strcheck(char c) {
 	switch (c) {
@@ -217,9 +218,9 @@ void define(char *argp, macro_t *mac, int eval) {
 	else arr_add(&defines, &def);
 }
 
-void _preprocess(ioh_t *out, char *in, macro_t *mac, int lvl);
+void _preprocess(ioh_t *out, char *in, macro_t *mac);
 
-int ppfind(ioh_t *out, char *ip, char *argp, char *next, macro_t *mac) {
+int ppfind(ioh_t *out, char *ip, char *argp, char **next, macro_t *mac) {
 	char *s;
 	int wp;
 
@@ -230,13 +231,13 @@ int ppfind(ioh_t *out, char *ip, char *argp, char *next, macro_t *mac) {
 		}
 		if (explvl > 0) {
 			--explvl;
-			return 1;
+			return 2;
 		}
 		flerrexit("endm without prior macro directive");
 	}
 	if (cmpid(ip, "macro")) {
 		macro_t mac, *p;
-		if (macro) {
+		if (macro || rep0 || ignore) {
 			++macro;
 			return 1;
 		}
@@ -264,15 +265,49 @@ int ppfind(ioh_t *out, char *ip, char *argp, char *next, macro_t *mac) {
 			}
 		if (!(ctype(*argp) & (CT_NL | CT_NUL)))
 			flerrexit("syntax error on macro directive");
-		mac.val = next;
+		mac.val = *next;
 		if ((p = macrofind(mac.name)) != NULL)
 			memcpy(p, &mac, sizeof(macro_t));
 		else arr_add(&macros, &mac);
 		++macro;
 		return 1;
 	}
-	if (macro)
-		return 0;
+	if (cmpid(ip, "rep")) {
+		int args[ARG_MAX], rline = line;
+		if (rep0 || ignore || macro) {
+			++rep0;
+			return 1;
+		}
+		if (argp == NULL)
+			flerrexit("too few arguments for rep directive");
+		s = argp = sppsub(argp, mac, 0);
+		if (getargs(&argp, args) != 1)
+			flerrexit("too many arguments for rep directive");
+		if (!args[0])
+			++rep0;
+		else {
+			++rep;
+			while (args[0]--) {
+				if (!explvl)
+					mfprintf(out, " line %i\n", rline + 1);
+				_preprocess(out, *next, mac);
+			}
+			--rep;
+			if (!explvl)
+				mfprintf(out, " line %i\n", rline);
+		}
+		++rep0;
+		free(s);
+		return 1;
+	}
+	if (cmpid(ip, "endrep")) {
+		if (rep0) {
+			--rep0;
+			return 1;
+		} else if (rep && !macro && !ignore)
+			return 2;
+		flerrexit("endrep without prior rep");
+	}
 	if (cmpid(ip, "if")) {
 		int args[ARG_MAX];
 		if (argp == NULL)
@@ -281,7 +316,7 @@ int ppfind(ioh_t *out, char *ip, char *argp, char *next, macro_t *mac) {
 		if (getargs(&argp, args) != 1)
 			flerrexit("too many arguments for if directive");
 		++level;
-		if (!ignore && !args[0])
+		if (!ignore && !macro && !rep0 && !args[0])
 			ignore = level;
 		free(s);
 		return 1;
@@ -291,7 +326,7 @@ int ppfind(ioh_t *out, char *ip, char *argp, char *next, macro_t *mac) {
 		if (s == NULL || !(ctype(*argp) & (CT_NL | CT_NUL)))
 			flerrexit("syntax error on ifdef directive");
 		++level;
-		if (!ignore && deffind(s) == NULL)
+		if (!ignore && !macro && !rep0 && deffind(s) == NULL)
 			ignore = level;
 		return 1;
 	}
@@ -300,7 +335,7 @@ int ppfind(ioh_t *out, char *ip, char *argp, char *next, macro_t *mac) {
 		if (s == NULL || !(ctype(*argp) & (CT_NL | CT_NUL)))
 			flerrexit("syntax error on ifndef directive");
 		++level;
-		if (!ignore && deffind(s) != NULL)
+		if (!ignore && !macro && !rep0 && deffind(s) != NULL)
 			ignore = level;
 		return 1;
 	}
@@ -309,7 +344,7 @@ int ppfind(ioh_t *out, char *ip, char *argp, char *next, macro_t *mac) {
 			flerrexit("syntax error on endif directive");
 		if (!level)
 			flerrexit("endif without prior if/ifdef/ifndef");
-		if (level == ignore)
+		if (level == ignore && !macro && !rep0)
 			ignore = 0;
 		--level;
 		return 1;
@@ -319,11 +354,13 @@ int ppfind(ioh_t *out, char *ip, char *argp, char *next, macro_t *mac) {
 			flerrexit("syntax error on else directive");
 		if (!level)
 			flerrexit("else without prior if/ifdef/ifndef");
+		if (!macro || !rep0)
+			return 1;
 		if (level == ignore || !ignore)
 			ignore = (ignore ? 0 : level);
 		return 1;
 	}
-	if (ignore)
+	if (macro || ignore || rep0)
 		return 0;
 	if (cmpid(ip, "xdefine")) {
 		define(argp, mac, 1);
@@ -383,28 +420,31 @@ int ppfind(ioh_t *out, char *ip, char *argp, char *next, macro_t *mac) {
 		return 1;
 	}
 	if (cmpid(ip, "include")) {
-		char *data, *ofile = file, *s;
+		char *data, *ofile = file, *s, *t;
 		int oline = line;
 		if (argp == NULL)
 			flerrexit("too few arguments for msg directive");
-		s = argp;
-		s = getstr(&s, 0);
-		if (s == NULL || !(ctype(*argp) & (CT_NL | CT_NUL)))
+		t = argp;
+		s = getstr(&t, 0);
+		if (s == NULL || !(ctype(*t) & (CT_NL | CT_NUL)))
 			flerrexit("syntax error on include directive");
-		file = s;
-		s = getstr(&argp, 1);
-		data = readfile(s);
-		free(s);
+		t = getstr(&argp, 1);
+		data = readfile(t);
+		free(t);
 		if (data == NULL)
-			flerrexit("failed to include file '%s'", file);
-		mfprintf(out, "file \"%s\"\n", file);
+			flerrexit("failed to include file '%s'", s);
+		file = s;
+		mfprintf(out, " file \"%s\"\n", file);
 		line = 1;
-		_preprocess(out, data, mac, explvl);
+		_preprocess(out, data, mac);
 		free(data);
 		free(file);
 		file = ofile;
 		line = oline;
-		mfprintf(out, "file \"%s\"\nline %u\n", file, oline + 1);
+		mfprintf(out, " file \"%s\"\n", file);
+		if (!explvl)
+			mfprintf(out, " line %i\n", oline + 1);
+		else mfprintf(out, " line %i\n nocount\n", oline);
 		return 1;
 	}
 	{
@@ -437,10 +477,12 @@ int ppfind(ioh_t *out, char *ip, char *argp, char *next, macro_t *mac) {
 			macargs = &args;
 			++explvl;
 			++mac->active;
-			_preprocess(out, mac->val, mac, explvl);
+			mfprint(out, " nocount\n");
+			_preprocess(out, mac->val, mac);
 			--mac->active;
 			macargs = argt;
-			mfprintf(out, "line %i", line + 1);
+			if (!explvl)
+				mfprintf(out, " line %i", line + 1);
 			for (--args.argc; args.argc >= 0; --args.argc)
 				free(args.argv[args.argc]);
 			return 1;
@@ -462,7 +504,7 @@ int getprefix(char **src) {
 	return n;
 }
 
-void _preprocess(ioh_t *out, char *in, macro_t *mac, int lvl) {
+void _preprocess(ioh_t *out, char *in, macro_t *mac) {
 	char *lnstart, *lp, *ip, *argp, *next;
 	int wp, r, pps;
 
@@ -557,7 +599,7 @@ void _preprocess(ioh_t *out, char *in, macro_t *mac, int lvl) {
 				goto endln;
 			}
 		}
-		if ((r = ppfind(out, ip, argp, next, mac)))
+		if ((r = ppfind(out, ip, argp, &next, mac)))
 			goto endln;
 		if (lp == NULL && !(wp & WP_PSPC)) {
 			lp = ip;
@@ -570,9 +612,11 @@ void _preprocess(ioh_t *out, char *in, macro_t *mac, int lvl) {
 					argp = in;
 				else goto endln;
 			}
-			r = ppfind(out, ip, argp, next, mac);
+			r = ppfind(out, ip, argp, &next, mac);
 		}
 		endln:
+		if (r == 2) /* endrep or endm wants us to die */
+			return;
 		if (pps && !r)
 			flwarn("unhandled preprocessor directive");
 		if (lp != NULL && r && !macro) {
@@ -580,12 +624,10 @@ void _preprocess(ioh_t *out, char *in, macro_t *mac, int lvl) {
 			mfwrite(out, ":", 1);
 		}
 		in = next;
-		if (!r && !ignore && !macro && !pps)
+		if (!r && !ignore && !macro && !rep0 && !pps)
 			ppsub(out, lnstart, mac, 0);
 		mfprint(out, "\n");
-		if (explvl < lvl)
-			return;
-		if (!lvl)
+		if (!explvl && !rep)
 			++line;
 	}
 }
@@ -605,8 +647,8 @@ void preprocess(ioh_t *out, char *in) {
 	arr_new(&defines, sizeof(define_t));
 	arr_new(&macros, sizeof(macro_t));
 	line = 1;
-	explvl = level = ignore = 0;
-	_preprocess(out, in, NULL, 0);
+	rep0 = rep = explvl = level = ignore = 0;
+	_preprocess(out, in, NULL);
 	for (--defines.count; defines.count >= 0; --defines.count)
 		if (((define_t *) defines.data)[defines.count].free)
 			free(((define_t *) defines.data)[defines.count].val);
