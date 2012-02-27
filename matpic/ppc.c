@@ -64,13 +64,23 @@ void _ppsub(ioh_t *out, char *in, macro_t *mac, define_t *parent, char end) {
 	macro = esc = str = 0;
 	while (!(ctype(*in) & (CT_NL | CT_NUL)) && *in != end) {
 		s = in;
-		while (!(ctype(*in) & (CT_NL | CT_NUL | CT_LET | CT_SEP)) && *in != '[') {
+		while (!(ctype(*in) & (CT_NL | CT_NUL | CT_LET | CT_SEP)) && *in != '[' && *in != '@') {
 			if (esc)
 				esc = 0;
 			else strcheck(*in);
 			++in;
 		}
 		mfwrite(out, s, in - s);
+		if (!str && macargs != NULL && *in == '@') {
+			++in;
+			i = getval(&in);
+			if (i > macargs->argc)
+				flerrexit("macro wants nonexistant argument #%i", i + 1);
+			if (i == 0)
+				mfprintf(out, "%i", macargs->argc - mac->argc);
+			else mfprint(out, macargs->argv[i - 1]);
+			continue;
+		}
 		if (!str && *in == '[') {
 			char *p;
 			++in;
@@ -457,10 +467,7 @@ int ppfind(ioh_t *out, char *ip, char *argp, char **next, macro_t *mac) {
 			if (argp != NULL)
 				while (!(ctype(*argp) & (CT_NL | CT_NUL))) {
 					s = argp;
-					if (args.argc + 1 < mac->argc)
-						while (!(ctype(*argp) & (CT_NL | CT_NUL)) && *argp != ',')
-							++argp;
-					else while (!(ctype(*argp) & (CT_NL | CT_NUL)))
+					while (!(ctype(*argp) & (CT_NL | CT_NUL)) && *argp != ',')
 						++argp;
 					args.argv[args.argc] = strldup(s, argp - s);
 					if (args.argv[args.argc] == NULL)
