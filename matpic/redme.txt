@@ -31,8 +31,8 @@ following directives exist:
 	org <origin>: set origin
 	data <value>, <value>: put stray words into bytecode
 	file "<filename>": tell assembler what file it is working on (also sets next line # to 1)
-		filenames with double quotes or newlines and stuff in them are not support (no escape codes)
 	line <line #>: tell assembler what the next line is numbered
+	nocount: stop counting lines until next file or line directive
 also there is preprocessor directives:
 	define, if, ifdef, ifndef, else, endif: behave mostly like C
 		with exception of the use of arguments in macros, in a case like
@@ -42,13 +42,15 @@ also there is preprocessor directives:
 	msg "<message>": show a message
 	warning "<message>": show a threatning message
 	error "<message>": show a deadly message
-	nocount: stop counting lines until next file or line directive
 	they don't need # like in C (though it is allowed, you even can use % like in nasm)
 special case of preprocessor is multiline macro, synopsis:
 	macro <identifier> [<argument name>, <...>]
 they are ended with:
 	endm
 nesting of multiline macros r supported
+in multiline macros '@0' or just '@' denotes the number of arguments excluding named ones
+@1 @2 etc are the actual arguments
+expressions can be used to select the argument if you place it in bracelets like '@(<expression>)'
 macro arguments won't be expanded in macros expanded inside the macro
 integer notation supports the following prefixes:
 	none at all: decimal

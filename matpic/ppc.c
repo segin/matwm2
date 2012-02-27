@@ -64,18 +64,20 @@ void _ppsub(ioh_t *out, char *in, macro_t *mac, define_t *parent, char end) {
 	macro = esc = str = 0;
 	while (!(ctype(*in) & (CT_NL | CT_NUL)) && *in != end) {
 		s = in;
-		while (!(ctype(*in) & (CT_NL | CT_NUL | CT_LET | CT_SEP)) && *in != '[' && *in != '@') {
+		while (!(ctype(*in) & (CT_NL | CT_NUL | CT_LET | CT_SEP)) && *in != '[' && *in != '@' && *in != end) {
 			if (esc)
 				esc = 0;
 			else strcheck(*in);
 			++in;
 		}
 		mfwrite(out, s, in - s);
+		if (*in == end || ctype(*in) & (CT_NL | CT_NUL))
+			return;
 		if (!str && macargs != NULL && *in == '@') {
 			++in;
 			i = getval(&in);
 			if (i > macargs->argc)
-				flerrexit("macro wants nonexistant argument #%i", i + 1);
+				flerrexit("macro wants nonexistant argument #%i", i);
 			if (i == 0)
 				mfprintf(out, "%i", macargs->argc - mac->argc);
 			else mfprint(out, macargs->argv[i - 1]);
