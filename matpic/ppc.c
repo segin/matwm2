@@ -333,6 +333,22 @@ int ppfind(ioh_t *out, char *ip, char *argp, char *next, macro_t *mac) {
 		define(argp, mac, 0);
 		return 1;
 	}
+	if (cmpid(ip, "undef")) {
+		define_t *def;
+		if (argp == NULL)
+			flerrexit("too few arguments to undef");
+		getword(&argp, &s);
+		if (s == NULL || !(ctype(*argp) & (CT_NL | CT_NUL)))
+			flerrexit("syntax error at undef directive");
+		def = deffind(s);
+		if (def != NULL) {
+			if (def->free)
+				free(def->val);
+			--defines.count;
+			memcpy(def, ((define_t *) defines.data + defines.count), sizeof(define_t));
+		}
+		return 1;
+	}
 	if (cmpid(ip, "msg")) {
 		if (argp == NULL)
 			flerrexit("too few arguments for msg directive");

@@ -2,7 +2,7 @@ variable arguments for multiline macros
 preprocessor loops
 	rep
 	rotate
-undef
+xmacro
 something like cblock (perhaps implemented as macro)
 db directive for store bytes separate and text with ""
 const, equ, dw, dd, dq, etc
