@@ -8,6 +8,7 @@ typedef struct {
 	char *name, *val;
 	int active, argc;
 	char *argv[ARG_MAX];
+	int free;
 } define_t;
 
 typedef struct {
