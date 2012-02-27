@@ -3,7 +3,7 @@ variable arguments for multiline macros
 xmacro
 something like cblock (perhaps implemented as macro)
 db directive for store bytes separate and text with ""
-const, equ, dw, dd, dq, etc
+dw, dd, dq, etc
 support banksel, bankisel, pagesel pseudo instructions
 changing default radix
 include search path

@@ -194,15 +194,19 @@ int getnum(char **src, unsigned int *ret) {
 	if (**src == '0') {
 		switch(*(++*src)) {
 			case 'x':
+			case 'X':
 				base = 16;
 				break;
 			case 'b':
+			case 'B':
 				base = 2;
 				break;
 			case 'd':
+			case 'D':
 				base = 10;
 				break;
-			case '0':
+			case 'o':
+			case 'O':
 				base = 8;
 				break;
 			default:
