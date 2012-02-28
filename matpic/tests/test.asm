@@ -6,7 +6,7 @@
  message Test message for message directive
 
  ; testing include
- include test.inc
+ include tests/test.inc
  ifdef includesuccess
 	return
 	sleep

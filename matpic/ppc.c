@@ -110,7 +110,6 @@ void _ppsub(ioh_t *out, char *in, macro_t *mac, define_t *parent, char end) {
 			char *p;
 			++in;
 			p = id = sppsub(in, mac, ']');
-			mfprintf(mstderr, "(:%s:)=%s=%u-\n", in, id, repno);
 			mfprintf(out, "%xh", numarg(&p));
 			if (*p)
 				flerrexit("exess data in preprocessor evaluation group");
