@@ -7,6 +7,7 @@
 
  ; testing include
  include "tests/testnew.inc"
+ include "tests/pptest.asm"
  ifdef includesuccess
 	return
 	sleep
@@ -50,9 +51,8 @@
  	we failed
  endif
 
-; enum 0, w, f ; test enum
-define w 0
-define f 1
+ ; test enum
+enum 0, w, f
 
  ; testing all instructions
  addwf 0x7F, w
@@ -88,10 +88,7 @@ define f 1
  ClRwDt ; testing cases (in)sensitiviy
  goto 0x7FF
  ; lets test enum again
-;  enum 15, a, b, c, enum, define
-define a 15
-define b 16
-define c 17
+  enum 15, a, b, c, enum, define
 define enum 18
 define define 19
 
