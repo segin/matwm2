@@ -1,4 +1,6 @@
 xmacro
+macro local variables
+macro local labels
 db directive for store bytes separate and text with ""
 dw, dd, dq, etc
 support banksel, bankisel, pagesel pseudo instructions
