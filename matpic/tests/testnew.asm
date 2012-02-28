@@ -7,7 +7,7 @@
 
  ; testing include
  include "tests/testnew.inc"
- include "tests/pptest.asm"
+ include "tests/enum.inc"
  ifdef includesuccess
 	return
 	sleep

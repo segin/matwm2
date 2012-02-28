@@ -124,7 +124,7 @@ void _ppsub(ioh_t *out, char *in, macro_t *mac, define_t *parent, char end) {
 		id = in;
 		getid(&in);
 		if (!str) {
-			if (macargs != NULL && macargs->argc) {
+			if (macargs != NULL && mac != NULL && macargs->argc) {
 				for (i = 0; i < mac->argc; ++i) {
 					if (cmpid(id, mac->argv[i])) {
 						_ppsub(out, macargs->argv[i], NULL, NULL, 0);
@@ -437,6 +437,7 @@ int ppfind(ioh_t *out, char *ip, char *argp, char **next, macro_t *mac) {
 		if (def != NULL) {
 			if (def->free)
 				free(def->val);
+			free(def->nptr);
 			--defines.count;
 			memcpy(def, ((define_t *) defines.data + defines.count), sizeof(define_t));
 		}
