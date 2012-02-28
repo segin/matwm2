@@ -15,3 +15,4 @@ fancy disassembler output that can be re-assembled as-is option
 BUGS
 	if integer size on host architecture is less than 32bit all will fail
 	unicode will be case sensitive
+	note: removed call to free() after including file, data is never freed

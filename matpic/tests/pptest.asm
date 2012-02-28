@@ -6,3 +6,5 @@ macro enum s
  endrep
 endm
 enum 4, four, five, six, seven
+enum 1, one, two, three
+enum 8, eight, nine, ten

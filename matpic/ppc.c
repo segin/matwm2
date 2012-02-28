@@ -110,6 +110,7 @@ void _ppsub(ioh_t *out, char *in, macro_t *mac, define_t *parent, char end) {
 			char *p;
 			++in;
 			p = id = sppsub(in, mac, ']');
+			mfprintf(mstderr, "(:%s:)=%s=%u-\n", in, id, repno);
 			mfprintf(out, "%xh", numarg(&p));
 			if (*p)
 				flerrexit("exess data in preprocessor evaluation group");
@@ -493,7 +494,7 @@ int ppfind(ioh_t *out, char *ip, char *argp, char **next, macro_t *mac) {
 		mfprintf(out, " file \"%s\"\n", file);
 		line = 1;
 		_preprocess(out, data, mac);
-		free(data);
+
 		free(file);
 		file = ofile;
 		line = oline;
@@ -694,6 +695,7 @@ void _preprocess(ioh_t *out, char *in, macro_t *mac) {
  *
  */
 void preprocess(ioh_t *out, char *in) {
+	define_t *def;
 	file = infile;
 	defargs = NULL;
 	macargs = NULL;
@@ -703,9 +705,10 @@ void preprocess(ioh_t *out, char *in) {
 	repno = rep0 = rep = explvl = level = ignore = 0;
 	_preprocess(out, in, NULL);
 	for (--defines.count; defines.count >= 0; --defines.count) {
-		free(((define_t *) defines.data)[defines.count].nptr);
-		if (((define_t *) defines.data)[defines.count].free)
-			free(((define_t *) defines.data)[defines.count].val);
+		def = (define_t *) defines.data + defines.count;
+		free(def->nptr);
+		if (def->free)
+			free(def->val);
 	}
 	arr_free(&macros);
 	arr_free(&defines);
