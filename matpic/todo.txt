@@ -1,7 +1,4 @@
-variable arguments for multiline macros
-	rotate
 xmacro
-something like cblock (perhaps implemented as macro)
 db directive for store bytes separate and text with ""
 dw, dd, dq, etc
 support banksel, bankisel, pagesel pseudo instructions

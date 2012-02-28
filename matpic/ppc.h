@@ -5,7 +5,7 @@
 #include "io.h"
 
 typedef struct {
-	char *name, *val;
+	char *name, *val, *nptr;
 	int active, argc;
 	char *argv[ARG_MAX];
 	int free;

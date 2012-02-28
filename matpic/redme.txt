@@ -38,7 +38,8 @@ also there is preprocessor directives:
 		with exception of the use of arguments in macros, in a case like
 			define macro(a, b) (a + b)
 		passing extra arguments after b, will add those to b, including commas
-	xdefine, undef and rep do what they does in nasm
+		define name can be put in <> bracelets to make it be preprocessed
+	xdefine, undef and rep do what they does in nasm, with rep you get '@@' to tell you what iteration is current
 	msg "<message>": show a message
 	warning "<message>": show a threatning message
 	error "<message>": show a deadly message
@@ -51,6 +52,7 @@ nesting of multiline macros r supported
 in multiline macros '@0' or just '@' denotes the number of arguments excluding named ones
 @1 @2 etc are the actual arguments
 expressions can be used to select the argument if you place it in bracelets like '@(<expression>)'
+also those expressions can be preprocessed if you use <> bracelets
 macro arguments won't be expanded in macros expanded inside the macro
 integer notation supports the following prefixes:
 	none at all: decimal

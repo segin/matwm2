@@ -12,7 +12,7 @@ arglist_t *defargs;
 arglist_t *macargs;
 
 int level, ignore; /* depth & state of if/ifdef/ifndef directives */
-int str, esc, macro, explvl, rep0, rep;
+int str, esc, macro, explvl, rep0, rep, repno;
 char *repstart;
 
 void strcheck(char c) {
@@ -26,7 +26,8 @@ void strcheck(char c) {
 				str ^= 1;
 			break;
 		case '\'':
-			str ^= 2;
+			if (!(str && esc) || str & 1)
+				str ^= 2;
 			break;
 		case '\n':
 			str = 0;
@@ -73,21 +74,43 @@ void _ppsub(ioh_t *out, char *in, macro_t *mac, define_t *parent, char end) {
 		mfwrite(out, s, in - s);
 		if (*in == end || ctype(*in) & (CT_NL | CT_NUL))
 			return;
-		if (!str && macargs != NULL && *in == '@') {
+		if (!str && *in == '@') {
 			++in;
-			i = getval(&in);
-			if (i > macargs->argc)
-				flerrexit("macro wants nonexistant argument #%i", i);
+			if (*in == '@') {
+				++in;
+				mfprintf(out, "%ut", repno);
+				continue;
+			}
+			if (*in == '<') {
+				char *p = in, *t = in;
+				while (!(ctype(*t) & (CT_NL | CT_NUL)) && *t != '>')
+					++t;
+				if (*t != '>')
+					flerrexit("missing '>'");
+				++t;
+				in = t;
+				p = t = sppsub(p + 1, mac, '>');
+				i = numarg(&t);
+				if (*t)
+					flerrexit("exess data in <> group");
+				free(p);
+			} else i = getval(&in);
+			if (macargs == NULL) {
+				mfprint(out, "0t");
+				continue;
+			}
+			if (i > macargs->argc - mac->argc)
+				flerrexit("macro wants nonexistant argument @%i", i);
 			if (i == 0)
-				mfprintf(out, "%i", macargs->argc - mac->argc);
-			else mfprint(out, macargs->argv[i - 1]);
+				mfprintf(out, "%ut", macargs->argc - mac->argc);
+			else mfprint(out, macargs->argv[mac->argc + i - 1]);
 			continue;
 		}
 		if (!str && *in == '[') {
 			char *p;
 			++in;
 			p = id = sppsub(in, mac, ']');
-			mfprintf(out, "%u", numarg(&p));
+			mfprintf(out, "%xh", numarg(&p));
 			if (*p)
 				flerrexit("exess data in preprocessor evaluation group");
 			free(id);
@@ -101,14 +124,14 @@ void _ppsub(ioh_t *out, char *in, macro_t *mac, define_t *parent, char end) {
 		id = in;
 		getid(&in);
 		if (!str) {
-			if (mac != NULL && macargs->argc) {
-				for (i = 0; i < macargs->argc; ++i) {
+			if (macargs != NULL && macargs->argc) {
+				for (i = 0; i < mac->argc; ++i) {
 					if (cmpid(id, mac->argv[i])) {
 						_ppsub(out, macargs->argv[i], NULL, NULL, 0);
 						break;
 					}
 				}
-				if (i != macargs->argc)
+				if (i != mac->argc)
 					continue;
 			}
 
@@ -189,7 +212,22 @@ void define(char *argp, macro_t *mac, int eval) {
 	int wp;
 	if (argp == NULL)
 		flerrexit("too few arguments for define directive");
-	wp = getword(&argp, &def.name);
+	if (*argp == '<') {
+		++argp;
+		def.nptr = s = sppsub(argp, mac, '>');
+		while (!(ctype(*argp) & (CT_NL | CT_NUL)) && *argp != '>')
+			++argp;
+		if (*argp != '>')
+			flerrexit("missing '>'");
+		++argp;
+		getword(&s, &def.name);
+		if (*s)
+			flerrexit("syntax error on define directive");
+		wp = WP_TSPC;
+	} else {
+		wp = getword(&argp, &def.name);
+		def.nptr = NULL;
+	}
 	if (def.name == NULL)
 		flerrexit("syntax error on define directive");
 	def.argc = 0;
@@ -225,8 +263,12 @@ void define(char *argp, macro_t *mac, int eval) {
 		def.free = 0;
 	}
 	def.active = 0;
-	if ((p = deffind(def.name)) != NULL)
+	if ((p = deffind(def.name)) != NULL) {
+		if (p->free)
+			free(p->val);
+		free(p->nptr);
 		memcpy(p, &def, sizeof(define_t));
+	}
 	else arr_add(&defines, &def);
 }
 
@@ -298,15 +340,17 @@ int ppfind(ioh_t *out, char *ip, char *argp, char **next, macro_t *mac) {
 		if (!args[0])
 			++rep0;
 		else {
+			int orepno = repno;
 			++rep;
-			while (args[0]--) {
+			for (repno = 0; repno < args[0]; ++repno) {
 				if (!explvl)
-					mfprintf(out, " line %i\n", rline + 1);
+					mfprintf(out, " line %ut\n", rline + 1);
 				_preprocess(out, *next, mac);
 			}
+			repno = orepno;
 			--rep;
 			if (!explvl)
-				mfprintf(out, " line %i\n", rline);
+				mfprintf(out, " line %ut\n", rline);
 		}
 		++rep0;
 		free(s);
@@ -455,8 +499,8 @@ int ppfind(ioh_t *out, char *ip, char *argp, char **next, macro_t *mac) {
 		line = oline;
 		mfprintf(out, " file \"%s\"\n", file);
 		if (!explvl)
-			mfprintf(out, " line %i\n", oline + 1);
-		else mfprintf(out, " line %i\n nocount\n", oline);
+			mfprintf(out, " line %ut\n", oline + 1);
+		else mfprintf(out, " line %ut\n nocount\n", oline);
 		return 1;
 	}
 	{
@@ -656,11 +700,13 @@ void preprocess(ioh_t *out, char *in) {
 	arr_new(&defines, sizeof(define_t));
 	arr_new(&macros, sizeof(macro_t));
 	line = 1;
-	rep0 = rep = explvl = level = ignore = 0;
+	repno = rep0 = rep = explvl = level = ignore = 0;
 	_preprocess(out, in, NULL);
-	for (--defines.count; defines.count >= 0; --defines.count)
+	for (--defines.count; defines.count >= 0; --defines.count) {
+		free(((define_t *) defines.data)[defines.count].nptr);
 		if (((define_t *) defines.data)[defines.count].free)
 			free(((define_t *) defines.data)[defines.count].val);
+	}
 	arr_free(&macros);
 	arr_free(&defines);
 }
