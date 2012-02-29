@@ -299,3 +299,12 @@ int getnum(char **src, unsigned int *ret) {
 	*ret = r;
 	return n;
 }
+
+char *strldup(char *s, int len) {
+	char *ret = malloc(len + 1);
+	if (ret != NULL) {
+		strncpy(ret, s, len);
+		ret[len] = 0;
+	}
+	return ret;
+}

@@ -97,14 +97,6 @@ int cmplid(char **idlp, char *idr) {
 	return 0;
 }
 
-char *strldup(char *s, int len) {
-	char *ret = malloc(len + 1);
-	if (ret != NULL)
-		strncpy(ret, s, len);
-	ret[len] = 0;
-	return ret;
-}
-
 unsigned int getval(char **src) {
 	unsigned int val;
 	char *ns, *ne;
@@ -443,12 +435,25 @@ int egethex(char **s) {
 	return n;
 }
 
+int sclen(char *in) {
+	char end = *in++;
+	int ret = 0;
+	while (!(ctype(*in) & (CT_NL | CT_NUL)) && *in != end && *(in - 1) != '\\')
+		++ret;
+	if (*in != end)
+		flerrexit("missing '%c'", end);
+	return ret;
+}
+
 char *getstr(char **in, int esc) {
 	string_t ret;
 	char *p, b[5] = { 0, 0, 0, 0, 0 };
-	int n;
+	int n, len;
 	if (**in != '"')
 		return NULL;
+	len = sclen(*in);
+	++in;
+	ret = strldup(in, len + 1);
 	vstr_new(&ret);
 	++*in;
 	p = *in;
