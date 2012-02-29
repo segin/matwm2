@@ -1,4 +1,4 @@
-#include "mem.h" /* BLOCK */
+#include "mem.h"
 #include "as.h" /* inss */
 #include "misc.h" /* errexit(), flwarn(), infile, line */
 #include "arch.h" /* arch */
@@ -34,7 +34,7 @@ void addb(ioh_t *out, unsigned char b) {
 		endln(out);
 }
 
-void getihex(ioh_t *out) {
+void ihex_write(ioh_t *out) {
 	int i;
 	ins_t *ins = (ins_t *) inss.data;
 
@@ -78,7 +78,7 @@ int gethnum(char **src) {
 	return (l << 4) | r;
 }
 
-void readihex(char *in) {
+void ihex_read(char *in) {
 	int n, len, crc, rtype, addr;
 	dsym_t ds;
 
@@ -130,7 +130,7 @@ void readihex(char *in) {
 				crc += n;
 			}
 			break;
-		case -1:
+		default:
 			goto dinval;
 	}
 	if ((n = gethnum(&in)) == -1)

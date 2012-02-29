@@ -78,14 +78,13 @@ char *readfile(char *path) {
 }
 
 int cmplid(char **idlp, char *idr) {
-	int n = 0;
 	char *idl = *idlp;
 
 	while (*idl && *idr && *idl != '.' &&
 	       (ctype(*idl) & (CT_LET | CT_SEP | CT_NUM)) &&
 	       (ctype(*idr) & (CT_LET | CT_SEP | CT_NUM)) &&
 	       lower[(unsigned char) *idl] == lower[(unsigned char) *idr])
-		++n, ++idl, ++idr;
+		++idl, ++idr;
 	if((!(ctype(*idl) & (CT_LET | CT_SEP | CT_NUM)) || *idl == '.') &&
 	   !(ctype(*idr) & (CT_LET | CT_SEP | CT_NUM))) {
 		if (*idl == '.') {

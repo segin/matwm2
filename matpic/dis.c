@@ -5,7 +5,7 @@
 #include "str.h" /* hexnib[] */
 #include "io.h"
 
-arr_t dsym = { NULL, 0, 0, 0 };
+arr_t dsym = { NULL, 0, 0, 0 }; /* these need to be 0 so cleanup() before disassemble won't fail */
 
 void disassemble(ioh_t *out) {
 	dsym_t *sym = (dsym_t *) dsym.data;

@@ -5,8 +5,8 @@
 #include "ppc.h"
 #include "io.h"
 
-arr_t defines = { NULL, 0, 0, 0 };
-arr_t macros = { NULL, 0, 0, 0 };
+arr_t defines;
+arr_t macros;
 
 arglist_t *defargs;
 arglist_t *macargs;

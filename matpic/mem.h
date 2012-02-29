@@ -5,6 +5,7 @@
  * generic memory stuff *
  ************************/
 
+#include <stdlib.h> /* NULL */
 #include <string.h> /* strlen() */
 
 #define BLOCK 2048  /* amount of memory to allocate in one go */
@@ -18,6 +19,9 @@ typedef struct {
 extern void arr_new(arr_t *a, int size);
 extern void arr_add(arr_t *a, void *data);
 extern void arr_free(arr_t *a);
+
+#define arr_item(a, type, i) ((type *) (a).data + (i))
+#define arr_top(a, type) (a.count ? ((type *) (a).data + (a).count - 1) : NULL)
 
 typedef struct {
 	char *data;

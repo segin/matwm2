@@ -2,8 +2,10 @@
  * generic string stuff *
  ************************/
 
-#include <stdlib.h> /* NULL */
 #include "str.h"
+
+#include <stdlib.h> /* NULL */
+#include <string.h> /* strcpy() */
 
 /* alfa[]
  *

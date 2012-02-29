@@ -15,9 +15,6 @@ enum atype {
 	AT_BS /* banksel */
 };
 
-int insord14b[4] = { 1, 0, 3, 2 };
-int dord14b[2] = { 0, 1 };
-
 oc_t ocs14b[] = {
 	/* byte operatios */
 	{ "clrw",   { 0x01, 0x00 }, { 0xFF, 0x80 }, 2, AT_NA  },
@@ -133,6 +130,9 @@ void adis14b(ioh_t *out, unsigned char *oc, int atype) {
 			break;
 	}
 }
+
+int insord14b[4] = { 1, 0, 3, 2 };
+int dord14b[2] = { 0, 1 };
 
 arch_t pic14b = {
 	ocs14b,

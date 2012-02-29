@@ -77,16 +77,16 @@ int main(int argc, char *argv[]) {
 		free(code); /* release the monster */
 		if (through) {
 			ioh_t *memout = mmemopen(0);
-			getihex(memout);
+			ihex_write(memout);
 			mfwrite(memout, "\0", 1);
 			code = mmemget(memout);
 			mfclose(memout);
 			if (code == NULL)
 				errexit("error error");
-		} else getihex(out);
+		} else ihex_write(out);
 	}
 	if (disasm || through) {
-		readihex(code);
+		ihex_read(code);
 		free(code);
 		disassemble(out);
 	}

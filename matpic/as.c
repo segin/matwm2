@@ -13,8 +13,12 @@
 int llbl, count;
 unsigned int addrl;
 
-arr_t inss = { NULL, 0, 0, 0 };
+arr_t inss = { NULL, 0, 0, 0 }; /* these need to be 0 so cleanup() before assemble won't fail */
 arr_t labels = { NULL, 0, 0, 0 };
+
+void parseline(char **in) {
+	
+}
 
 void addlabel(char *lp) {
 	label_t label, *li;
@@ -26,14 +30,13 @@ void addlabel(char *lp) {
 	label.address = addrl / arch->align;
 	label.parent = -1;
 	for (i = labels.count - 1; i >= 0; --i) { /* find owner */
-		li = (label_t *) ((label_t *) labels.data) + i;
-		if (li->local < label.local) {
+		if (arr_item(labels, label_t, i)->local < label.local) {
 			label.parent = i;
 			break;
 		}
 	}
 	for (i = 0; i < labels.count; ++i) { /* check if already exists */
-		li = (label_t *) ((label_t *) labels.data) + i;
+		li = arr_item(labels, label_t, i);
 		if (cmpid(li->name, label.name) && label.parent == li->parent && label.local == li->local)
 			flerrexit("duplicate label");
 	}
@@ -218,7 +221,7 @@ void assemble(char *code) {
 					}
 					if (i)
 						--ins;
-					address += c;
+					address += (arch->dlen / arch->align) * c;
 					break;
 				case IT_FIL:
 					if (file != infile)

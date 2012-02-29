@@ -3,7 +3,7 @@
 
 #include "io.h"
 
-extern void getihex(ioh_t *out);
-extern void readihex(char *in);
+extern void ihex_write(ioh_t *out);
+extern void ihex_read(char *in);
 
 #endif /* __IHEX_H__ */
