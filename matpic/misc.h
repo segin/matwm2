@@ -17,6 +17,8 @@ extern char *readfile(char *path);
 
 extern unsigned int getval(char **src);
 extern unsigned int numarg(char **src);
+
+int countargs(char *src);
 extern int getargs(char **src, int *args);
 extern int getword(char **src, char **word);
 extern int sclen(char *in);

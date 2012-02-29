@@ -381,6 +381,18 @@ unsigned int numarg(char **src) {
 	return lval[0];
 }
 
+int countargs(char *src) {
+	int n = 1;
+	if (src == NULL)
+		return 0;
+	while(!(ctype(*src) & (CT_NUL | CT_NL))) {
+		if (*src == ',')
+			++n;
+		++src;
+	}
+	return n;
+}
+
 int getargs(char **src, int *args) {
 	int n = 0;
 
@@ -448,12 +460,9 @@ int sclen(char *in) {
 char *getstr(char **in, int esc) {
 	string_t ret;
 	char *p, b[5] = { 0, 0, 0, 0, 0 };
-	int n, len;
+	int n;
 	if (**in != '"')
 		return NULL;
-	len = sclen(*in);
-	++in;
-	ret = strldup(in, len + 1);
 	vstr_new(&ret);
 	++*in;
 	p = *in;

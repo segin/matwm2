@@ -8,25 +8,13 @@
 #include "str.h"
 #include "mem.h"
 #include "arch.h"
-#include "misc.h" /* getargs(), clearfile(), getstr(), file, address, line */
+#include "misc.h" /* countargs(), getargs(), getstr(), file, address, line */
 
 int llbl, count;
 unsigned int addrl;
 
 arr_t inss = { NULL, 0, 0, 0 };
 arr_t labels = { NULL, 0, 0, 0 };
-
-int countargs(char *src) {
-	int n = 1;
-	if (src == NULL)
-		return 0;
-	while(!(ctype(*src) & (CT_NUL | CT_NL))) {
-		if (*src == ',')
-			++n;
-		++src;
-	}
-	return n;
-}
 
 void addlabel(char *lp) {
 	label_t label, *li;
