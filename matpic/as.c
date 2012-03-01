@@ -16,8 +16,70 @@ unsigned int addrl;
 arr_t inss = { NULL, 0, 0, 0 }; /* these need to be 0 so cleanup() before assemble won't fail */
 arr_t labels = { NULL, 0, 0, 0 };
 
-void parseline(char **in) {
-	
+char *lp, *ip, *argp, *nextln;
+int pspc, tspc, stage;
+
+int parseln(char *in) {
+	if (!*in)
+		return 0;
+	if (stage == 0) {
+		int r = 1;
+		pspc = skipsp(&in);
+		lp = NULL;
+		ip = getid(&in);
+		argp = NULL;
+		if (*in == ':') {
+			lp = ip;
+			++in;
+			skipsp(&in);
+			ip = getid(&in);
+		}
+		if (ip == NULL) {
+			if (!(ctype(*in) & (CT_NL | CT_NUL)))
+				r = 2;
+			goto endln;
+		}
+		tspc = skipsp(&in);
+		if (!(ctype(*in) & (CT_NL | CT_NUL))) {
+			if (tspc)
+				argp = in;
+			else {
+				r = 2;
+				goto endln;
+			}
+		}
+		endln:
+		while (!(ctype(*in) & (CT_NUL | CT_NL)))
+			++in;
+		skipnl(&in);
+		nextln = in;
+		++stage;
+		return r;
+	}
+	stage = 0;
+	if (lp == NULL) {
+		if (!pspc) {
+			lp = ip;
+			in = argp;
+			ip = getid(&in);
+			tspc = skipsp(&in);
+			argp = NULL;
+			if (ip == NULL) {
+				if (!(ctype(*in) & (CT_NL | CT_NUL)))
+					return 2;
+				return 1;
+			}
+			if (!(ctype(*in) & (CT_NL | CT_NUL))) {
+				if (tspc) {
+					argp = in;
+					return 1;
+				}
+				return 2;
+			}
+			return 1;
+		} else return 2;
+	}
+	return 3;
 }
 
 void addlabel(char *lp) {
