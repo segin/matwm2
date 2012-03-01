@@ -1,4 +1,5 @@
 #include <stdlib.h> /* NULL */
+#include "as.h" /* parseln() */
 #include "mem.h"
 #include "str.h" /* skipsp(), ctype(), etc */
 #include "misc.h" /* flerrexit(), getword(), readfile(), getstr(), clearfile(), file */

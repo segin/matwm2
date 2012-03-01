@@ -49,6 +49,10 @@ extern arr_t inss;
 extern arr_t labels;
 extern int llbl; /* last label */
 
+extern char *lp, *ip, *argp, *nextln;
+extern int run;
+
+extern int parseln(char *in);
 extern void assemble(char *code);
 
 #endif /* __AS_H__ */

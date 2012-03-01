@@ -17,12 +17,12 @@ arr_t inss = { NULL, 0, 0, 0 }; /* these need to be 0 so cleanup() before assemb
 arr_t labels = { NULL, 0, 0, 0 };
 
 char *lp, *ip, *argp, *nextln;
-int pspc, tspc, stage;
+int pspc, tspc, run;
 
 int parseln(char *in) {
 	if (!*in)
 		return 0;
-	if (stage == 0) {
+	if (run == 0) {
 		int r = 1;
 		pspc = skipsp(&in);
 		lp = NULL;
@@ -53,28 +53,31 @@ int parseln(char *in) {
 			++in;
 		skipnl(&in);
 		nextln = in;
-		++stage;
+		++run;
 		return r;
 	}
-	stage = 0;
-	if (lp == NULL) {
+	run = 0;
+	if (lp == NULL && ip != NULL) {
 		if (!pspc) {
 			lp = ip;
-			in = argp;
-			ip = getid(&in);
-			tspc = skipsp(&in);
-			argp = NULL;
-			if (ip == NULL) {
-				if (!(ctype(*in) & (CT_NL | CT_NUL)))
-					return 2;
-				return 1;
-			}
-			if (!(ctype(*in) & (CT_NL | CT_NUL))) {
-				if (tspc) {
-					argp = in;
+			ip = NULL;
+			if (argp != NULL) {
+				in = argp;
+				argp = NULL;
+				ip = getid(&in);
+				tspc = skipsp(&in);
+				if (ip == NULL) {
+					if (!(ctype(*in) & (CT_NL | CT_NUL)))
+						return 2;
 					return 1;
 				}
-				return 2;
+				if (!(ctype(*in) & (CT_NL | CT_NUL))) {
+					if (tspc) {
+						argp = in;
+						return 1;
+					}
+					return 2;
+				}
 			}
 			return 1;
 		} else return 2;
@@ -193,65 +196,32 @@ void assemble(char *code) {
 
 	{ /* first pass */
 		ins_t ins;
-		char *lp, *ip, *argp;
-		int wp;
+		int r;
 
 		file = infile;
 		line = 1;
 		address = 0;
 		llbl = -1;
 		count = 1;
-		while (*code) {
+		run = 0;
+		while ((r = parseln(code))) {
 			ins.line = line;
 			addrl = address; /* case there is a label we have the address at start of line */
-			lp = NULL;
-			argp = NULL;
-			wp = getword(&code, &ip);
-			if (wp & (WP_LABEL | WP_LOCAL)) { /* we have label and we're sure about it */
-				if (!(wp & WP_TSPC) && !(ctype(*code) & (CT_NL | CT_NUL)))
-					flerrexit("invalid character in local label"); /* can only happen with local label */
-				lp = ip;
+			if (r == 2)
+				flerrexit("syntax error");
+			if (lp != NULL)
 				addlabel(lp);
-				wp = getword(&code, &ip);
+			if (ip != NULL) {
+				if (insfind(ip, argp))
+					run = 0;
+				else if (run == 0)
+					flerrexit("no such instruction or directive");
 			}
-			if (ip == NULL) {
-				if (!(ctype(*code) & (CT_NL | CT_NUL)))
-					flerrexit("invalid identifier");
-				goto endln;
+			if (run == 0) {
+				if (count)
+					++line;
+				code = nextln;
 			}
-			if (!(ctype(*code) & (CT_NL | CT_NUL))) {
-				if (wp & WP_TSPC)
-					argp = code;
-				else flerrexit("invalid identifier");
-			}
-			if (insfind(ip, argp))
-				goto endln;
-			if (lp == NULL) {
-				if (!(wp & WP_PSPC)) {
-					lp = ip;
-					addlabel(lp);
-					wp = getword(&code, &ip);
-					argp = NULL;
-					if (ip == NULL) {
-						if (!(ctype(*code) & (CT_NL | CT_NUL)))
-							flerrexit("invalid identifier");
-						goto endln;
-					}
-					if (!(ctype(*code) & (CT_NL | CT_NUL))) {
-						if (wp & WP_TSPC)
-							argp = code;
-						else flerrexit("invalid identifier");
-					}
-					if (!insfind(ip, argp))
-						flerrexit("no such instruction/directive");
-				} else flerrexit("no such instruction/directive");
-			}
-			endln:
-			while (!(ctype(*code) & (CT_NUL | CT_NL)))
-				++code;
-			skipnl(&code);
-			if (count)
-				++line;
 		}
 		ins.type = IT_END;
 		arr_add(&inss, &ins);
