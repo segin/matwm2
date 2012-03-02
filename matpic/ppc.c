@@ -151,7 +151,7 @@ void _ppsub(ioh_t *out, char *in, macro_t *mac, define_t *parent, char end) {
 				args.argc = 0;
 				if (*in == '(') {
 					++in;
-					while (!(ctype(*in) & (CT_NL | CT_NUL)) && *in != ')') {
+					while (!(ctype(*in) & (CT_NL | CT_NUL))) {
 						s = in;
 						if (args.argc + 1 < def->argc)
 							while (!(ctype(*in) & (CT_NL | CT_NUL)) && *in != ',' && *in != ')')
@@ -161,11 +161,13 @@ void _ppsub(ioh_t *out, char *in, macro_t *mac, define_t *parent, char end) {
 						args.argv[args.argc] = strldup(s, in - s);
 						if (args.argv[args.argc] == NULL)
 							errexit("strldup() failure");
-						if (*in == ',')
-							++in;
 						++args.argc;
 						if (args.argc == ARG_MAX)
 							flerrexit("too many arguments for macro");
+						if (*in == ')')
+							break;
+						if (*in == ',')
+							++in;
 					}
 					if (*in != ')')
 						flerrexit("missing ')'");
@@ -450,7 +452,6 @@ int ppfind(ioh_t *out, char *ip, char *argp, macro_t *mac) {
 		if (argp == NULL)
 			flerrexit("too few arguments for msg directive");
 		s = getstr(&argp, 1);
-		skipsp(&argp);
 		if (s == NULL || !(ctype(*argp) & (CT_NL | CT_NUL)))
 			flerrexit("syntax error on msg directive");
 		flmsg(s);
@@ -461,7 +462,6 @@ int ppfind(ioh_t *out, char *ip, char *argp, macro_t *mac) {
 		if (argp == NULL)
 			flerrexit("too few arguments for msg directive");
 		s = getstr(&argp, 1);
-		skipsp(&argp);
 		if (s == NULL || !(ctype(*argp) & (CT_NL | CT_NUL)))
 			flerrexit("syntax error on msg directive");
 		flerrexit(s);
@@ -472,7 +472,6 @@ int ppfind(ioh_t *out, char *ip, char *argp, macro_t *mac) {
 		if (argp == NULL)
 			flerrexit("too few arguments for msg directive");
 		s = getstr(&argp, 1);
-		skipsp(&argp);
 		if (s == NULL || !(ctype(*argp) & (CT_NL | CT_NUL)))
 			flerrexit("syntax error on msg directive");
 		flwarn(s);

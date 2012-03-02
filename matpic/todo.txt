@@ -16,4 +16,4 @@ BUGS
 	if integer size on host architecture is less than 32bit all will fail
 	unicode will be case sensitive
 	note: removed call to free() after including file, data is never freed
-	macro arguments are not failsafe yet (, at end is ignore etc) (not sure if this also is with #define)
+	macro arguments are not failsafe yet (, at end is ignore etc)
