@@ -17,7 +17,20 @@ arr_t inss = { NULL, 0, 0, 0 }; /* these need to be 0 so cleanup() before assemb
 arr_t labels = { NULL, 0, 0, 0 };
 
 char *lp, *ip, *argp, *nextln;
-int pspc, tspc, run;
+int pspc, tspc, prefix, run;
+
+int getprefix(char **src) {
+	char *p = *src;
+	int n = 0;
+	skipsp(&p);
+	while (ctype(*p) & (CT_PPC))
+		++p, ++n;
+	if (n) {
+		*src = p;
+		skipsp(src);
+	}
+	return n;
+}
 
 int parseln(char *in) {
 	if (!*in)
@@ -25,6 +38,7 @@ int parseln(char *in) {
 	if (run == 0) {
 		int r = 1;
 		pspc = skipsp(&in);
+		prefix = getprefix(&in);
 		lp = NULL;
 		ip = getid(&in);
 		argp = NULL;
@@ -44,6 +58,7 @@ int parseln(char *in) {
 			if (tspc)
 				argp = in;
 			else {
+				ip = NULL;
 				r = 2;
 				goto endln;
 			}
@@ -57,31 +72,31 @@ int parseln(char *in) {
 		return r;
 	}
 	run = 0;
-	if (lp == NULL && ip != NULL) {
-		if (!pspc) {
-			lp = ip;
-			ip = NULL;
-			if (argp != NULL) {
-				in = argp;
-				argp = NULL;
-				ip = getid(&in);
-				tspc = skipsp(&in);
-				if (ip == NULL) {
-					if (!(ctype(*in) & (CT_NL | CT_NUL)))
-						return 2;
+	if (lp == NULL && ip != NULL && !pspc && !prefix) { /* ip possibly a label */
+		lp = ip;
+		ip = NULL;
+		if (argp != NULL) {
+			in = argp;
+			argp = NULL;
+			ip = getid(&in);
+			tspc = skipsp(&in);
+			if (ip == NULL) {
+				if (!(ctype(*in) & (CT_NL | CT_NUL)))
+					return 2;
+				return 1;
+			}
+			if (!(ctype(*in) & (CT_NL | CT_NUL))) {
+				if (tspc) {
+					argp = in;
 					return 1;
 				}
-				if (!(ctype(*in) & (CT_NL | CT_NUL))) {
-					if (tspc) {
-						argp = in;
-						return 1;
-					}
-					return 2;
-				}
+				return 2;
 			}
-			return 1;
-		} else return 2;
+		}
+		return 1;
 	}
+	lp = NULL; /* to be sure we don't do twice the same thing */
+	ip = NULL;
 	return 3;
 }
 
@@ -156,6 +171,8 @@ int insfind(char *ip, char *argp) {
 		count = 0;
 		return 1;
 	}
+	if (prefix)
+		return 0;
 	if (cmpid(ip, "data")) {
 		int n = countargs(argp);
 		ins.type = IT_DAT;

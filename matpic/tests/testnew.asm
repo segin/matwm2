@@ -3,7 +3,7 @@
 ; and (almost) all directives etc should also be tested here
 
  ; testing various directives
- msg "Test message for message directive"
+msg "Test message for message directive"
 
  ; testing include
  include "tests/testnew.inc"

@@ -4,4 +4,3 @@
  define includesuccess
  iorwf 2,1
  msg "Hello from included file"
-

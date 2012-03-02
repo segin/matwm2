@@ -275,7 +275,7 @@ void define(char *argp, macro_t *mac, int eval) {
 
 void _preprocess(ioh_t *out, char *in, macro_t *mac);
 
-int ppfind(ioh_t *out, char *ip, char *argp, char **next, macro_t *mac) {
+int ppfind(ioh_t *out, char *ip, char *argp, macro_t *mac) {
 	char *s;
 	int wp;
 
@@ -320,7 +320,7 @@ int ppfind(ioh_t *out, char *ip, char *argp, char **next, macro_t *mac) {
 			}
 		if (!(ctype(*argp) & (CT_NL | CT_NUL)))
 			flerrexit("syntax error on macro directive");
-		mac.val = *next;
+		mac.val = nextln;
 		if ((p = macrofind(mac.name)) != NULL)
 			memcpy(p, &mac, sizeof(macro_t));
 		else arr_add(&macros, &mac);
@@ -342,16 +342,20 @@ int ppfind(ioh_t *out, char *ip, char *argp, char **next, macro_t *mac) {
 			++rep0;
 		else {
 			int orepno = repno;
+			char *onl;
 			++rep;
 			for (repno = 0; repno < args[0]; ++repno) {
 				if (!explvl)
-					mfprintf(out, " line %ut\n", rline + 1);
-				_preprocess(out, *next, mac);
+					mfprintf(out, "%%line %ut\n", rline + 1);
+				onl = nextln;
+				_preprocess(out, nextln, mac);
+				nextln = onl;
+				run = 0;
 			}
 			repno = orepno;
 			--rep;
 			if (!explvl)
-				mfprintf(out, " line %ut\n", rline);
+				mfprintf(out, "%%line %ut\n", rline);
 		}
 		++rep0;
 		free(s);
@@ -478,7 +482,7 @@ int ppfind(ioh_t *out, char *ip, char *argp, char **next, macro_t *mac) {
 		return 1;
 	}
 	if (cmpid(ip, "include")) {
-		char *data, *ofile = file, *s, *t;
+		char *data, *ofile = file, *s, *t, *onl;
 		int oline = line;
 		if (argp == NULL)
 			flerrexit("too few arguments for msg directive");
@@ -492,22 +496,25 @@ int ppfind(ioh_t *out, char *ip, char *argp, char **next, macro_t *mac) {
 		if (data == NULL)
 			flerrexit("failed to include file '%s'", s);
 		file = s;
-		mfprintf(out, " file \"%s\"\n", file);
+		mfprintf(out, "%%file \"%s\"\n", file);
 		line = 1;
+		onl = nextln;
 		_preprocess(out, data, mac);
-
+		run = 0;
+		nextln = onl;
 		free(file);
 		file = ofile;
 		line = oline;
-		mfprintf(out, " file \"%s\"\n", file);
+		mfprintf(out, "%%file \"%s\"\n", file);
 		if (!explvl)
-			mfprintf(out, " line %ut\n", oline + 1);
-		else mfprintf(out, " line %ut\n nocount\n", oline);
+			mfprintf(out, "%%line %ut\n", oline + 1);
+		else mfprintf(out, "%%line %ut\n%%nocount\n", oline);
 		return 1;
 	}
 	{
 		macro_t *mac;
 		arglist_t args, *argt;
+		char *onl;
 		if ((mac = macrofind(ip)) != NULL) {
 			if (mac->active)
 				return 0;
@@ -532,12 +539,15 @@ int ppfind(ioh_t *out, char *ip, char *argp, char **next, macro_t *mac) {
 			macargs = &args;
 			++explvl;
 			++mac->active;
-			mfprint(out, " nocount\n");
+			mfprint(out, "%%nocount\n");
+			onl = nextln;
 			_preprocess(out, mac->val, mac);
+			run = 0;
+			nextln = onl;
 			--mac->active;
 			macargs = argt;
 			if (!explvl)
-				mfprintf(out, " line %i", line + 1);
+				mfprintf(out, "%%line %ut", line + 1);
 			for (--args.argc; args.argc >= 0; --args.argc)
 				free(args.argv[args.argc]);
 			return 1;
@@ -546,25 +556,8 @@ int ppfind(ioh_t *out, char *ip, char *argp, char **next, macro_t *mac) {
 	return 0;
 }
 
-int getprefix(char **src) {
-	char *p = *src;
-	int n = 0;
-	skipsp(&p);
-	while (ctype(*p) & (CT_PPC))
-		++p, ++n;
-	if (n) {
-		*src = p;
-		skipsp(src);
-	}
-	return n;
-}
-
 void _preprocess(ioh_t *out, char *in, macro_t *mac) {
-	char *lnstart, *lp, *ip, *argp, *next;
-	int wp, r, pps;
-
-	/* strip comments */
-	{
+	{ /* strip comments */
 		char *p = in;
 		int iscomment = 0, nestcomment = 0;
 
@@ -623,67 +616,33 @@ void _preprocess(ioh_t *out, char *in, macro_t *mac) {
 		*p = 0;
 	}
 
-	/* this very similar to assemble() */
-	while (*in) {
-		next = lnstart = in;
-		lp = NULL;
-		argp = NULL;
-		r = 0;
-		while (!(ctype(*next) & (CT_NUL | CT_NL)))
-			++next;
-		skipnl(&next);
-		pps = getprefix(&in);
-		wp = getword(&in, &ip);
-		if (wp & (WP_LABEL | WP_LOCAL)) { /* we have label and we're sure about it */
-			if (!(wp & WP_TSPC) && !(ctype(*in) & (CT_NL | CT_NUL)))
-				flerrexit("invalid character in local label"); /* can only happen with local label */
-			lp = ip;
-			wp = getword(&in, &ip);
-		}
-		if (ip == NULL) {
-			if (pps && !(ctype(*in) & (CT_NL | CT_NUL)))
-				flwarn("invalid preprocessor directive");
-			goto endln;
-		}
-		if (!(ctype(*in) & (CT_NL | CT_NUL))) {
-			if (wp & WP_TSPC)
-				argp = in;
-			else {
-				if (pps)
-					flwarn("invalid preprocessor directive");
-				goto endln;
+	{
+		int r;
+		run = 0;
+		while (parseln(in)) {
+			r = 0;
+			if (ip != NULL) {
+				if ((r = ppfind(out, ip, argp, mac))) {
+					if (lp != NULL && !macro) {
+						mfwrite(out, lp, idlen(lp));
+						mfwrite(out, ":", 1);
+					}
+					run = 0;
+					if (r == 2) /* endrep or endm wants us to die */
+						return;
+				}
+			}
+			if (prefix && !r)
+				flwarn("unhandled preprocessor directive");
+			if (run == 0) {
+				if (!r && !ignore && !macro && !rep0 && !prefix)
+					ppsub(out, in, mac, 0);
+				in = nextln;
+				mfprint(out, "\n");
+				if (!explvl && !rep)
+					++line;
 			}
 		}
-		if ((r = ppfind(out, ip, argp, &next, mac)))
-			goto endln;
-		if (lp == NULL && !(wp & WP_PSPC)) {
-			lp = ip;
-			wp = getword(&in, &ip);
-			if (ip == NULL)
-				goto endln;
-			argp = NULL;
-			if (!(ctype(*in) & (CT_NL | CT_NUL))) {
-				if (wp & WP_TSPC)
-					argp = in;
-				else goto endln;
-			}
-			r = ppfind(out, ip, argp, &next, mac);
-		}
-		endln:
-		if (r == 2) /* endrep or endm wants us to die */
-			return;
-		if (pps && !r)
-			flwarn("unhandled preprocessor directive");
-		if (lp != NULL && r && !macro) {
-			mfwrite(out, lp, idlen(lp));
-			mfwrite(out, ":", 1);
-		}
-		in = next;
-		if (!r && !ignore && !macro && !rep0 && !pps)
-			ppsub(out, lnstart, mac, 0);
-		mfprint(out, "\n");
-		if (!explvl && !rep)
-			++line;
 	}
 }
 

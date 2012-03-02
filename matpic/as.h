@@ -50,7 +50,7 @@ extern arr_t labels;
 extern int llbl; /* last label */
 
 extern char *lp, *ip, *argp, *nextln;
-extern int run;
+extern int prefix, run;
 
 extern int parseln(char *in);
 extern void assemble(char *code);
