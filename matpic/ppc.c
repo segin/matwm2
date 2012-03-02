@@ -336,8 +336,7 @@ int ppfind(ioh_t *out, char *ip, char *argp, macro_t *mac) {
 		if (argp == NULL)
 			flerrexit("too few arguments for rep directive");
 		s = argp = sppsub(argp, mac, 0);
-		if (getargs(&argp, args) != 1)
-			flerrexit("too many arguments for rep directive");
+		getargs(&argp, args, 1, 1);
 		if (!args[0])
 			++rep0;
 		else {
@@ -374,8 +373,7 @@ int ppfind(ioh_t *out, char *ip, char *argp, macro_t *mac) {
 		if (argp == NULL)
 			flerrexit("too few arguments for if directive");
 		s = argp = sppsub(argp, mac, 0);
-		if (getargs(&argp, args) != 1)
-			flerrexit("too many arguments for if directive");
+		getargs(&argp, args, 1, 1);
 		++level;
 		if (!ignore && !macro && !rep0 && !args[0])
 			ignore = level;

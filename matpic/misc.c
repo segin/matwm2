@@ -392,24 +392,28 @@ int countargs(char *src) {
 	return n;
 }
 
-int getargs(char **src, int *args) {
+int getargs(char **src, int *args, int min, int max) {
 	int n = 0;
 
-	if (*src == NULL)
-		return 0;
-	while (1) {
-		args[n] = numarg(src);
-		if (ctype(**src) & (CT_NUL | CT_NL))
-			return n + 1;
-		if (**src != ',')
-			flerrexit("your argument is invalid");
-		++n, ++*src;
-		if (n == ARG_MAX)
-			flerrexit("too many arguments");
-		skipsp(src);
-		if (ctype(**src) & (CT_NUL | CT_NL))
-			flerrexit("expression expected");
-	}
+	if (*src != NULL)
+		while (1) {
+			args[n++] = numarg(src);
+			if (ctype(**src) & (CT_NUL | CT_NL))
+				break;
+			if (**src != ',')
+				flerrexit("your argument is invalid");
+			++*src;
+			if (n == ARG_MAX)
+				flerrexit("too many arguments");
+			skipsp(src);
+			if (ctype(**src) & (CT_NUL | CT_NL))
+				flerrexit("expression expected");
+		}
+	if (n < min)
+		flerrexit("too few arguments");
+	if (n > max)
+		flerrexit("too many arguments");
+	return n;
 }
 
 int getword(char **src, char **word) {

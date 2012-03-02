@@ -133,8 +133,7 @@ int insfind(char *ip, char *argp) {
 
 	ins.line = line;
 	if (cmpid(ip, "org")) {
-		if (getargs(&argp, args) != 1)
-			flerrexit("invalid number of arguments to org directive");
+		getargs(&argp, args, 1, 1);
 		ins.type = IT_ORG;
 		ins.d.org.address = args[0] * arch->align;
 		address = ins.d.org.address;
@@ -159,8 +158,7 @@ int insfind(char *ip, char *argp) {
 		return 1;
 	}
 	if (cmpid(ip, "line")) {
-		if (getargs(&argp, args) != 1)
-			flerrexit("'line' directive wants exactly 1 argument");
+		getargs(&argp, args, 1, 1);
 		count = 1;
 		line = args[0] - 1;
 		return 1;
@@ -183,8 +181,7 @@ int insfind(char *ip, char *argp) {
 		return 1;
 	}
 	if (cmpid(ip, "equ")) {
-		if (getargs(&argp, args) != 1)
-			flerrexit("'equ' directive wants exactly 1 argument");
+		getargs(&argp, args, 1, 1);
 		if (labels.count == 0)
 			flerrexit("'equ' before label");
 		((label_t *) labels.data + labels.count - 1)->address = args[0];
@@ -255,7 +252,7 @@ void assemble(char *code) {
 			line = ins->line;
 			switch (ins->type) {
 				case IT_INS:
-					c = getargs(&(ins->d.ins.args), args);
+					c = getargs(&(ins->d.ins.args), args, 1, ARG_MAX);
 					arch->acmp(ins->d.ins.oc, ins->d.ins.atype, c, args);
 					++address;
 					break;
@@ -263,7 +260,7 @@ void assemble(char *code) {
 					address = ins->d.org.address;
 					break;
 				case IT_DAT:
-					c = getargs(&(ins->d.data.args), args);
+					c = getargs(&(ins->d.data.args), args, 1, ARG_MAX);
 					for (i = 0; i < c; ++i) {
 						ins->d.data.value = args[i];
 						++ins;
