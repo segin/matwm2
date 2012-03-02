@@ -458,14 +458,15 @@ int sclen(char *in) {
 
 char *getstr(char **in, int esc) {
 	string_t ret;
-	char *p, b[5] = { 0, 0, 0, 0, 0 };
+	char end, *p, b[5] = { 0, 0, 0, 0, 0 };
 	int n;
-	if (**in != '"')
+	if (**in != '"' && **in != '\'')
 		return NULL;
+	end = **in;
 	vstr_new(&ret);
 	++*in;
 	p = *in;
-	while (!(ctype(*p) & (CT_NUL | CT_NL)) && *p != '"') {
+	while (!(ctype(*p) & (CT_NUL | CT_NL)) && *p != end) {
 		if (esc && *p == '\\' && !(ctype(p[1]) & (CT_NUL | CT_NL))) {
 			vstr_addl(&ret, *in, p - *in);
 			*in = p + 1;
@@ -544,8 +545,8 @@ char *getstr(char **in, int esc) {
 			*in = p;
 		} else ++p;
 	}
-	if (*p != '"')
-		flerrexit("missing \"");
+	if (*p != end)
+		flerrexit("missing %c", end);
 	vstr_addl(&ret, *in, p - *in);
 	*in = p;
 	++*in;

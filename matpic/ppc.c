@@ -485,7 +485,7 @@ int ppfind(ioh_t *out, char *ip, char *argp, macro_t *mac) {
 		char *data, *ofile = file, *s, *t, *onl;
 		int oline = line;
 		if (argp == NULL)
-			flerrexit("too few arguments for msg directive");
+			flerrexit("too few arguments for include directive");
 		t = argp;
 		s = getstr(&t, 0);
 		if (s == NULL || !(ctype(*t) & (CT_NL | CT_NUL)))
