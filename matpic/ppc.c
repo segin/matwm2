@@ -2,7 +2,7 @@
 #include "as.h" /* parseln() */
 #include "mem.h"
 #include "str.h" /* skipsp(), ctype(), etc */
-#include "misc.h" /* flerrexit(), getword(), readfile(), getstr(), clearfile(), file */
+#include "misc.h" /* flerrexit(), readfile(), getstr(), clearfile(), file */
 #include "ppc.h"
 #include "io.h"
 
@@ -15,6 +15,13 @@ arglist_t *macargs;
 int level, ignore; /* depth & state of if/ifdef/ifndef directives */
 int str, esc, macro, explvl, rep0, rep, repno;
 char *repstart;
+
+char *getidc(char **in) {
+	char *ret = getid(in);
+	if (ret == NULL || !(ctype(**in) & (CT_NL | CT_NUL)))
+		flerrexit("syntax error");
+	return ret;
+}
 
 void strcheck(char c) {
 	switch (c) {
@@ -212,7 +219,6 @@ char *sppsub(char *in, macro_t *mac, char end) {
 void define(char *argp, macro_t *mac, int eval) {
 	define_t def, *p;
 	char *s;
-	int wp;
 	if (argp == NULL)
 		flerrexit("too few arguments for define directive");
 	if (*argp == '<') {
@@ -223,21 +229,21 @@ void define(char *argp, macro_t *mac, int eval) {
 		if (*argp != '>')
 			flerrexit("missing '>'");
 		++argp;
-		getword(&s, &def.name);
-		if (*s)
+		skipsp(&s);
+		def.name = getid(&s);
+		skipsp(&s);
+		if (def.name == NULL || *s)
 			flerrexit("syntax error on define directive");
-		wp = WP_TSPC;
 	} else {
-		wp = getword(&argp, &def.name);
+		def.name = getid(&argp);
 		def.nptr = NULL;
 	}
-	if (def.name == NULL)
-		flerrexit("syntax error on define directive");
 	def.argc = 0;
-	if  (!(wp & WP_TSPC) && *argp == '(') {
+	if  (*argp == '(') {
 		++argp;
 		while (1) {
-			getword(&argp, &s);
+			s = getid(&argp);
+			skipsp(&argp);
 			if (s == NULL)
 				flerrexit("syntax error in macro parameter list");
 			if (s != NULL) {
@@ -251,12 +257,13 @@ void define(char *argp, macro_t *mac, int eval) {
 			if (*argp != ',')
 				flerrexit("syntax error in macro parameter list");
 			++argp;
+			skipsp(&argp);
 			if (def.argc == ARG_MAX)
 				flerrexit("too many arguments for macro");
 		}
 		if (!skipsp(&argp) && !(ctype(*argp) & (CT_NL | CT_NUL)))
 			flerrexit("syntax error on define directive");
-	} else if (!(wp & WP_TSPC) && !(ctype(*argp) & (CT_NL | CT_NUL)))
+	} else if (!skipsp(&argp) && !(ctype(*argp) & (CT_NL | CT_NUL)))
 		flerrexit("syntax error on define directive");
 	if (eval) {
 		def.val = sppsub(argp, mac, 0);
@@ -279,7 +286,6 @@ void _preprocess(ioh_t *out, char *in, macro_t *mac);
 
 int ppfind(ioh_t *out, char *ip, char *argp, macro_t *mac) {
 	char *s;
-	int wp;
 
 	if (!ignore && cmpid(ip, "endm")) {
 		if (macro) {
@@ -300,14 +306,15 @@ int ppfind(ioh_t *out, char *ip, char *argp, macro_t *mac) {
 		}
 		if (argp == NULL)
 			flerrexit("macro directive needs more arguments");
-		wp = getword(&argp, &mac.name);
+		mac.name = getid(&argp);
 		if (mac.name == NULL)
 			flerrexit("syntax error on macro directive");
 		mac.active = 0;
 		mac.argc = 0;
-		if (wp & WP_TSPC && !(ctype(*argp) & (CT_NL | CT_NUL)))
+		if (!skipsp(&argp) && !(ctype(*argp) & (CT_NL | CT_NUL)))
 			while (1) {
-				getword(&argp, &s);
+				s = getid(&argp);
+				skipsp(&argp);
 				if (s == NULL)
 					flerrexit("syntax error in macro parameter list");
 				mac.argv[mac.argc] = s;
@@ -317,6 +324,7 @@ int ppfind(ioh_t *out, char *ip, char *argp, macro_t *mac) {
 				if (*argp != ',')
 					flerrexit("syntax error in macro parameter list");
 				++argp;
+				skipsp(&argp);
 				if (mac.argc == ARG_MAX)
 					flerrexit("too many arguments for macro");
 			}
@@ -335,8 +343,6 @@ int ppfind(ioh_t *out, char *ip, char *argp, macro_t *mac) {
 			++rep0;
 			return 1;
 		}
-		if (argp == NULL)
-			flerrexit("too few arguments for rep directive");
 		s = argp = sppsub(argp, mac, 0);
 		getargs(&argp, args, 1, 1);
 		if (!args[0])
@@ -383,18 +389,14 @@ int ppfind(ioh_t *out, char *ip, char *argp, macro_t *mac) {
 		return 1;
 	}
 	if (cmpid(ip, "ifdef")) {
-		wp = getword(&argp, &s);
-		if (s == NULL || !(ctype(*argp) & (CT_NL | CT_NUL)))
-			flerrexit("syntax error on ifdef directive");
+		s = getidc(&argp);
 		++level;
 		if (!ignore && !macro && !rep0 && deffind(s) == NULL)
 			ignore = level;
 		return 1;
 	}
 	if (cmpid(ip, "ifndef")) {
-		wp = getword(&argp, &s);
-		if (s == NULL || !(ctype(*argp) & (CT_NL | CT_NUL)))
-			flerrexit("syntax error on ifndef directive");
+		s = getidc(&argp);
 		++level;
 		if (!ignore && !macro && !rep0 && deffind(s) != NULL)
 			ignore = level;
@@ -433,11 +435,7 @@ int ppfind(ioh_t *out, char *ip, char *argp, macro_t *mac) {
 	}
 	if (cmpid(ip, "undef")) {
 		define_t *def;
-		if (argp == NULL)
-			flerrexit("too few arguments to undef");
-		getword(&argp, &s);
-		if (s == NULL || !(ctype(*argp) & (CT_NL | CT_NUL)))
-			flerrexit("syntax error at undef directive");
+		s = getidc(&argp);
 		def = deffind(s);
 		if (def != NULL) {
 			if (def->free)

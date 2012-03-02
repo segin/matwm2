@@ -416,27 +416,6 @@ int getargs(char **src, int *args, int min, int max) {
 	return n;
 }
 
-int getword(char **src, char **word) {
-	int prop = 0;
-
-	if (src == NULL || *src == NULL) {
-		*word = NULL;
-		return 0;
-	}
-	if (skipsp(src))
-		prop |= WP_PSPC;
-	if (**src == '.')
-		prop |= WP_LOCAL | WP_LABEL;
-	*word = getid(src);
-	if (skipsp(src))
-		prop |= WP_TSPC;
-	if (**src == ':') {
-		prop |= WP_LABEL | WP_TSPC; /* we don't require spaces after : */
-		++*src;
-	}
-	return prop;
-}
-
 int egethex(char **s) {
 	int n, r = 0, c = 2;
 	while (c--) {
