@@ -1,6 +1,6 @@
 xmacro
 macro local variables
-macro local labels
+macro local labels (possibly macro)
 db directive for store bytes separate and text with ""
 dw, dd, dq, etc
 support banksel, bankisel, pagesel pseudo instructions
@@ -16,4 +16,5 @@ BUGS
 	if integer size on host architecture is less than 32bit all will fail
 	unicode will be case sensitive
 	note: removed call to free() after including file, data is never freed
-	macro arguments are not failsafe yet (, at end is ignore etc)
+	line numbers broken tomorow i wil fix it
+	should change ppsub() to not recurse as much as it does

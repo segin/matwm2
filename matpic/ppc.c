@@ -360,8 +360,7 @@ void skipblock(char *start, char *end) {
 			}
 		}
 		if (run == 0) {
-			if (amacros.count == 0)
-				++line;
+			++line;
 			s = nextln;
 		}
 	}
@@ -406,7 +405,7 @@ void macro(ioh_t *out, char *argp, int eval) {
 
 	mac.val = nextln;
 	skipblock("macro", "endm");
-	mfprintf(out, "%%line %ut", line);
+	mfprintf(out, "%%line %ut", line + 2);
 
 	{ /* add macro */
 		macro_t *p;
@@ -516,38 +515,14 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 		s = sppsub(argp, 0);
 		getargs(s, args, 1, 1);
 		free(s);
-		if (!args[0]) {
-			int d = 0;
-			s = nextln;
-			run = 0;
-			while (1) {
-				if (!parseln(s))
-					flerrexit("end of file within rep group");
-				if (ip != NULL) {
-					if (cmpid(ip, "rep"))
-						++d;
-					if (cmpid(ip, "endrep")) {
-						if (argp != NULL)
-							flerrexit("'endrep' takes no arguments");
-						if (d == 0)
-							break;
-						--d;
-					}
-				}
-				if (run == 0) {
-					++line;
-					s = nextln;
-				}
-			}
-			mfprintf(out, "%%line %ut", line);
-		} else {
+		if (args[0]) {
 			rep_t rep;
 			rep.count = args[0];
 			rep.start = nextln;
 			rep.repno = 0;
 			rep.line = line + 1;
 			arr_add(&reps, &rep);
-		}
+		} else skipblock("rep", "endrep");
 		return 1;
 	}
 	if (cmpid(ip, "xdefine")) {
@@ -610,25 +585,37 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 		strip(data);
 		return 1;
 	}
-	{ /* FIXME rewrite this shit */
+	{
 		macro_t *mac;
-		amacro_t am;
 
 		if ((mac = macrofind(ip)) != NULL) {
+			amacro_t am;
+			char *e;
 			if (mac->active)
 				return 0;
 			am.argc = 0;
 			if (argp != NULL)
-				while (!(ctype(*argp) & (CT_NL | CT_NUL))) {
+				while (1) {
 					s = argp;
 					while (!(ctype(*argp) & (CT_NL | CT_NUL)) && *argp != ',')
 						++argp;
-					am.argv[am.argc] = strldup(s, argp - s);
+					if (s == argp)
+						flerrexit("syntax error");
+					e = argp;
+					while (ctype(*(e - 1)) & CT_SPC)
+						--e;
+					am.argv[am.argc] = strldup(s, e - s);
 					if (am.argv[am.argc] == NULL)
 						errexit("strldup() failure");
-					if (*argp == ',')
-						++argp;
 					++am.argc;
+					if (ctype(*argp) & (CT_NL | CT_NUL))
+						break;
+					if (*argp == ',') {
+						++argp;
+						skipsp(&argp);
+						if (ctype(*argp) & (CT_NL | CT_NUL))
+							flerrexit("syntax error");
+					}
 					if (am.argc == ARG_MAX)
 						flerrexit("too many arguments for macro");
 				}
@@ -646,9 +633,28 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 	return 0;
 }
 
-void _preprocess(ioh_t *out, char *in) {
+/* preprocess(in, ret)
+ *
+ * description
+ *   strips comments from in (on the string itself replaces them with space)
+ *   evaluates preprocessor directives and builds with them preprocessed data
+ *   that will be sent to out i/o handle
+ *
+ */
+void preprocess(ioh_t *out, char *in) {
 	int r;
 	file_t *f;
+	define_t *def;
+	file = infile;
+	defargs = NULL;
+	arr_new(&defines, sizeof(define_t));
+	arr_new(&macros, sizeof(macro_t));
+	arr_new(&files, sizeof(file_t));
+	arr_new(&reps, sizeof(rep_t));
+	arr_new(&amacros, sizeof(amacro_t));
+	line = 1;
+	level = ignore = 0;
+
 	strip(in);
 	proceed:
 	run = 0;
@@ -667,7 +673,7 @@ void _preprocess(ioh_t *out, char *in) {
 		}
 		if (prefix && !r)
 			flwarn("unhandled preprocessor directive");
-		if (run == 0) {
+		if (run == 0 || prefix) {
 			if (!r && !ignore && !prefix)
 				ppsub(out, in, 0);
 			mfprint(out, "\n");
@@ -687,28 +693,7 @@ void _preprocess(ioh_t *out, char *in) {
 		mfprintf(out, "%%line %ut\n", line + 1);
 		goto proceed;
 	}
-}
 
-/* preprocess(in, ret)
- *
- * description
- *   strips comments from in (on the string itself replaces them with space)
- *   evaluates preprocessor directives and builds with them preprocessed data
- *   that will be sent to out i/o handle
- *
- */
-void preprocess(ioh_t *out, char *in) {
-	define_t *def;
-	file = infile;
-	defargs = NULL;
-	arr_new(&defines, sizeof(define_t));
-	arr_new(&macros, sizeof(macro_t));
-	arr_new(&files, sizeof(file_t));
-	arr_new(&reps, sizeof(rep_t));
-	arr_new(&amacros, sizeof(amacro_t));
-	line = 1;
-	level = ignore = 0;
-	_preprocess(out, in);
 	for (--defines.count; defines.count >= 0; --defines.count) {
 		def = (define_t *) defines.data + defines.count;
 		free(def->nptr);

@@ -231,7 +231,7 @@ void assemble(char *code) {
 				else if (run == 0)
 					flerrexit("no such instruction or directive");
 			}
-			if (run == 0) {
+			if (run == 0 || prefix) {
 				if (count)
 					++line;
 				code = nextln;
