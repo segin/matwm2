@@ -252,7 +252,7 @@ void assemble(char *code) {
 			line = ins->line;
 			switch (ins->type) {
 				case IT_INS:
-					c = getargs(&(ins->d.ins.args), args, 1, ARG_MAX);
+					c = getargs(&(ins->d.ins.args), args, 0, ARG_MAX);
 					arch->acmp(ins->d.ins.oc, ins->d.ins.atype, c, args);
 					++address;
 					break;

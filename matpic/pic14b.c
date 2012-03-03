@@ -103,6 +103,9 @@ void acmp14b(unsigned char *oc, int atype, int argc, int *argv) {
 				flerrexit("wrong number of arguments");
 			oc[1] |= argv[0] & 0x3;
 			break;
+		case AT_NA:
+			if (argc)
+				flerrexit("wrong number of arguments");
 		case AT_BS:
 			break;
 	}

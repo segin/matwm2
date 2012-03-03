@@ -311,7 +311,7 @@ int ppfind(ioh_t *out, char *ip, char *argp, macro_t *mac) {
 			flerrexit("syntax error on macro directive");
 		mac.active = 0;
 		mac.argc = 0;
-		if (!skipsp(&argp) && !(ctype(*argp) & (CT_NL | CT_NUL)))
+		if (skipsp(&argp) && !(ctype(*argp) & (CT_NL | CT_NUL)))
 			while (1) {
 				s = getid(&argp);
 				skipsp(&argp);
@@ -353,7 +353,7 @@ int ppfind(ioh_t *out, char *ip, char *argp, macro_t *mac) {
 			++rep;
 			for (repno = 0; repno < args[0]; ++repno) {
 				if (!explvl)
-					mfprintf(out, "%%line %ut\n", rline + 1);
+					mfprintf(out, "%%line %ut", rline + 1);
 				onl = nextln;
 				_preprocess(out, nextln, mac);
 				nextln = onl;
@@ -362,7 +362,7 @@ int ppfind(ioh_t *out, char *ip, char *argp, macro_t *mac) {
 			repno = orepno;
 			--rep;
 			if (!explvl)
-				mfprintf(out, "%%line %ut\n", rline);
+				mfprintf(out, "%%line %ut", rline);
 		}
 		++rep0;
 		free(s);
@@ -502,8 +502,8 @@ int ppfind(ioh_t *out, char *ip, char *argp, macro_t *mac) {
 		line = oline;
 		mfprintf(out, "%%file \"%s\"\n", file);
 		if (!explvl)
-			mfprintf(out, "%%line %ut\n", oline + 1);
-		else mfprintf(out, "%%line %ut\n%%nocount\n", oline);
+			mfprintf(out, "%%line %ut", oline + 1);
+		else mfprintf(out, "%%line %ut\n%%nocount", oline);
 		return 1;
 	}
 	{
