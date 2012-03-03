@@ -17,13 +17,6 @@ int level, ignore; /* depth & state of if/ifdef/ifndef directives */
 int str, esc, macro, explvl, rep0, rep, repno;
 char *repstart, *data;
 
-char *getidc(char **in) {
-	char *ret = getid(in);
-	if (ret == NULL || !(ctype(**in) & (CT_NL | CT_NUL)))
-		flerrexit("syntax error");
-	return ret;
-}
-
 void strcheck(char c) {
 	switch (c) {
 		case '\\':
@@ -344,6 +337,26 @@ void define(char *argp, macro_t *mac, int eval) {
 	else arr_add(&defines, &def);
 }
 
+char *getida(char *in) {
+	char *ret;
+	if (in == NULL)
+		flerrexit("too few arguments");
+	ret = getid(&in);
+	if (ret == NULL || !(ctype(*in) & (CT_NL | CT_NUL)))
+		flerrexit("syntax error");
+	return ret;
+}
+
+char *getstra(char *argp, int e) {
+	char *s;
+	if (argp == NULL)
+		flerrexit("too few arguments");
+	s = getstr(&argp, e);
+	if (s == NULL || !(ctype(*argp) & (CT_NL | CT_NUL)))
+		flerrexit("syntax error");
+	return s;
+}
+
 void _preprocess(ioh_t *out, char *in, macro_t *mac);
 
 int ppfind(ioh_t *out, char *ip, char *argp, macro_t *mac) {
@@ -451,14 +464,14 @@ int ppfind(ioh_t *out, char *ip, char *argp, macro_t *mac) {
 		return 1;
 	}
 	if (cmpid(ip, "ifdef")) {
-		s = getidc(&argp);
+		s = getida(argp);
 		++level;
 		if (!ignore && !macro && !rep0 && deffind(s) == NULL)
 			ignore = level;
 		return 1;
 	}
 	if (cmpid(ip, "ifndef")) {
-		s = getidc(&argp);
+		s = getida(argp);
 		++level;
 		if (!ignore && !macro && !rep0 && deffind(s) != NULL)
 			ignore = level;
@@ -497,7 +510,7 @@ int ppfind(ioh_t *out, char *ip, char *argp, macro_t *mac) {
 	}
 	if (cmpid(ip, "undef")) {
 		define_t *def;
-		s = getidc(&argp);
+		s = getida(argp);
 		def = deffind(s);
 		if (def != NULL) {
 			if (def->free)
@@ -509,47 +522,31 @@ int ppfind(ioh_t *out, char *ip, char *argp, macro_t *mac) {
 		return 1;
 	}
 	if (cmpid(ip, "msg")) {
-		if (argp == NULL)
-			flerrexit("too few arguments for msg directive");
-		s = getstr(&argp, 1);
-		if (s == NULL || !(ctype(*argp) & (CT_NL | CT_NUL)))
-			flerrexit("syntax error on msg directive");
+		s = getstra(argp, 1);
 		flmsg(s);
 		free(s);
 		return 1;
 	}
 	if (cmpid(ip, "error")) {
-		if (argp == NULL)
-			flerrexit("too few arguments for msg directive");
-		s = getstr(&argp, 1);
-		if (s == NULL || !(ctype(*argp) & (CT_NL | CT_NUL)))
-			flerrexit("syntax error on msg directive");
+		s = getstra(argp, 1);
 		flerrexit(s);
 		free(s);
 		return 1;
 	}
 	if (cmpid(ip, "warn")) {
-		if (argp == NULL)
-			flerrexit("too few arguments for msg directive");
-		s = getstr(&argp, 1);
-		if (s == NULL || !(ctype(*argp) & (CT_NL | CT_NUL)))
-			flerrexit("syntax error on msg directive");
+		s = getstra(argp, 1);
 		flwarn(s);
 		free(s);
 		return 1;
 	}
 	if (cmpid(ip, "include")) {
 		file_t ofile;
-		char *s, *t;
 		if (argp == NULL)
 			flerrexit("too few arguments for include directive");
-		t = argp;
-		s = getstr(&t, 1);
-		if (s == NULL || !(ctype(*t) & (CT_NL | CT_NUL)))
-			flerrexit("syntax error on include directive");
+		s = getstra(argp, 1);
 		data = readfile(s);
 		free(s);
-		s = getstr(&argp, 0);
+		s = getstra(argp, 0);
 		if (data == NULL)
 			flerrexit("failed to include file '%s'", s);
 		ofile.name = file;
