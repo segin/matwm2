@@ -18,3 +18,4 @@ BUGS
 	note: removed call to free() after including file, data is never freed
 	line numbers broken tomorow i wil fix it
 	should change ppsub() to not recurse as much as it does
+	should ppsub arguments of macro (both macro directive and when macros used)
