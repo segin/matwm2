@@ -392,21 +392,21 @@ int countargs(char *src) {
 	return n;
 }
 
-int getargs(char **src, int *args, int min, int max) {
+int getargs(char *src, int *args, int min, int max) {
 	int n = 0;
 
-	if (*src != NULL)
+	if (src != NULL)
 		while (1) {
-			args[n++] = numarg(src);
-			if (ctype(**src) & (CT_NUL | CT_NL))
+			args[n++] = numarg(&src);
+			if (ctype(*src) & (CT_NUL | CT_NL))
 				break;
-			if (**src != ',')
+			if (*src != ',')
 				flerrexit("your argument is invalid");
-			++*src;
+			++src;
 			if (n == ARG_MAX)
 				flerrexit("too many arguments");
-			skipsp(src);
-			if (ctype(**src) & (CT_NUL | CT_NL))
+			skipsp(&src);
+			if (ctype(*src) & (CT_NUL | CT_NL))
 				flerrexit("expression expected");
 		}
 	if (n < min)

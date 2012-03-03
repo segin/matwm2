@@ -19,7 +19,7 @@ extern unsigned int getval(char **src);
 extern unsigned int numarg(char **src);
 
 int countargs(char *src);
-extern int getargs(char **src, int *args, int min, int max);
+extern int getargs(char *src, int *args, int min, int max);
 extern int sclen(char *in);
 extern char *getstr(char **in, int esc);
 

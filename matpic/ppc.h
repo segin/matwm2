@@ -24,6 +24,11 @@ typedef struct {
 } file_t;
 
 typedef struct {
+	char *start;
+	int count, repno, line;
+} rep_t;
+
+typedef struct {
 	char *argv[ARG_MAX];
 	int argc;
 } arglist_t;
