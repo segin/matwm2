@@ -22,6 +22,7 @@ extern void arr_free(arr_t *a);
 
 #define arr_item(a, type, i) ((type *) (a).data + (i))
 #define arr_top(a, type) (a.count ? ((type *) (a).data + (a).count - 1) : NULL)
+#define arr_pop(a, type) (a.count ? ((type *) (a).data + --((a).count)) : NULL)
 
 typedef struct {
 	char *data;

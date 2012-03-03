@@ -18,12 +18,15 @@ typedef struct {
 } macro_t;
 
 typedef struct {
+	char *name;
+	char *nextln;
+	int line;
+} file_t;
+
+typedef struct {
 	char *argv[ARG_MAX];
 	int argc;
 } arglist_t;
-
-extern arr_t defines;
-extern arr_t macros;
 
 extern void preprocess(ioh_t *out, char *in);
 

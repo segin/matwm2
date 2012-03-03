@@ -8,13 +8,14 @@
 
 arr_t defines;
 arr_t macros;
+arr_t files;
 
 arglist_t *defargs;
 arglist_t *macargs;
 
 int level, ignore; /* depth & state of if/ifdef/ifndef directives */
 int str, esc, macro, explvl, rep0, rep, repno;
-char *repstart;
+char *repstart, *data;
 
 char *getidc(char **in) {
 	char *ret = getid(in);
@@ -42,6 +43,67 @@ void strcheck(char c) {
 			break;
 	}
 	esc = 0;
+}
+
+void strip(char *in) {
+	{ /* strip comments */
+		char *p = in;
+		int iscomment = 0, nestcomment = 0;
+
+		esc = str = 0;
+		while (*p) {
+			if (!iscomment && !nestcomment)
+				strcheck(*p);
+			if (!str) {
+				if (p[0] == '/' && p[1] == '*') {
+					++nestcomment;
+				} else if (nestcomment && p[0] == '*' && p[1] == '/') {
+					--nestcomment;
+					p[0] = p[1] = ' ';
+					++p;
+				}
+				if (iscomment || nestcomment) {
+					if (ctype(*p) & CT_NL)
+						iscomment = 0;
+					else *p = ' ';
+				} else if (*p == ';') {
+					*p = ' ';
+					iscomment = 1;
+				}
+			}
+			++p;
+		}
+	}
+
+	{ /* fix escaped newlines and remove dos newlines */
+		char *p, *c;
+		int i, nl = 0;
+		p = c = in;
+		while (*c) {
+			switch (*c) {
+				case '\\':
+					i = 1;
+					while (c[i] == '\r')
+						++i;
+					if (c[1] == '\n') {
+						c += i + 1;
+						++nl;
+					}
+					break;
+				case '\r':
+					/* dos newlines will be added by mfwrite(), if the user wants them in output */
+					++c;
+					break;
+				case '\n':
+					if (nl)
+						while (nl--)
+							*(p++) = '\n';
+			}
+			*p = *c;
+			++p, ++c;
+		}
+		*p = 0;
+	}
 }
 
 define_t *deffind(char *name) {
@@ -477,33 +539,28 @@ int ppfind(ioh_t *out, char *ip, char *argp, macro_t *mac) {
 		return 1;
 	}
 	if (cmpid(ip, "include")) {
-		char *data, *ofile = file, *s, *t, *onl;
-		int oline = line;
+		file_t ofile;
+		char *s, *t;
 		if (argp == NULL)
 			flerrexit("too few arguments for include directive");
 		t = argp;
-		s = getstr(&t, 0);
+		s = getstr(&t, 1);
 		if (s == NULL || !(ctype(*t) & (CT_NL | CT_NUL)))
 			flerrexit("syntax error on include directive");
-		t = getstr(&argp, 1);
-		data = readfile(t);
-		free(t);
+		data = readfile(s);
+		free(s);
+		s = getstr(&argp, 0);
 		if (data == NULL)
 			flerrexit("failed to include file '%s'", s);
+		ofile.name = file;
+		ofile.nextln = nextln;
+		ofile.line = line;
+		arr_add(&files, &ofile);
 		file = s;
-		mfprintf(out, "%%file \"%s\"\n", file);
+		mfprintf(out, "%%file \"%s\"", file);
+		nextln = data;
 		line = 1;
-		onl = nextln;
-		_preprocess(out, data, mac);
-		run = 0;
-		nextln = onl;
-		free(file);
-		file = ofile;
-		line = oline;
-		mfprintf(out, "%%file \"%s\"\n", file);
-		if (!explvl)
-			mfprintf(out, "%%line %ut", oline + 1);
-		else mfprintf(out, "%%line %ut\n%%nocount", oline);
+		strip(data);
 		return 1;
 	}
 	{
@@ -552,92 +609,46 @@ int ppfind(ioh_t *out, char *ip, char *argp, macro_t *mac) {
 }
 
 void _preprocess(ioh_t *out, char *in, macro_t *mac) {
-	{ /* strip comments */
-		char *p = in;
-		int iscomment = 0, nestcomment = 0;
-
-		esc = str = 0;
-		while (*p) {
-			if (!iscomment && !nestcomment)
-				strcheck(*p);
-			if (!str) {
-				if (p[0] == '/' && p[1] == '*') {
-					++nestcomment;
-				} else if (nestcomment && p[0] == '*' && p[1] == '/') {
-					--nestcomment;
-					p[0] = p[1] = ' ';
-					++p;
+	int r;
+	file_t *f;
+	strip(in);
+	proceed:
+	run = 0;
+	while (parseln(in)) {
+		r = 0;
+		if (ip != NULL) {
+			if ((r = ppfind(out, ip, argp, mac))) {
+				if (lp != NULL && !macro) {
+					mfwrite(out, lp, idlen(lp));
+					mfwrite(out, ":", 1);
 				}
-				if (iscomment || nestcomment) {
-					if (ctype(*p) & CT_NL)
-						iscomment = 0;
-					else *p = ' ';
-				} else if (*p == ';') {
-					*p = ' ';
-					iscomment = 1;
-				}
+				run = 0;
+				if (r == 2) /* endrep or endm wants us to die */
+					return;
 			}
-			++p;
+		}
+		if (prefix && !r)
+			flwarn("unhandled preprocessor directive");
+		if (run == 0) {
+			if (!r && !ignore && !macro && !rep0 && !prefix)
+				ppsub(out, in, mac, 0);
+			in = nextln;
+			mfprint(out, "\n");
+			if (!explvl && !rep)
+				++line;
 		}
 	}
-
-	{ /* fix escaped newlines and remove dos newlines */
-		char *p, *c;
-		int i, nl = 0;
-		p = c = in;
-		while (*c) {
-			switch (*c) {
-				case '\\':
-					i = 1;
-					while (c[i] == '\r')
-						++i;
-					if (c[1] == '\n') {
-						c += i + 1;
-						++nl;
-					}
-					break;
-				case '\r':
-					/* dos newlines will be added by mfwrite(), if the user wants them in output */
-					++c;
-					break;
-				case '\n':
-					if (nl)
-						while (nl--)
-							*(p++) = '\n';
-			}
-			*p = *c;
-			++p, ++c;
-		}
-		*p = 0;
-	}
-
-	{
-		int r;
-		run = 0;
-		while (parseln(in)) {
-			r = 0;
-			if (ip != NULL) {
-				if ((r = ppfind(out, ip, argp, mac))) {
-					if (lp != NULL && !macro) {
-						mfwrite(out, lp, idlen(lp));
-						mfwrite(out, ":", 1);
-					}
-					run = 0;
-					if (r == 2) /* endrep or endm wants us to die */
-						return;
-				}
-			}
-			if (prefix && !r)
-				flwarn("unhandled preprocessor directive");
-			if (run == 0) {
-				if (!r && !ignore && !macro && !rep0 && !prefix)
-					ppsub(out, in, mac, 0);
-				in = nextln;
-				mfprint(out, "\n");
-				if (!explvl && !rep)
-					++line;
-			}
-		}
+	if ((f = arr_pop(files, file_t)) != NULL) {
+		free(file);
+/*		free(data); */
+		file = f->name;
+		in = f->nextln;
+		line = f->line;
+		mfprintf(out, "%%file \"%s\"\n", file);
+		if (!explvl)
+			mfprintf(out, "%%line %ut\n", line + 1);
+		else mfprintf(out, "%%line %ut\n%%nocount\n", line);
+		goto proceed;
 	}
 }
 
@@ -656,6 +667,7 @@ void preprocess(ioh_t *out, char *in) {
 	macargs = NULL;
 	arr_new(&defines, sizeof(define_t));
 	arr_new(&macros, sizeof(macro_t));
+	arr_new(&files, sizeof(file_t));
 	line = 1;
 	repno = rep0 = rep = explvl = level = ignore = 0;
 	_preprocess(out, in, NULL);
@@ -665,6 +677,7 @@ void preprocess(ioh_t *out, char *in) {
 		if (def->free)
 			free(def->val);
 	}
+	arr_free(&files);
 	arr_free(&macros);
 	arr_free(&defines);
 }
