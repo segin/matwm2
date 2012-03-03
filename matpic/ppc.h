@@ -29,6 +29,12 @@ typedef struct {
 } rep_t;
 
 typedef struct {
+	void *macro;
+	char *argv[ARG_MAX], *nextln;
+	int argc, line;
+} amacro_t;
+
+typedef struct {
 	char *argv[ARG_MAX];
 	int argc;
 } arglist_t;
