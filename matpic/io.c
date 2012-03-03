@@ -197,12 +197,21 @@ ioh_t *_mcbopen(void *d, int len, int options,
  * stdio wrappers *
  ******************/
 
+#include <stdlib.h> /* atexit() */
+
 ioh_t *mstdin, *mstdout, *mstderr;
+
+void mstdio_end(void) {
+	mfclose(mstdin);
+	mfclose(mstdout);
+	mfclose(mstderr);
+}
 
 void mstdio_init(void) {
 	mstdin = mfdopen(0, 0);
 	mstdout = mfdopen(1, 0);
 	mstderr = mfdopen(2, 0);
+	atexit(mstdio_end);
 }
 
 #include <unistd.h>
