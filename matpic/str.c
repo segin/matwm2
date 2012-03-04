@@ -284,18 +284,21 @@ int getnum(char **src, unsigned int *ret) {
 		}
 	}
 
-	while ((c = hexlookup[(unsigned char) **src]) != 16) {
+	s = *src;
+	while ((c = hexlookup[(unsigned char) *s]) != 16) {
 		if (c == 17) {
-			++*src;
+			++s;
 			continue;
 		}
 		if (c >= base)
 			goto endnum;
 		r *= base;
 		r += c;
-		++*src, ++n;
+		++s, ++n;
 	}
 	endnum:
+	if (n)
+		*src = s;
 	if (sfx)
 		++*src;
 	*ret = r;

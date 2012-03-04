@@ -2,7 +2,7 @@
 #include "as.h" /* parseln() */
 #include "mem.h"
 #include "str.h" /* skipsp(), ctype(), etc */
-#include "misc.h" /* flerrexit(), readfile(), getstr(), clearfile(), file */
+#include "misc.h" /* flerrexit(), readfile(), getstr(), file */
 #include "ppc.h"
 #include "io.h"
 
@@ -12,8 +12,6 @@ arr_t files;
 arr_t reps;
 arr_t amacros;
 arr_t adef;
-
-arglist_t *defargs;
 
 int level, ignore; /* depth & state of if/ifdef/ifndef directives */
 int str, esc;
@@ -121,16 +119,38 @@ macro_t *macrofind(char *name) {
 
 char *sppsub(char *in, char end);
 
-void _ppsub(ioh_t *out, char *in, define_t *parent, char end) {
-	char *s, *id;
-	int i;
-	define_t *def;
-	arglist_t args, *argt;
-	amacro_t *am = arr_top(amacros, amacro_t);
-	macro_t *mac = ((am == NULL) ? NULL : (macro_t *) (am->macro));
+unsigned int ppgetnum(char **in) {
+	unsigned int ret;
+	char *p, *t;
+	if (**in == '[') {
+		++*in;
+		p = t = sppsub(*in, ']');
+		ret = numarg(&p);
+		if (*p)
+			flerrexit("exess data in preprocessor evaluation group");
+		free(t);
+		while (*((*in)++) != ']'); /* sppsub made sure ']' is there */
+	} else return getval(in);
+	return ret;
+}
 
+typedef struct {
+	define_t *parent;
+	char *argv[ARG_MAX];
+	int argc;
+	char *in;
+} sstate_t;
+
+void _ppsub(ioh_t *out, char *in, amacro_t *am, char end) {
+	int i;
+	char *s, *id;
+	define_t *def;
+	arr_t sstack;
+	sstate_t state = { NULL };
+
+	arr_new(&sstack, sizeof(sstate_t));
 	esc = str = 0;
-	while (!(ctype(*in) & (CT_NL | CT_NUL)) && *in != end) {
+	while (1) {
 		s = in;
 		while (!(ctype(*in) & (CT_NL | CT_NUL | CT_LET | CT_SEP)) && *in != '[' && *in != '@' && *in != end) {
 			if (esc)
@@ -139,96 +159,86 @@ void _ppsub(ioh_t *out, char *in, define_t *parent, char end) {
 			++in;
 		}
 		mfwrite(out, s, in - s);
-		if (*in == end || ctype(*in) & (CT_NL | CT_NUL))
-			return;
-		if (!str && *in == '@') {
-			++in;
+		if (*in == end || ctype(*in) & (CT_NL | CT_NUL)) {
+			sstate_t *s = arr_top(sstack, sstate_t);
+			s = arr_pop(sstack, sstate_t);
+			if (s == NULL) {
+				if (end != 0 && *in != end)
+					flerrexit("expecting '%c'", end);
+				break;
+			}
+			--(state.parent->active);
+			for (--state.argc; state.argc >= 0; --state.argc)
+				free(state.argv[state.argc]);
+			memcpy(&state, s, sizeof(sstate_t));
+			in = state.in;
+			continue;
+		}
+		if (!str) {
 			if (*in == '@') {
 				++in;
-				mfprintf(out, "%ut", arr_top(reps, rep_t)->repno);
+				if (*in == '@') {
+					++in;
+					mfprintf(out, "%ut", arr_top(reps, rep_t)->repno);
+					continue;
+				}
+				i = ppgetnum(&in);
+				if (am == NULL)
+					flerrexit("macro argument requested outside of macro");
+				if (i > am->argc - am->macro->argc)
+					flerrexit("macro wants nonexistant argument @%i", i);
+				if (i == 0)
+					mfprintf(out, "%ut", am->argc - am->macro->argc);
+				else mfprint(out, am->argv[am->macro->argc + i - 1]);
 				continue;
 			}
-			if (*in == '<') {
-				char *p = in, *t = in;
-				while (!(ctype(*t) & (CT_NL | CT_NUL)) && *t != '>')
-					++t;
-				if (*t != '>')
-					flerrexit("missing '>'");
-				++t;
-				in = t;
-				p = t = sppsub(p + 1, '>');
-				i = numarg(&t);
-				if (*t)
-					flerrexit("exess data in <> group");
-				free(p);
-			} else i = getval(&in);
-			if (am == NULL) {
-				mfprint(out, "0t");
+			if (*in == '[') {
+				mfprintf(out, "%xh", ppgetnum(&in));
 				continue;
 			}
-			if (i > am->argc - mac->argc)
-				flerrexit("macro wants nonexistant argument @%i", i);
-			if (i == 0)
-				mfprintf(out, "%ut", am->argc - mac->argc);
-			else mfprint(out, am->argv[mac->argc + i - 1]);
-			continue;
-		}
-		if (!str && *in == '[') {
-			char *p;
-			++in;
-			p = id = sppsub(in, ']');
-			mfprintf(out, "%xh", numarg(&p));
-			if (*p)
-				flerrexit("exess data in preprocessor evaluation group");
-			free(id);
-			while (!(ctype(*in) & (CT_NL | CT_NUL)) && *in != ']')
-				++in;
-			if (*in != ']')
-				flerrexit("expected ']' after expression");
-			++in;
-			continue;
-		}
-		id = in;
-		getid(&in);
-		if (!str) {
-			if (am != NULL && mac != NULL && am->argc) {
-				for (i = 0; i < mac->argc; ++i) {
-					if (cmpid(id, mac->argv[i])) {
+			id = in;
+			getid(&in);
+			if (state.parent != NULL && state.argc) { /* substitute %define arguments */
+				for (i = 0; i < state.argc; ++i) {
+					if (cmpid(id, state.parent->argv[i])) {
+						_ppsub(out, state.argv[i], NULL , 0);
+						break;
+					}
+				}
+				if (i != state.argc)
+					continue;
+			}
+
+			if (am != NULL && am->argc) { /* substitute macro arguments */
+				for (i = 0; i < am->macro->argc; ++i) {
+					if (cmpid(id, am->macro->argv[i])) {
 						_ppsub(out, am->argv[i], NULL, 0);
 						break;
 					}
 				}
-				if (i != mac->argc)
-					continue;
-			}
-
-			if (parent != NULL && defargs->argc) {
-				for (i = 0; i < defargs->argc; ++i) {
-					if (cmpid(id, parent->argv[i])) {
-						_ppsub(out, defargs->argv[i], NULL, 0);
-						break;
-					}
-				}
-				if (i != defargs->argc)
+				if (i != am->macro->argc)
 					continue;
 			}
 
 			if ((def = deffind(id)) != NULL && !def->active) {
-				args.argc = 0;
+				state.in = in;
+				arr_add(&sstack, &state);
+				state.parent = def;
+				state.argc = 0;
 				if (*in == '(') {
 					++in;
 					while (!(ctype(*in) & (CT_NL | CT_NUL))) {
 						s = in;
-						if (args.argc + 1 < def->argc)
+						if (state.argc + 1 < def->argc)
 							while (!(ctype(*in) & (CT_NL | CT_NUL)) && *in != ',' && *in != ')')
 								++in;
 						else while (!(ctype(*in) & (CT_NL | CT_NUL)) && *in != ')')
 								++in;
-						args.argv[args.argc] = strldup(s, in - s);
-						if (args.argv[args.argc] == NULL)
+						state.argv[state.argc] = strldup(s, in - s);
+						if (state.argv[state.argc] == NULL)
 							errexit("strldup() failure");
-						++args.argc;
-						if (args.argc == ARG_MAX)
+						++state.argc;
+						if (state.argc == ARG_MAX)
 							flerrexit("too many arguments for macro");
 						if (*in == ')')
 							break;
@@ -239,26 +249,21 @@ void _ppsub(ioh_t *out, char *in, define_t *parent, char end) {
 						flerrexit("missing ')'");
 					++in;
 				}
-				if (args.argc < def->argc)
+				if (state.argc < def->argc)
 					flerrexit("too few arguments for macro");
-
-				argt = defargs;
-				defargs = &args;
+				state.parent = def;
+				in = def->val;
 				++def->active;
-				_ppsub(out, def->val, def, 0);
-				--def->active;
-				defargs = argt;
-				for (--args.argc; args.argc >= 0; --args.argc)
-					free(args.argv[args.argc]);
 				continue;
 			}
 		}
 		mfwrite(out, id, in - id);
 	}
+	arr_free(&sstack);
 }
 
 void ppsub(ioh_t *out, char *in, char end) {
-	_ppsub(out, in, NULL, end);
+	_ppsub(out, in, arr_top(amacros, amacro_t), end);
 }
 
 char *sppsub(char *in, char end) {
@@ -646,7 +651,7 @@ void preprocess(ioh_t *out, char *in) {
 	file_t *f;
 	define_t *def;
 	file = infile;
-	defargs = NULL;
+
 	arr_new(&defines, sizeof(define_t));
 	arr_new(&macros, sizeof(macro_t));
 	arr_new(&files, sizeof(file_t));

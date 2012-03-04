@@ -120,11 +120,10 @@ unsigned int getval(char **src) {
 			int i, j, r, l = -1, local = 0;
 			label_t *label = (label_t *) labels.data;
 			char *id;
-	
 			id = getid(src);
 			if (id == NULL)
 				goto gotval;
-	
+
 			/* get label or fail */
 			while (*id == '.')
 				++id, ++local;
@@ -162,7 +161,7 @@ unsigned int getval(char **src) {
 					goto gotval;
 				}
 			}
-			flerrexit("unknown identifier");
+			flerrexit("unknown identifier '%s'", strldup(id, idlen(id)));
 		}
 	}
 	gotval:
