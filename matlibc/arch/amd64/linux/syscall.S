@@ -18,9 +18,9 @@ err:
 	negq %rax
 #ifdef PIC
 	movq errno@GOTPCREL(%rip), %rcx
-	movq %rax, (%rcx)
+	movl %eax, (%rcx)
 #else
-	movq %rax, errno(%rip)
+	movl %eax, errno(%rip)
 #endif /* PIC */
 	movq $-1,%rax
 	ret
