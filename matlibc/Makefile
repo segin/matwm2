@@ -1,5 +1,9 @@
 ARCH = amd64/linux
 
+CC = cc
+AS = as
+RM = rm -f
+
 AFLAGS  = -nostdinc
 CFLAGS  = -nostdinc -fno-builtin -I./include
 LDFLAGS = -nostartfiles
