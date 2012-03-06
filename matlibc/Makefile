@@ -4,18 +4,17 @@ AFLAGS  = -nostdinc
 CFLAGS  = -nostdinc -fno-builtin -I./include
 LDFLAGS = -nostartfiles
 
+include arch/Makefile
+include string/Makefile
+include stdlib/Makefile
+
 all: test
 
-DIR = arch
-include $(DIR)/Makefile
-DIR = string
-include $(DIR)/Makefile
-
-test: $(OBJS) string arch matcrt0.o test.o string
-	$(LD) $(LDFLAGS) $(OBJS) matcrt0.o test.o -o $@
+test: $(OBJS) $(CRTO) test.o
+	$(LD) $(LDFLAGS) $(OBJS) $(CRTO) test.o -o $@
 
 clean:
-	$(RM) $(OBJS) matcrt0.o test.o test
+	$(RM) $(OBJS) $(CRTO) test.o test
 
 .SUFFIXES: .S .c .o
 

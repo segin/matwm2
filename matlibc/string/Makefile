@@ -1,3 +1,1 @@
-OBJS += strlen.o
-
-string: $(OBJS)
+OBJS += string/strlen.o
