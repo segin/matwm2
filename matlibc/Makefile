@@ -5,7 +5,7 @@ AS = as
 RM = rm -f
 
 AFLAGS  = -nostdinc
-CFLAGS  = -nostdinc -fno-builtin -I./include
+CFLAGS  = -Wall -ansi -pedantic -nostdinc -fno-builtin -I./include
 LDFLAGS = -nostartfiles
 
 include arch/Makefile

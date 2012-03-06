@@ -39,7 +39,8 @@
 extern "C" {
 #endif
 
-#include <types.h>
+#include <types.h> /* size_t, ssize_t */
+#include <stdlib.h> /* NULL */
 
 extern void *memchr(const void *, int, size_t);
 extern void *memrchr(const void *, int, size_t);
