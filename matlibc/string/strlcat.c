@@ -16,7 +16,6 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <sys/types.h>
 #include <string.h>
 
 /*
@@ -26,9 +25,7 @@
  * Returns strlen(src) + MIN(siz, strlen(initial dst)).
  * If retval >= siz, truncation occurred.
  */
-size_t
-strlcat(char *dst, const char *src, size_t siz)
-{
+size_t strlcat(char *dst, const char *src, size_t siz) {
 	char *d = dst;
 	const char *s = src;
 	size_t n = siz;

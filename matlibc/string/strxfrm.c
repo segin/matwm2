@@ -38,14 +38,11 @@
  * strcmp() on transformed strings returns what strcoll()
  * on the original untransformed strings would return.
  */
-size_t
-strxfrm(char *dst, const char *src, size_t n)
-{
-
+size_t strxfrm(char *dst, const char *src, size_t n) {
 	/*
 	 * Since locales are unimplemented, this is just a copy.
 	 */
 	if (n == 0)
 		return (strlen(src));
-	return (strlcpy(dst, src, n));
+	return (strlcpy(dst, src, n)); /* strlcpy() makes warning if no -D_BSD_VISIBLE */
 }

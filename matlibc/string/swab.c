@@ -31,11 +31,9 @@
  * SUCH DAMAGE.
  */
 
-#include <unistd.h>
+#include <string.h>
 
-void
-swab(const void *from, void *to, size_t len)
-{
+void swab(const void *from, void *to, size_t len) {
 	size_t n;
 	char *fp, *tp;
 	char temp;
@@ -43,10 +41,10 @@ swab(const void *from, void *to, size_t len)
 	n = (len / 2) + 1;
 	fp = (char *)from;
 	tp = (char *)to;
-#define	STEP do {	\
-	temp = *fp++;	\
-	*tp++ = *fp++;	\
-	*tp++ = temp;	\
+#define STEP do {   \
+	temp = *fp++;   \
+	*tp++ = *fp++;  \
+	*tp++ = temp;   \
 } while (0)
 	/* round to multiple of 8 */
 	while ((--n) & 07)

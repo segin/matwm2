@@ -30,7 +30,6 @@
  */
 
 #include <string.h>
-#include <stdio.h>
 
 /*
  * Get next token from string *stringp, where tokens are possibly-empty
@@ -43,9 +42,7 @@
  *
  * If *stringp is NULL, strsep returns NULL.
  */
-char *
-strsep(char **stringp, const char *delim)
-{
+char *strsep(char **stringp, const char *delim) {
 	char *s;
 	const char *spanp;
 	int c, sc;
