@@ -32,19 +32,13 @@
  * SUCH DAMAGE.
  */
 
-#if !defined(_KERNEL) && !defined(_STANDALONE)
 #include <string.h>
-#else
-#include <lib/libkern/libkern.h>
-#endif
 
 /*
  * Copy src to dst, truncating or null-padding to always copy n bytes.
  * Return dst.
  */
-char *
-strncpy(char *dst, const char *src, size_t n)
-{
+char *strncpy(char *dst, const char *src, size_t n) {
 	if (n != 0) {
 		char *d = dst;
 		const char *s = src;

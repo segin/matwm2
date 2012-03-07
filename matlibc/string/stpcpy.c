@@ -36,9 +36,7 @@ __warn_references(stpcpy,
     "warning: stpcpy() is dangerous GNU crap; don't use it");
 #endif
 
-char *
-stpcpy(char *to, const char *from)
-{
+char *stpcpy(char *to, const char *from) {
 	for (; (*to = *from) != '\0'; ++from, ++to);
 	return(to);
 }

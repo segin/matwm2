@@ -29,16 +29,9 @@
  * SUCH DAMAGE.
  */
 
-#if !defined(_KERNEL) && !defined(_STANDALONE)
 #include <string.h>
-#else
-#include <lib/libkern/libkern.h>
-#endif
 
-int
-strncmp(const char *s1, const char *s2, size_t n)
-{
-
+int strncmp(const char *s1, const char *s2, size_t n) {
 	if (n == 0)
 		return (0);
 	do {

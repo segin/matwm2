@@ -29,9 +29,7 @@
 #include <wctype.h>
 #include "locale/runetype.h"
 
-int
-wcscasecmp(const wchar_t *s1, const wchar_t *s2)
-{
+int wcscasecmp(const wchar_t *s1, const wchar_t *s2) {
 	wchar_t l1, l2;
 
 	while ((l1 = towlower(*s1++)) == (l2 = towlower(*s2++))) {
@@ -42,9 +40,7 @@ wcscasecmp(const wchar_t *s1, const wchar_t *s2)
 	return ((rune_t)l1 - (rune_t)l2);
 }
 
-int
-wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n)
-{
+int wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n) {
 	wchar_t l1, l2;
 
 	if (n == 0)

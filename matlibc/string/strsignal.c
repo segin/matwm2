@@ -32,9 +32,7 @@
 
 extern char *__strsignal(int, char *);
 
-char *
-strsignal(int sig)
-{
+char *strsignal(int sig) {
 	static char buf[NL_TEXTMAX];
 
 	return __strsignal(sig, buf);

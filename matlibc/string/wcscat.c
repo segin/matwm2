@@ -36,9 +36,7 @@ __warn_references(wcscat,
     "warning: wcscat() is almost always misused, please use wcslcat()");
 #endif
 
-wchar_t *
-wcscat(wchar_t *s1, const wchar_t *s2)
-{
+wchar_t *wcscat(wchar_t *s1, const wchar_t *s2) {
 	wchar_t *p;
 	wchar_t *q;
 	const wchar_t *r;

@@ -31,9 +31,7 @@
 
 #include <wchar.h>
 
-int
-wcswidth(const wchar_t *s, size_t n)
-{
+int wcswidth(const wchar_t *s, size_t n) {
 	int w, q;
 
 	w = 0;

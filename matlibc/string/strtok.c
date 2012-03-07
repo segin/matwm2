@@ -29,17 +29,13 @@
 
 #include <string.h>
 
-char *
-strtok(char *s, const char *delim)
-{
+char *strtok(char *s, const char *delim) {
 	static char *last;
 
 	return strtok_r(s, delim, &last);
 }
 
-char *
-strtok_r(char *s, const char *delim, char **last)
-{
+char *strtok_r(char *s, const char *delim, char **last) {
 	char *spanp;
 	int c, sc;
 	char *tok;

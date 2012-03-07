@@ -34,9 +34,7 @@
 
 /* XXX mode should be mode_t */
 
-void
-strmode(int mode, char *p)
-{
+void strmode(int mode, char *p) {
 	 /* print type */
 	switch (mode & S_IFMT) {
 	case S_IFDIR:			/* directory */

@@ -22,9 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-char *
-strndup(const char *str, size_t maxlen)
-{
+char *strndup(const char *str, size_t maxlen) {
 	char *copy;
 	size_t len;
 

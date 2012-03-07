@@ -17,9 +17,7 @@
 #include <signal.h>
 #include <string.h>
 
-static size_t
-__digits10(unsigned int num)
-{
+static size_t __digits10(unsigned int num) {
 	size_t i = 0;
 
 	do {
@@ -31,8 +29,7 @@ __digits10(unsigned int num)
 }
 
 static int
-__itoa(int num, int sign, char *buffer, size_t start, size_t end)
-{
+__itoa(int num, int sign, char *buffer, size_t start, size_t end) {
 	size_t pos;
 	unsigned int a;
 	int neg;
@@ -68,8 +65,7 @@ __itoa(int num, int sign, char *buffer, size_t start, size_t end)
 
 static int
 __num2string(int num, int sign, int setid, char *buf, size_t buflen,
-    char * list[], size_t max, const char *def)
-{
+    char * list[], size_t max, const char *def) {
 	int ret = 0;
 	size_t len;
 
@@ -111,9 +107,7 @@ __num2string(int num, int sign, int setid, char *buf, size_t buflen,
 
 #define	UPREFIX	"Unknown error: "
 
-int
-strerror_r(int errnum, char *strerrbuf, size_t buflen)
-{
+int strerror_r(int errnum, char *strerrbuf, size_t buflen) {
 	int save_errno;
 	int ret_errno;
 
@@ -128,9 +122,7 @@ strerror_r(int errnum, char *strerrbuf, size_t buflen)
 
 #define USIGPREFIX "Unknown signal: "
 
-char *
-__strsignal(int num, char *buf)
-{
+char *__strsignal(int num, char *buf) {
 	__num2string(num, 0, 2, buf, NL_TEXTMAX, (char **)sys_siglist, NSIG,
 	    USIGPREFIX);
 	return buf;

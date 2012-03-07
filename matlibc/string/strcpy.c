@@ -29,22 +29,15 @@
  * SUCH DAMAGE.
  */
 
-#if !defined(_KERNEL) && !defined(_STANDALONE)
 #include <string.h>
-#else
-#include <lib/libkern/libkern.h>
-#endif
 
 #if defined(APIWARN)
 __warn_references(strcpy,
     "warning: strcpy() is almost always misused, please use strlcpy()");
 #endif
 
-char *
-strcpy(char *to, const char *from)
-{
+char *strcpy(char *to, const char *from) {
 	char *save = to;
-
 	for (; (*to = *from) != '\0'; ++from, ++to);
 	return(save);
 }

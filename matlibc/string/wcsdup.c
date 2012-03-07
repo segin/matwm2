@@ -15,9 +15,7 @@
 #include <stdlib.h>
 #include <wchar.h>
 
-wchar_t *
-wcsdup(const wchar_t *str)
-{
+wchar_t *wcsdup(const wchar_t *str) {
 	wchar_t *copy;
 	size_t len;
 

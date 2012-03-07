@@ -36,9 +36,7 @@ __warn_references(wcscpy,
     "warning: wcscpy() is almost always misused, please use wcslcpy()");
 #endif
 
-wchar_t *
-wcscpy(wchar_t *s1, const wchar_t *s2)
-{
+wchar_t *wcscpy(wchar_t *s1, const wchar_t *s2) {
 	wchar_t *p;
 	const wchar_t *q;
 

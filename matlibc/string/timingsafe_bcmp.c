@@ -15,15 +15,9 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#if !defined(_KERNEL) && !defined(_STANDALONE)
 #include <string.h>
-#else
-#include <lib/libkern/libkern.h>
-#endif
 
-int
-timingsafe_bcmp(const void *b1, const void *b2, size_t n)
-{
+int timingsafe_bcmp(const void *b1, const void *b2, size_t n) {
 	const unsigned char *p1 = b1, *p2 = b2;
 	int ret = 0;
 

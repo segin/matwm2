@@ -31,10 +31,7 @@
 
 #include <string.h>
 
-void *
-memccpy(void *t, const void *f, int c, size_t n)
-{
-
+void *memccpy(void *t, const void *f, int c, size_t n) {
 	if (n) {
 		unsigned char *tp = t;
 		const unsigned char *fp = f;

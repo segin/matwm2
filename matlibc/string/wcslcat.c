@@ -27,9 +27,7 @@
  * Returns wcslen(src) + MIN(siz, wcslen(initial dst)).
  * If retval >= siz, truncation occurred.
  */
-size_t
-wcslcat(wchar_t *dst, const wchar_t *src, size_t siz)
-{
+size_t wcslcat(wchar_t *dst, const wchar_t *src, size_t siz) {
 	wchar_t *d = dst;
 	const wchar_t *s = src;
 	size_t n = siz;

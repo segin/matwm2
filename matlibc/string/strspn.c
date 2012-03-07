@@ -33,9 +33,7 @@
 /*
  * Span the string s2 (skip characters that are in s2).
  */
-size_t
-strspn(const char *s1, const char *s2)
-{
+size_t strspn(const char *s1, const char *s2) {
 	const char *p = s1, *spanp;
 	char c, sc;
 

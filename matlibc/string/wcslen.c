@@ -31,9 +31,7 @@
 
 #include <wchar.h>
 
-size_t
-wcslen(const wchar_t *s)
-{
+size_t wcslen(const wchar_t *s) {
 	const wchar_t *p;
 
 	p = s;

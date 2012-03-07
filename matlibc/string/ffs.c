@@ -5,18 +5,12 @@
  * Written by Dale Rahn.
  */
 
-#if !defined(_KERNEL) && !defined(_STANDALONE)
 #include <string.h>
-#else
-#include <lib/libkern/libkern.h>
-#endif
 
 /*
  * ffs -- vax ffs instruction
  */
-int
-ffs(int mask)
-{
+int ffs(int mask) {
 	int bit;
 	unsigned int r = mask;
 	static const signed char t[16] = {

@@ -29,18 +29,12 @@
  * SUCH DAMAGE.
  */
 
-#if !defined(_KERNEL) && !defined(_STANDALONE)
 #include <string.h>
-#else
-#include <lib/libkern/libkern.h>
-#endif
 
 /*
  * bcmp -- vax cmpc3 instruction
  */
-int
-bcmp(const void *b1, const void *b2, size_t length)
-{
+int bcmp(const void *b1, const void *b2, size_t length) {
 	char *p1, *p2;
 
 	if (length == 0)

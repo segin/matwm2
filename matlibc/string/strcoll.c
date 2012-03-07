@@ -36,9 +36,7 @@
 /*
  * Compare strings according to LC_COLLATE category of current locale.
  */
-int
-strcoll(const char *s1, const char *s2)
-{
+int strcoll(const char *s1, const char *s2) {
 	/* LC_COLLATE is unimplemented, hence always "C" */
 	return (strcmp(s1, s2));
 }
