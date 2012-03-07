@@ -1,0 +1,2 @@
+use unistd.h prototypes from openbsd
+fix and add string functions not in makefile yet cause of problems
