@@ -7,6 +7,7 @@ extern "C" {
 
 typedef unsigned long int size_t;
 typedef signed long int ssize_t;
+typedef signed long int off_t;
 
 #ifdef __cplusplus
 }

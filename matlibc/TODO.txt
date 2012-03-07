@@ -1,2 +1,3 @@
 use unistd.h prototypes from openbsd
 fix and add string functions not in makefile yet cause of problems
+add #defines for open() and lseek() flags (and think of how best do this portable, probably include file for arch)
