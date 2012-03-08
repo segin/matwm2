@@ -5,12 +5,17 @@
 #ifndef __STDLIB_H__
 #define __STDLIB_H__
 
-#define ATEXIT_MAX 512
-
 void exit(int status);
 int atexit(void (*function)(void));
 
 #ifdef INTERNAL 
+#define ATEXIT_MAX 512
+
+#if ATEXIT_MAX < 32
+# warn POSIX requires atexit() to support at least 32 registrations
+# warn You currently have ATEXIT_MAX configured to less than 32!
+#endif
+
 void _atexitproc(void);
 #endif /* INTERNAL */
 
