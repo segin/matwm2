@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
+#include <fcntl.h>
 
 int fdprint(int fd, char *str) {
 	return write(fd, str, strlen(str));
