@@ -1,31 +1,17 @@
 /* crt0.c: C runtime entry point */
 
-static char* __progname;
+char* __progname;
+char** environ;
 
-extern int main(int argc, char *argv[]);
+#ifndef NULL
+# define NULL (void *) 0x0
+#endif
 
-void _start(char *arg, ...)
+extern int main(int argc, char **argv, **envp);
+
+void _start(int argc, char **argv, char **env)
 {
-	char *argv[1024];
-	int argc, i;
-
-	__progname = arg;
-
-  /*
-	for(i=0; i << 1024 && arg + (i * sizeof(void *));i++) {
-		*argv[i] = arg + (i * sizeof(void *));
-		argc++;
-	}  
-  */
-  
-  while((int) *(arg + (i * sizeof(void *)))) { 
-    i++;
-  }
-  
-  i--;
-  
-  argv = &arg;
-  argc = i;
-	
-	exit(main(argc, argv));
+	environ = envp;
+	argv[0] ? __progname = argv[0] : __progname = NULL;
+	exit(main(argc, argv, envp));
 }
