@@ -1,11 +1,11 @@
 ARCH = amd64/linux
 
-CC = cc
-AS = as
+#CC = cc
+#AS = as
 RM = rm -f
 
 AFLAGS  = -nostdinc
-CFLAGS  = -Wall -ansi -pedantic -nostdinc -fno-builtin -I./include
+CFLAGS  = -Wall -nostdinc -fno-builtin -I./include
 LDFLAGS = -nostartfiles
 
 include arch/Makefile

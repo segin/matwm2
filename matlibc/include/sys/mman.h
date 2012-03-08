@@ -1,9 +1,5 @@
-#ifndef __UNISTD_H__
-#define __UNISTD_H__
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef __SYS_MMAN_H__
+#define __SYS_MMAN_H__
 
 #include <types.h>
 
@@ -11,8 +7,4 @@ extern void *mmap(void *addr, size_t len, int proto, int flags, int fd, off_t of
 extern int mprotect(const void *addr, size_t len, int proto);
 extern int munmap(void *addr, size_t len);
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* __UNISTD_H__ */
+#endif /* __SYS_MMAN_H__ */

@@ -1,16 +1,6 @@
 #ifndef __TYPES_H__
 #define __TYPES_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-typedef unsigned long int size_t;
-typedef signed long int ssize_t;
-typedef signed long int off_t;
-
-#ifdef __cplusplus
-}
-#endif
+#include <sys/types.h>
 
 #endif /* __TYPES_H__ */

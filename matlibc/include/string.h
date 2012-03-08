@@ -35,10 +35,6 @@
 #ifndef __STRING_H__
 #define __STRING_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <types.h> /* size_t, ssize_t */
 #include <stdlib.h> /* NULL */
 
@@ -103,9 +99,5 @@ extern char *strsep(char **, const char *);
 extern char *strsignal(int);
 extern int timingsafe_bcmp(const void *, const void *, size_t);
 #endif 
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* __STRING_H__ */

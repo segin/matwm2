@@ -1,14 +1,6 @@
-#ifndef __STDLIB_H__
-#define __STDLIB_H__
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef __ERRNO_H__
+#define __ERRNO_H__
 
 extern int errno;
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* __STDLIB_H__ */
+#endif /* __ERRNO_H__ */
