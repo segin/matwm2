@@ -1,4 +1,6 @@
-/* unistd.h: standard symbolic constants and types */
+/* unistd.h: standard symbolic constants and types 
+ * Written by Kirn Gill <segin2005@gmail.com>
+ */
 
 #ifndef __UNISTD_H__
 #define __UNISTD_H__

@@ -1,5 +1,7 @@
-/* crt0.c: C runtime entry point */
-
+/* crt0.c: C runtime entry point 
+ * Written by Kirn Gill <segin2005@gmail.com>
+ */
+ 
 char* __progname;
 char** environ;
 

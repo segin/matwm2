@@ -1,4 +1,6 @@
-/* sys/sycall.h: Syscall inteface */
+/* sys/sycall.h: Syscall inteface
+ * Written by Kirn Gill <segin2005@gmail.com>
+ */
 
 #ifndef __SYS_SYSCALL_H__
 #define __SYS_SYSCALL_H__

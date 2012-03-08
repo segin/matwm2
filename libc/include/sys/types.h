@@ -1,4 +1,6 @@
-/* sys/types.h: system types */
+/* sys/types.h: system types 
+ * Written by Kirn Gill <segin2005@gmail.com>
+ */
 
 #ifndef __SYS_TYPES_H__
 #define __SYS_TYPES_H__
