@@ -730,14 +730,15 @@ static void copy_param(int k) {
 	p = MALLOC(sizeof(*p));
 	NO_SPACE(p);
 
-	p->type2 = malloc(strlen(buf + type2));
+	p->type2 = MALLOC(strlen(buf + type2));
 	NO_SPACE(p->type2);
 	strcpy(p->type2, buf + type2);
 
 	buf[type2] = '\0';
 
-	p->name = strdup(buf + name);
+	p->name = MALLOC(strlen(buf + name));
 	NO_SPACE(p->name);
+	strcpy(p->name, buf + name);
 
 	buf[name] = '\0';
 	p->type = buf;
