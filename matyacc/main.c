@@ -1,7 +1,7 @@
 /* $Id: main.c,v 1.38 2012/01/14 01:01:15 tom Exp $ */
 
 #include <signal.h>
-#include <unistd.h>				/* for _exit() */
+#include <unistd.h> /* for _exit() */
 
 #include "defs.h"
 
@@ -10,7 +10,7 @@
 #  define USE_MKSTEMP 1
 # elif defined(HAVE_FCNTL_H)
 #  define USE_MKSTEMP 1
-#  include <fcntl.h>				/* for open(), O_EXCL, etc. */
+#  include <fcntl.h> /* for open(), O_EXCL, etc. */
 # else
 #  define USE_MKSTEMP 0
 # endif
@@ -22,12 +22,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-typedef struct _my_tmpfiles
-{
+typedef struct _my_tmpfiles {
 	struct _my_tmpfiles *next;
 	char *name;
-}
-MY_TMPFILES;
+} MY_TMPFILES;
 
 static MY_TMPFILES *my_tmpfiles;
 #endif /* USE_MKSTEMP */
@@ -62,20 +60,21 @@ static char *graph_file_name;
 static char *output_file_name;
 static char *verbose_file_name;
 
-FILE *action_file;		/*  a temp file, used to save actions associated	*/
-						/*  with rules until the parser is written		  */
-FILE *code_file;		/*  y.code.c (used when the -r option is specified) */
-FILE *defines_file;		/*  y.tab.h										 */
-FILE *externs_file;		/*  y.tab.i										 */
-FILE *input_file;		/*  the input file								  */
-FILE *output_file;		/*  y.tab.c										 */
-FILE *text_file;		/*  a temp file, used to save text until all		*/
-						/*  symbols have been defined					   */
-FILE *union_file;		/*  a temp file, used to save the union			 */
-						/*  definition until all symbol have been		   */
-						/*  defined										 */
-FILE *verbose_file;		/*  y.output										*/
-FILE *graph_file;		/*  y.dot										   */
+FILE *action_file;  /*  a temp file, used to save actions associated  *
+                     *  with rules until the parser is written        */
+FILE *code_file;    /*  y.code.c                                      *
+                     *  (used when the -r option is specified)        */
+FILE *defines_file; /*  y.tab.h                                       */
+FILE *externs_file; /*  y.tab.i                                       */
+FILE *input_file;   /*  the input file                                */
+FILE *output_file;  /*  y.tab.c                                       */
+FILE *text_file;    /*  a temp file, used to save text until all      *
+                     *  symbols have been defined                     */
+FILE *union_file;   /*  a temp file, used to save the union           *
+                     *  definition until all symbol have been         *
+                     *  defined                                       */
+FILE *verbose_file; /*  y.output                                      */
+FILE *graph_file;   /*  y.dot                                         */
 
 int nitems;
 int nrules;
@@ -106,17 +105,11 @@ char *nullable;
  * if there is a problem closing a file.
  */
 #define DO_CLOSE(fp) \
-		if (fp != 0) { \
-			FILE *use = fp; \
-			fp = 0; \
-			fclose(use); \
-		}
+	if (fp != 0) { FILE *use = fp; fp = 0; fclose(use); }
 
 static int got_intr = 0;
 
-void
-done(int k)
-{
+void done(int k) {
 	DO_CLOSE(input_file);
 	DO_CLOSE(output_file);
 
@@ -162,16 +155,12 @@ done(int k)
 	exit(k);
 }
 
-static void
-onintr(int sig GCC_UNUSED)
-{
+static void onintr(int sig GCC_UNUSED) {
 	got_intr = 1;
 	done(EXIT_FAILURE);
 }
 
-static void
-set_signals(void)
-{
+static void set_signals(void) {
 #ifdef SIGINT
 	if (signal(SIGINT, SIG_IGN) != SIG_IGN)
 		signal(SIGINT, onintr);
@@ -186,26 +175,23 @@ set_signals(void)
 #endif
 }
 
-static void
-usage(void)
-{
-	static const char *msg[] =
-	{
+static void usage(void) {
+	static const char *msg[] = {
 		""
 		,"Options:"
-		,"  -b file_prefix		set filename prefix (default \"y.\")"
-		,"  -d					write definitions (y.tab.h)"
-		,"  -i					write interface (y.tab.i)"
-		,"  -g					write a graphical description"
-		,"  -l					suppress #line directives"
-		,"  -o output_file		(default \"y.tab.c\")"
-		,"  -p symbol_prefix	  set symbol prefix (default \"yy\")"
-		,"  -P					create a reentrant parser, e.g., \"%pure-parser\""
-		,"  -r					produce separate code and table files (y.code.c)"
-		,"  -s					suppress #define's for quoted names in %token lines"
-		,"  -t					add debugging support"
-		,"  -v					write description (y.output)"
-		,"  -V					show version information and exit"
+		,"  -b <file_prefix>      set filename prefix (default \"y.\")"
+		,"  -d                    write definitions (y.tab.h)"
+		,"  -i                    write interface (y.tab.i)"
+		,"  -g                    write a graphical description"
+		,"  -l                    suppress #line directives"
+		,"  -o <output_file>      (default \"y.tab.c\")"
+		,"  -p <symbol_prefix>    set symbol prefix (default \"yy\")"
+		,"  -P                    create a reentrant parser, e.g., \"%pure-parser\""
+		,"  -r                    produce separate code and table files (y.code.c)"
+		,"  -s                    suppress #define's for quoted names in %token lines"
+		,"  -t                    add debugging support"
+		,"  -v                    write description (y.output)"
+		,"  -V                    show version information and exit"
 	};
 	unsigned n;
 
@@ -217,64 +203,60 @@ usage(void)
 	exit(1);
 }
 
-static void
-setflag(int ch)
-{
-	switch (ch)
-	{
-	case 'd':
-		dflag = 1;
-		break;
+static void setflag(int ch) {
+	switch (ch) {
+		case 'd':
+			dflag = 1;
+			break;
 
-	case 'g':
-		gflag = 1;
-		break;
+		case 'g':
+			gflag = 1;
+			break;
 
-	case 'i':
-		iflag = 1;
-		break;
+		case 'i':
+			iflag = 1;
+			break;
 
-	case 'l':
-		lflag = 1;
-		break;
+		case 'l':
+			lflag = 1;
+			break;
 
-	case 'P':
-		pure_parser = 1;
-		break;
+		case 'P':
+			pure_parser = 1;
+			break;
 
-	case 'r':
-		rflag = 1;
-		break;
+		case 'r':
+			rflag = 1;
+			break;
 
-	case 's':
-		sflag = 1;
-		break;
+		case 's':
+			sflag = 1;
+			break;
 
-	case 't':
-		tflag = 1;
-		break;
+		case 't':
+			tflag = 1;
+			break;
 
-	case 'v':
-		vflag = 1;
-		break;
+		case 'v':
+			vflag = 1;
+			break;
 
-	case 'V':
-		printf("%s - %s\n", myname, VERSION);
-		exit(EXIT_SUCCESS);
+		case 'V':
+			printf("%s - %s\n", myname, VERSION);
+			exit(EXIT_SUCCESS);
 
-	case 'y':
-		/* noop for bison compatibility. byacc is already designed to be posix
-		 * yacc compatible. */
-		break;
+		case 'y':
+			/* noop for bison compatibility. byacc is already designed
+			 * to be posix yacc compatible.
+			 */
+			break;
 
-	default:
-		usage();
+		default:
+			usage();
 	}
 }
 
-static void
-getargs(int argc, char *argv[])
-{
+static void getargs(int argc, char *argv[]) {
 	int i;
 	char *s;
 	int ch;
@@ -282,65 +264,61 @@ getargs(int argc, char *argv[])
 	if (argc > 0)
 		myname = argv[0];
 
-	for (i = 1; i < argc; ++i)
-	{
+	for (i = 1; i < argc; ++i) {
 		s = argv[i];
 		if (*s != '-')
 			break;
-		switch (ch = *++s)
-		{
-		case '\0':
-			input_file = stdin;
-			if (i + 1 < argc)
-				usage();
-			return;
-
-		case '-':
-			++i;
-			goto no_more_options;
-
-		case 'b':
-			if (*++s)
-				file_prefix = s;
-			else if (++i < argc)
-				file_prefix = argv[i];
-			else
-				usage();
-			continue;
-
-		case 'o':
-			if (*++s)
-				output_file_name = s;
-			else if (++i < argc)
-				output_file_name = argv[i];
-			else
-				usage();
-			continue;
-
-		case 'p':
-			if (*++s)
-				symbol_prefix = s;
-			else if (++i < argc)
-				symbol_prefix = argv[i];
-			else
-				usage();
-			continue;
-
-		default:
-			setflag(ch);
-			break;
-		}
-
-		for (;;)
-		{
-			switch (ch = *++s)
-			{
+		switch (ch = *++s) {
 			case '\0':
-				goto end_of_option;
+				input_file = stdin;
+				if (i + 1 < argc)
+					usage();
+				return;
+
+			case '-':
+				++i;
+				goto no_more_options;
+
+			case 'b':
+				if (*++s)
+					file_prefix = s;
+				else if (++i < argc)
+					file_prefix = argv[i];
+				else
+					usage();
+				continue;
+
+			case 'o':
+				if (*++s)
+					output_file_name = s;
+				else if (++i < argc)
+					output_file_name = argv[i];
+				else
+					usage();
+				continue;
+
+			case 'p':
+				if (*++s)
+					symbol_prefix = s;
+				else if (++i < argc)
+					symbol_prefix = argv[i];
+				else
+					usage();
+				continue;
 
 			default:
 				setflag(ch);
 				break;
+		}
+
+		for (;;) {
+			switch (ch = *++s) {
+				case '\0':
+					goto end_of_option;
+
+				default:
+					setflag(ch);
+					break;
 			}
 		}
 	  end_of_option:;
@@ -352,14 +330,11 @@ getargs(int argc, char *argv[])
 	input_file_name = argv[i];
 }
 
-void *
-allocate(size_t n)
-{
+void *allocate(size_t n) {
 	void *p;
 
 	p = NULL;
-	if (n)
-	{
+	if (n) {
 		p = CALLOC(1, n);
 		NO_SPACE(p);
 	}
@@ -372,9 +347,7 @@ allocate(size_t n)
 		strcpy(dest, file_prefix); \
 		strcpy(dest + len, suffix)
 
-static void
-create_file_names(void)
-{
+static void create_file_names(void) {
 	size_t len;
 	const char *defines_suffix;
 	const char *externs_suffix;
@@ -385,72 +358,57 @@ create_file_names(void)
 	externs_suffix = EXTERNS_SUFFIX;
 
 	/* compute the file_prefix from the user provided output_file_name */
-	if (output_file_name != 0)
-	{
+	if (output_file_name != 0) {
 		if (!(prefix = strstr(output_file_name, ".tab.c"))
-			&& (prefix = strstr(output_file_name, ".c")))
-		{
+			&& (prefix = strstr(output_file_name, ".c"))) {
 			defines_suffix = ".h";
 			externs_suffix = ".i";
 		}
 	}
 
-	if (prefix != NULL)
-	{
+	if (prefix != NULL) {
 		len = (size_t) (prefix - output_file_name);
 		file_prefix = (char *)MALLOC(len + 1);
 		NO_SPACE(file_prefix);
 		strncpy(file_prefix, output_file_name, len)[len] = 0;
 	}
-	else
-		len = strlen(file_prefix);
+	else len = strlen(file_prefix);
 
 	/* if "-o filename" was not given */
-	if (output_file_name == 0)
-	{
+	if (output_file_name == 0) {
 		oflag = 1;
 		CREATE_FILE_NAME(output_file_name, OUTPUT_SUFFIX);
 	}
 
-	if (rflag)
-	{
+	if (rflag) {
 		CREATE_FILE_NAME(code_file_name, CODE_SUFFIX);
 	}
-	else
-		code_file_name = output_file_name;
+	else code_file_name = output_file_name;
 
-	if (dflag)
-	{
+	if (dflag) {
 		CREATE_FILE_NAME(defines_file_name, defines_suffix);
 	}
 
-	if (iflag)
-	{
+	if (iflag) {
 		CREATE_FILE_NAME(externs_file_name, externs_suffix);
 	}
 
-	if (vflag)
-	{
+	if (vflag) {
 		CREATE_FILE_NAME(verbose_file_name, VERBOSE_SUFFIX);
 	}
 
-	if (gflag)
-	{
+	if (gflag) {
 		CREATE_FILE_NAME(graph_file_name, GRAPH_SUFFIX);
 	}
 
-	if (prefix != NULL)
-	{
+	if (prefix != NULL) {
 		FREE(file_prefix);
 	}
 }
 
 #if USE_MKSTEMP
-static void
-close_tmpfiles(void)
-{
-	while (my_tmpfiles != 0)
-	{
+static void close_tmpfiles(void) {
+	while (my_tmpfiles != 0) {
 		MY_TMPFILES *next = my_tmpfiles->next;
 
 		chmod(my_tmpfiles->name, 0644);
@@ -464,9 +422,7 @@ close_tmpfiles(void)
 }
 
 #ifndef HAVE_MKSTEMP
-static int
-my_mkstemp(char *temp)
-{
+static int my_mkstemp(char *temp) {
 	int fd;
 	char *dname;
 	char *fname;
@@ -476,23 +432,17 @@ my_mkstemp(char *temp)
 	 * Split-up to use tempnam, rather than tmpnam; the latter (like
 	 * mkstemp) is unusable on Windows.
 	 */
-	if ((fname = strrchr(temp, '/')) != 0)
-	{
+	if ((fname = strrchr(temp, '/')) != 0) {
 		dname = strdup(temp);
 		dname[++fname - temp] = '\0';
-	}
-	else
-	{
+	} else {
 		dname = 0;
 		fname = temp;
 	}
-	if ((name = tempnam(dname, fname)) != 0)
-	{
+	if ((name = tempnam(dname, fname)) != 0) {
 		fd = open(name, O_CREAT | O_EXCL | O_RDWR);
 		strcpy(temp, name);
-	}
-	else
-	{
+	} else {
 		fd = -1;
 	}
 
@@ -510,9 +460,7 @@ my_mkstemp(char *temp)
  * tmpfile() should be adequate, except that it may require special privileges
  * to use, e.g., MinGW and Windows 7 where it tries to use the root directory.
  */
-static FILE *
-open_tmpfile(const char *label)
-{
+static FILE *open_tmpfile(const char *label) {
 	FILE *result;
 #if USE_MKSTEMP
 	int fd;
@@ -520,8 +468,7 @@ open_tmpfile(const char *label)
 	char *name;
 	const char *mark;
 
-	if ((tmpdir = getenv("TMPDIR")) == 0 || access(tmpdir, W_OK) != 0)
-	{
+	if ((tmpdir = getenv("TMPDIR")) == 0 || access(tmpdir, W_OK) != 0) {
 #ifdef P_tmpdir
 		tmpdir = P_tmpdir;
 #else
@@ -534,22 +481,18 @@ open_tmpfile(const char *label)
 	name = malloc(strlen(tmpdir) + 10 + strlen(label));
 
 	result = 0;
-	if (name != 0)
-	{
+	if (name != 0) {
 		if ((mark = strrchr(label, '_')) == 0)
 			mark = label + strlen(label);
 
 		sprintf(name, "%s/%.*sXXXXXX", tmpdir, (int)(mark - label), label);
 		fd = mkstemp(name);
-		if (fd >= 0)
-		{
+		if (fd >= 0) {
 			result = fdopen(fd, "w+");
-			if (result != 0)
-			{
+			if (result != 0) {
 				MY_TMPFILES *item;
 
-				if (my_tmpfiles == 0)
-				{
+				if (my_tmpfiles == 0) {
 					atexit(close_tmpfiles);
 				}
 
@@ -573,13 +516,10 @@ open_tmpfile(const char *label)
 	return result;
 }
 
-static void
-open_files(void)
-{
+static void open_files(void) {
 	create_file_names();
 
-	if (input_file == 0)
-	{
+	if (input_file == 0) {
 		input_file = fopen(input_file_name, "r");
 		if (input_file == 0)
 			open_error(input_file_name);
@@ -588,15 +528,13 @@ open_files(void)
 	action_file = open_tmpfile("action_file");
 	text_file = open_tmpfile("text_file");
 
-	if (vflag)
-	{
+	if (vflag) {
 		verbose_file = fopen(verbose_file_name, "w");
 		if (verbose_file == 0)
 			open_error(verbose_file_name);
 	}
 
-	if (gflag)
-	{
+	if (gflag) {
 		graph_file = fopen(graph_file_name, "w");
 		if (graph_file == 0)
 			open_error(graph_file_name);
@@ -612,16 +550,14 @@ open_files(void)
 		fprintf(graph_file, "\t*/\n");
 	}
 
-	if (dflag)
-	{
+	if (dflag) {
 		defines_file = fopen(defines_file_name, "w");
 		if (defines_file == 0)
 			open_error(defines_file_name);
 		union_file = open_tmpfile("union_file");
 	}
 
-	if (iflag)
-	{
+	if (iflag) {
 		externs_file = fopen(externs_file_name, "w");
 		if (externs_file == 0)
 			open_error(externs_file_name);
@@ -631,19 +567,14 @@ open_files(void)
 	if (output_file == 0)
 		open_error(output_file_name);
 
-	if (rflag)
-	{
+	if (rflag) {
 		code_file = fopen(code_file_name, "w");
 		if (code_file == 0)
 			open_error(code_file_name);
-	}
-	else
-		code_file = output_file;
+	} else code_file = output_file;
 }
 
-int
-main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 		SRexpect = -1;
 		RRexpect = -1;
 		exit_code = EXIT_SUCCESS;

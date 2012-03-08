@@ -1,1 +1,3 @@
-reformat lr0 main mkpar and output
+comments say matching_vector() is poorly designed
+figure what difference between allocate() and MALLOC() is and if they both needed
+check output and see if anything can improve
