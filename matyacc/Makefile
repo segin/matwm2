@@ -7,4 +7,3 @@ matyacc: $(OBJS)
 
 clean:
 	$(RM) $(OBJS) matyacc
-
