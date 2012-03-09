@@ -1,5 +1,6 @@
 /* unistd.h: standard symbolic constants and types 
- * Written by Kirn Gill <segin2005@gmail.com>
+ * Written by Kirn Gill <segin2005@gmail.com>,
+ * Mattis Michel <sic_zer0@hotmail.com>
  */
 
 #ifndef __UNISTD_H__
