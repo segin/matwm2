@@ -1477,7 +1477,7 @@ static void copy_action(void) {
 			if (depth > 0)
 				goto loop;
 			fprintf(f, "\nbreak;\n");
-			free(a_line);
+			FREE(a_line);
 			return;
 	
 		case L_CURL:
@@ -1488,7 +1488,7 @@ static void copy_action(void) {
 			if (--depth > 0)
 				goto loop;
 			fprintf(f, "\nbreak;\n");
-			free(a_line);
+			FREE(a_line);
 			return;
 	
 		case '\'':
@@ -1942,10 +1942,10 @@ void reader(void) {
 static param *free_declarations(param * list) {
 	while (list != 0) {
 		param *next = list->next;
-		free(list->type);
-		free(list->name);
-		free(list->type2);
-		free(list);
+		FREE(list->type);
+		FREE(list->name);
+		FREE(list->type2);
+		FREE(list);
 		list = next;
 	}
 	return list;

@@ -117,7 +117,7 @@
 #define ISVAR(s)	((s) >= start_symbol)
 
 /*  storage allocation macros  */
-#define	FREE(x)      (free((char*)(x)))
+#define	FREE(x)      (free((void*)(x)))
 #define MALLOC(n)    (allocate((size_t)(n)))
 #define CALLOC(k,n)  (callocate((size_t)(k),(size_t)(n)))
 #define REALLOC(p,n) (reallocate((void*)(p),(size_t)(n)))

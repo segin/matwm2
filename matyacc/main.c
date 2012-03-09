@@ -440,8 +440,8 @@ static void close_tmpfiles(void) {
 		chmod(my_tmpfiles->name, 0644);
 		unlink(my_tmpfiles->name);
 
-		free(my_tmpfiles->name);
-		free(my_tmpfiles);
+		FREE(my_tmpfiles->name);
+		FREE(my_tmpfiles);
 
 		my_tmpfiles = next;
 	}
@@ -473,7 +473,7 @@ static int my_mkstemp(char *temp) {
 	}
 
 	if (dname != 0)
-		free(dname);
+		FREE(dname);
 
 	return fd;
 }

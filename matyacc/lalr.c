@@ -528,8 +528,7 @@ static void traverse(int i) {
 
 	rp = R[i];
 	if (rp) {
-		while ((j = *rp++) >= 0)
-		{
+		while ((j = *rp++) >= 0) {
 			if (INDEX[j] == 0)
 				traverse(j);
 
@@ -566,9 +565,8 @@ void lalr_leaks(void) {
 	int i;
 
 	if (includes != 0) {
-		for (i = 0; i < ngotos; i++)
-		{
-			free(includes[i]);
+		for (i = 0; i < ngotos; i++) {
+			FREE(includes[i]);
 		}
 		DO_FREE(includes);
 	}
