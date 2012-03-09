@@ -7,12 +7,11 @@
 
 #include <sys/types.h>
 
-void	_exit(int);	
-pid_t	fork(void);
-pid_t	vfork(void);
+extern	void	_exit(int);	
+extern	pid_t	fork(void);
+extern	pid_t	vfork(void);
 
-ssize_t	read(int, void *, size_t);
-ssize_t	write(int, void *, size_t);
-int	close(int);
+extern	ssize_t	read(int, void *, size_t);
+extern	ssize_t	write(int, void *, size_t);
 
 #endif /* __UNISTD_H__ */

@@ -5,9 +5,9 @@
 #ifndef __STDLIB_H__
 #define __STDLIB_H__
 
-void exit(int status);
-void _Exit(int status);
-int atexit(void (*function)(void));
+extern	void exit(int status);
+extern	void _Exit(int status);
+extern	int atexit(void (*function)(void));
 
 #ifdef INTERNAL 
 #define ATEXIT_MAX 512
@@ -17,7 +17,7 @@ int atexit(void (*function)(void));
 # warn You currently have ATEXIT_MAX configured to less than 32!
 #endif
 
-void _atexitproc(void);
+extern	void _atexitproc(void);
 
 #endif /* INTERNAL */
 
