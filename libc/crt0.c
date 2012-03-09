@@ -13,17 +13,18 @@ char** environ;
 
 extern int main(int argc, char **argv, char **envp);
 
-void _start(char **ap, void (*cleanup)(void), void *unused, void *unused2)
+void _start(char **args, void (*cleanup)(void), void *unused, void *unused2)
 {
 	int argc;
 	char **argv;
 	char **envp;
 	
-	argc = * (long *) ap;
-	argv = ap + 1;
-	envp = ap + 2 + argc;
-	
+	argc = *(long *) args;
+	argv = args + 1;
+	envp = args + 2 + argc;
 	environ = envp;
-	*argv[0] ? __progname = argv[0] : __progname = "";
+	
+	*argv[0] ? __progname = basename(argv[0]) : __progname = "";
+	atexit(cleanup);
 	exit(main(argc, argv, envp));
 }
