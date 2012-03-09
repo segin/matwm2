@@ -475,10 +475,7 @@ static int pack_vector(int vector) {
 				} while (newmax <= loc);
 
 				table = (Value_t *) REALLOC(table, (unsigned)newmax * sizeof(Value_t));
-				NO_SPACE(table);
-
 				check = (Value_t *) REALLOC(check, (unsigned)newmax * sizeof(Value_t));
-				NO_SPACE(check);
 
 				for (l = maxtable; l < newmax; ++l) {
 					table[l] = 0;
@@ -779,8 +776,7 @@ static void output_debug(void) {
 	++outline;
 	fprintf(code_file, "#define YYMAXTOKEN %d\n", max);
 
-	symnam = (const char **)MALLOC((unsigned)(max + 1) * sizeof(char *));
-	NO_SPACE(symnam);
+	symnam = (const char **) allocate((unsigned)(max + 1) * sizeof(char *));
 
 	/* Note that it is  not necessary to initialize the element      */
 	/* symnam[max].                                                  */

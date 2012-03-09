@@ -335,15 +335,42 @@ void *allocate(size_t n) {
 
 	p = NULL;
 	if (n) {
-		p = CALLOC(1, n);
-		NO_SPACE(p);
+		p = malloc(n);
+		if (p == NULL)
+			no_space();
+		assert(p != NULL);
+	}
+	return (p);
+}
+
+void *callocate(size_t n, size_t s) {
+	void *p;
+
+	p = NULL;
+	if (n) {
+		p = calloc(n, s);
+		if (p == NULL)
+			no_space();
+		assert(p != NULL);
+	}
+	return (p);
+}
+
+void *reallocate(void *ptr, size_t n) {
+	void *p;
+
+	p = NULL;
+	if (n) {
+		p = realloc(ptr, n);
+		if (p == NULL)
+			no_space();
+		assert(p != NULL);
 	}
 	return (p);
 }
 
 #define CREATE_FILE_NAME(dest, suffix) \
 		dest = MALLOC(len + strlen(suffix) + 1); \
-		NO_SPACE(dest); \
 		strcpy(dest, file_prefix); \
 		strcpy(dest + len, suffix)
 
@@ -358,7 +385,7 @@ static void create_file_names(void) {
 	externs_suffix = EXTERNS_SUFFIX;
 
 	/* compute the file_prefix from the user provided output_file_name */
-	if (output_file_name != 0) {
+	if (output_file_name != NULL) {
 		if (!(prefix = strstr(output_file_name, ".tab.c"))
 			&& (prefix = strstr(output_file_name, ".c"))) {
 			defines_suffix = ".h";
@@ -368,8 +395,7 @@ static void create_file_names(void) {
 
 	if (prefix != NULL) {
 		len = (size_t) (prefix - output_file_name);
-		file_prefix = (char *)MALLOC(len + 1);
-		NO_SPACE(file_prefix);
+		file_prefix = (char *) MALLOC(len + 1);
 		strncpy(file_prefix, output_file_name, len)[len] = 0;
 	}
 	else len = strlen(file_prefix);
@@ -478,10 +504,10 @@ static FILE *open_tmpfile(const char *label) {
 			tmpdir = ".";
 	}
 
-	name = malloc(strlen(tmpdir) + 10 + strlen(label));
+	name = MALLOC(strlen(tmpdir) + 10 + strlen(label));
 
 	result = 0;
-	if (name != 0) {
+	if (name != NULL) {
 		if ((mark = strrchr(label, '_')) == 0)
 			mark = label + strlen(label);
 
@@ -492,7 +518,7 @@ static FILE *open_tmpfile(const char *label) {
 			if (result != 0) {
 				MY_TMPFILES *item;
 
-				if (my_tmpfiles == 0) {
+				if (my_tmpfiles == NULL) {
 					atexit(close_tmpfiles);
 				}
 
@@ -519,9 +545,9 @@ static FILE *open_tmpfile(const char *label) {
 static void open_files(void) {
 	create_file_names();
 
-	if (input_file == 0) {
+	if (input_file == NULL) {
 		input_file = fopen(input_file_name, "r");
-		if (input_file == 0)
+		if (input_file == NULL)
 			open_error(input_file_name);
 	}
 
@@ -530,13 +556,13 @@ static void open_files(void) {
 
 	if (vflag) {
 		verbose_file = fopen(verbose_file_name, "w");
-		if (verbose_file == 0)
+		if (verbose_file == NULL)
 			open_error(verbose_file_name);
 	}
 
 	if (gflag) {
 		graph_file = fopen(graph_file_name, "w");
-		if (graph_file == 0)
+		if (graph_file == NULL)
 			open_error(graph_file_name);
 		fprintf(graph_file, "digraph %s {\n", file_prefix);
 		fprintf(graph_file, "\tedge [fontsize=10];\n");
@@ -552,24 +578,24 @@ static void open_files(void) {
 
 	if (dflag) {
 		defines_file = fopen(defines_file_name, "w");
-		if (defines_file == 0)
+		if (defines_file == NULL)
 			open_error(defines_file_name);
 		union_file = open_tmpfile("union_file");
 	}
 
 	if (iflag) {
 		externs_file = fopen(externs_file_name, "w");
-		if (externs_file == 0)
+		if (externs_file == NULL)
 			open_error(externs_file_name);
 	}
 
 	output_file = fopen(output_file_name, "w");
-	if (output_file == 0)
+	if (output_file == NULL)
 		open_error(output_file_name);
 
 	if (rflag) {
 		code_file = fopen(code_file_name, "w");
-		if (code_file == 0)
+		if (code_file == NULL)
 			open_error(code_file_name);
 	} else code_file = output_file;
 }

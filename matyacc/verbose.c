@@ -21,8 +21,7 @@ void verbose(void) {
 	if (!vflag)
 		return;
 
-	null_rules = (short *)MALLOC((unsigned)nrules * sizeof(short));
-	NO_SPACE(null_rules);
+	null_rules = (short *) MALLOC((unsigned)nrules * sizeof(short));
 
 	fprintf(verbose_file, "\f\n");
 	for (i = 0; i < nstates; i++)

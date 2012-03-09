@@ -2,21 +2,21 @@
 
 #include "defs.h"
 
-/*  The definition of yysccsid in the banner should be replaced with	*/
-/*  a #pragma ident directive if the target C compiler supports		*/
-/*  #pragma ident directives.						*/
-/*									*/
-/*  If the skeleton is changed, the banner should be changed so that	*/
-/*  the altered version can be easily distinguished from the original.	*/
-/*									*/
-/*  The #defines included with the banner are there because they are	*/
-/*  useful in subsequent code.  The macros #defined in the header or	*/
-/*  the body either are not useful outside of semantic actions or	*/
-/*  are conditional.							*/
+/* The definition of yysccsid in the banner should be replaced with   */
+/* a #pragma ident directive if the target C compiler supports        */
+/* #pragma ident directives.                                          */
+/*                                                                    */
+/* If the skeleton is changed, the banner should be changed so that   */
+/* the altered version can be easily distinguished from the original. */
+/*                                                                    */
+/*  The #defines included with the banner are there because they are  */
+/*  useful in subsequent code.  The macros #defined in the header or  */
+/*  the body either are not useful outside of semantic actions or     */
+/*  are conditional.                                                  */
 
 const char *const banner[] = {
 	"#ifndef lint",
-	"static const char yysccsid[] = \"@(#)yaccpar	1.9 (Berkeley) 02/21/93\";",
+	"static const char yysccsid[] = \"@(#)yaccpar 1.9 (Berkeley) 02/21/93\";",
 	"#endif",
 	"",
 	"#define YYBYACC 1",
@@ -122,11 +122,11 @@ const char *const body_vars[] = {
 const char *const body_1[] = {
 	"",
 	"#if YYDEBUG",
-	"#include <stdio.h>				/* needed for printf */",
+	"#include <stdio.h>  /* needed for printf */",
 	"#endif",
 	"",
-	"#include <stdlib.h>		/* needed for malloc, etc */",
-	"#include <string.h>		/* needed for memset */",
+	"#include <stdlib.h> /* needed for malloc, etc */",
+	"#include <string.h> /* needed for memset */",
 	"",
 	"/* allocate initial stack or double stack size, up to YYMAXDEPTH */",
 	"static int yygrowstack(YYSTACKDATA *data)",
@@ -145,14 +145,14 @@ const char *const body_1[] = {
 	"",
 	"	i = data->s_mark - data->s_base;",
 	"	newss = (short *)realloc(data->s_base, newsize * sizeof(*newss));",
-	"	if (newss == 0)",
+	"	if (newss == NULL)",
 	"		return -1;",
 	"",
 	"	data->s_base = newss;",
 	"	data->s_mark = newss + i;",
 	"",
 	"	newvs = (YYSTYPE *)realloc(data->l_base, newsize * sizeof(*newvs));",
-	"	if (newvs == 0)",
+	"	if (newvs == NULL)",
 	"		return -1;",
 	"",
 	"	data->l_base = newvs;",
@@ -221,9 +221,9 @@ const char *const body_2[] = {
 	"#if YYDEBUG",
 	"		if (yydebug)",
 	"		{",
-	"			yys = 0;",
+	"			yys = NULL;",
 	"			if (yychar <= YYMAXTOKEN) yys = yyname[yychar];",
-	"			if (!yys) yys = \"illegal-symbol\";",
+	"			if (yys == NULL) yys = \"illegal-symbol\";",
 	"			printf(\"%sdebug: state %d, reading %d (%s)\\n\",",
 	"					YYPREFIX, yystate, yychar, yys);",
 	"		}",
@@ -392,8 +392,7 @@ const char *const trailer[] = {
 	0
 };
 
-const char *const trailer_2[] =
-{
+const char *const trailer_2[] = {
 	"",
 	"yyabort:",
 	"	yyfreestack(&yystack);",
@@ -411,10 +410,8 @@ void write_section(FILE * fp, const char *const section[]) {
 	int i;
 	const char *s;
 
-	for (i = 0; (s = section[i]) != 0; ++i)
-	{
-		while ((c = *s) != 0)
-		{
+	for (i = 0; (s = section[i]) != 0; ++i) {
+		while ((c = *s) != 0) {
 			putc(c, fp);
 			++s;
 		}

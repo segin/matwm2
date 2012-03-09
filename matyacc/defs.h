@@ -1,9 +1,5 @@
 /* $Id: defs.h,v 1.36 2011/12/20 01:31:16 tom Exp $ */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -26,119 +22,108 @@
 
 #define VERSION VSTRING(YYMAJOR, YYMINOR)
 
-/*  machine-dependent definitions			*/
-/*  the following definitions are for the Tahoe		*/
-/*  they might have to be changed for other machines	*/
+/*  machine-dependent definitions                       */
+/*  the following definitions are for the Tahoe         */
+/*  they might have to be changed for other machines    */
 
-/*  MAXCHAR is the largest unsigned character value	*/
-/*  MAXSHORT is the largest value of a C short		*/
-/*  MINSHORT is the most negative value of a C short	*/
-/*  MAXTABLE is the maximum table size			*/
-/*  BITS_PER_WORD is the number of bits in a C unsigned	*/
-/*  WORDSIZE computes the number of words needed to	*/
-/*	store n bits					*/
-/*  BIT returns the value of the n-th bit starting	*/
-/*	from r (0-indexed)				*/
-/*  SETBIT sets the n-th bit starting from r		*/
+/*  MAXCHAR is the largest unsigned character value     */
+/*  MAXSHORT is the largest value of a C short          */
+/*  MINSHORT is the most negative value of a C short    */
+/*  MAXTABLE is the maximum table size                  */
+/*  BITS_PER_WORD is the number of bits in a C unsigned */
+/*  WORDSIZE computes the number of words needed to     */
+/*  store n bits                                        */
+/*  BIT returns the value of the n-th bit starting      */
+/*  from r (0-indexed)                                  */
+/*  SETBIT sets the n-th bit starting from r            */
 
-#define	MAXCHAR		255
-#define	MAXSHORT	32767
-#define MINSHORT	-32768
-#define MAXTABLE	32500
-#define BITS_PER_WORD	32
-#define	WORDSIZE(n)	(((n)+(BITS_PER_WORD-1))/BITS_PER_WORD)
-#define	BIT(r, n)	((((r)[(n)>>5])>>((n)&31))&1)
-#define	SETBIT(r, n)	((r)[(n)>>5]|=((unsigned)1<<((n)&31)))
+#define MAXCHAR       255
+#define MAXSHORT      32767
+#define MINSHORT      -32768
+#define MAXTABLE      32500
+#define BITS_PER_WORD 32
+#define WORDSIZE(n)   (((n)+(BITS_PER_WORD-1))/BITS_PER_WORD)
+#define BIT(r, n)     ((((r)[(n)>>5])>>((n)&31))&1)
+#define SETBIT(r, n)  ((r)[(n)>>5]|=((unsigned)1<<((n)&31)))
 
 /*  character names  */
+#define	NUL          '\0'   /*  the null character  */
+#define	NEWLINE      '\n'   /*  line feed  */
+#define	SP           ' '    /*  space  */
+#define	BS           '\b'   /*  backspace  */
+#define	HT           '\t'   /*  horizontal tab  */
+#define	VT           '\013' /*  vertical tab  */
+#define	CR           '\r'   /*  carriage return  */
+#define	FF           '\f'   /*  form feed  */
+#define	QUOTE        '\''   /*  single quote  */
+#define	DOUBLE_QUOTE '\"'   /*  double quote  */
+#define	BACKSLASH    '\\'   /*  backslash  */
 
-#define	NUL		'\0'	/*  the null character  */
-#define	NEWLINE		'\n'	/*  line feed  */
-#define	SP		' '	/*  space  */
-#define	BS		'\b'	/*  backspace  */
-#define	HT		'\t'	/*  horizontal tab  */
-#define	VT		'\013'	/*  vertical tab  */
-#define	CR		'\r'	/*  carriage return  */
-#define	FF		'\f'	/*  form feed  */
-#define	QUOTE		'\''	/*  single quote  */
-#define	DOUBLE_QUOTE	'\"'	/*  double quote  */
-#define	BACKSLASH	'\\'	/*  backslash  */
-
-#define UCH(c)          (unsigned char)(c)
+#define UCH(c) ((unsigned char)(c))
 
 /* defines for constructing filenames */
-
 #if defined(VMS)
-#define CODE_SUFFIX	"_code.c"
-#define	DEFINES_SUFFIX	"_tab.h"
-#define	EXTERNS_SUFFIX	"_tab.i"
-#define	OUTPUT_SUFFIX	"_tab.c"
+#define CODE_SUFFIX     "_code.c"
+#define DEFINES_SUFFIX  "_tab.h"
+#define EXTERNS_SUFFIX  "_tab.i"
+#define OUTPUT_SUFFIX   "_tab.c"
 #else
-#define CODE_SUFFIX	".code.c"
-#define	DEFINES_SUFFIX	".tab.h"
-#define	EXTERNS_SUFFIX	".tab.i"
-#define	OUTPUT_SUFFIX	".tab.c"
+#define CODE_SUFFIX     ".code.c"
+#define DEFINES_SUFFIX  ".tab.h"
+#define EXTERNS_SUFFIX  ".tab.i"
+#define OUTPUT_SUFFIX   ".tab.c"
 #endif
-#define	VERBOSE_SUFFIX	".output"
+#define VERBOSE_SUFFIX  ".output"
 #define GRAPH_SUFFIX    ".dot"
 
 /* keyword codes */
-
-#define TOKEN 0
-#define LEFT 1
-#define RIGHT 2
-#define NONASSOC 3
-#define MARK 4
-#define TEXT 5
-#define TYPE 6
-#define START 7
-#define UNION 8
-#define IDENT 9
-#define EXPECT 10
-#define EXPECT_RR 11
+#define TOKEN       0
+#define LEFT        1
+#define RIGHT       2
+#define NONASSOC    3
+#define MARK        4
+#define TEXT        5
+#define TYPE        6
+#define START       7
+#define UNION       8
+#define IDENT       9
+#define EXPECT      10
+#define EXPECT_RR   11
 #define PURE_PARSER 12
 #define PARSE_PARAM 13
-#define LEX_PARAM 14
-#define POSIX_YACC 15
+#define LEX_PARAM   14
+#define POSIX_YACC  15
 
 /*  symbol classes  */
-
 #define UNKNOWN 0
-#define TERM 1
+#define TERM    1
 #define NONTERM 2
 
 /*  the undefined value  */
-
 #define UNDEFINED (-1)
 
 /*  action codes  */
-
-#define SHIFT 1
+#define SHIFT  1
 #define REDUCE 2
 
 /*  character macros  */
-
-#define IS_IDENT(c)	(isalnum(c) || (c) == '_' || (c) == '.' || (c) == '$')
-#define	IS_OCTAL(c)	((c) >= '0' && (c) <= '7')
-#define	NUMERIC_VALUE(c)	((c) - '0')
+#define IS_IDENT(c)      (isalnum(c) || (c) == '_' || (c) == '.' \
+                          || (c) == '$')
+#define	IS_OCTAL(c)      ((c) >= '0' && (c) <= '7')
+#define	NUMERIC_VALUE(c) ((c) - '0')
 
 /*  symbol macros  */
-
 #define ISTOKEN(s)	((s) < start_symbol)
 #define ISVAR(s)	((s) >= start_symbol)
 
 /*  storage allocation macros  */
-
-#define CALLOC(k,n)	(calloc((size_t)(k),(size_t)(n)))
-#define	FREE(x)		(free((char*)(x)))
-#define MALLOC(n)	(malloc((size_t)(n)))
-#define	NEW(t)		((t*)allocate(sizeof(t)))
-#define	NEW2(n,t)	((t*)allocate(((size_t)(n)*sizeof(t))))
-#define REALLOC(p,n)	(realloc((char*)(p),(size_t)(n)))
-
-#define DO_FREE(x)	if (x) { FREE(x); x = 0; }
-
-#define NO_SPACE(p)	if (p == 0) no_space(); assert(p != 0)
+#define	FREE(x)      (free((char*)(x)))
+#define MALLOC(n)    (allocate((size_t)(n)))
+#define CALLOC(k,n)  (callocate((size_t)(k),(size_t)(n)))
+#define REALLOC(p,n) (reallocate((void*)(p),(size_t)(n)))
+#define NEW(t)       ((t*)allocate(sizeof(t)))
+#define NEW2(n,t)    ((t*)callocate((unsigned)(n),sizeof(t)))
+#define DO_FREE(x)   if (x) { FREE(x); x = NULL; }
 
 /* messages */
 #define PLURAL(n) ((n) > 1 ? "s" : "")
@@ -149,10 +134,8 @@ typedef short Index_t;
 typedef short Value_t;
 
 /*  the structure of a symbol table entry  */
-
 typedef struct bucket bucket;
-struct bucket
-{
+struct bucket {
     struct bucket *link;
     struct bucket *next;
     char *name;
@@ -165,10 +148,8 @@ struct bucket
 };
 
 /*  the structure of the LR(0) state machine  */
-
 typedef struct core core;
-struct core
-{
+struct core {
     struct core *next;
     struct core *link;
     Value_t number;
@@ -180,8 +161,7 @@ struct core
 /*  the structure used to record shifts  */
 
 typedef struct shifts shifts;
-struct shifts
-{
+struct shifts {
     struct shifts *next;
     Value_t number;
     Value_t nshifts;
@@ -191,8 +171,7 @@ struct shifts
 /*  the structure used to store reductions  */
 
 typedef struct reductions reductions;
-struct reductions
-{
+struct reductions {
     struct reductions *next;
     Value_t number;
     Value_t nreds;
@@ -202,8 +181,7 @@ struct reductions
 /*  the structure used to represent parser actions  */
 
 typedef struct action action;
-struct action
-{
+struct action {
     struct action *next;
     Value_t symbol;
     Value_t number;
@@ -215,8 +193,7 @@ struct action
 
 /*  the structure used to store parse/lex parameters  */
 typedef struct param param;
-struct param
-{
+struct param {
     struct param *next;
     char *name;		/* parameter name */
     char *type;		/* everything before parameter name */
@@ -409,6 +386,8 @@ extern void show_shifts(void);
 
 /* main.c */
 extern void *allocate(size_t n);
+extern void *callocate(size_t n, size_t s);
+extern void *reallocate(void *ptr, size_t n);
 extern void done(int k) GCC_NORETURN;
 
 /* mkpar.c */

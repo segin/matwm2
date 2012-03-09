@@ -197,7 +197,6 @@ static void initialize_states(void) {
 		continue;
 
 	p = (core *) MALLOC(sizeof(core) + i * sizeof(short));
-	NO_SPACE(p);
 
 	p->next = 0;
 	p->link = 0;
@@ -260,7 +259,7 @@ static core *new_state(int symbol) {
 	iend = kernel_end[symbol];
 	n = (unsigned)(iend - isp1);
 
-	p = (core *) allocate((sizeof(core) + (n - 1) * sizeof(short)));
+	p = (core *) MALLOC((sizeof(core) + (n - 1) * sizeof(short)));
 	p->accessing_symbol = (Value_t) symbol;
 	p->number = (Value_t) nstates;
 	p->nitems = (Value_t) n;
@@ -351,8 +350,8 @@ static void save_shifts(void) {
 	short *sp2;
 	short *send;
 
-	p = (shifts *)allocate((sizeof(shifts) +
-							  (unsigned)(nshifts - 1) * sizeof(short)));
+	p = (shifts *) MALLOC(sizeof(shifts) +
+	                      ((nshifts - 1) * sizeof(short)));
 
 	p->number = this_state->number;
 	p->nshifts = (Value_t) nshifts;
@@ -391,9 +390,8 @@ static void save_reductions(void) {
 	}
 
 	if (count) {
-		p = (reductions *) allocate((sizeof(reductions) +
-		                            (unsigned)(count - 1) *
-		                            sizeof(short)));
+		p = (reductions *) MALLOC(sizeof(reductions) +
+		                            ((count - 1) * sizeof(short)));
 
 		p->number = this_state->number;
 		p->nreds = count;
@@ -466,7 +464,6 @@ static void set_nullable(void) {
 	int done_flag;
 
 	nullable = MALLOC(nsyms);
-	NO_SPACE(nullable);
 
 	for (i = 0; i < nsyms; ++i)
 		nullable[i] = 0;

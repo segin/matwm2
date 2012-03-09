@@ -29,14 +29,12 @@ bucket *make_bucket(const char *name) {
 
 	assert(name != 0);
 
-	bp = (bucket *)MALLOC(sizeof(bucket));
-	NO_SPACE(bp);
+	bp = (bucket *) MALLOC(sizeof(bucket));
 
 	bp->link = 0;
 	bp->next = 0;
 
 	bp->name = MALLOC(strlen(name) + 1);
-	NO_SPACE(bp->name);
 
 	bp->tag = 0;
 	bp->value = UNDEFINED;
@@ -74,7 +72,6 @@ void create_symbol_table(void) {
 	bucket *bp;
 
 	symbol_table = (bucket **) MALLOC(TABLE_SIZE * sizeof(bucket *));
-	NO_SPACE(symbol_table);
 
 	for (i = 0; i < TABLE_SIZE; i++)
 		symbol_table[i] = 0;

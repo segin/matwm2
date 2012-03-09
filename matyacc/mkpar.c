@@ -158,8 +158,7 @@ static void unused_rules(void) {
 	int i;
 	action *p;
 
-	rules_used = (Value_t *) MALLOC((unsigned)nrules * sizeof(Value_t));
-	NO_SPACE(rules_used);
+	rules_used = (Value_t *) allocate((unsigned)nrules * sizeof(Value_t));
 
 	for (i = 0; i < nrules; ++i)
 		rules_used[i] = 0;
