@@ -9,7 +9,7 @@ char** environ;
 # define NULL (void *) 0x0
 #endif
 
-extern int main(int argc, char **argv, **envp);
+extern int main(int argc, char **argv, char **envp);
 
 void _start(int argc, char **argv, char **envp)
 {
