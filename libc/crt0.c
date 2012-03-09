@@ -13,6 +13,13 @@ char** environ;
 
 extern int main(int argc, char **argv, char **envp);
 
+/* XXX: for now */
+
+char *basename(char *arg)
+{
+	return arg;
+}
+
 void _start(char **args, void (*cleanup)(void), void *unused, void *unused2)
 {
 	int argc;
