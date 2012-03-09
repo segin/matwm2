@@ -20,7 +20,7 @@ void _atexitproc(void)
 {
 	int i;
 	void (*function)(void);
-	for(int i = _atexitcount; i > 0; i--) {
+	for(i = _atexitcount; i > 0; i--) {
 		function = _atexitregs[i - 1];
 		(*function)();
 	}
