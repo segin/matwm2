@@ -32,6 +32,6 @@ void _start(char **args, void (*cleanup)(void), void *unused, void *unused2)
 	environ = envp;
 	
 	__progname = argv[0] ? basename(argv[0]) : "";
-	atexit(cleanup);
+	if (cleanup) atexit(cleanup);
 	exit(main(argc, argv, envp));
 }
