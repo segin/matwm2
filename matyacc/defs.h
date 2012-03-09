@@ -121,8 +121,8 @@
 #define MALLOC(n)    (allocate((size_t)(n)))
 #define CALLOC(k,n)  (callocate((size_t)(k),(size_t)(n)))
 #define REALLOC(p,n) (reallocate((void*)(p),(size_t)(n)))
-#define NEW(t)       ((t*)allocate(sizeof(t)))
-#define NEW2(n,t)    ((t*)callocate((unsigned)(n),sizeof(t)))
+#define NEW(t)       ((t*)callocate(sizeof(t),1))
+#define NEW2(n,t)    ((t*)callocate((size_t)(n),sizeof(t)))
 #define DO_FREE(x)   if (x) { FREE(x); x = NULL; }
 
 /* messages */

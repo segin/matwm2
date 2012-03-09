@@ -146,7 +146,7 @@ static Value_t get_state(int symbol) {
 	int found;
 	int n;
 
-#ifdef		TRACE
+#ifdef TRACE
 	fprintf(stderr, "Entering get_state(%d)\n", symbol);
 #endif
 
@@ -157,7 +157,7 @@ static Value_t get_state(int symbol) {
 	key = *isp1;
 	assert(0 <= key && key < nitems);
 	sp = state_set[key];
-	if (sp) {
+	if (sp != NULL) {
 		found = 0;
 		while (!found) {
 			if (sp->nitems == n) {
@@ -197,9 +197,8 @@ static void initialize_states(void) {
 		continue;
 
 	p = (core *) MALLOC(sizeof(core) + i * sizeof(short));
-
-	p->next = 0;
-	p->link = 0;
+	p->next = NULL;
+	p->link = NULL;
 	p->number = 0;
 	p->accessing_symbol = 0;
 	p->nitems = (Value_t) i;
@@ -260,6 +259,8 @@ static core *new_state(int symbol) {
 	n = (unsigned)(iend - isp1);
 
 	p = (core *) MALLOC((sizeof(core) + (n - 1) * sizeof(short)));
+	p->next = NULL;
+	p->link = NULL;
 	p->accessing_symbol = (Value_t) symbol;
 	p->number = (Value_t) nstates;
 	p->nitems = (Value_t) n;
@@ -352,7 +353,7 @@ static void save_shifts(void) {
 
 	p = (shifts *) MALLOC(sizeof(shifts) +
 	                      ((nshifts - 1) * sizeof(short)));
-
+	p->next = NULL;
 	p->number = this_state->number;
 	p->nshifts = (Value_t) nshifts;
 
@@ -391,8 +392,8 @@ static void save_reductions(void) {
 
 	if (count) {
 		p = (reductions *) MALLOC(sizeof(reductions) +
-		                            ((count - 1) * sizeof(short)));
-
+		                          ((count - 1) * sizeof(short)));
+		p->next = NULL;
 		p->number = this_state->number;
 		p->nreds = count;
 
