@@ -7,6 +7,7 @@
 
 #include <sys/types.h>
 
+void	_exit(int);	
 pid_t	fork(void);
 pid_t	vfork(void);
 

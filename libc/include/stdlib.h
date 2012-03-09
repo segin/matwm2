@@ -6,6 +6,7 @@
 #define __STDLIB_H__
 
 void exit(int status);
+void _Exit(int status);
 int atexit(void (*function)(void));
 
 #ifdef INTERNAL 
@@ -17,6 +18,7 @@ int atexit(void (*function)(void));
 #endif
 
 void _atexitproc(void);
+
 #endif /* INTERNAL */
 
 #endif /* __STDLIB_H__ */

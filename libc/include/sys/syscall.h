@@ -15,5 +15,4 @@ int syscall(int callno, ...);
 #define	sys_open	5
 #define	sys_close	6
 
-
 #endif /* __SYS_SYSCALL_H__ */
