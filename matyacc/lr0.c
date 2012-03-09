@@ -86,7 +86,7 @@ static void append_states(void) {
 	int j;
 	Value_t symbol;
 
-#ifdef		TRACE
+#ifdef TRACE
 	fprintf(stderr, "Entering append_states()\n");
 #endif
 	for (i = 1; i < nshifts; i++) {
