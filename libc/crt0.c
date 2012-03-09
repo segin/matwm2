@@ -31,7 +31,7 @@ void _start(char **args, void (*cleanup)(void), void *unused, void *unused2)
 	envp = args + 2 + argc;
 	environ = envp;
 	
-	*argv[0] ? __progname = basename(argv[0]) : __progname = "";
+	__progname = argv[0] ? basename(argv[0]) : "";
 	atexit(cleanup);
 	exit(main(argc, argv, envp));
 }
