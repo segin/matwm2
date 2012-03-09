@@ -11,7 +11,7 @@ char** environ;
 
 extern int main(int argc, char **argv, **envp);
 
-void _start(int argc, char **argv, char **env)
+void _start(int argc, char **argv, char **envp)
 {
 	environ = envp;
 	argv[0] ? __progname = argv[0] : __progname = NULL;
