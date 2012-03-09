@@ -5,8 +5,7 @@
 #ifndef __SYS_SYSCALL_H__
 #define __SYS_SYSCALL_H__
 
-int syscall(int syscall, ...);
-
+int syscall(int callno, ...);
 
 #define	sys_nosys	0
 #define	sys_exit	1
