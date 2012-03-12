@@ -1,8 +1,9 @@
 
 #include <unistd.h>
 
-int main(int argc, char **argv)
+void _start(char *args, ...)
 {
 	write(1, "Hello, World!\n", 14);
+	_Exit(0);
 }
 
