@@ -2,7 +2,11 @@
  * Written by Kirn Gill <segin2005@gmail.com>
  */
  
+#define INTERNAL
+
 #include <sys/syscall.h>
+#include <unistd.h>
+#include <stdlib.h>
 
 void _Exit(int val)
 {
