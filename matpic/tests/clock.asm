@@ -12,9 +12,6 @@
 	; interrupt is here
 	btfsc pir1, tmr1if
 	goto tick ; is timer interrupt
-
-	; stuff for buttons goes here
-
 	retfie
 
 tick
