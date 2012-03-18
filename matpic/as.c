@@ -108,7 +108,7 @@ void addlabel(char *lp) {
 	/* we has a lebel */
 	for (label.local = 0; *lp == '.'; ++label.local, ++lp);
 	label.name = lp;
-	label.address = addrl / arch->align;
+	label.address = addrl;
 	label.parent = -1;
 	for (i = labels.count - 1; i >= 0; --i) { /* find owner */
 		if (arr_item(labels, label_t, i)->local < label.local) {
@@ -136,7 +136,7 @@ int insfind(char *ip, char *argp) {
 	if (cmpid(ip, "org")) {
 		getargs(argp, args, 1, 1);
 		ins.type = IT_ORG;
-		ins.d.org.address = args[0] * arch->align;
+		ins.d.org.address = args[0];
 		address = ins.d.org.address;
 		arr_add(&inss, &ins);
 		return 1;
@@ -176,7 +176,7 @@ int insfind(char *ip, char *argp) {
 		int n = countargs(argp);
 		ins.type = IT_DAT;
 		ins.d.data.args = argp;
-		address += n * arch->align;
+		address += n * arch->dlen / arch->align;
 		for (; n > 0; --n)
 			arr_add(&inss, &ins);
 		return 1;
@@ -197,7 +197,7 @@ int insfind(char *ip, char *argp) {
 			ins.d.ins.atype = oc->atype;
 			ins.d.ins.args = argp;
 			arr_add(&inss, &ins);
-			address += ins.d.ins.len;
+			address += ins.d.ins.len / arch->align;
 			return 1;
 		}
 		++oc;
@@ -255,7 +255,7 @@ void assemble(char *code) {
 				case IT_INS:
 					c = getargs(ins->d.ins.args, args, 0, ARG_MAX);
 					arch->acmp(ins->d.ins.oc, ins->d.ins.atype, c, args);
-					++address;
+					address += ins->d.ins.len / arch->align;
 					break;
 				case IT_ORG:
 					address = ins->d.org.address;
@@ -268,7 +268,7 @@ void assemble(char *code) {
 					}
 					if (i)
 						--ins;
-					address += (arch->dlen / arch->align) * c;
+					address += arch->dlen / arch->align * c;
 					break;
 				case IT_FIL:
 					if (file != infile)

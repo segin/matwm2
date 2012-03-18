@@ -46,13 +46,12 @@ void ihex_write(ioh_t *out) {
 			case IT_ORG:
 				if (pos)
 					endln(out);
-				address = saddr = ins->d.org.address;
+				address = saddr = ins->d.org.address * arch->align;
 				break;
 			case IT_DAT:
-				for (i = 0; i < arch->dlen; ++i) {
+				address += arch->dlen;
+				for (i = 0; i < arch->dlen; ++i)
 					addb(out, (ins->d.data.value & (0xFF << (8 * arch->dord[i]))) >> (8 * arch->dord[i]));
-					address += arch->dlen;
-				}
 				break;
 			case IT_INS:
 				address += ins->d.ins.len;
