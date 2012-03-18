@@ -1,6 +1,6 @@
 #include "mem.h"
 #include "as.h" /* inss */
-#include "misc.h" /* errexit(), flwarn(), infile */
+#include "misc.h" /* errexit(), flwarn(), file, infile */
 #include "arch.h" /* arch */
 /* below includes = only for ihex input */
 #include "str.h" /* skipsp(), skipnl(), ctype, hexlookup[], hexnib[] */

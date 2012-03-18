@@ -502,7 +502,7 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 		if (--rep->count > 0) {
 			++rep->repno;
 			nextln = rep->start;
-			lineno_set(rep->line);
+			lineno_set(rep->line + 1);
 			mfprintf(out, "%%line %ut", lineno_get());
 		} else --reps.count;
 		return 1;
@@ -680,8 +680,7 @@ void preprocess(ioh_t *out, char *in) {
 		in = f->nextln;
 		lineno_dropfile();
 		lineno_inc();
-		mfprintf(out, "%%file \"%s\"\n", file);
-		mfprintf(out, "%%line %ut\n", lineno_get());
+		mfprintf(out, "%%endfile \"%s\"\n", file);
 		goto proceed;
 	}
 

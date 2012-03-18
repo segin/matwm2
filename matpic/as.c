@@ -8,7 +8,7 @@
 #include "str.h"
 #include "mem.h"
 #include "arch.h"
-#include "misc.h" /* countargs(), getargs(), getstr(), file, address, line */
+#include "misc.h" /* countargs(), getargs(), getstr(), file, infile, address */
 
 int llbl, count;
 unsigned int addrl;

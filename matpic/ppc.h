@@ -19,7 +19,6 @@ typedef struct {
 typedef struct {
 	char *name;
 	char *nextln;
-	int line;
 } file_t;
 
 typedef struct {
@@ -30,7 +29,7 @@ typedef struct {
 typedef struct {
 	macro_t *macro;
 	char *argv[ARG_MAX], *nextln;
-	int argc, line;
+	int argc;
 } amacro_t;
 
 extern void preprocess(ioh_t *out, char *in);
