@@ -512,6 +512,7 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 			++rep->repno;
 			nextln = rep->start;
 			mfprintf(out, "%%line %ut", rep->line);
+			line = rep->line;
 		} else --reps.count;
 		return 1;
 	}
@@ -525,7 +526,7 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 			rep.count = args[0];
 			rep.start = nextln;
 			rep.repno = 0;
-			rep.line = line + 1;
+			rep.line = line;
 			arr_add(&reps, &rep);
 		} else skipblock("rep", "endrep");
 		return 1;
