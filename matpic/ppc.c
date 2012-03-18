@@ -679,7 +679,7 @@ void preprocess(ioh_t *out, char *in) {
 		in = f->nextln;
 		line = f->line + 1;
 		mfprintf(out, "%%file \"%s\"\n", file);
-		mfprintf(out, "%%line %ut\n", line + 1);
+		mfprintf(out, "%%line %ut\n", line);
 		goto proceed;
 	}
 
