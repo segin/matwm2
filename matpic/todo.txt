@@ -3,7 +3,7 @@ macro local variables
 macro local labels (possibly macro)
 db directive for store bytes separate and text with ""
 dw, dd, dq, etc
-support banksel, bankisel, pagesel pseudo instructions
+support pagesel pseudo instruction
 changing default radix
 include search path
 relocatable code and coff output support
