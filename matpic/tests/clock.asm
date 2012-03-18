@@ -6,13 +6,10 @@
 	org 0
 	goto start
 
-	org 4
+	org 4 ; interrupt is here
 	bcf intcon, intf
-
-	; interrupt is here
 	btfsc pir1, tmr1if
 	goto tick ; is timer interrupt
-
 	retfie
 
 tick
@@ -70,7 +67,7 @@ start
 	clrf 0x40+@@
 	endrep
 
-	; as to show 8888 before starting
+	; as to show 88:88 before starting
 	movlw 8
 	movwf 0x24
 	movwf 0x25
@@ -120,35 +117,68 @@ start
 	bsf t1con, tmr1on
 
 loop
-	clrf 0x50
+	clrf 0x50 ; 'on' samples bitmap
+	clrf 0x55 ; 'off' samples bitmap
 	bcf intcon, gie
+
+	clrf 0x51 ; sample 'on' counter
 	bsf gpio, 0
-	btfsc gpio, 3
-	bsf 0x50, 0
+	movlw 0xFF
+	movwf 0x54 ; loop counter
+	.inloop0:
+		btfsc gpio, 3
+		incf 0x51, f
+		decfsz 0x54, f
+		goto .inloop0
 	bcf gpio, 0
+	; check if we got a sample without 0s
+	movf 0x51, w
+	sublw 0xFF
+	btfsc status, z
+	bsf 0x50, 0
+	; check if we got a sample without 1s
+	movf 0x51, w
+	sublw 0xFF
+	btfss status, z
+	bsf 0x55, 0
+
+	clrf 0x51
 	bsf gpio, 2
-	btfsc gpio, 3
-	bsf 0x50, 1
+	movlw 0xFF
+	movwf 0x54
+	.inloop1:
+		btfsc gpio, 3
+		incf 0x51, f
+		decfsz 0x54, f
+		goto .inloop1
 	bcf gpio, 2
+	movf 0x51, w
+	sublw 0xFF
+	btfsc status, z
+	bsf 0x50, 1
+	movf 0x51, w
+	sublw 0xFF
+	btfss status, z
+	bsf 0x55, 1
 
 	movf 0x50, w
-	xorwf 0x51, w
-	andwf 0x50, w
-	movwf 0x52
+	xorwf 0x55, w
+	sublw 2
+	btfsc status, z
+	goto loop ; we are unsure
 
-	btfsc 0x52, 0
+	movf 0x50, w
+	xorwf 0x52, w
+	andwf 0x50, w
+	movwf 0x53
+	btfsc 0x53, 0
 	call mnch
-	btfsc 0x52, 1
+	btfsc 0x53, 1
 	call hncm
 
 	movf 0x50, w
-	movwf 0x51
+	movwf 0x52
 	bsf intcon, gie
-
-	clrf 0x53
-delay
-	decfsz 0x53, f
-	goto delay
 	goto loop
 
 sec
