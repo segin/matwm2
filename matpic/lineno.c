@@ -65,7 +65,6 @@ lineno_t *lineno_getctx(void) {
 	if (ln == NULL)
 		errexit("out of memory");
 	memcpy(ln, arr_top(lineno, lineno_t), sizeof(lineno_t));
-	arr_add(&lineno, &ln);
 	return ln;
 }
 
