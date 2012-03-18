@@ -119,7 +119,7 @@ void addlabel(char *lp) {
 	for (i = 0; i < labels.count; ++i) { /* check if already exists */
 		li = arr_item(labels, label_t, i);
 		if (cmpid(li->name, label.name) && label.parent == li->parent && label.local == li->local)
-			flerrexit("duplicate label");
+			flerrexit("duplicate label '%s'", strldup(li->name, idlen(li->name)));
 	}
 	arr_add(&labels, &label);
 	ins.type = IT_LBL;

@@ -297,10 +297,11 @@ int getnum(char **src, unsigned int *ret) {
 		++s, ++n;
 	}
 	endnum:
-	if (n)
+	if (n) {
 		*src = s;
-	if (sfx)
-		++*src;
+		if (sfx)
+			++*src;
+	}
 	*ret = r;
 	return n;
 }

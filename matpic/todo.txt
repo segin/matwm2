@@ -17,3 +17,4 @@ BUGS
 	unicode will be case sensitive
 	line numbers broken tomorow i wil fix it
 	should ppsub arguments of macro (both macro directive and when macros used)
+	must rename strldup, clashes with bsd libc function

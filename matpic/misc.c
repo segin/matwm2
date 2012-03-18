@@ -134,7 +134,7 @@ unsigned int getval(char **src) {
 							break;
 					if (label[i].parent != j)
 						continue;
-				}
+				} else continue;
 				val = label[i].address;
 				goto gotval;
 			}
