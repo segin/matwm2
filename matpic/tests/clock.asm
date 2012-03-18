@@ -12,6 +12,7 @@
 	; interrupt is here
 	btfsc pir1, tmr1if
 	goto tick ; is timer interrupt
+
 	retfie
 
 tick
@@ -65,14 +66,9 @@ start
 	call spi_send
 	call load
 
-	clrf 0x40
-	clrf 0x41
-	clrf 0x42
-	clrf 0x43
-	clrf 0x44
-	clrf 0x45
-	clrf 0x46
-	clrf 0x47
+	rep 8
+	clrf 0x40+@@
+	endrep
 
 	; as to show 8888 before starting
 	movlw 8
@@ -269,45 +265,22 @@ decsetdigit
 ; destroys register 0x22, 0x30-0x37 and 0x40-0x47
 setdigit
 	movwf 0x20
-	clrf 0x30
-	clrf 0x31
-	clrf 0x32
-	clrf 0x33
-	clrf 0x34
-	clrf 0x35
-	clrf 0x36
-	clrf 0x37
-	btfsc 0x20, 0
-	bsf 0x30, 0
-	btfsc 0x20, 1
-	bsf 0x31, 0
-	btfsc 0x20, 2
-	bsf 0x32, 0
-	btfsc 0x20, 3
-	bsf 0x33, 0
-	btfsc 0x20, 4
-	bsf 0x34, 0
-	btfsc 0x20, 5
-	bsf 0x35, 0
-	btfsc 0x20, 6
-	bsf 0x36, 0
-	btfsc 0x20, 7
-	bsf 0x37, 0
-
+	rep 8
+		clrf 0x30+@@
+	endrep
+	rep 8
+		btfsc 0x20, @@
+		bsf 0x30+@@, 0
+	endrep
 	movf 0x21, w
 roll
 	decfsz 0x21, f
 	goto rollon
 	goto combine
 rollon
-	rlf 0x30, f
-	rlf 0x31, f
-	rlf 0x32, f
-	rlf 0x33, f
-	rlf 0x34, f
-	rlf 0x35, f
-	rlf 0x36, f
-	rlf 0x37, f
+	rep 8
+		rlf 0x30+@@, f
+	endrep
 	goto roll
 combine
 	; shift 1 left to match digit
@@ -320,34 +293,12 @@ combine2
 	goto combine2
 	rrf 0x22, f
 	comf 0x22, f
-	movf 0x22, w
-	andwf 0x40, f
-	movf 0x30, w
-	iorwf 0x40, f
-	movf 0x22, w
-	andwf 0x41, f
-	movf 0x31, w
-	iorwf 0x41, f
-	movf 0x22, w
-	andwf 0x42, f
-	movf 0x32, w
-	iorwf 0x42, f
-	movf 0x22, w
-	andwf 0x43, f
-	movf 0x33, w
-	iorwf 0x43, f
-	movf 0x22, w
-	andwf 0x44, f
-	movf 0x34, w
-	iorwf 0x44, f
-	movf 0x22, w
-	andwf 0x45, f
-	movf 0x35, w
-	iorwf 0x45, f
-	movf 0x22, w
-	andwf 0x46, f
-	movf 0x36, w
-	iorwf 0x46, f
+	rep 7
+		movf 0x22, w
+		andwf 0x40+@@, f
+		movf 0x30+@@, w
+		iorwf 0x40+@@, f
+	endrep
 	movf 0x22, w
 ;	andwf 0x47, f ; why does this fuck with dot?
 	movf 0x37, w
@@ -355,46 +306,13 @@ combine2
 	return
 
 display
-	movlw 0x01
-	call spi_send
-	movf 0x40, w
-	call spi_send
-	call load
-	movlw 0x02
-	call spi_send
-	movf 0x41, w
-	call spi_send
-	call load
-	movlw 0x03
-	call spi_send
-	movf 0x42, w
-	call spi_send
-	call load
-	movlw 0x04
-	call spi_send
-	movf 0x43, w
-	call spi_send
-	call load
-	movlw 0x05
-	call spi_send
-	movf 0x44, w
-	call spi_send
-	call load
-	movlw 0x06
-	call spi_send
-	movf 0x45, w
-	call spi_send
-	call load
-	movlw 0x07
-	call spi_send
-	movf 0x46, w
-	call spi_send
-	call load
-	movlw 0x08
-	call spi_send
-	movf 0x47, w
-	call spi_send
-	call load
+	rep 8
+		movlw 0x01+@@
+		call spi_send
+		movf 0x40+@@, w
+		call spi_send
+		call load
+	endrep
 	return
 
 load
@@ -407,46 +325,19 @@ load
 ;  gpio 0 is data
 ;  gpio 1 is clock
 spi_send
-	movwf spidata
-	andlw 0x80
-	btfss status, z
-	bsf gpio, 0
-	call clock
-	movf spidata, w
-	andlw 0x40
-	btfss status, z
-	bsf gpio, 0
-	call clock
-	movf spidata, w
-	andlw 0x20
-	btfss status, z
-	bsf gpio, 0
-	call clock
-	movf spidata, w
-	andlw 0x10
-	btfss status, z
-	bsf gpio, 0
-	call clock
-	movf spidata, w
-	andlw 0x08
-	btfss status, z
-	bsf gpio, 0
-	call clock
-	movf spidata, w
-	andlw 0x04
-	btfss status, z
-	bsf gpio, 0
-	call clock
-	movf spidata, w
-	andlw 0x02
-	btfss status, z
-	bsf gpio, 0
-	call clock
-	movf spidata, w
-	andlw 0x01
-	btfss status, z
-	bsf gpio, 0
-	call clock
+	define _spibit 0x80
+	rep 8
+		if @@ == 0
+			movwf spidata
+		else
+			movf spidata, w
+		endif
+		andlw _spibit
+		btfss status, z
+		bsf gpio, 0
+		call clock
+		xdefine _spibit [_spibit >> 1]
+	endrep
 	return
 
 clock
