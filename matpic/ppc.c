@@ -5,6 +5,7 @@
 #include "misc.h" /* flerrexit(), readfile(), getstr(), file */
 #include "ppc.h"
 #include "io.h"
+#include "lineno.h"
 
 arr_t defines;
 arr_t macros;
@@ -338,7 +339,7 @@ void skipblock(char *start, char *end) {
 	int d = 0;
 	char *s = nextln;
 	run = 0;
-	++line;
+	lineno_inc();
 	while (1) {
 		if (!parseln(s))
 			flerrexit("end of file within '%s' block", start);
@@ -354,7 +355,7 @@ void skipblock(char *start, char *end) {
 			}
 		}
 		if (run == 0) {
-			++line;
+			lineno_inc();
 			s = nextln;
 		}
 	}
@@ -366,7 +367,7 @@ void macro(ioh_t *out, char *argp, int eval) {
 
 	if (ignore) {
 		skipblock("macro", "endm");
-		mfprintf(out, "%%line %ut", line);
+		mfprintf(out, "%%line %ut", lineno_get());
 		return;
 	}
 
@@ -399,7 +400,7 @@ void macro(ioh_t *out, char *argp, int eval) {
 
 	mac.val = nextln;
 	skipblock("macro", "endm");
-	mfprintf(out, "%%line %ut", line + 2);
+	mfprintf(out, "%%line %ut", lineno_get());
 
 	{ /* add macro */
 		macro_t *p;
@@ -439,7 +440,7 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 			for (--mac->argc; mac->argc >= 0; --mac->argc)
 				free(mac->argv[mac->argc]);
 			nextln = mac->nextln;
-			line = mac->line;
+			lineno_dropmacro();
 		} else flerrexit("endm without prior macro directive");
 		return 1;
 	}
@@ -501,8 +502,8 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 		if (--rep->count > 0) {
 			++rep->repno;
 			nextln = rep->start;
-			mfprintf(out, "%%line %ut", rep->line);
-			line = rep->line;
+			lineno_set(rep->line);
+			mfprintf(out, "%%line %ut", lineno_get());
 		} else --reps.count;
 		return 1;
 	}
@@ -516,7 +517,7 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 			rep.count = args[0];
 			rep.start = nextln;
 			rep.repno = 0;
-			rep.line = line;
+			rep.line = lineno_get();
 			arr_add(&reps, &rep);
 		} else skipblock("rep", "endrep");
 		return 1;
@@ -569,12 +570,11 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 			flerrexit("failed to include file '%s'", s);
 		ofile.name = file;
 		ofile.nextln = nextln;
-		ofile.line = line;
+		lineno_pushfile(file);
 		arr_add(&files, &ofile);
 		file = s;
 		mfprintf(out, "%%file \"%s\"", file);
 		nextln = data;
-		line = 0;
 		strip(data);
 		arr_add(&garbage, &data);
 		return 1;
@@ -616,7 +616,7 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 			if (am.argc < mac->argc)
 				flerrexit("too few arguments for macro");
 			am.nextln = nextln;
-			am.line = line;
+			lineno_pushmacro(mac->name, NULL, 0); /* TODO keep file and line */
 			am.macro = mac;
 			arr_add(&amacros, &am);
 			++mac->active;
@@ -646,7 +646,8 @@ void preprocess(ioh_t *out, char *in) {
 	arr_new(&reps, sizeof(rep_t));
 	arr_new(&amacros, sizeof(amacro_t));
 	arr_new(&garbage, sizeof(void *));
-	line = 1;
+	lineno_init();
+	lineno_pushfile(file);
 	level = ignore = 0;
 
 	strip(in);
@@ -668,7 +669,7 @@ void preprocess(ioh_t *out, char *in) {
 		if (!r && !ignore)
 			ppsub(out, in, 0);
 		mfprint(out, "\n");
-		++line;
+		lineno_inc();
 		in = nextln;
 	}
 	if (reps.count)
@@ -677,9 +678,9 @@ void preprocess(ioh_t *out, char *in) {
 		free(file);
 		file = f->name;
 		in = f->nextln;
-		line = f->line + 1;
+		lineno_dropfile();
 		mfprintf(out, "%%file \"%s\"\n", file);
-		mfprintf(out, "%%line %ut\n", line);
+		mfprintf(out, "%%line %ut\n", lineno_get());
 		goto proceed;
 	}
 
