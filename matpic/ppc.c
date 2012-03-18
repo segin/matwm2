@@ -350,6 +350,7 @@ void skipblock(char *start, char *end) {
 	int d = 0;
 	char *s = nextln;
 	run = 0;
+	++line;
 	while (1) {
 		if (!parseln(s))
 			flerrexit("end of file within '%s' block", start);
@@ -450,6 +451,7 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 			for (--mac->argc; mac->argc >= 0; --mac->argc)
 				free(mac->argv[mac->argc]);
 			nextln = mac->nextln;
+			line = mac->line;
 		} else flerrexit("endm without prior macro directive");
 		return 1;
 	}
@@ -586,7 +588,7 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 		file = s;
 		mfprintf(out, "%%file \"%s\"", file);
 		nextln = data;
-		line = 1;
+		line = 0;
 		strip(data);
 		return 1;
 	}
@@ -665,26 +667,24 @@ void preprocess(ioh_t *out, char *in) {
 	run = 0;
 	while (parseln(in)) {
 		r = 0;
+		run = 0;
 		if (ip != NULL) {
 			if ((r = ppfind(out, ip, argp))) {
 				if (lp != NULL) {
 					mfwrite(out, lp, idlen(lp));
 					mfwrite(out, ":", 1);
 				}
-				run = 0;
 				if (r == 2) /* endrep or endm wants us to die */
 					return;
 			}
 		}
 		if (prefix && !r)
 			flwarn("unhandled preprocessor directive");
-		if (run == 0 || prefix) {
-			if (!r && !ignore && !prefix)
-				ppsub(out, in, 0);
-			mfprint(out, "\n");
-			++line;
-			in = nextln;
-		}
+		if (!r && !ignore && !prefix)
+			ppsub(out, in, 0);
+		mfprint(out, "\n");
+		++line;
+		in = nextln;
 	}
 	if (reps.count)
 		flerrexit("expected 'endrep' before EOF");
@@ -693,7 +693,7 @@ void preprocess(ioh_t *out, char *in) {
 /*		free(data); */
 		file = f->name;
 		in = f->nextln;
-		line = f->line;
+		line = f->line + 1;
 		mfprintf(out, "%%file \"%s\"\n", file);
 		mfprintf(out, "%%line %ut\n", line + 1);
 		goto proceed;
