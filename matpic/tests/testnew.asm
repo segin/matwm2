@@ -2,6 +2,10 @@
 ; all 14bit PIC instructions are here (hopefully
 ; and (almost) all directives etc should also be tested here
 
+/* testing C style comments
+ * /* which can be nested (unlike in C) */
+ */
+
 ; testing various directives
 msg "Test message for message directive"
 
