@@ -21,7 +21,7 @@ tick
 	btfss status, z
 	call sec
 	retfie
-
+	sss
 start
 
 	; initialize hardware

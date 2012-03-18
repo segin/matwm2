@@ -229,8 +229,8 @@ void assemble(char *code) {
 			if (ip != NULL) {
 				if (insfind(ip, argp))
 					run = 0;
-				else if (run == 0)
-					flerrexit("no such instruction or directive");
+				else if (lp || pspc)
+					flerrexit("no such instruction or directive '%s'", strldup(ip, idlen(ip)));
 			}
 			if (run == 0 || prefix) {
 				if (count)
