@@ -680,7 +680,7 @@ void preprocess(ioh_t *out, char *in) {
 		in = f->nextln;
 		lineno_dropctx();
 		lineno_inc();
-		mfprintf(out, "%%endfile \"%s\"\n", file);
+		mfprintf(out, "%%endfile\n");
 		goto proceed;
 	}
 

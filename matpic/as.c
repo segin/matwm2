@@ -159,6 +159,9 @@ int insfind(char *ip, char *argp) {
 			flerrexit("invalid data after file directive");
 		return 1;
 	}
+	if (cmpid(ip, "endfile")) {
+		lineno_dropctx();
+	}
 	if (cmpid(ip, "line")) {
 		getargs(argp, args, 1, 1);
 		lineno_set(args[0] - 1);

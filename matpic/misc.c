@@ -26,7 +26,9 @@ void vaflwarn(char *pro, char *fmt, va_list ap) {
 void errexit(char *fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
-	vaflwarn("error: ", fmt, ap);
+	mfprint(mstderr, "error: ");
+	mvafprintf(mstderr, fmt, ap);
+	mfprint(mstderr, "\n");
 	va_end(ap);
 	exit(EXIT_FAILURE);
 }
