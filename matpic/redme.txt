@@ -8,7 +8,7 @@ synopsis
 	matpic [-d|p|P|t] [<infile> [<outfile>]]
 options
 	-d	disassemble
-  	-p	only preprocess
+	-p	only preprocess
 	-P	don't preprocess
 	-t	after assembling instead of giving ihex output, disassemble again
 when no files specified input file is read from stdin, output written to stdout
