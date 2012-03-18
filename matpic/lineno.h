@@ -1,6 +1,8 @@
 #ifndef __LINENO_H__
 #define __LINENO_H__
 
+#include "mem.h"
+
 typedef struct {
 	unsigned int line;
 	char *file;
@@ -8,6 +10,8 @@ typedef struct {
 	int mline;
 	char *mfile, *mname;
 } lineno_t;
+
+extern arr_t lineno;
 
 extern void lineno_init(void);
 extern void lineno_end(void);

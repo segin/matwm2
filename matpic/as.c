@@ -134,7 +134,7 @@ int insfind(char *ip, char *argp) {
 	oc_t *oc = arch->ocs;
 	ins_t ins;
 
-	ins.line = lineno_getctx();
+	ins.line = lineno_getctx(); /* TODO this is dumb, change it */
 	if (cmpid(ip, "org")) {
 		getargs(argp, args, 1, 1);
 		ins.type = IT_ORG;
@@ -160,6 +160,8 @@ int insfind(char *ip, char *argp) {
 		return 1;
 	}
 	if (cmpid(ip, "endfile")) {
+		if (lineno.count == 1)
+			flerrexit("context stack underrun");
 		lineno_dropctx();
 	}
 	if (cmpid(ip, "line")) {
