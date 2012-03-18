@@ -42,10 +42,11 @@ int parseln(char *in) {
 		lp = NULL;
 		ip = getid(&in);
 		argp = NULL;
-		if (*in == ':') {
+		if (!prefix && *in == ':') {
 			lp = ip;
 			++in;
 			skipsp(&in);
+			prefix = getprefix(&in);
 			ip = getid(&in);
 		}
 		if (ip == NULL) {

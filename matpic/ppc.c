@@ -24,11 +24,11 @@ void strcheck(char c) {
 				++esc;
 			return;
 		case '"':
-			if (!(str && esc) || str & 2)
+			if (!(str & 1 && esc))
 				str ^= 1;
 			break;
 		case '\'':
-			if (!(str && esc) || str & 1)
+			if (!(str & 2 && esc))
 				str ^= 2;
 			break;
 		case '\n':
@@ -152,10 +152,8 @@ void _ppsub(ioh_t *out, char *in, amacro_t *am, char end) {
 	esc = str = 0;
 	while (1) {
 		s = in;
-		while (!(ctype(*in) & (CT_NL | CT_NUL | CT_LET | CT_SEP)) && *in != '[' && *in != '@' && *in != end) {
-			if (esc)
-				esc = 0;
-			else strcheck(*in);
+		while (!(ctype(*in) & (CT_NL | CT_NUL)) && (str || (!(ctype(*in) & (CT_LET | CT_SEP)) && *in != '[' && *in != '@' && *in != end))) {
+			strcheck(*in);
 			++in;
 		}
 		mfwrite(out, s, in - s);
