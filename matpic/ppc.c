@@ -12,6 +12,7 @@ arr_t files;
 arr_t reps;
 arr_t amacros;
 arr_t adef;
+arr_t garbage;
 
 int level, ignore; /* depth & state of if/ifdef/ifndef directives */
 int str, esc;
@@ -589,6 +590,7 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 		nextln = data;
 		line = 0;
 		strip(data);
+		arr_add(&garbage, &data);
 		return 1;
 	}
 	{
@@ -658,6 +660,7 @@ void preprocess(ioh_t *out, char *in) {
 	arr_new(&files, sizeof(file_t));
 	arr_new(&reps, sizeof(rep_t));
 	arr_new(&amacros, sizeof(amacro_t));
+	arr_new(&garbage, sizeof(void *));
 	line = 1;
 	level = ignore = 0;
 
@@ -687,7 +690,6 @@ void preprocess(ioh_t *out, char *in) {
 		flerrexit("expected 'endrep' before EOF");
 	if ((f = arr_pop(files, file_t)) != NULL) {
 		free(file);
-/*		free(data); */
 		file = f->name;
 		in = f->nextln;
 		line = f->line + 1;
@@ -702,6 +704,9 @@ void preprocess(ioh_t *out, char *in) {
 		if (def->free)
 			free(def->val);
 	}
+	for (--garbage.count; garbage.count >= 0; --garbage.count)
+		free(*((void **) garbage.data + garbage.count));
+	arr_free(&garbage);
 	arr_free(&amacros);
 	arr_free(&reps);
 	arr_free(&files);
