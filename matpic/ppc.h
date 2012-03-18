@@ -5,10 +5,9 @@
 #include "io.h"
 
 typedef struct {
-	char *name, *val, *nptr;
+	char *name, *val;
 	int active, argc;
 	char *argv[ARG_MAX];
-	int free;
 } define_t;
 
 typedef struct {

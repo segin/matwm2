@@ -286,21 +286,17 @@ void define(char *argp, int eval) {
 		flerrexit("too few arguments for define directive");
 	if (*argp == '<') {
 		++argp;
-		def.nptr = s = sppsub(argp, '>');
-		while (!(ctype(*argp) & (CT_NL | CT_NUL)) && *argp != '>')
+		s = sppsub(argp, '>');
+		arr_add(&garbage, &s);
+		while (*argp != '>') /* sppsub() shoulda made sure it is there */
 			++argp;
-		if (*argp != '>')
-			flerrexit("missing '>'");
 		++argp;
 		skipsp(&s);
 		def.name = getid(&s);
 		skipsp(&s);
 		if (def.name == NULL || *s)
 			flerrexit("syntax error on define directive");
-	} else {
-		def.name = getid(&argp);
-		def.nptr = NULL;
-	}
+	} else def.name = getid(&argp);
 	def.argc = 0;
 	if  (*argp == '(') {
 		++argp;
@@ -330,18 +326,11 @@ void define(char *argp, int eval) {
 		flerrexit("syntax error on define directive");
 	if (eval) {
 		def.val = sppsub(argp, 0);
-		def.free = 1;
-	} else {
-		def.val = argp;
-		def.free = 0;
-	}
+		arr_add(&garbage, &def.val);
+	} else def.val = argp;
 	def.active = 0;
-	if ((p = deffind(def.name)) != NULL) {
-		if (p->free)
-			free(p->val);
-		free(p->nptr);
+	if ((p = deffind(def.name)) != NULL)
 		memcpy(p, &def, sizeof(define_t));
-	}
 	else arr_add(&defines, &def);
 }
 
@@ -545,9 +534,6 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 		s = getida(argp);
 		def = deffind(s);
 		if (def != NULL) {
-			if (def->free)
-				free(def->val);
-			free(def->nptr);
 			--defines.count;
 			memcpy(def, ((define_t *) defines.data + defines.count), sizeof(define_t));
 		}
@@ -652,7 +638,6 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 void preprocess(ioh_t *out, char *in) {
 	int r;
 	file_t *f;
-	define_t *def;
 	file = infile;
 
 	arr_new(&defines, sizeof(define_t));
@@ -698,12 +683,6 @@ void preprocess(ioh_t *out, char *in) {
 		goto proceed;
 	}
 
-	for (--defines.count; defines.count >= 0; --defines.count) {
-		def = (define_t *) defines.data + defines.count;
-		free(def->nptr);
-		if (def->free)
-			free(def->val);
-	}
 	for (--garbage.count; garbage.count >= 0; --garbage.count)
 		free(*((void **) garbage.data + garbage.count));
 	arr_free(&garbage);
