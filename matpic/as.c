@@ -232,6 +232,8 @@ void assemble(char *code) {
 			if (run == 0 || prefix) {
 				lineno_inc();
 				code = nextln;
+				if (prefix)
+					run = 0;
 			}
 		}
 		ins.type = IT_END;
