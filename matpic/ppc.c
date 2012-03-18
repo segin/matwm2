@@ -2,7 +2,7 @@
 #include "as.h" /* parseln() */
 #include "mem.h"
 #include "str.h" /* skipsp(), ctype(), etc */
-#include "misc.h" /* flerrexit(), readfile(), getstr(), file */
+#include "misc.h" /* flerrexit(), readfile(), getstr(), file, infile */
 #include "ppc.h"
 #include "io.h"
 #include "lineno.h"
@@ -679,11 +679,13 @@ void preprocess(ioh_t *out, char *in) {
 		file = f->name;
 		in = f->nextln;
 		lineno_dropfile();
+		lineno_inc();
 		mfprintf(out, "%%file \"%s\"\n", file);
 		mfprintf(out, "%%line %ut\n", lineno_get());
 		goto proceed;
 	}
 
+	lineno_end();
 	for (--garbage.count; garbage.count >= 0; --garbage.count)
 		free(*((void **) garbage.data + garbage.count));
 	arr_free(&garbage);

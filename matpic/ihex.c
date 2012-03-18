@@ -1,11 +1,12 @@
 #include "mem.h"
 #include "as.h" /* inss */
-#include "misc.h" /* errexit(), flwarn(), infile, line */
+#include "misc.h" /* errexit(), flwarn(), infile */
 #include "arch.h" /* arch */
 /* below includes = only for ihex input */
 #include "str.h" /* skipsp(), skipnl(), ctype, hexlookup[], hexnib[] */
 #include "dis.h" /* dsym, dsym_t */
 #include "io.h"
+#include "lineno.h"
 
 #define IHLL 16
 
@@ -40,7 +41,6 @@ void ihex_write(ioh_t *out) {
 
 	address = saddr = 0;
 	crc = 0;
-	line = 1;
 	while (ins->type != IT_END) {
 		switch (ins->type) {
 			case IT_ORG:
@@ -83,13 +83,15 @@ void ihex_read(char *in) {
 
 	file = infile;
 	arr_new(&dsym, sizeof(dsym_t));
+	lineno_init();
+	lineno_pushfile(file);
 	dstartline:
 	crc = 0;
-	--line;
-	do {
+	skipsp(&in);
+	while (skipnl(&in)) {
 		skipsp(&in);
-		++line;
-	} while (skipnl(&in));
+		lineno_inc();
+	}
 	if (*in == 0) {
 		flwarn("no end record");
 		return;
@@ -143,7 +145,7 @@ void ihex_read(char *in) {
 		flwarn("exess characters after ihex data");
 		goto dnextline;
 	}
-	++line;
+	lineno_inc();
 	goto dstartline;
 
 	dinval:
@@ -151,6 +153,6 @@ void ihex_read(char *in) {
 	dnextline:
 	while(!(ctype(*(in++)) & (CT_NL | CT_NUL)));
 	skipnl(&in);
-	++line;
+	lineno_inc();
 	goto dstartline;
 }

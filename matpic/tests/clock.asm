@@ -1,11 +1,16 @@
+	msg "1"
 	include "include/p12f683.inc"
+	msg "3"
 	include "tests/enum.inc"
+	msg "5"
 
 	enum 0x60, spidata, ddata, ddata2, ddata3
+	msg "8"
+	msg "9"
 
 	org 0
 	goto start
-
+	msg "13"
 	org 4 ; interrupt is here
 	bcf intcon, intf
 	btfsc pir1, tmr1if
