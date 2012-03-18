@@ -84,7 +84,7 @@ void ihex_read(char *in) {
 	file = infile;
 	arr_new(&dsym, sizeof(dsym_t));
 	lineno_init();
-	lineno_pushfile(file);
+	lineno_pushfile(file, 1);
 	dstartline:
 	crc = 0;
 	skipsp(&in);

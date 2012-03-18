@@ -9,8 +9,9 @@
 #include "mem.h"
 #include "arch.h"
 #include "misc.h" /* countargs(), getargs(), getstr(), file, infile, address */
+#include "lineno.h"
 
-int llbl, count;
+int llbl;
 unsigned int addrl;
 
 arr_t inss = { NULL, 0, 0, 0 }; /* these need to be 0 so cleanup() before assemble won't fail */
@@ -123,6 +124,7 @@ void addlabel(char *lp) {
 	}
 	arr_add(&labels, &label);
 	ins.type = IT_LBL;
+	ins.line = lineno_getctx();
 	ins.d.lbl.lbl = labels.count - 1;
 	arr_add(&inss, &ins);
 }
@@ -132,7 +134,7 @@ int insfind(char *ip, char *argp) {
 	oc_t *oc = arch->ocs;
 	ins_t ins;
 
-	ins.line = line;
+	ins.line = lineno_getctx();
 	if (cmpid(ip, "org")) {
 		getargs(argp, args, 1, 1);
 		ins.type = IT_ORG;
@@ -144,8 +146,6 @@ int insfind(char *ip, char *argp) {
 	if (cmpid(ip, "file")) {
 		if (argp == NULL)
 			flerrexit("'file' directive needs an argument");
-		count = 1;
-		line = 0; /* will be incremented soon enough */
 		ins.type = IT_FIL;
 		ins.d.file.file = argp;
 		arr_add(&inss, &ins);
@@ -154,20 +154,14 @@ int insfind(char *ip, char *argp) {
 		file = getstr(&argp, 0);
 		if (file == NULL)
 			errexit("syntax error on file directive");
+		lineno_pushfile(file, 0);
 		if (!(ctype(*argp) & (CT_NUL | CT_NL)))
 			flerrexit("invalid data after file directive");
 		return 1;
 	}
 	if (cmpid(ip, "line")) {
 		getargs(argp, args, 1, 1);
-		count = 1;
-		line = args[0] - 1;
-		return 1;
-	}
-	if (cmpid(ip, "nocount")) {
-		if (argp != NULL)
-			flerrexit("too many arguments for nocount directive");
-		count = 0;
+		lineno_set(args[0] - 1);
 		return 1;
 	}
 	if (prefix)
@@ -208,19 +202,19 @@ int insfind(char *ip, char *argp) {
 void assemble(char *code) {
 	arr_new(&inss, sizeof(ins_t));
 	arr_new(&labels, sizeof(label_t));
+	lineno_init();
+	lineno_pushfile(infile, 1);
 
 	{ /* first pass */
 		ins_t ins;
 		int r;
 
 		file = infile;
-		line = 1;
 		address = 0;
 		llbl = -1;
-		count = 1;
 		run = 0;
 		while ((r = parseln(code))) {
-			ins.line = line;
+			ins.line = lineno_getctx();
 			addrl = address; /* case there is a label we have the address at start of line */
 			if (r == 2)
 				flerrexit("syntax error");
@@ -233,8 +227,7 @@ void assemble(char *code) {
 					flerrexit("no such instruction or directive '%s'", strldup(ip, idlen(ip)));
 			}
 			if (run == 0 || prefix) {
-				if (count)
-					++line;
+				lineno_inc();
 				code = nextln;
 			}
 		}
@@ -250,7 +243,7 @@ void assemble(char *code) {
 		address = 0;
 
 		while (ins->type != IT_END) {
-			line = ins->line;
+			lineno_setctx(ins->line);
 			switch (ins->type) {
 				case IT_INS:
 					c = getargs(ins->d.ins.args, args, 0, ARG_MAX);
@@ -286,4 +279,5 @@ void assemble(char *code) {
 	llbl = -1; /* important */
 	if (file != infile)
 		free(file);
+	lineno_end();
 }

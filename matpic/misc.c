@@ -9,7 +9,7 @@
 char *file = NULL;
 char *infile = "<stdin>";
 
-unsigned int address, line;
+unsigned int address;
 
 void cleanup(void) {
 	arr_free(&inss);

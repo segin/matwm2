@@ -2,6 +2,7 @@
 #define __AS_H__
 
 #include "mem.h"
+#include "lineno.h"
 
 typedef struct label_t label_t;
 
@@ -13,7 +14,8 @@ struct label_t {
 };
 
 typedef struct {
-	unsigned int type, line;
+	unsigned int type;
+	lineno_t *line;
 	union {
 		struct ins {
 			char *args;

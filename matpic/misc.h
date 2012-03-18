@@ -3,7 +3,7 @@
 
 extern char *file;
 extern char *infile;
-extern unsigned int address, line;
+extern unsigned int address;
 
 extern void cleanup(void);
 extern void reset(void);

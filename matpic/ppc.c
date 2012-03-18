@@ -440,7 +440,7 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 			for (--mac->argc; mac->argc >= 0; --mac->argc)
 				free(mac->argv[mac->argc]);
 			nextln = mac->nextln;
-			lineno_dropmacro();
+			lineno_dropctx();
 		} else flerrexit("endm without prior macro directive");
 		return 1;
 	}
@@ -570,7 +570,7 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 			flerrexit("failed to include file '%s'", s);
 		ofile.name = file;
 		ofile.nextln = nextln;
-		lineno_pushfile(file);
+		lineno_pushfile(file, 1);
 		arr_add(&files, &ofile);
 		file = s;
 		mfprintf(out, "%%file \"%s\"", file);
@@ -647,7 +647,7 @@ void preprocess(ioh_t *out, char *in) {
 	arr_new(&amacros, sizeof(amacro_t));
 	arr_new(&garbage, sizeof(void *));
 	lineno_init();
-	lineno_pushfile(file);
+	lineno_pushfile(file, 1);
 	level = ignore = 0;
 
 	strip(in);
@@ -678,7 +678,7 @@ void preprocess(ioh_t *out, char *in) {
 		free(file);
 		file = f->name;
 		in = f->nextln;
-		lineno_dropfile();
+		lineno_dropctx();
 		lineno_inc();
 		mfprintf(out, "%%endfile \"%s\"\n", file);
 		goto proceed;
