@@ -668,17 +668,15 @@ void preprocess(ioh_t *out, char *in) {
 		run = 0;
 		if (ip != NULL) {
 			if ((r = ppfind(out, ip, argp))) {
-				if (lp != NULL) {
-					mfwrite(out, lp, idlen(lp));
-					mfwrite(out, ":", 1);
-				}
+				if (lp != NULL)
+					flerrexit("label on same line as preprocessor directive");
 				if (r == 2) /* endrep or endm wants us to die */
 					return;
 			}
 		}
 		if (prefix && !r)
 			flwarn("unhandled preprocessor directive");
-		if (!r && !ignore && !prefix)
+		if (!r && !ignore)
 			ppsub(out, in, 0);
 		mfprint(out, "\n");
 		++line;
