@@ -23,7 +23,7 @@ extern int mfwrite(ioh_t *h, char *data, int len);
 extern int mfflush(ioh_t *h);
 extern void mfclose(ioh_t *h);
 extern int mfprint(ioh_t *h, char *data);
-extern int mfprintsnum(ioh_t *h, unsigned int n, int b, int p);
+extern int mfprintsnum(ioh_t *h, int n, int b, int p);
 extern int mfprintnum(ioh_t *h, unsigned int n, int b, int p);
 extern int mfprintf(ioh_t *h, char *fmt, ...);
 extern int mvafprintf(ioh_t *h, char *fmt, va_list l);
