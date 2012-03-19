@@ -115,57 +115,60 @@ unsigned int getval(char **src) {
 		if (**src != ')')
 			flerrexit("missing ')'");
 		++*src;
-	} else if(!getnum(src, &val)) {
-		if (**src == '$') {
-			val = address;
-			++*src;
-		} else {
-			int i, j, r, l = -1, local = 0;
-			label_t *label = (label_t *) labels.data;
-			char *id;
-			id = getid(src);
-			if (id == NULL)
-				goto gotval;
-
+		goto gotval;
+	}
+	if(getnum(src, &val))
+		goto gotval;
+	if (**src == '$') {
+		val = address;
+		++*src;
+		goto gotval;
+	}
+	{
+		int i, j, r, l = -1, local = 0;
+		label_t *label = (label_t *) labels.data;
+		char *id;
+		id = getid(src);
+		if (id == NULL)
+			flerrexit("constant expected");
 			/* get label or fail */
-			while (*id == '.')
-				++id, ++local;
-			for (i = 0; i < labels.count; ++i) {
-				if (cmpid(id, label[i].name) && label[i].local == local) {
+		while (*id == '.')
+			++id, ++local;
+		for (i = 0; i < labels.count; ++i) {
+			if (cmpid(id, label[i].name) && label[i].local == local) {
+				for (j = llbl; j >= 0; --j)
+					if (label[j].local < label[i].local)
+						break;
+				if (label[i].parent != j)
+					continue;
+			} else continue;
+			val = label[i].address;
+			goto gotval;
+		}
+		for (i = 0; i < labels.count; ++i) {
+			if (l != -1 && label[i].local < l)
+				break;
+			if ((r = cmplid(&id, label[i].name))) {
+				if (l == -1) {
+					if (label[i].local != local)
+						continue;
 					for (j = llbl; j >= 0; --j)
 						if (label[j].local < label[i].local)
 							break;
 					if (label[i].parent != j)
 						continue;
-				} else continue;
+				}
+				if (r & 2) {
+					while (*id == '.')
+						++id, ++local;
+					l = label[i].local;
+					continue;
+				}
 				val = label[i].address;
 				goto gotval;
 			}
-			for (i = 0; i < labels.count; ++i) {
-				if (l != -1 && label[i].local < l)
-					break;
-				if ((r = cmplid(&id, label[i].name))) {
-					if (l == -1) {
-						if (label[i].local != local)
-							continue;
-						for (j = llbl; j >= 0; --j)
-							if (label[j].local < label[i].local)
-								break;
-						if (label[i].parent != j)
-							continue;
-					}
-					if (r & 2) {
-						while (*id == '.')
-							++id, ++local;
-						l = label[i].local;
-						continue;
-					}
-					val = label[i].address;
-					goto gotval;
-				}
-			}
-			flerrexit("unknown identifier '%s'", strldup(id, idlen(id)));
 		}
+		flerrexit("unknown identifier '%s'", strldup(id, idlen(id)));
 	}
 	gotval:
 	while (ns != ne--) {
@@ -210,9 +213,13 @@ unsigned int calc(int op, unsigned int lval, unsigned int rval) {
 			lval *= rval;
 			break;
 		case OP_DIV:
+			if (!rval)
+				flerrexit("division by zero");			
 			lval /= rval;
 			break;
 		case OP_MOD:
+			if (!rval)
+				flerrexit("division by zero");
 			lval %= rval;
 			break;
 		case OP_AND:

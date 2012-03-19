@@ -179,6 +179,8 @@ void _ppsub(ioh_t *out, char *in, amacro_t *am, char end) {
 				++in;
 				if (*in == '@') {
 					++in;
+					if (reps.count == 0)
+						flerrexit("'@@' outside of rep block");
 					mfprintf(out, "%ut", arr_top(reps, rep_t)->repno);
 					continue;
 				}
@@ -629,7 +631,7 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 			++mac->active;
 			nextln = mac->val;
 			lineno_pushmacro(mac->name, mac->file, mac->line); /* TODO keep file and line */
-			mfprintf(out, "%%expands \"%s\"", mac->name);
+			mfprintf(out, "%%expands %s, \"%s\", %ut", mac->name, mac->file, mac->line);
 			return 1;
 		}
 	}

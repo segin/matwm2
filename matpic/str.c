@@ -234,6 +234,7 @@ int getnum(char **src, unsigned int *ret) {
 				break;
 			default:
 				base = 8;
+				--*src; /* so our 0 is counted */
 				goto oct0;
 		}
 		++*src;

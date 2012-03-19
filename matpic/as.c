@@ -4,6 +4,7 @@
 
 #include <stdlib.h> /* NULL */
 #include <string.h> /* memcpy() */
+#include <stdarg.h>
 #include "as.h"
 #include "str.h"
 #include "mem.h"
@@ -31,6 +32,25 @@ int getprefix(char **src) {
 		skipsp(src);
 	}
 	return n;
+}
+
+int parseargs(char *in, char *mode, ...) {
+	int *i;
+	char **s;
+	va_list ap;
+	va_start(ap, mode);
+	while (*mode) {
+		switch (*mode) {
+			case 'n':
+				i = va_arg(ap, int *);
+				*i = numarg(&in);
+				
+				break;
+			case 's':
+				s = va_arg(ap, char **);
+		}
+	}
+	va_end(ap);
 }
 
 int parseln(char *in) {

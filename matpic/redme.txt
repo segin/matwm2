@@ -31,8 +31,13 @@ you can call a local label out of its scope like label.locallabel
 following directives exist:
 	org <origin>: set origin
 	data <value>, <value>: put stray words into bytecode
+also the following which are only meant for the preprocessor to tell the assembler what's going on
 	file "<filename>": tell assembler what file it is working on (also sets next line # to 1)
+	endfile: tell the assembler we are working on the previous file again
 	line <line #>: tell assembler what the next line is numbered
+	expands <id>, "<filename>", <line>: tell the macro following code is from a specific macro
+	endexp: tell the assembler we exited a macro
+
 also there is preprocessor directives (these do not allow a label on the same line):
 	define, if, ifdef, ifndef, else, endif: behave mostly like C
 		with exception of the use of arguments in macros, in a case like
@@ -49,7 +54,7 @@ special case of preprocessor is multiline macro, synopsis:
 they are ended with:
 	endm
 nesting of multiline macros r supported
-in multiline macros '@0' or just '@' denotes the number of arguments excluding named ones
+in multiline macros '@0' denotes the number of arguments excluding named ones
 @1 @2 etc are the actual arguments
 expressions can be used to select the argument if you place it in bracelets like '@(<expression>)'
 also those expressions can be preprocessed if you use [] bracelets
