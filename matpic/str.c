@@ -191,7 +191,7 @@ int idlen(char *src) {
 
 int getnum(char **src, unsigned int *ret) {
 	unsigned int c, r = 0;
-	int n = 0, base = 10, sfx = 0;
+	int n = 0, base = 10, sfx = 0, pfx = 0;
 	char *s;
 
 	if (**src == '$') {
@@ -203,6 +203,7 @@ int getnum(char **src, unsigned int *ret) {
 			++*src;
 		}
 	} else if (**src == '0') {
+		pfx = 1;
 		switch(*++*src) {
 			case 'x':
 			case 'X':
@@ -234,7 +235,6 @@ int getnum(char **src, unsigned int *ret) {
 				break;
 			default:
 				base = 8;
-				--*src; /* so our 0 is counted */
 				goto oct0;
 		}
 		++*src;
@@ -298,16 +298,18 @@ int getnum(char **src, unsigned int *ret) {
 		++s, ++n;
 	}
 	endnum:
-	if (n) {
+	if (n || pfx) {
 		*src = s;
 		if (sfx)
 			++*src;
+		if (!n)
+			++n;
 	}
 	*ret = r;
 	return n;
 }
 
-char *strldup(char *s, int len) {
+char *mstrldup(char *s, int len) {
 	char *ret = malloc(len + 1);
 	if (ret != NULL) {
 		strncpy(ret, s, len);

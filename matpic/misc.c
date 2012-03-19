@@ -168,7 +168,7 @@ unsigned int getval(char **src) {
 				goto gotval;
 			}
 		}
-		flerrexit("unknown identifier '%s'", strldup(id, idlen(id)));
+		flerrexit("unknown identifier '%s'", mstrldup(id, idlen(id)));
 	}
 	gotval:
 	while (ns != ne--) {

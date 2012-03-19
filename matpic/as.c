@@ -34,22 +34,49 @@ int getprefix(char **src) {
 	return n;
 }
 
-int parseargs(char *in, char *mode, ...) {
+void parseargs(char *in, char *mode, ...) {
 	int *i;
 	char **s;
 	va_list ap;
 	va_start(ap, mode);
-	while (*mode) {
+	while (1) {
 		switch (*mode) {
 			case 'n':
 				i = va_arg(ap, int *);
 				*i = numarg(&in);
-				
 				break;
 			case 's':
 				s = va_arg(ap, char **);
+				*s = getstr(&in, 0);
+				if (*s == NULL)
+					flerrexit("your argument is invalid");
+				break;
+			case 'i':
+				s = va_arg(ap, char **);
+				*s = getid(&in);
+				if (*s == NULL)
+					flerrexit("your argument is invalid");
+				skipsp(&in);
+				break;
 		}
+		if (mode[1] == '+') {
+			if (*in == ',') {
+				++in;
+				skipsp(&in);
+				continue;
+			} else break;
+		}
+		if (*++mode) {
+			if (*in != ',')
+				flerrexit("too few arguments");
+			++in;
+			skipsp(&in);
+		} else break;
 	}
+	if (*in == ',')
+		flerrexit("too many arguments");
+	if (!(ctype(*in) & (CT_NL | CT_NUL)))
+		flerrexit("your argument is invalid");
 	va_end(ap);
 }
 
@@ -140,7 +167,7 @@ void addlabel(char *lp) {
 	for (i = 0; i < labels.count; ++i) { /* check if already exists */
 		li = arr_item(labels, label_t, i);
 		if (cmpid(li->name, label.name) && label.parent == li->parent && label.local == li->local)
-			flerrexit("duplicate label '%s'", strldup(li->name, idlen(li->name)));
+			flerrexit("duplicate label '%s'", mstrldup(li->name, idlen(li->name)));
 	}
 	arr_add(&labels, &label);
 	ins.type = IT_LBL;
@@ -179,15 +206,11 @@ int insfind(char *ip, char *argp) {
 		return 1;
 	}
 	if (cmpid(ip, "expands")) {
-		char *name;
-		if (argp == NULL)
-			flerrexit("'expands' directive needs an argument");
-		name = getstr(&argp, 0);
-		if (name == NULL)
-			errexit("syntax error on expands directive");
-		if (!(ctype(*argp) & (CT_NUL | CT_NL)))
-			flerrexit("invalid data after expands directive");
-		lineno_pushmacro(name, NULL, 0);
+		char *name, *file;
+		unsigned int line;
+		parseargs(argp, "isn", &name, &file, &line);
+		name = mstrldup(name, idlen(name));
+		lineno_pushmacro(name, file, line);
 		ins.type = IT_CTX;
 		ins.d.ctx = lineno_getctx();
 		arr_add(&inss, &ins);
@@ -262,7 +285,7 @@ void assemble(char *code) {
 				if (insfind(ip, argp))
 					run = 0;
 				else if (lp || pspc)
-					flerrexit("no such instruction or directive '%s'", strldup(ip, idlen(ip)));
+					flerrexit("no such instruction or directive '%s'", mstrldup(ip, idlen(ip)));
 			}
 			if (run == 0 || prefix) {
 				lineno_inc();
@@ -278,6 +301,8 @@ void assemble(char *code) {
 			arr_add(&inss, &ins);
 		}
 	}
+	if (lineno.count != 1)
+		errexit("context stack unbalanced");
 	{ /* second pass */
 		ins_t *ins = (ins_t *) inss.data;
 		int i, c, args[ARG_MAX];

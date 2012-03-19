@@ -236,9 +236,9 @@ void _ppsub(ioh_t *out, char *in, amacro_t *am, char end) {
 								++in;
 						else while (!(ctype(*in) & (CT_NL | CT_NUL)) && *in != ')')
 								++in;
-						state.argv[state.argc] = strldup(s, in - s);
+						state.argv[state.argc] = mstrldup(s, in - s);
 						if (state.argv[state.argc] == NULL)
-							errexit("strldup() failure");
+							errexit("mstrldup() failure");
 						++state.argc;
 						if (state.argc == ARG_MAX)
 							flerrexit("too many arguments for macro");
@@ -380,7 +380,7 @@ void macro(ioh_t *out, char *argp, int eval) {
 	mac.name = getid(&argp);
 	if (mac.name == NULL)
 		flerrexit("syntax error on macro directive");
-	mac.name = strldup(mac.name, idlen(mac.name));
+	mac.name = mstrldup(mac.name, idlen(mac.name));
 	arr_add(&garbage, &mac.name);
 	mac.argc = 0;
 	mac.file = lineno_getrealfile();
@@ -608,9 +608,9 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 					e = argp;
 					while (ctype(*(e - 1)) & CT_SPC)
 						--e;
-					am.argv[am.argc] = strldup(s, e - s);
+					am.argv[am.argc] = mstrldup(s, e - s);
 					if (am.argv[am.argc] == NULL)
-						errexit("strldup() failure");
+						errexit("mstrldup() failure");
 					++am.argc;
 					if (ctype(*argp) & (CT_NL | CT_NUL))
 						break;
