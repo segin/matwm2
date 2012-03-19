@@ -71,7 +71,7 @@ int mfprint(ioh_t *h, char *data) {
 	return mfwrite(h, data, strlen(data));
 }
 
-int mfprintsnum(ioh_t *h, int n, int b, int p) {
+int mfprintsnum(ioh_t *h, unsigned int n, int b, int p) {
 	char rev[24]; /* best stay above 22 */
 	int pos = sizeof(rev);
 	if (n < 0) {

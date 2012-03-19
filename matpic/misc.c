@@ -20,6 +20,7 @@ void vaflwarn(char *pro, char *fmt, va_list ap) {
 	mfprintf(mstderr, pro, lineno_getfile(), lineno_get());
 	mvafprintf(mstderr, fmt, ap);
 	mfprint(mstderr, "\n");
+	lineno_printorigin(mstderr);
 }
 
 void errexit(char *fmt, ...) {
@@ -35,7 +36,7 @@ void errexit(char *fmt, ...) {
 void flerrexit(char *fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
-	vaflwarn("%s: line %d: error: ", fmt, ap);
+	vaflwarn("%s: line %u: error: ", fmt, ap);
 	va_end(ap);
 	exit(EXIT_FAILURE);
 }
@@ -43,12 +44,12 @@ void flerrexit(char *fmt, ...) {
 void flwarn(char *fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
-	vaflwarn("%s: line %d: warning: ", fmt, ap);
+	vaflwarn("%s: line %u: warning: ", fmt, ap);
 	va_end(ap);
 }
 
 void flmsg(char *msg) {
-	mfprintf(mstderr, "%s: line %d: message: %s\n", lineno_getfile(), lineno_get(), msg);
+	mfprintf(mstderr, "%s: line %u: message: %s\n", lineno_getfile(), lineno_get(), msg);
 }
 
 char *readfile(char *path) {

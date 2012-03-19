@@ -2,6 +2,7 @@
 #include "lineno.h"
 #include "mem.h"
 #include "misc.h" /* errexit() */
+#include "io.h"
 
 arr_t lineno;
 arr_t garbage;
@@ -68,6 +69,12 @@ char *lineno_getfile(void) {
 	return arr_top(lineno, lineno_t)->file;
 }
 
+char *lineno_getrealfile(void) {
+	if (arr_top(lineno, lineno_t)->mline)
+		return arr_top(lineno, lineno_t)->mfile;
+	return arr_top(lineno, lineno_t)->file;
+}
+
 lineno_t *lineno_getctx(void) {
 	lineno_t *ln = malloc(sizeof(lineno_t));
 	if (ln == NULL)
@@ -79,4 +86,12 @@ lineno_t *lineno_getctx(void) {
 
 void lineno_pushctx(lineno_t *ctx) {
 	arr_add(&lineno, ctx);
+}
+
+void lineno_printorigin(ioh_t *out) {
+	lineno_t *ln = arr_top(lineno, lineno_t);
+	if (ln->mline) {
+		mfprintf(out, "initiated from macro '%s' file '%s' line %u\n",
+		         ln->mname, ln->mfile, ln->mline);
+	}
 }

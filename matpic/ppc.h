@@ -14,6 +14,8 @@ typedef struct {
 	char *name, *val;
 	int active, argc;
 	char *argv[ARG_MAX];
+	char *file;
+	unsigned int line;
 } macro_t;
 
 typedef struct {

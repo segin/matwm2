@@ -2,6 +2,7 @@
 #define __LINENO_H__
 
 #include "mem.h"
+#include "io.h"
 
 typedef struct {
 	unsigned int line;
@@ -23,7 +24,9 @@ extern unsigned int lineno_getreal(void);
 extern void lineno_pushmacro(char *name, char *file, unsigned int n);
 extern void lineno_pushfile(char *file, unsigned int n, int free);
 extern char *lineno_getfile(void);
+extern char *lineno_getrealfile(void);
 extern lineno_t *lineno_getctx(void);
 extern void lineno_pushctx(lineno_t *ctx);
+extern void lineno_printorigin(ioh_t *out);
 
 #endif /* __LINENO_H__ */

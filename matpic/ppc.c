@@ -381,7 +381,9 @@ void macro(ioh_t *out, char *argp, int eval) {
 	mac.name = strldup(mac.name, idlen(mac.name));
 	arr_add(&garbage, &mac.name);
 	mac.argc = 0;
-	if (skipsp(&argp) && !(ctype(*argp) & (CT_NL | CT_NUL)))
+	mac.file = lineno_getrealfile();
+	mac.line = lineno_getreal();
+	if (skipsp(&argp) && !(ctype(*argp) & (CT_NL | CT_NUL))) {
 		while (1) {
 			s = getid(&argp);
 			skipsp(&argp);
@@ -398,6 +400,7 @@ void macro(ioh_t *out, char *argp, int eval) {
 			if (mac.argc == ARG_MAX)
 				flerrexit("too many arguments for macro");
 		}
+	}
 	if (!(ctype(*argp) & (CT_NL | CT_NUL)))
 		flerrexit("syntax error on macro directive");
 
@@ -625,7 +628,7 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 			arr_add(&amacros, &am);
 			++mac->active;
 			nextln = mac->val;
-			lineno_pushmacro(mac->name, NULL, 0); /* TODO keep file and line */
+			lineno_pushmacro(mac->name, mac->file, mac->line); /* TODO keep file and line */
 			mfprintf(out, "%%expands \"%s\"", mac->name);
 			return 1;
 		}
