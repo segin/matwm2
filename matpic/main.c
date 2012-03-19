@@ -12,13 +12,12 @@
 
 int main(int argc, char *argv[]) {
 	char *a, *code;
-	int i, file = 0;
-	ioh_t *out = out;
+	int i, file = 0, outfile = 0;
+	ioh_t *out;
 	/* teh command line options */
 	int disasm = 0, ppm = 0, through = 0;
 
 	mstdio_init();
-	out = mstdout;
 	for (i = 1; i < argc; ++i) {
 		if (*(argv[i]) == '-') {
 			a = argv[i] + 1;
@@ -44,9 +43,10 @@ int main(int argc, char *argv[]) {
 			}
 		} else {
 			if (file) {
-				if (out != mstdout)
+				if (out != NULL)
 					errexit("too many arguments");
 				out = mfopen(argv[i], MFM_WR | MFM_CREAT | MFM_TRUNC);
+				outfile = 1;
 				if (out == NULL)
 					errexit("cannot open output file '%s'", argv[i]);
 			} else {
@@ -56,6 +56,10 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+	if (!outfile)
+		out = mmemopen(1);
+	if (out == NULL)
+		errexit("mmemopen() failed");
 	code = readfile(file ? infile: NULL);
 	if (code == NULL)
 		errexit("failed to read file '%s'", infile);
@@ -93,6 +97,8 @@ int main(int argc, char *argv[]) {
 	}
 	done:
 	cleanup();
-
+	if (!outfile)
+		mfwrite(mstdout, mmemget(out), mmemlen(out));
+	mfclose(out);
 	return EXIT_SUCCESS;
 }
