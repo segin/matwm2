@@ -192,13 +192,7 @@ int insfind(char *ip, char *argp) {
 	}
 	if (cmpid(ip, "file")) {
 		char *file;
-		if (argp == NULL)
-			flerrexit("'file' directive needs an argument");
-		file = getstr(&argp, 0);
-		if (file == NULL)
-			errexit("syntax error on file directive");
-		if (!(ctype(*argp) & (CT_NUL | CT_NL)))
-			flerrexit("invalid data after file directive");
+		parsargs(argp, "s");
 		lineno_pushfile(file, 0, 0);
 		ins.type = IT_CTX;
 		ins.d.ctx = lineno_getctx();
@@ -217,6 +211,8 @@ int insfind(char *ip, char *argp) {
 		return 1;
 	}
 	if (cmpid(ip, "endfile") || cmpid(ip, "endexp")) {
+		if (argp != NULL)
+			flerrexit("too many arguments");
 		if (lineno.count == 1)
 			flerrexit("context stack underrun");
 		lineno_dropctx();
