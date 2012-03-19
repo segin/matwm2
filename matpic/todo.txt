@@ -11,10 +11,11 @@ add ihex thing for bigger than 16bit addresses
 header files for chips
 support more chips
 fancy disassembler output that can be re-assembled as-is option
+trace errors back to macro
+install target for maekfile
 
 BUGS
 	if integer size on host architecture is less than 32bit all will fail
 	unicode will be case sensitive
 	should ppsub arguments of macro (both macro directive and when macros used)
 	must rename strldup, clashes with bsd libc function
-	line numbers for rep are broken (2 consecutive reps = fault)
