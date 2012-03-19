@@ -17,7 +17,6 @@ typedef struct {
 } macro_t;
 
 typedef struct {
-	char *name;
 	char *nextln;
 } file_t;
 

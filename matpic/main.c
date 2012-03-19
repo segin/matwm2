@@ -12,7 +12,7 @@
 
 int main(int argc, char *argv[]) {
 	char *a, *code;
-	int i;
+	int i, file = 0;
 	ioh_t *out = out;
 	/* teh command line options */
 	int disasm = 0, ppm = 0, through = 0;
@@ -43,19 +43,20 @@ int main(int argc, char *argv[]) {
 				++a;
 			}
 		} else {
-			if (file != NULL) {
+			if (file) {
 				if (out != mstdout)
 					errexit("too many arguments");
 				out = mfopen(argv[i], MFM_WR | MFM_CREAT | MFM_TRUNC);
 				if (out == NULL)
 					errexit("cannot open output file '%s'", argv[i]);
 			} else {
-				file = infile = argv[i]; /* only setting file to check against it later */
+				++file;
+				infile = argv[i]; /* only setting file to check against it later */
 			}
 		}
 	}
 
-	code = readfile(file);
+	code = readfile(file ? infile: NULL);
 	if (code == NULL)
 		errexit("failed to read file '%s'", infile);
 	if (!disasm) {

@@ -124,7 +124,7 @@ void addlabel(char *lp) {
 	}
 	arr_add(&labels, &label);
 	ins.type = IT_LBL;
-	ins.line = lineno_getctx();
+	ins.line = lineno_get();
 	ins.d.lbl.lbl = labels.count - 1;
 	arr_add(&inss, &ins);
 }
@@ -134,7 +134,7 @@ int insfind(char *ip, char *argp) {
 	oc_t *oc = arch->ocs;
 	ins_t ins;
 
-	ins.line = lineno_getctx(); /* TODO this is dumb, change it */
+	ins.line = lineno_get();
 	if (cmpid(ip, "org")) {
 		getargs(argp, args, 1, 1);
 		ins.type = IT_ORG;
@@ -144,25 +144,41 @@ int insfind(char *ip, char *argp) {
 		return 1;
 	}
 	if (cmpid(ip, "file")) {
+		char *file;
 		if (argp == NULL)
 			flerrexit("'file' directive needs an argument");
-		ins.type = IT_FIL;
-		ins.d.file.file = argp;
-		arr_add(&inss, &ins);
-		if (file != infile)
-			free(file);
 		file = getstr(&argp, 0);
 		if (file == NULL)
 			errexit("syntax error on file directive");
-		lineno_pushfile(file, 0);
 		if (!(ctype(*argp) & (CT_NUL | CT_NL)))
 			flerrexit("invalid data after file directive");
+		lineno_pushfile(file, 0, 0);
+		ins.type = IT_CTX;
+		ins.d.ctx = lineno_getctx();
+		arr_add(&inss, &ins);
 		return 1;
 	}
-	if (cmpid(ip, "endfile")) {
+	if (cmpid(ip, "expands")) {
+		char *name;
+		if (argp == NULL)
+			flerrexit("'expands' directive needs an argument");
+		name = getstr(&argp, 0);
+		if (name == NULL)
+			errexit("syntax error on expands directive");
+		if (!(ctype(*argp) & (CT_NUL | CT_NL)))
+			flerrexit("invalid data after expands directive");
+		lineno_pushmacro(name, NULL, 0);
+		ins.type = IT_CTX;
+		ins.d.ctx = lineno_getctx();
+		arr_add(&inss, &ins);
+		return 1;
+	}
+	if (cmpid(ip, "endfile") || cmpid(ip, "endexp")) {
 		if (lineno.count == 1)
 			flerrexit("context stack underrun");
 		lineno_dropctx();
+		ins.type = IT_CTX_END;
+		arr_add(&inss, &ins);
 	}
 	if (cmpid(ip, "line")) {
 		getargs(argp, args, 1, 1);
@@ -208,18 +224,15 @@ void assemble(char *code) {
 	arr_new(&inss, sizeof(ins_t));
 	arr_new(&labels, sizeof(label_t));
 	lineno_init();
-	lineno_pushfile(infile, 1);
+	lineno_pushfile(infile, 1, 0);
 
 	{ /* first pass */
-		ins_t ins;
 		int r;
 
-		file = infile;
 		address = 0;
 		llbl = -1;
 		run = 0;
 		while ((r = parseln(code))) {
-			ins.line = lineno_getctx();
 			addrl = address; /* case there is a label we have the address at start of line */
 			if (r == 2)
 				flerrexit("syntax error");
@@ -238,19 +251,21 @@ void assemble(char *code) {
 					run = 0;
 			}
 		}
-		ins.type = IT_END;
-		arr_add(&inss, &ins);
+		{
+			ins_t ins;
+			ins.line = lineno_get();
+			ins.type = IT_END;
+			arr_add(&inss, &ins);
+		}
 	}
 	{ /* second pass */
 		ins_t *ins = (ins_t *) inss.data;
 		int i, c, args[ARG_MAX];
-		char *s;
 
-		file = infile;
 		address = 0;
 
 		while (ins->type != IT_END) {
-			lineno_setctx(ins->line);
+			lineno_set(ins->line);
 			switch (ins->type) {
 				case IT_INS:
 					c = getargs(ins->d.ins.args, args, 0, ARG_MAX);
@@ -270,11 +285,11 @@ void assemble(char *code) {
 						--ins;
 					address += arch->dlen / arch->align * c;
 					break;
-				case IT_FIL:
-					if (file != infile)
-						free(file);
-					s = ins->d.file.file;
-					file = getstr(&s, 1);
+				case IT_CTX:
+					lineno_pushctx(ins->d.ctx);
+					break;
+				case IT_CTX_END:
+					lineno_dropctx();
 					break;
 				case IT_LBL:
 					llbl = ins->d.lbl.lbl;
@@ -284,7 +299,5 @@ void assemble(char *code) {
 		}
 	}
 	llbl = -1; /* important */
-	if (file != infile)
-		free(file);
 	lineno_end();
 }

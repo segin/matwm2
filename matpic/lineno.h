@@ -19,10 +19,11 @@ extern void lineno_dropctx(void);
 extern void lineno_inc(void);
 extern void lineno_set(unsigned int n);
 extern unsigned int lineno_get(void);
+extern unsigned int lineno_getreal(void);
 extern void lineno_pushmacro(char *name, char *file, unsigned int n);
-extern void lineno_pushfile(char *file, unsigned int n);
+extern void lineno_pushfile(char *file, unsigned int n, int free);
 extern char *lineno_getfile(void);
 extern lineno_t *lineno_getctx(void);
-extern void lineno_setctx(lineno_t *ctx);
+extern void lineno_pushctx(lineno_t *ctx);
 
 #endif /* __LINENO_H__ */

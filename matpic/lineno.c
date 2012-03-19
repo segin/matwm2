@@ -38,22 +38,30 @@ unsigned int lineno_get(void) {
 	return arr_top(lineno, lineno_t)->line;
 }
 
+unsigned int lineno_getreal(void) {
+	if (arr_top(lineno, lineno_t)->mline)
+		return arr_top(lineno, lineno_t)->mline;
+	return arr_top(lineno, lineno_t)->line;
+}
+
 void lineno_pushmacro(char *name, char *file, unsigned int n) {
 	lineno_t ln;
 	ln.mname = name;
-	ln.mfile = lineno_getfile();
-	ln.mline = lineno_get();
-	ln.file = file;
-	ln.line = n;
+	ln.mfile = file;
+	ln.mline = n;
+	ln.file = lineno_getfile();
+	ln.line = lineno_get();
 	arr_add(&lineno, &ln);
 }
 
-void lineno_pushfile(char *file, unsigned int n) {
+void lineno_pushfile(char *file, unsigned int n, int free) {
 	lineno_t ln;
 	ln.line = n;
 	ln.file = file;
 	ln.mline = 0; /* so we know it is not a macro */
 	arr_add(&lineno, &ln);
+	if (free)
+		arr_add(&garbage, &file);
 }
 
 char *lineno_getfile(void) {
@@ -64,11 +72,11 @@ lineno_t *lineno_getctx(void) {
 	lineno_t *ln = malloc(sizeof(lineno_t));
 	if (ln == NULL)
 		errexit("out of memory");
-	memcpy(ln, arr_top(lineno, lineno_t), sizeof(lineno_t));
+	/* not using arr_top() macro cause avoid stupid warning lol */
+	memcpy(ln, (void *) ((lineno_t *) lineno.data + lineno.count - 1), sizeof(lineno_t));
 	return ln;
 }
 
-void lineno_setctx(lineno_t *ctx) {
-	lineno.count = 0;
+void lineno_pushctx(lineno_t *ctx) {
 	arr_add(&lineno, ctx);
 }

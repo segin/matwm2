@@ -6,7 +6,6 @@
 #include "misc.h"
 #include "lineno.h"
 
-char *file = NULL;
 char *infile = "<stdin>";
 
 unsigned int address;
@@ -18,7 +17,7 @@ void cleanup(void) {
 }
 
 void vaflwarn(char *pro, char *fmt, va_list ap) {
-	mfprintf(mstderr, pro, file, lineno_get());
+	mfprintf(mstderr, pro, lineno_getfile(), lineno_get());
 	mvafprintf(mstderr, fmt, ap);
 	mfprint(mstderr, "\n");
 }
@@ -49,7 +48,7 @@ void flwarn(char *fmt, ...) {
 }
 
 void flmsg(char *msg) {
-	mfprintf(mstderr, "%s: line %d: message: %s\n", file, lineno_get(), msg);
+	mfprintf(mstderr, "%s: line %d: message: %s\n", lineno_getfile(), lineno_get(), msg);
 }
 
 char *readfile(char *path) {

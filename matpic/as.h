@@ -15,7 +15,7 @@ struct label_t {
 
 typedef struct {
 	unsigned int type;
-	lineno_t *line;
+	unsigned int line;
 	union {
 		struct ins {
 			char *args;
@@ -29,12 +29,10 @@ typedef struct {
 			char *args;
 			unsigned int value;
 		} data;
-		struct file {
-			char *file;
-		} file;
 		struct lbl {
 			int lbl;
 		} lbl;
+		lineno_t *ctx;
 	} d;
 } ins_t;
 
@@ -43,7 +41,8 @@ enum itype {
 	IT_ORG, /* org directive */
 	IT_DAT, /* data directive */
 	IT_INS, /* an actual instruction */
-	IT_FIL, /* change of filename */
+	IT_CTX, /* change of filename/macro */
+	IT_CTX_END,
 	IT_LBL  /* last label encountered */
 };
 

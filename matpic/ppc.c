@@ -359,6 +359,7 @@ void skipblock(char *start, char *end) {
 			s = nextln;
 		}
 	}
+	run = 0;
 }
 
 void macro(ioh_t *out, char *argp, int eval) {
@@ -377,6 +378,8 @@ void macro(ioh_t *out, char *argp, int eval) {
 	mac.name = getid(&argp);
 	if (mac.name == NULL)
 		flerrexit("syntax error on macro directive");
+	mac.name = strldup(mac.name, idlen(mac.name));
+	arr_add(&garbage, &mac.name);
 	mac.argc = 0;
 	if (skipsp(&argp) && !(ctype(*argp) & (CT_NL | CT_NUL)))
 		while (1) {
@@ -400,7 +403,7 @@ void macro(ioh_t *out, char *argp, int eval) {
 
 	mac.val = nextln;
 	skipblock("macro", "endm");
-	mfprintf(out, "%%line %ut", lineno_get());
+	mfprintf(out, "%%line %ut", lineno_get() + 1);
 
 	{ /* add macro */
 		macro_t *p;
@@ -441,6 +444,7 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 				free(mac->argv[mac->argc]);
 			nextln = mac->nextln;
 			lineno_dropctx();
+			mfprint(out, "%endexp");
 		} else flerrexit("endm without prior macro directive");
 		return 1;
 	}
@@ -503,7 +507,7 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 			++rep->repno;
 			nextln = rep->start;
 			lineno_set(rep->line + 1);
-			mfprintf(out, "%%line %ut", lineno_get());
+			mfprintf(out, "%%line %ut", lineno_getreal());
 		} else --reps.count;
 		return 1;
 	}
@@ -568,12 +572,10 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 		s = getstra(argp, 0);
 		if (data == NULL)
 			flerrexit("failed to include file '%s'", s);
-		ofile.name = file;
 		ofile.nextln = nextln;
-		lineno_pushfile(file, 1);
+		lineno_pushfile(s, 0, 1);
 		arr_add(&files, &ofile);
-		file = s;
-		mfprintf(out, "%%file \"%s\"", file);
+		mfprintf(out, "%%file \"%s\"", s);
 		nextln = data;
 		strip(data);
 		arr_add(&garbage, &data);
@@ -616,11 +618,12 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 			if (am.argc < mac->argc)
 				flerrexit("too few arguments for macro");
 			am.nextln = nextln;
-			lineno_pushmacro(mac->name, NULL, 0); /* TODO keep file and line */
 			am.macro = mac;
 			arr_add(&amacros, &am);
 			++mac->active;
 			nextln = mac->val;
+			lineno_pushmacro(mac->name, NULL, 0); /* TODO keep file and line */
+			mfprintf(out, "%%expands \"%s\"", mac->name);
 			return 1;
 		}
 	}
@@ -638,7 +641,6 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 void preprocess(ioh_t *out, char *in) {
 	int r;
 	file_t *f;
-	file = infile;
 
 	arr_new(&defines, sizeof(define_t));
 	arr_new(&macros, sizeof(macro_t));
@@ -647,7 +649,7 @@ void preprocess(ioh_t *out, char *in) {
 	arr_new(&amacros, sizeof(amacro_t));
 	arr_new(&garbage, sizeof(void *));
 	lineno_init();
-	lineno_pushfile(file, 1);
+	lineno_pushfile(infile, 1, 0);
 	level = ignore = 0;
 
 	strip(in);
@@ -659,9 +661,7 @@ void preprocess(ioh_t *out, char *in) {
 		if (ip != NULL) {
 			if ((r = ppfind(out, ip, argp))) {
 				if (lp != NULL)
-					flerrexit("label on same line as preprocessor directive");
-				if (r == 2) /* endrep or endm wants us to die */
-					return;
+					flerrexit("label on same line as preprocessor directive are not allow");
 			}
 		}
 		if (prefix && !r)
@@ -675,8 +675,6 @@ void preprocess(ioh_t *out, char *in) {
 	if (reps.count)
 		flerrexit("expected 'endrep' before EOF");
 	if ((f = arr_pop(files, file_t)) != NULL) {
-		free(file);
-		file = f->name;
 		in = f->nextln;
 		lineno_dropctx();
 		lineno_inc();

@@ -1,7 +1,6 @@
 #ifndef __MISC_H__
 #define __MISC_H__
 
-extern char *file;
 extern char *infile;
 extern unsigned int address;
 
