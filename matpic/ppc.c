@@ -506,8 +506,8 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 		if (--rep->count > 0) {
 			++rep->repno;
 			nextln = rep->start;
-			lineno_set(rep->line + 1);
-			mfprintf(out, "%%line %ut", lineno_getreal());
+			lineno_set(rep->line);
+			mfprintf(out, "%%line %ut", lineno_getreal() + 1);
 		} else --reps.count;
 		return 1;
 	}
@@ -523,7 +523,10 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 			rep.repno = 0;
 			rep.line = lineno_get();
 			arr_add(&reps, &rep);
-		} else skipblock("rep", "endrep");
+		} else {
+			skipblock("rep", "endrep");
+			mfprintf(out, "%%line %ut", lineno_getreal() + 1);
+		}
 		return 1;
 	}
 	if (cmpid(ip, "xdefine")) {
