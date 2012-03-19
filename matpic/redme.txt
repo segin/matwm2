@@ -54,6 +54,7 @@ special case of preprocessor is multiline macro, synopsis:
 	macro <identifier> [<argument name>, <...>]
 they are ended with:
 	endm
+and also can put the name in diamond bracelets '<' and '>' to make it preprocessed
 nesting of multiline macros r supported
 in multiline macros '@0' denotes the number of arguments excluding named ones
 @1 @2 etc are the actual arguments

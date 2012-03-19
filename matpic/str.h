@@ -29,6 +29,7 @@ extern char *getid(char **src);
 extern int idlen(char *src);
 extern int cmpid(char *idl, char *idr);
 extern int getnum(char **src, unsigned int *ret);
+extern int linelen(char *str);
 extern char *mstrldup(char *s, int len);
 
 #endif /* __STR_H__ */

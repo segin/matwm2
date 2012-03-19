@@ -223,7 +223,6 @@ void _ppsub(ioh_t *out, char *in, amacro_t *am, char end) {
 			}
 
 			if ((def = deffind(id)) != NULL && !def->active) {
-				state.in = in;
 				arr_add(&sstack, &state);
 				state.parent = def;
 				state.argc = 0;
@@ -254,6 +253,7 @@ void _ppsub(ioh_t *out, char *in, amacro_t *am, char end) {
 				if (state.argc < def->argc)
 					flerrexit("too few arguments for macro");
 				state.parent = def;
+				arr_top(sstack, sstate_t)->in = in;
 				in = def->val;
 				++def->active;
 				continue;
@@ -291,14 +291,12 @@ void define(char *argp, int eval) {
 		++argp;
 		s = sppsub(argp, '>');
 		arr_add(&garbage, &s);
-		while (*argp != '>') /* sppsub() shoulda made sure it is there */
-			++argp;
-		++argp;
+		while (*(argp++) != '>'); /* sppsub() shoulda made sure it is there */
 		skipsp(&s);
 		def.name = getid(&s);
 		skipsp(&s);
 		if (def.name == NULL || *s)
-			flerrexit("syntax error on define directive");
+			flerrexit("macro name expands to nothing useful");
 	} else def.name = getid(&argp);
 	def.argc = 0;
 	if  (*argp == '(') {
@@ -377,11 +375,20 @@ void macro(ioh_t *out, char *argp, int eval) {
 	if (argp == NULL)
 		flerrexit("too few arguments");
 	mac.active = 0;
-	mac.name = getid(&argp);
-	if (mac.name == NULL)
-		flerrexit("syntax error on macro directive");
-	mac.name = mstrldup(mac.name, idlen(mac.name));
-	arr_add(&garbage, &mac.name);
+	if (*argp == '<') {
+		s = sppsub(argp + 1, '>');
+		arr_add(&garbage, &s);
+		mac.name = getid(&s);
+		if (mac.name == NULL || *s)
+			flerrexit("macro name expands to nothing useful");
+		while (*(argp++) != '>'); /* again sppsub ensured us end char is there */
+	} else {
+		s = getid(&argp);
+		if (s == NULL)
+			flerrexit("syntax error on macro directive");
+		mac.name = mstrldup(s, idlen(s));
+		arr_add(&garbage, &mac.name);
+	}
 	mac.argc = 0;
 	mac.file = lineno_getrealfile();
 	mac.line = lineno_getreal();
@@ -573,11 +580,15 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 
 		if ((mac = macrofind(ip)) != NULL) {
 			amacro_t am;
-			char *e;
+			char *e, *p;
 			if (mac->active)
 				return 0;
 			am.argc = 0;
-			if (argp != NULL)
+			if (argp != NULL) {
+				p = argp = mstrldup(argp, linelen(argp));
+				argp = sppsub(argp, 0);
+				free(p);
+				p = argp;
 				while (1) {
 					s = argp;
 					while (!(ctype(*argp) & (CT_NL | CT_NUL)) && *argp != ',')
@@ -602,6 +613,8 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 					if (am.argc == ARG_MAX)
 						flerrexit("too many arguments for macro");
 				}
+				free(p);
+			}
 			if (am.argc < mac->argc)
 				flerrexit("too few arguments for macro");
 			am.nextln = nextln;

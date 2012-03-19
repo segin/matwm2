@@ -1,13 +1,13 @@
+include search path
 xmacro
-macro local variables
-macro local labels (possibly macro)
 db directive for store bytes separate and text with ""
 dw, dd, dq, etc
-support pagesel pseudo instruction
 changing default radix
-include search path
+macro local variables
+macro local labels (possibly macro)
 relocatable code and coff output support
 add ihex thing for bigger than 16bit addresses
+support pagesel pseudo instruction
 header files for chips
 support more chips
 fancy disassembler output that can be re-assembled as-is option
@@ -15,4 +15,3 @@ fancy disassembler output that can be re-assembled as-is option
 BUGS
 	if integer size on host architecture is less than 32bit all will fail
 	unicode will be case sensitive
-	should ppsub arguments of macro (both macro directive and when macros used)

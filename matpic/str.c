@@ -309,6 +309,13 @@ int getnum(char **src, unsigned int *ret) {
 	return n;
 }
 
+int linelen(char *str) {
+	int n = 0;
+	while (!(ctype(*(str++)) & (CT_NL | CT_NUL)))
+		++n;
+	return n;
+}
+
 char *mstrldup(char *s, int len) {
 	char *ret = malloc(len + 1);
 	if (ret != NULL) {
