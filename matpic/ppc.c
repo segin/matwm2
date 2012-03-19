@@ -1,8 +1,8 @@
 #include <stdlib.h> /* NULL */
-#include "as.h" /* parseln() */
+#include "as.h" /* parseargs(), parseln() */
 #include "mem.h"
 #include "str.h" /* skipsp(), ctype(), etc */
-#include "misc.h" /* flerrexit(), readfile(), getstr(), file, infile */
+#include "misc.h" /* flerrexit(), readfile(), file, infile */
 #include "ppc.h"
 #include "io.h"
 #include "lineno.h"
@@ -418,26 +418,6 @@ void macro(ioh_t *out, char *argp, int eval) {
 	}
 }
 
-char *getida(char *in) {
-	char *ret;
-	if (in == NULL)
-		flerrexit("too few arguments");
-	ret = getid(&in);
-	if (ret == NULL || !(ctype(*in) & (CT_NL | CT_NUL)))
-		flerrexit("syntax error");
-	return ret;
-}
-
-char *getstra(char *argp, int e) {
-	char *s;
-	if (argp == NULL)
-		flerrexit("too few arguments");
-	s = getstr(&argp, e);
-	if (s == NULL || !(ctype(*argp) & (CT_NL | CT_NUL)))
-		flerrexit("syntax error");
-	return s;
-}
-
 int ppfind(ioh_t *out, char *ip, char *argp) {
 	char *s;
 
@@ -470,14 +450,14 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 		return 1;
 	}
 	if (cmpid(ip, "ifdef")) {
-		s = getida(argp);
+		parseargs(argp, "i", &s);
 		++level;
 		if (!ignore && deffind(s) == NULL)
 			ignore = level;
 		return 1;
 	}
 	if (cmpid(ip, "ifndef")) {
-		s = getida(argp);
+		parseargs(argp, "i", &s);
 		++level;
 		if (!ignore && deffind(s) != NULL)
 			ignore = level;
@@ -544,7 +524,7 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 	}
 	if (cmpid(ip, "undef")) {
 		define_t *def;
-		s = getida(argp);
+		parseargs(argp, "i", &s);
 		def = deffind(s);
 		if (def != NULL) {
 			--defines.count;
@@ -553,31 +533,30 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 		return 1;
 	}
 	if (cmpid(ip, "msg")) {
-		s = getstra(argp, 1);
+		parseargs(argp, "s", &s);
 		flmsg(s);
 		free(s);
 		return 1;
 	}
 	if (cmpid(ip, "error")) {
-		s = getstra(argp, 1);
+		parseargs(argp, "s", &s);
 		flerrexit(s);
 		free(s);
 		return 1;
 	}
 	if (cmpid(ip, "warn")) {
-		s = getstra(argp, 1);
+		parseargs(argp, "s", &s);
 		flwarn(s);
 		free(s);
 		return 1;
 	}
 	if (cmpid(ip, "include")) {
 		file_t ofile;
-		if (argp == NULL)
-			flerrexit("too few arguments for include directive");
-		s = getstra(argp, 1);
-		data = readfile(s);
-		free(s);
-		s = getstra(argp, 0);
+		char *fn;
+		parseargs(argp, "s", &s);
+		fn = unescape(s);
+		data = readfile(fn);
+		free(fn);
 		if (data == NULL)
 			flerrexit("failed to include file '%s'", s);
 		ofile.nextln = nextln;

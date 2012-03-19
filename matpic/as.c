@@ -38,6 +38,8 @@ void parseargs(char *in, char *mode, ...) {
 	int *i;
 	char **s;
 	va_list ap;
+	if (in == NULL)
+		flerrexit("too few arguments");
 	va_start(ap, mode);
 	while (1) {
 		switch (*mode) {
@@ -47,7 +49,7 @@ void parseargs(char *in, char *mode, ...) {
 				break;
 			case 's':
 				s = va_arg(ap, char **);
-				*s = getstr(&in, 0);
+				*s = getstr(&in);
 				if (*s == NULL)
 					flerrexit("your argument is invalid");
 				break;
@@ -192,7 +194,7 @@ int insfind(char *ip, char *argp) {
 	}
 	if (cmpid(ip, "file")) {
 		char *file;
-		parsargs(argp, "s");
+		parseargs(argp, "s", &file);
 		lineno_pushfile(file, 0, 0);
 		ins.type = IT_CTX;
 		ins.d.ctx = lineno_getctx();

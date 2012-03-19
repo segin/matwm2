@@ -1,6 +1,7 @@
 #ifndef __AS_H__
 #define __AS_H__
 
+#include <stdarg.h>
 #include "mem.h"
 #include "lineno.h"
 
@@ -53,6 +54,7 @@ extern int llbl; /* last label */
 extern char *lp, *ip, *argp, *nextln;
 extern int prefix, run;
 
+extern void parseargs(char *in, char *mode, ...);
 extern int parseln(char *in);
 extern void assemble(char *code);
 

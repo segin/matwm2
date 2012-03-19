@@ -20,6 +20,7 @@ extern unsigned int numarg(char **src);
 int countargs(char *src);
 extern int getargs(char *src, int *args, int min, int max);
 extern int sclen(char *in);
-extern char *getstr(char **in, int esc);
+extern char *getstr(char **in);
+extern char *unescape(char *in);
 
 #endif /* __MISC_H__ */

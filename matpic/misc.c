@@ -448,20 +448,42 @@ int sclen(char *in) {
 	return ret;
 }
 
-char *getstr(char **in, int esc) {
+char *getstr(char **in) {
 	string_t ret;
-	char end, *p, b[5] = { 0, 0, 0, 0, 0 };
-	int n;
+	char end, *p;
 	if (**in != '"' && **in != '\'')
 		return NULL;
 	end = **in;
 	vstr_new(&ret);
 	++*in;
 	p = *in;
-	while (!(ctype(*p) & (CT_NUL | CT_NL)) && *p != end) {
-		if (esc && *p == '\\' && !(ctype(p[1]) & (CT_NUL | CT_NL))) {
-			vstr_addl(&ret, *in, p - *in);
-			*in = p + 1;
+	while (!(ctype(*p) & (CT_NUL | CT_NL))) {
+		while (!(ctype(*p) & (CT_NUL | CT_NL)) && *p != end)
+			++p;
+		vstr_addl(&ret, *in, p - *in);
+		*in = p;
+		if (*p == end && *(p - 1) != '\\')
+			break;
+	}
+	if (*p != end)
+		flerrexit("missing '%c'", end);
+	*in = p;
+	++*in;
+	skipsp(in);
+	return ret.data;
+}
+
+char *unescape(char *in) {
+	string_t ret;
+	char end, *p, b[5] = { 0, 0, 0, 0, 0 };
+	int n;
+	end = *in;
+	vstr_new(&ret);
+	p = in;
+	while (*p) {
+		if (*p == '\\' && !(ctype(p[1]) & (CT_NUL | CT_NL))) {
+			vstr_addl(&ret, in, p - in);
+			in = p + 1;
 			++p;
 			switch (*p) {
 				case 'a':
@@ -534,14 +556,12 @@ char *getstr(char **in, int esc) {
 					vstr_add(&ret, b);
 			}
 			++p;
-			*in = p;
+			in = p;
 		} else ++p;
 	}
-	if (*p != end)
-		flerrexit("missing %c", end);
-	vstr_addl(&ret, *in, p - *in);
-	*in = p;
-	++*in;
-	skipsp(in);
-	return ret.data;
+	vstr_addl(&ret, in, p - in);
+	in = p;
+	++in;
+	skipsp(&in);
+	return ret.data;	
 }
