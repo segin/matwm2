@@ -76,3 +76,7 @@ and the following suffixes:
 b and d suffix and 0b and 0d suffix are ignored if the default radix is hex
 underscores within integers are ignored (but not in prefix plz)
 utf-8 in labels / macro names etc are allowed
+
+BUGS
+	if integer size on host architecture is less than 32bit all will fail
+	unicode will be case sensitive

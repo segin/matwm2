@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
 						++through;
 						break;
 					default:
-						errexit("invalid argument");
+						errexit("i am in ur error, your argument is invalid");
 				}
 				++a;
 			}
