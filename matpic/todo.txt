@@ -1,7 +1,7 @@
 include search path
-db, dw, dd, dq, etc
-db to store string of bytes with "this kind of syntax"
 allow "abcd" to be seen as integer
+make way to store "text strings" with byte order intact
+db/dw to store string of bytes with "this kind of syntax"
 relocatable code and coff output support
 db/dw/dd/data to take into account limits of chips with odd word size
 
