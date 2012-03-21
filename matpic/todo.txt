@@ -3,10 +3,7 @@ xmacro
 db, dw, dd, dq, etc
 db to store string of bytes with "this kind of syntax"
 allow "abcd" to be seen as integer
-changing default radix
 relocatable code and coff output support
-macro local variables
-macro local labels (possibly macro)
 
 relating to extra chip support
 	add ihex thing for bigger than 16bit addresses
@@ -14,5 +11,8 @@ relating to extra chip support
 	support pagesel pseudo instruction
 
 non-essential (i.e. low priority)
+	changing default radix
+	macro local variables (possibly as macro)
+	macro local labels (possibly macro)
 	fancy disassembler output that can be re-assembled as-is option
 	header files for chips
