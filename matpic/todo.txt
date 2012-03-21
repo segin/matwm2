@@ -3,7 +3,6 @@ xmacro
 db, dw, dd, dq, etc
 db to store string of bytes with "this kind of syntax"
 allow "abcd" to be seen as integer
-allow labels before macro
 changing default radix
 relocatable code and coff output support
 macro local variables
