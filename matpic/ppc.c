@@ -641,6 +641,8 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 void preprocess(ioh_t *out, char *in) {
 	int r;
 	file_t *f;
+	char *label;
+	ioh_t *tout;
 
 	arr_new(&defines, sizeof(define_t));
 	arr_new(&macros, sizeof(macro_t));
@@ -652,25 +654,36 @@ void preprocess(ioh_t *out, char *in) {
 	lineno_pushfile(infile, 1, 0);
 	level = ignore = 0;
 
+	tout = mmemopen(1);
+	if (tout == NULL)
+		errexit("mmemopen fail");
+
 	strip(in);
 	proceed:
 	run = 0;
 	while (parseln(in)) {
 		r = 0;
-		run = 0;
+		label = lp;
 		if (ip != NULL) {
-			if ((r = ppfind(out, ip, argp))) {
-				if (lp != NULL)
-					flerrexit("label on same line as preprocessor directive are not allow");
+			mftrunc(tout, 0);
+			if ((r = ppfind(tout, ip, argp))) {
+				if (label != NULL) {
+					mfwrite(out, label, idlen(label));
+					mfprint(out, ":\n");
+				}
+				mfwrite(out, mmemget(tout), mmemlen(tout));
+				run = 0;
 			}
 		}
 		if (prefix && !r)
 			flwarn("unhandled preprocessor directive");
-		if (!r && !ignore)
-			ppsub(out, in, 0);
-		mfprint(out, "\n");
-		lineno_inc();
-		in = nextln;
+		if (run == 0) {
+			if (!r && !ignore)
+				ppsub(out, in, 0);
+			mfprint(out, "\n");
+			lineno_inc();
+			in = nextln;
+		}
 	}
 	if (reps.count)
 		flerrexit("expected 'endrep' before EOF");
@@ -682,6 +695,7 @@ void preprocess(ioh_t *out, char *in) {
 		goto proceed;
 	}
 
+	mfclose(tout);
 	lineno_end();
 	for (--garbage.count; garbage.count >= 0; --garbage.count)
 		free(*((void **) garbage.data + garbage.count));

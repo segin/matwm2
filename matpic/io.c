@@ -67,6 +67,15 @@ int mfflush(ioh_t *h) {
 	return 0;
 }
 
+int mftrunc(ioh_t *h, int len) {
+	if (h == NULL)
+		return -1;
+	if (h->trunc(h, len) < 0)
+		return -1;
+	h->pos = 0;
+	return 0;
+}
+
 int mfprint(ioh_t *h, char *data) {
 	return mfwrite(h, data, strlen(data));
 }
@@ -173,6 +182,7 @@ ioh_t *_mcbopen(void *d, int len, int options,
                 int (*read)(ioh_t *, char *, int),
                 int (*write)(ioh_t *, char *, int),
                 int (*seek)(ioh_t *, int, int),
+                int (*trunc)(ioh_t *, int),
                 void (*close)(ioh_t *)) {
 	ioh_t *new = (ioh_t *) malloc(sizeof(ioh_t));
 	if (new == NULL)
@@ -187,6 +197,7 @@ ioh_t *_mcbopen(void *d, int len, int options,
 	new->read = read;
 	new->write = write;
 	new->seek = seek;
+	new->trunc = trunc;
 	new->close = close;
 	new->pos = 0;
 	new->options = options;
@@ -240,7 +251,7 @@ ioh_t *mfdopen(int fd, int close) {
 	mfddata_t d;
 	d.fd = fd;
 	d.close = close;
-	return _mcbopen(&d, sizeof(mfddata_t), 0, &_mfdread, &_mfdwrite, NULL, &_mfdclose);
+	return _mcbopen(&d, sizeof(mfddata_t), 0, &_mfdread, &_mfdwrite, NULL, NULL, &_mfdclose);
 }
 
 /*************
@@ -303,6 +314,17 @@ int _mmemwrite(ioh_t *h, char *data, int len) {
 	return len;
 }
 
+int _mmemtrunc(ioh_t *h, int len) {
+	mmemdata_t *d;
+	if (h == NULL)
+		return -1;
+	d = (mmemdata_t *) h->data;
+	mfflush(h);
+	d->pos = d->len = len;
+	h->pos = 0;
+	return 0;
+}
+
 void _mmemclose(ioh_t *h) {
 	mmemdata_t *d = (mmemdata_t *) h->data;
 	if (d->options & MMO_FREE)
@@ -315,7 +337,7 @@ ioh_t *mmemopen(int options) {
 	d.pos = 0;
 	d.len = 0;
 	d.options = options;
-	return _mcbopen((void *) &d, sizeof(mmemdata_t), 0, &_mmemread, &_mmemwrite, NULL, &_mmemclose);
+	return _mcbopen((void *) &d, sizeof(mmemdata_t), 0, &_mmemread, &_mmemwrite, NULL, &_mmemtrunc, &_mmemclose);
 }
 
 char *mmemget(ioh_t *h) {
@@ -330,15 +352,6 @@ int mmemlen(ioh_t *h) {
 		return -1;
 	mfflush(h);
 	return ((mmemdata_t *) h->data)->len;
-}
-
-void mmemtrunc(ioh_t *h) {
-	mmemdata_t *d;
-	if (h == NULL)
-		return;
-	d = (mmemdata_t *) h->data;
-	d->pos = d->len = 0;
-	h->pos = 0;
 }
 
 char *msprintf(char *fmt, ...) {

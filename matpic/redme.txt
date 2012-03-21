@@ -39,13 +39,13 @@ also the following which are only meant for the preprocessor to tell the assembl
 	expands <id>, "<filename>", <line>: tell the macro following code is from a specific macro
 	endexp: tell the assembler we exited a macro
 
-also there is preprocessor directives (these do not allow a label on the same line):
+also there is preprocessor directives:
 	define, if, ifdef, ifndef, else, endif: behave mostly like C
 		with exception of the use of arguments in macros, in a case like
 			define macro(a, b) (a + b)
 		passing extra arguments after b, will add those to b, including commas
 		define name can be put in <> bracelets to make it be preprocessed
-	xdefine, undef and rep do what they does in nasm, with rep you get '@@' to tell you what iteration is current
+	xdefine, undef and rep do what they does in nasm, with rep you get '@@' to tell you what iteration is current (and endrep ends the block)
 	msg "<message>": show a message
 	warning "<message>": show a threatning message
 	error "<message>": show a deadly message

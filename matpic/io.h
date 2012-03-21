@@ -9,6 +9,7 @@ struct ioh_t {
 	int (*read)(ioh_t *, char *, int);
 	int (*write)(ioh_t *, char *, int);
 	int (*seek)(ioh_t *, int, int);
+	int (*trunc)(ioh_t *, int);
 	void (*close)(ioh_t *);
 	void *data;
 	char buf[2048];
@@ -21,6 +22,7 @@ struct ioh_t {
 extern int mfread(ioh_t *h, char *data, int len);
 extern int mfwrite(ioh_t *h, char *data, int len);
 extern int mfflush(ioh_t *h);
+extern int mftrunc(ioh_t *h, int len);
 extern void mfclose(ioh_t *h);
 extern int mfprint(ioh_t *h, char *data);
 extern int mfprintsnum(ioh_t *h, int n, int b, int p);
@@ -49,7 +51,6 @@ extern ioh_t *mfopen(char *fn, int mode);
 extern ioh_t *mmemopen(int options);
 extern char *mmemget(ioh_t *h);
 extern int mmemlen(ioh_t *h);
-extern void mmemtrunc(ioh_t *h);
 extern char *msprintf(char *fmt, ...);
 
 /* mmemopen() options */
