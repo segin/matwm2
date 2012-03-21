@@ -13,7 +13,7 @@
 int main(int argc, char *argv[]) {
 	char *a, *code;
 	int i, file = 0, outfile = 0;
-	ioh_t *out;
+	ioh_t *out = NULL;
 	/* teh command line options */
 	int disasm = 0, ppm = 0, through = 0;
 
@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 			}
 		} else {
 			if (file) {
-				if (out != NULL)
+				if (outfile)
 					errexit("too many arguments");
 				out = mfopen(argv[i], MFM_WR | MFM_CREAT | MFM_TRUNC);
 				outfile = 1;

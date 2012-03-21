@@ -9,7 +9,7 @@ arr_t dsym = { NULL, 0, 0, 0 }; /* these need to be 0 so cleanup() before disass
 
 void disassemble(ioh_t *out) {
 	dsym_t *sym = (dsym_t *) dsym.data;
-	int i, c = dsym.count;
+	int i = 0, c = dsym.count;
 	oc_t *oc;
 	unsigned char inop[6];
 

@@ -174,6 +174,7 @@ void _ppsub(ioh_t *out, char *in, amacro_t *am, char end) {
 			in = state.in;
 			continue;
 		}
+		id = in;
 		if (!str) {
 			if (*in == '@') {
 				++in;
