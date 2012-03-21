@@ -181,12 +181,14 @@ void addlabel(char *lp) {
 void adddata(int size, char *argp) {
 	ins_t ins;
 	int n = countargs(argp);
+	if (n == 0)
+		return;
 	ins.type = IT_DAT;
 	ins.d.data.args = argp;
 	ins.d.data.size = size;
+	ins.d.data.len = n;
 	address += n * size / arch->align;
-	for (; n > 0; --n)
-		arr_add(&inss, &ins);
+	arr_add(&inss, &ins);
 }
 
 int insfind(char *ip, char *argp) {
@@ -317,7 +319,7 @@ void assemble(char *code) {
 		errexit("context stack unbalanced");
 	{ /* second pass */
 		ins_t *ins = (ins_t *) inss.data;
-		int i, c, args[ARG_MAX];
+		int i, j, c, args[ARG_MAX];
 
 		address = 0;
 
@@ -333,14 +335,22 @@ void assemble(char *code) {
 					address = ins->d.org.address;
 					break;
 				case IT_DAT:
-					c = getargs(ins->d.data.args, args, 1, ARG_MAX);
+					c = ins->d.data.len * ins->d.data.size;
+					ins->d.data.len = (c + (c % arch->align));
+					ins->d.data.value = malloc(ins->d.data.len);
+					if (ins->d.data.value == NULL)
+						errexit("no moar memory");
+					getargs(ins->d.data.args, args, 0, ARG_MAX);
 					for (i = 0; i < c; ++i) {
-						ins->d.data.value = args[i];
-						++ins;
+						j = i % ins->d.data.size;
+						ins->d.data.value[i] =
+							(args[i / ins->d.data.size] & (0xFF << (j * 8))) >> (j * 8);
 					}
-					if (i)
-						--ins;
-					address += arch->dlen / arch->align * c;
+					c += c % arch->align;
+					for (; i < c; ++i)
+						ins->d.data.value[i] = 0;
+					ins->d.data.size = 1;
+					address += ins->d.data.len / arch->align;
 					break;
 				case IT_CTX:
 					lineno_pushctx(ins->d.ctx);

@@ -135,7 +135,7 @@ void adis14b(ioh_t *out, unsigned char *oc, int atype) {
 }
 
 int insord14b[4] = { 1, 0, 3, 2 };
-int dord14b[2] = { 0, 1 };
+int dord14b[2] = { 1, 0 };
 
 arch_t pic14b = {
 	ocs14b,

@@ -49,9 +49,9 @@ void ihex_write(ioh_t *out) {
 				address = saddr = ins->d.org.address * arch->align;
 				break;
 			case IT_DAT:
-				address += arch->dlen;
-				for (i = 0; i < arch->dlen; ++i)
-					addb(out, (ins->d.data.value & (0xFF << (8 * arch->dord[i]))) >> (8 * arch->dord[i]));
+				address += ins->d.data.len * ins->d.data.size;
+				for (i = 0; i < ins->d.data.len * ins->d.data.size; ++i)
+					addb(out, ins->d.data.value[i - (i % arch->dlen) + arch->dord[i % arch->dlen]]);
 				break;
 			case IT_INS:
 				address += ins->d.ins.len;

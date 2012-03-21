@@ -28,8 +28,8 @@ typedef struct {
 		} org;
 		struct data {
 			char *args;
-			unsigned long value;
-			int size;
+			unsigned char *value;
+			int size, len;
 		} data;
 		struct lbl {
 			unsigned int lbl;
