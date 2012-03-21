@@ -1,5 +1,4 @@
 include search path
-xmacro
 db, dw, dd, dq, etc
 db to store string of bytes with "this kind of syntax"
 allow "abcd" to be seen as integer

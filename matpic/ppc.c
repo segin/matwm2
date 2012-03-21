@@ -363,7 +363,7 @@ void define(char *argp, int eval) {
 	else arr_add(&defines, &def);
 }
 
-void macro(ioh_t *out, char *argp, int eval) {
+void macro(ioh_t *out, char *argp) {
 	macro_t mac;
 	char *s;
 
@@ -414,15 +414,8 @@ void macro(ioh_t *out, char *argp, int eval) {
 	if (!(ctype(*argp) & (CT_NL | CT_NUL)))
 		flerrexit("syntax error on macro directive");
 
-	s = nextln;
+	mac.val = nextln;
 	skipblock("macro", "endm");
-	mac.val = mstrldup(s, nextln - s);
-	if (eval) {
-		s = mac.val;
-		mac.val = sppsub(mac.val, 0);
-		free(s);
-	}
-	arr_add(&garbage, &mac.val);
 	mfprintf(out, "%%line %ut", lineno_get() + 1);
 
 	{ /* add macro */
@@ -448,12 +441,8 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 		} else flerrexit("endm without prior macro directive");
 		return 1;
 	}
-	if (cmpid(ip, "xmacro")) {
-		macro(out, argp, 1);
-		return 1;
-	}
 	if (cmpid(ip, "macro")) {
-		macro(out, argp, 0);
+		macro(out, argp);
 		return 1;
 	}
 	if (cmpid(ip, "if")) {
