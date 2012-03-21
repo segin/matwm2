@@ -31,7 +31,7 @@ you can call a local label out of its scope like label.locallabel
 following directives exist:
 	org <origin>: set origin
 	data <value>, ...: put stray words into bytecode (native word size)
-	dd|dw|dq <value>, ...: add data of 2, 4 or 8 byte size respectively into bytecode output
+	dd|dw <value>, ...: add data of 2, 4 or 8 byte size respectively into bytecode output
 	equ <number>: assign <number> to the preceding label, instead of the adress it's at
 also the following which are only meant for the preprocessor to tell the assembler what's going on
 	file "<filename>": tell assembler what file it is working on (also sets next line # to 1)
@@ -79,5 +79,4 @@ underscores within integers are ignored (but not in prefix plz)
 utf-8 in labels / macro names etc are allowed
 
 BUGS
-	if integer size on host architecture is less than 32bit all will fail
 	unicode will be case sensitive

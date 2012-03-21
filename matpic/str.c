@@ -189,7 +189,7 @@ int idlen(char *src) {
 	return ret;
 }
 
-int getnum(char **src, unsigned int *ret) {
+int getnum(char **src, unsigned long *ret) {
 	unsigned int c, r = 0;
 	int n = 0, base = 10, sfx = 0, pfx = 0;
 	char *s;

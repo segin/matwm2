@@ -2,7 +2,7 @@
 #define __MISC_H__
 
 extern char *infile;
-extern unsigned int address;
+extern unsigned long address;
 
 extern void cleanup(void);
 extern void reset(void);
@@ -14,8 +14,8 @@ extern void flmsg(char *msg);
 
 extern char *readfile(char *path);
 
-extern unsigned int getval(char **src);
-extern unsigned int numarg(char **src);
+extern unsigned long getval(char **src);
+extern unsigned long numarg(char **src);
 
 int countargs(char *src);
 extern int getargs(char *src, int *args, int min, int max);

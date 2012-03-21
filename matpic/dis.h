@@ -7,7 +7,7 @@
 /* we store stuff in this way cause we intend later also support coff */
 typedef struct {
 	unsigned char value;
-	unsigned int addr;
+	unsigned long addr;
 } dsym_t;
 
 extern arr_t dsym;

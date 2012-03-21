@@ -10,7 +10,7 @@
 
 #define IHLL 16
 
-unsigned int saddr;
+unsigned long saddr;
 unsigned char buf[IHLL];
 int pos = 0, crc;
 
@@ -78,7 +78,8 @@ int gethnum(char **src) {
 }
 
 void ihex_read(char *in) {
-	int n, len, crc, rtype, addr;
+	int n, len, crc, rtype;
+	unsigned long addr;
 	dsym_t ds;
 
 	arr_new(&dsym, sizeof(dsym_t));

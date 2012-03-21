@@ -239,16 +239,12 @@ int insfind(char *ip, char *argp) {
 	}
 	if (prefix)
 		return 0;
-	if (cmpid(ip, "dd")) {
+	if (cmpid(ip, "dw")) {
 		adddata(2, argp);
 		return 1;
 	}
-	if (cmpid(ip, "dw")) {
+	if (cmpid(ip, "dd")) {
 		adddata(4, argp);
-		return 1;
-	}
-	if (cmpid(ip, "dq")) {
-		adddata(8, argp);
 		return 1;
 	}
 	if (cmpid(ip, "data")) {

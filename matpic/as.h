@@ -24,15 +24,15 @@ typedef struct {
 			unsigned int len, atype;
 		} ins;
 		struct org {
-			unsigned int address;
+			unsigned long address;
 		} org;
 		struct data {
 			char *args;
-			unsigned int value;
+			unsigned long value;
 			int size;
 		} data;
 		struct lbl {
-			int lbl;
+			unsigned int lbl;
 		} lbl;
 		lineno_t *ctx;
 	} d;
