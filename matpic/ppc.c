@@ -669,7 +669,7 @@ void preprocess(ioh_t *out, char *in) {
 			if ((r = ppfind(tout, ip, argp))) {
 				if (label != NULL) {
 					mfwrite(out, label, idlen(label));
-					mfprint(out, ":\n");
+					mfprint(out, ":");
 				}
 				mfwrite(out, mmemget(tout), mmemlen(tout));
 				run = 0;
