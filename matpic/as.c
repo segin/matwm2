@@ -241,6 +241,10 @@ int insfind(char *ip, char *argp) {
 	}
 	if (prefix)
 		return 0;
+	if (cmpid(ip, "db")) {
+		adddata(1, argp);
+		return 1;
+	}
 	if (cmpid(ip, "dw")) {
 		adddata(2, argp);
 		return 1;
@@ -343,7 +347,7 @@ void assemble(char *code) {
 					getargs(ins->d.data.args, args, 0, ARG_MAX);
 					for (i = 0; i < c; ++i) {
 						j = i % ins->d.data.size;
-						ins->d.data.value[i] =
+						ins->d.data.value[c - (i + 1)] =
 							(args[i / ins->d.data.size] & (0xFF << (j * 8))) >> (j * 8);
 					}
 					c += c % arch->align;
