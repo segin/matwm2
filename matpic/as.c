@@ -178,6 +178,17 @@ void addlabel(char *lp) {
 	arr_add(&inss, &ins);
 }
 
+void adddata(int size, char *argp) {
+	ins_t ins;
+	int n = countargs(argp);
+	ins.type = IT_DAT;
+	ins.d.data.args = argp;
+	ins.d.data.size = size;
+	address += n * size / arch->align;
+	for (; n > 0; --n)
+		arr_add(&inss, &ins);
+}
+
 int insfind(char *ip, char *argp) {
 	int args[ARG_MAX];
 	oc_t *oc = arch->ocs;
@@ -228,13 +239,20 @@ int insfind(char *ip, char *argp) {
 	}
 	if (prefix)
 		return 0;
+	if (cmpid(ip, "dd")) {
+		adddata(2, argp);
+		return 1;
+	}
+	if (cmpid(ip, "dw")) {
+		adddata(4, argp);
+		return 1;
+	}
+	if (cmpid(ip, "dq")) {
+		adddata(8, argp);
+		return 1;
+	}
 	if (cmpid(ip, "data")) {
-		int n = countargs(argp);
-		ins.type = IT_DAT;
-		ins.d.data.args = argp;
-		address += n * arch->dlen / arch->align;
-		for (; n > 0; --n)
-			arr_add(&inss, &ins);
+		adddata(arch->dlen, argp);
 		return 1;
 	}
 	if (cmpid(ip, "equ")) {

@@ -29,6 +29,7 @@ typedef struct {
 		struct data {
 			char *args;
 			unsigned int value;
+			int size;
 		} data;
 		struct lbl {
 			int lbl;
