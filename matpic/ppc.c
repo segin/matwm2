@@ -282,6 +282,33 @@ char *sppsub(char *in, char end) {
 	return ret;
 }
 
+void skipblock(char *start, char *end) {
+	int d = 0;
+	char *s = nextln;
+	run = 0;
+	lineno_inc();
+	while (1) {
+		if (!parseln(s))
+			flerrexit("end of file within '%s' block", start);
+		if (ip != NULL) {
+			if (cmpid(ip, start))
+				++d;
+			if (cmpid(ip, end)) {
+				if (argp != NULL)
+					flerrexit("'%s' takes no arguments", end);
+				if (d == 0)
+					break;
+				--d;
+			}
+		}
+		if (run == 0) {
+			lineno_inc();
+			s = nextln;
+		}
+	}
+	run = 0;
+}
+
 void define(char *argp, int eval) {
 	define_t def, *p;
 	char *s;
@@ -335,33 +362,6 @@ void define(char *argp, int eval) {
 	else arr_add(&defines, &def);
 }
 
-void skipblock(char *start, char *end) {
-	int d = 0;
-	char *s = nextln;
-	run = 0;
-	lineno_inc();
-	while (1) {
-		if (!parseln(s))
-			flerrexit("end of file within '%s' block", start);
-		if (ip != NULL) {
-			if (cmpid(ip, start))
-				++d;
-			if (cmpid(ip, end)) {
-				if (argp != NULL)
-					flerrexit("'%s' takes no arguments", end);
-				if (d == 0)
-					break;
-				--d;
-			}
-		}
-		if (run == 0) {
-			lineno_inc();
-			s = nextln;
-		}
-	}
-	run = 0;
-}
-
 void macro(ioh_t *out, char *argp, int eval) {
 	macro_t mac;
 	char *s;
@@ -413,8 +413,15 @@ void macro(ioh_t *out, char *argp, int eval) {
 	if (!(ctype(*argp) & (CT_NL | CT_NUL)))
 		flerrexit("syntax error on macro directive");
 
-	mac.val = nextln;
+	s = nextln;
 	skipblock("macro", "endm");
+	mac.val = mstrldup(s, nextln - s);
+	if (eval) {
+		s = mac.val;
+		mac.val = sppsub(mac.val, 0);
+		free(s);
+	}
+	arr_add(&garbage, &mac.val);
 	mfprintf(out, "%%line %ut", lineno_get() + 1);
 
 	{ /* add macro */
@@ -438,6 +445,10 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 			lineno_dropctx();
 			mfprint(out, "%endexp");
 		} else flerrexit("endm without prior macro directive");
+		return 1;
+	}
+	if (cmpid(ip, "xmacro")) {
+		macro(out, argp, 1);
 		return 1;
 	}
 	if (cmpid(ip, "macro")) {
@@ -500,6 +511,7 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 			nextln = rep->start;
 			lineno_set(rep->line);
 			mfprintf(out, "%%line %ut", lineno_getreal() + 1);
+			run = 0;
 		} else --reps.count;
 		return 1;
 	}
@@ -515,6 +527,7 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 			rep.repno = 0;
 			rep.line = lineno_get();
 			arr_add(&reps, &rep);
+			run = 0;
 		} else {
 			skipblock("rep", "endrep");
 			mfprintf(out, "%%line %ut", lineno_getreal() + 1);
@@ -624,6 +637,7 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 			nextln = mac->val;
 			lineno_pushmacro(mac->name, mac->file, mac->line); /* TODO keep file and line */
 			mfprintf(out, "%%expands %s, \"%s\", %ut", mac->name, mac->file, mac->line);
+			run = 0;
 			return 1;
 		}
 	}
