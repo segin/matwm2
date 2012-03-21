@@ -675,8 +675,10 @@ void preprocess(ioh_t *out, char *in) {
 				run = 0;
 			}
 		}
-		if (prefix && !r)
+		if (prefix && !r) {
 			flwarn("unhandled preprocessor directive");
+			run = 0;
+		}
 		if (run == 0) {
 			if (!r && !ignore)
 				ppsub(out, in, 0);
