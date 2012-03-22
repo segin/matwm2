@@ -1,7 +1,7 @@
 #ifndef __AS_H__
 #define __AS_H__
 
-#include <stdarg.h>
+#include "arch.h"
 #include "mem.h"
 #include "lineno.h"
 
@@ -14,28 +14,32 @@ struct label_t {
 	int parent; /* tried to keep this as pointer first, big mistake */
 };
 
-typedef struct {
+typedef union {
 	unsigned int type;
 	unsigned int line;
-	union {
-		struct ins {
-			char *args;
-			unsigned char oc[6];
-			unsigned int len, atype;
-		} ins;
-		struct org {
-			unsigned long address;
-		} org;
-		struct data {
-			char *args;
-			unsigned char *value;
-			int size, len;
-		} data;
-		struct lbl {
-			unsigned int lbl;
-		} lbl;
+	struct ins {
+		unsigned int type, line;
+		char *args;
+		oc_t *oc;
+	} ins;
+	struct org {
+		unsigned int type, line;
+		unsigned long address;
+		char *end;
+	} org;
+	struct data {
+		unsigned int type, line;
+		char *args;
+		int size, len, pad; /* len & pad = in bytes */
+	} data;
+	struct lbl {
+		unsigned int type, line;
+		unsigned int lbl;
+	} lbl;
+	struct ctx {
+		unsigned int type, line;
 		lineno_t *ctx;
-	} d;
+	} ctx;
 } ins_t;
 
 enum itype {
@@ -51,11 +55,11 @@ enum itype {
 extern arr_t inss;
 extern arr_t labels;
 extern int llbl; /* last label */
+extern string_t outbuf;
 
 extern char *lp, *ip, *argp, *nextln;
 extern int prefix, run;
 
-extern void parseargs(char *in, char *mode, ...);
 extern int parseln(char *in);
 extern void assemble(char *code);
 

@@ -4,12 +4,11 @@
 
 #include <stdlib.h> /* NULL */
 #include <string.h> /* memcpy() */
-#include <stdarg.h>
 #include "as.h"
 #include "str.h"
 #include "mem.h"
 #include "arch.h"
-#include "misc.h" /* countargs(), getargs(), getstr(), file, infile, address */
+#include "misc.h" /* getargs(), getstr(), file, infile, address */
 #include "lineno.h"
 
 int llbl;
@@ -17,6 +16,7 @@ unsigned int addrl;
 
 arr_t inss = { NULL, 0, 0, 0 }; /* these need to be 0 so cleanup() before assemble won't fail */
 arr_t labels = { NULL, 0, 0, 0 };
+string_t outbuf = { NULL, 0, 0 };
 
 char *lp, *ip, *argp, *nextln;
 int pspc, tspc, prefix, run;
@@ -32,54 +32,6 @@ int getprefix(char **src) {
 		skipsp(src);
 	}
 	return n;
-}
-
-void parseargs(char *in, char *mode, ...) {
-	int *i;
-	char **s;
-	va_list ap;
-	if (in == NULL)
-		flerrexit("too few arguments");
-	va_start(ap, mode);
-	while (1) {
-		switch (*mode) {
-			case 'n':
-				i = va_arg(ap, int *);
-				*i = numarg(&in);
-				break;
-			case 's':
-				s = va_arg(ap, char **);
-				*s = getstr(&in);
-				if (*s == NULL)
-					flerrexit("your argument is invalid");
-				break;
-			case 'i':
-				s = va_arg(ap, char **);
-				*s = getid(&in);
-				if (*s == NULL)
-					flerrexit("your argument is invalid");
-				skipsp(&in);
-				break;
-		}
-		if (mode[1] == '+') {
-			if (*in == ',') {
-				++in;
-				skipsp(&in);
-				continue;
-			} else break;
-		}
-		if (*++mode) {
-			if (*in != ',')
-				flerrexit("too few arguments");
-			++in;
-			skipsp(&in);
-		} else break;
-	}
-	if (*in == ',')
-		flerrexit("too many arguments");
-	if (!(ctype(*in) & (CT_NL | CT_NUL)))
-		flerrexit("your argument is invalid");
-	va_end(ap);
 }
 
 int parseln(char *in) {
@@ -174,21 +126,43 @@ void addlabel(char *lp) {
 	arr_add(&labels, &label);
 	ins.type = IT_LBL;
 	ins.line = lineno_get();
-	ins.d.lbl.lbl = labels.count - 1;
+	ins.lbl.lbl = labels.count - 1;
 	arr_add(&inss, &ins);
+}
+
+int countargs(char *src) {
+	int n = 1;
+	if (src == NULL)
+		return 0;
+	while(!(ctype(*src) & (CT_NUL | CT_NL))) {
+		switch (*src) {
+			case ',':
+				++n;
+				break;
+/*			case '"':
+			case '\'':
+				break; */
+		}
+		++src;
+	}
+	return n;
 }
 
 void adddata(int size, char *argp) {
 	ins_t ins;
-	int n = countargs(argp);
+	int n = countargs(argp) * size;
 	if (n == 0)
 		return;
 	ins.type = IT_DAT;
-	ins.d.data.args = argp;
-	ins.d.data.size = size;
-	ins.d.data.len = n;
-	address += n * size / arch->align;
+	ins.data.args = argp;
+	ins.data.size = size;
+	ins.data.len = n; /* number of bytes */
+	ins.data.pad = 0;
+	if (n % arch->align)
+		ins.data.pad = arch->align - n % arch->align;
+	address += (n + ins.data.pad) / arch->align;
 	arr_add(&inss, &ins);
+	vstr_skip(&outbuf, n);
 }
 
 int insfind(char *ip, char *argp) {
@@ -200,8 +174,8 @@ int insfind(char *ip, char *argp) {
 	if (cmpid(ip, "org")) {
 		getargs(argp, args, 1, 1);
 		ins.type = IT_ORG;
-		ins.d.org.address = args[0];
-		address = ins.d.org.address;
+		ins.org.address = args[0];
+		address = ins.org.address;
 		arr_add(&inss, &ins);
 		return 1;
 	}
@@ -210,7 +184,7 @@ int insfind(char *ip, char *argp) {
 		parseargs(argp, "s", &file);
 		lineno_pushfile(file, 0, 0);
 		ins.type = IT_CTX;
-		ins.d.ctx = lineno_getctx();
+		ins.ctx.ctx = lineno_getctx();
 		arr_add(&inss, &ins);
 		return 1;
 	}
@@ -221,7 +195,7 @@ int insfind(char *ip, char *argp) {
 		name = mstrldup(name, idlen(name));
 		lineno_pushmacro(name, file, line);
 		ins.type = IT_CTX;
-		ins.d.ctx = lineno_getctx();
+		ins.ctx.ctx = lineno_getctx();
 		arr_add(&inss, &ins);
 		return 1;
 	}
@@ -268,12 +242,11 @@ int insfind(char *ip, char *argp) {
 	while (oc->name != NULL) {
 		if (cmpid(ip, oc->name)) {
 			ins.type = IT_INS;
-			memcpy((void *) ins.d.ins.oc, (void *) oc->oc, sizeof(oc->oc));
-			ins.d.ins.len = oc->len;
-			ins.d.ins.atype = oc->atype;
-			ins.d.ins.args = argp;
+			ins.ins.oc = oc;
+			ins.ins.args = argp;
 			arr_add(&inss, &ins);
-			address += ins.d.ins.len / arch->align;
+			vstr_skip(&outbuf, oc->len);
+			address += oc->len / arch->align;
 			return 1;
 		}
 		++oc;
@@ -284,15 +257,22 @@ int insfind(char *ip, char *argp) {
 void assemble(char *code) {
 	arr_new(&inss, sizeof(ins_t));
 	arr_new(&labels, sizeof(label_t));
+	vstr_new(&outbuf);
 	lineno_init();
 	lineno_pushfile(infile, 1, 0);
 
 	{ /* first pass */
 		int r;
 
-		address = 0;
 		llbl = -1;
 		run = 0;
+		address = 0;
+		{ /* start with an org, to be friendly for output modules */
+			ins_t ins;
+			ins.type = IT_ORG;
+			ins.org.address = address;
+			arr_add(&inss, &ins);
+		}
 		while ((r = parseln(code))) {
 			addrl = address; /* case there is a label we have the address at start of line */
 			if (r == 2)
@@ -324,50 +304,56 @@ void assemble(char *code) {
 	{ /* second pass */
 		ins_t *ins = (ins_t *) inss.data;
 		int i, j, c, args[ARG_MAX];
+		unsigned char *bufp = (unsigned char *) outbuf.data;
+		unsigned char op[8];
+		char **lorgend = NULL;
 
 		address = 0;
-
 		while (ins->type != IT_END) {
 			lineno_set(ins->line);
 			switch (ins->type) {
 				case IT_INS:
-					c = getargs(ins->d.ins.args, args, 0, ARG_MAX);
-					arch->acmp(ins->d.ins.oc, ins->d.ins.atype, c, args);
-					address += ins->d.ins.len / arch->align;
-					break;
-				case IT_ORG:
-					address = ins->d.org.address;
+					c = getargs(ins->ins.args, args, 0, ARG_MAX);
+					memcpy(op, ins->ins.oc->oc, ins->ins.oc->len);
+					arch->acmp(op, ins->ins.oc->atype, c, args);
+					for (i = 0; i < ins->ins.oc->len; ++i)
+						bufp[i] = op[arch->insord[i]];
+					address += ins->ins.oc->len / arch->align;
+					bufp += ins->ins.oc->len;
 					break;
 				case IT_DAT:
-					c = ins->d.data.len * ins->d.data.size;
-					ins->d.data.len = (c + (c % arch->align));
-					ins->d.data.value = malloc(ins->d.data.len);
-					if (ins->d.data.value == NULL)
-						errexit("no moar memory");
-					getargs(ins->d.data.args, args, 0, ARG_MAX);
-					for (i = 0; i < c; ++i) {
-						j = i % ins->d.data.size;
-						ins->d.data.value[c - (i + 1)] =
-							(args[i / ins->d.data.size] & (0xFF << (j * 8))) >> (j * 8);
+					getargs(ins->data.args, args, 0, ARG_MAX);
+					for (i = 0; i < ins->data.len; ++i) {
+						j = ins->data.size - i % ins->data.size - 1;
+						bufp[i - (i % arch->dlen) + arch->dord[i % arch->dlen]] =
+							(args[i / ins->data.size] & (0xFF << (j * 8))) >> (j * 8);
 					}
-					c += c % arch->align;
-					for (; i < c; ++i)
-						ins->d.data.value[i] = 0;
-					ins->d.data.size = 1;
-					address += ins->d.data.len / arch->align;
+					bufp += ins->data.len;
+					for (i = 0; i < ins->data.pad; ++i)
+						bufp[i] = 0;
+					address += ins->data.len + ins->data.pad / arch->align;
+					bufp += ins->data.pad;
+					break;
+				case IT_ORG:
+					if (lorgend != NULL)
+						*lorgend = (char *) bufp;
+					lorgend = &ins->org.end;
+					address = ins->org.address;
 					break;
 				case IT_CTX:
-					lineno_pushctx(ins->d.ctx);
+					lineno_pushctx(ins->ctx.ctx);
 					break;
 				case IT_CTX_END:
 					lineno_dropctx();
 					break;
 				case IT_LBL:
-					llbl = ins->d.lbl.lbl;
+					llbl = ins->lbl.lbl;
 					break;
 			}
 			++ins;
 		}
+		if (lorgend != NULL)
+			*lorgend = (char *) bufp;
 	}
 	llbl = -1; /* important */
 	lineno_end();

@@ -26,13 +26,14 @@ extern void arr_free(arr_t *a);
 
 typedef struct {
 	char *data;
-	int len, res;
+	unsigned long len, res;
 } string_t;
 
 #define vstr_add(s, str) (vstr_addl(s, str, strlen(str)))
 
 extern void vstr_new(string_t *s);
-extern void vstr_addl(string_t *s, char *str, int len);
+extern void vstr_skip(string_t *s, unsigned long len);
+extern void vstr_addl(string_t *s, char *str, unsigned long len);
 extern void vstr_free(string_t *s);
 
 #endif /* __MEM_H__ */

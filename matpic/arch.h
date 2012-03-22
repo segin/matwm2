@@ -7,7 +7,7 @@
 
 typedef struct {
 	char *name;
-	unsigned char oc[6], imask[6];
+	unsigned char oc[8], imask[8];
 	int len, atype;
 } oc_t;
 

@@ -40,16 +40,31 @@ void vstr_new(string_t *s) {
 	vstr_add(s, ""); /* so to be sure it is not NULL */
 }
 
-void vstr_addl(string_t *s, char *str, int len) {
-	while (s->res < s->len + len + 1) {
-		if (s->res + BLOCK < s->res)
-			errexit("integer overflow :(");
-		s->res += BLOCK;
-		s->data = (char *) realloc((void *) s->data, s->res);
-		if (s->data == NULL)
-			errexit("out of memory");
-	}
-	memcpy((void *) (s->data + s->len), (void *) str, len);
+void vstr_resize(string_t *s, unsigned long len) {
+	s->res = len + (BLOCK - len % BLOCK);
+	if (s->res < len)
+		errexit("integer overflow :(");
+	s->data = (char *) realloc((void *) s->data, s->res);
+	if (s->data == NULL)
+		errexit("out of memory");
+}
+
+void vstr_grow(string_t *s, unsigned long len) {
+	len = s->len + len + 1; /* 1 extra for end 0 */
+	if (len < s->len)
+		errexit("integer overflow :(");
+	vstr_resize(s, len);
+}
+
+void vstr_skip(string_t *s, unsigned long len) {
+	vstr_grow(s, len);
+	s->len += len;
+}
+
+void vstr_addl(string_t *s, char *str, unsigned long len) {
+	unsigned long start = s->len;
+	vstr_grow(s, len);
+	memcpy(s->data + start, (void *) str, len);
 	s->len += len;
 	s->data[s->len] = 0;
 }

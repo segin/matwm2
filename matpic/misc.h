@@ -1,6 +1,8 @@
 #ifndef __MISC_H__
 #define __MISC_H__
 
+#include <stdarg.h>
+
 extern char *infile;
 extern unsigned long address;
 
@@ -17,8 +19,8 @@ extern char *readfile(char *path);
 extern unsigned long getval(char **src);
 extern unsigned long numarg(char **src);
 
-int countargs(char *src);
 extern int getargs(char *src, int *args, int min, int max);
+extern void parseargs(char *in, char *mode, ...);
 extern int sclen(char *in);
 extern char *getstr(char **in);
 extern char *unescape(char *in);

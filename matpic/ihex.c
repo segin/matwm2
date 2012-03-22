@@ -3,66 +3,51 @@
 #include "misc.h" /* errexit(), flwarn(), file, infile */
 #include "arch.h" /* arch */
 /* below includes = only for ihex input */
-#include "str.h" /* skipsp(), skipnl(), ctype, hexlookup[], hexnib[] */
+#include "str.h" /* skipsp(), skipnl(), ctype, hexlookup[] */
 #include "dis.h" /* dsym, dsym_t */
 #include "io.h"
 #include "lineno.h"
 
 #define IHLL 16
 
-unsigned long saddr;
 unsigned char buf[IHLL];
 int pos = 0, crc;
 
 void endln(ioh_t *out) {
 	int i;
-	mfprintf(out, ":%2x%4x00", pos, saddr);
+	mfprintf(out, ":%2x%4x00", pos, address);
 	for (i = 0; i < pos; ++i)
 		mfprintf(out, "%2x", buf[i]);
-	crc += saddr >> 8;
-	crc += saddr & 0xFF;
+	crc += address >> 8;
+	crc += address & 0xFF;
 	mfprintf(out, "%2x", (0x100 - (crc + pos)) & 0xFF);
 	mfprint(out, "\n");
 	crc = 0;
 	pos = 0;
-	saddr = address;
-}
-
-void addb(ioh_t *out, unsigned char b) {
-	buf[pos++] = b;
-	crc += b;
-	if (pos == 16)
-		endln(out);
 }
 
 void ihex_write(ioh_t *out) {
-	int i;
 	ins_t *ins = (ins_t *) inss.data;
+	char *bufp = outbuf.data;
 
-	address = saddr = 0;
+	address = 0;
 	crc = 0;
 	while (ins->type != IT_END) {
-		switch (ins->type) {
-			case IT_ORG:
+		if (ins->type == IT_ORG) {
+				address = ins->org.address * arch->align;
+				while (bufp != ins->org.end) {
+					buf[pos++] = *bufp;
+					crc += *bufp;
+					if (pos == 16)
+						endln(out);
+					++bufp;
+				}
 				if (pos)
 					endln(out);
-				address = saddr = ins->d.org.address * arch->align;
-				break;
-			case IT_DAT:
-				address += ins->d.data.len * ins->d.data.size;
-				for (i = 0; i < ins->d.data.len * ins->d.data.size; ++i)
-					addb(out, ins->d.data.value[i - (i % arch->dlen) + arch->dord[i % arch->dlen]]);
-				break;
-			case IT_INS:
-				address += ins->d.ins.len;
-				for (i = 0; i < ins->d.ins.len; ++i)
-					addb(out, ins->d.ins.oc[arch->insord[i]]);
 				break;
 		}
 		++ins;
 	}
-	if (pos)
-		endln(out);
 	mfprint(out, ":00000001FF\n");
 }
 

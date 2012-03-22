@@ -1,5 +1,6 @@
 #include <stdlib.h> /* NULL, exit(), EXIT_FAILURE, malloc() */
 #include <string.h> /* strlen() */
+#include <stdarg.h>
 #include "as.h" /* inss, labels, llbl */
 #include "dis.h" /* dsym */
 #include "str.h" /* skipsp(), getnum(), getid(), cmpid(), ctype(), lower[] */
@@ -14,6 +15,7 @@ void cleanup(void) {
 	arr_free(&inss);
 	arr_free(&labels);
 	arr_free(&dsym);
+	vstr_free(&outbuf);
 }
 
 void vaflwarn(char *pro, char *fmt, va_list ap) {
@@ -214,7 +216,7 @@ unsigned long calc(int op, unsigned long lval, unsigned long rval) {
 			break;
 		case OP_DIV:
 			if (!rval)
-				flerrexit("division by zero");			
+				flerrexit("division by zero");
 			lval /= rval;
 			break;
 		case OP_MOD:
@@ -390,18 +392,6 @@ unsigned long numarg(char **src) {
 	return lval[0];
 }
 
-int countargs(char *src) {
-	int n = 1;
-	if (src == NULL)
-		return 0;
-	while(!(ctype(*src) & (CT_NUL | CT_NL))) {
-		if (*src == ',')
-			++n;
-		++src;
-	}
-	return n;
-}
-
 int getargs(char *src, int *args, int min, int max) {
 	int n = 0;
 
@@ -424,6 +414,54 @@ int getargs(char *src, int *args, int min, int max) {
 	if (n > max)
 		flerrexit("too many arguments");
 	return n;
+}
+
+void parseargs(char *in, char *mode, ...) {
+	int *i;
+	char **s;
+	va_list ap;
+	if (in == NULL)
+		flerrexit("too few arguments");
+	va_start(ap, mode);
+	while (1) {
+		switch (*mode) {
+			case 'n':
+				i = va_arg(ap, int *);
+				*i = numarg(&in);
+				break;
+			case 's':
+				s = va_arg(ap, char **);
+				*s = getstr(&in);
+				if (*s == NULL)
+					flerrexit("your argument is invalid");
+				break;
+			case 'i':
+				s = va_arg(ap, char **);
+				*s = getid(&in);
+				if (*s == NULL)
+					flerrexit("your argument is invalid");
+				skipsp(&in);
+				break;
+		}
+		if (mode[1] == '+') {
+			if (*in == ',') {
+				++in;
+				skipsp(&in);
+				continue;
+			} else break;
+		}
+		if (*++mode) {
+			if (*in != ',')
+				flerrexit("too few arguments");
+			++in;
+			skipsp(&in);
+		} else break;
+	}
+	if (*in == ',')
+		flerrexit("too many arguments");
+	if (!(ctype(*in) & (CT_NL | CT_NUL)))
+		flerrexit("your argument is invalid");
+	va_end(ap);
 }
 
 int egethex(char **s) {
