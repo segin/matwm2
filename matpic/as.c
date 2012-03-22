@@ -324,7 +324,7 @@ void assemble(char *code) {
 				case IT_DAT:
 					getargs(ins->data.args, args, 0, ARG_MAX);
 					for (i = 0; i < ins->data.len; ++i) {
-						j = ins->data.size - i % ins->data.size - 1;
+						j = (ins->data.size - i % ins->data.size - 1);
 						bufp[i - (i % arch->dlen) + arch->dord[i % arch->dlen]] =
 							(args[i / ins->data.size] & (0xFF << (j * 8))) >> (j * 8);
 					}
