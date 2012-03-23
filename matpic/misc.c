@@ -103,7 +103,7 @@ int cmplid(char **idlp, char *idr) {
 
 unsigned long getval(char **src) {
 	unsigned long val;
-	char *ns, *ne;
+	char *ns, *ne, *s;
 
 	skipsp(src);
 	ns = *src;
@@ -124,6 +124,13 @@ unsigned long getval(char **src) {
 	if (**src == '$') {
 		val = address;
 		++*src;
+		goto gotval;
+	}
+	if ((s = getstr(src)) != NULL) {
+		int i;
+		for (i = 0; s[i] && i < sizeof(val); ++i)
+			val += s[i] << 8 * i;
+		free(s);
 		goto gotval;
 	}
 	{

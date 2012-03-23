@@ -15,10 +15,8 @@ typedef struct {
 	oc_t *ocs;
 	void (*acmp)(unsigned char *, int, int, int *);
 	void (*adis)(ioh_t *out, unsigned char *oc, int atype);
-	int *insord;
-	int *dord;
+	int *ord;
 	int align;
-	int dlen;
 } arch_t;
 
 extern arch_t *arch;

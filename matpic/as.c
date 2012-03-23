@@ -228,7 +228,7 @@ int insfind(char *ip, char *argp) {
 		return 1;
 	}
 	if (cmpid(ip, "data")) {
-		adddata(arch->dlen, argp);
+		adddata(arch->align, argp);
 		return 1;
 	}
 	if (cmpid(ip, "equ")) {
@@ -317,7 +317,7 @@ void assemble(char *code) {
 					memcpy(op, ins->ins.oc->oc, ins->ins.oc->len);
 					arch->acmp(op, ins->ins.oc->atype, c, args);
 					for (i = 0; i < ins->ins.oc->len; ++i)
-						bufp[i] = op[arch->insord[i]];
+						bufp[i - (i % arch->align) + arch->ord[i % arch->align]] = op[ins->ins.oc->len - 1 - i];
 					address += ins->ins.oc->len / arch->align;
 					bufp += ins->ins.oc->len;
 					break;
@@ -327,10 +327,10 @@ void assemble(char *code) {
 					memset(bufp, 0, ins->data.len * ins->data.size + ins->data.pad);
 					for (i = 0; i < ins->data.len; ++i) {
 						for (j = 0; j < ins->data.size; ++j)
-							op[ins->data.size - 1 - j] = (args[i] & (0xFF << (j * 8))) >> (j * 8);
+							op[j] = (args[i] & (0xFF << (j * 8))) >> (j * 8);
 						for (j = 0; j < ins->data.size; ++j) {
 							c = i * ins->data.size + j;
-							bufp[c - (c % arch->dlen) + arch->dord[c % arch->dlen]] = op[j];
+							bufp[c - (c % arch->align) + arch->ord[c % arch->align]] = op[j];
 						}
 					}
 					bufp += ins->data.len * ins->data.size + ins->data.pad;

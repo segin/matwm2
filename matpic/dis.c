@@ -20,10 +20,10 @@ void disassemble(ioh_t *out) {
 		while (oc->name != NULL) {
 			if (oc->len > c) /* this is to prevent disaster */
 				goto docf;
-			for (i = 0; ((sym + arch->insord[i])->value & oc->imask[i]) == oc->oc[i] && i < oc->len; ++i);
+			for (i = 0; ((sym + arch->ord[i % arch->align])->value & oc->imask[i]) == oc->oc[i] && i < oc->len; ++i);
 			if (i == oc->len) {
 				for (i = 0; i < oc->len; ++i)
-					inop[i] = (sym + arch->insord[i])->value;
+					inop[i] = (sym + arch->ord[i % arch->align])->value;
 				for (i = 0; i < oc->len; ++i)
 					mfprintf(out, "%2x", inop[i]);
 				mfprintf(out, "): %s ", oc->name);
@@ -37,10 +37,10 @@ void disassemble(ioh_t *out) {
 		}
 		if (i != oc->len) {
 			for (i = 0; i < arch->align; ++i)
-				mfprintf(out, "%2x", (sym + arch->insord[i])->value);
+				mfprintf(out, "%2x", (sym + arch->ord[i])->value);
 			mfprint(out, "): data 0x");
 			for (i = 0; i < arch->align; ++i)
-				mfprintf(out, "%2x", (sym + arch->insord[i])->value);
+				mfprintf(out, "%2x", (sym + arch->ord[i])->value);
 			sym += arch->align;
 			c -= arch->align;
 		}
