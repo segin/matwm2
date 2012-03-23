@@ -13,6 +13,7 @@ typedef struct {
 } lineno_t;
 
 extern arr_t lineno;
+extern arr_t garbage; /* ppc uses this too */
 
 extern void lineno_init(void);
 extern void lineno_end(void);

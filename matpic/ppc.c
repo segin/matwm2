@@ -13,7 +13,6 @@ arr_t files;
 arr_t reps;
 arr_t amacros;
 arr_t adef;
-arr_t garbage;
 
 int level, ignore; /* depth & state of if/ifdef/ifndef directives */
 int str, esc;
@@ -653,7 +652,6 @@ void preprocess(ioh_t *out, char *in) {
 	arr_new(&files, sizeof(file_t));
 	arr_new(&reps, sizeof(rep_t));
 	arr_new(&amacros, sizeof(amacro_t));
-	arr_new(&garbage, sizeof(void *));
 	lineno_init();
 	lineno_pushfile(infile, 1, 0);
 	level = ignore = 0;
@@ -705,7 +703,6 @@ void preprocess(ioh_t *out, char *in) {
 	lineno_end();
 	for (--garbage.count; garbage.count >= 0; --garbage.count)
 		free(*((void **) garbage.data + garbage.count));
-	arr_free(&garbage);
 	arr_free(&amacros);
 	arr_free(&reps);
 	arr_free(&files);
