@@ -317,7 +317,7 @@ void assemble(char *code) {
 					memcpy(op, ins->ins.oc->oc, ins->ins.oc->len);
 					arch->acmp(op, ins->ins.oc->atype, c, args);
 					for (i = 0; i < ins->ins.oc->len; ++i)
-						bufp[i - (i % arch->align) + arch->ord[i % arch->align]] = op[ins->ins.oc->len - 1 - i];
+						bufp[i] = op[i - i % arch->align + arch->align - 1 - arch->ord[i % arch->align]];
 					address += ins->ins.oc->len / arch->align;
 					bufp += ins->ins.oc->len;
 					break;
