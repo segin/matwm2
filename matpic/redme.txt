@@ -76,6 +76,8 @@ and the following suffixes:
 	o, q: octal
 b and d suffix and 0b and 0d suffix are ignored if the default radix is hex
 underscores within integers are ignored (but not in prefix plz)
+when integers are expected, you can also give a string encapsulated in quotes or double quotes
+   "abcd" is equivalent to 0x61626364
 utf-8 in labels / macro names etc are allowed
 
 BUGS
