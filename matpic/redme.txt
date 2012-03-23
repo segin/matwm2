@@ -32,6 +32,7 @@ following directives exist:
 	org <origin>: set origin
 	data <value>, ...: put stray words into bytecode (native word size)
 	dd|dw <value>, ...: add data of 2, 4 or 8 byte size respectively into bytecode output
+	                    when number is bigger than the native word size, big endian is assumed
 	equ <number>: assign <number> to the preceding label, instead of the adress it's at
 also the following which are only meant for the preprocessor to tell the assembler what's going on
 	file "<filename>": tell assembler what file it is working on (also sets next line # to 1)
@@ -39,7 +40,6 @@ also the following which are only meant for the preprocessor to tell the assembl
 	line <line #>: tell assembler what the next line is numbered
 	expands <id>, "<filename>", <line>: tell the macro following code is from a specific macro
 	endexp: tell the assembler we exited a macro
-
 also there is preprocessor directives:
 	define, if, ifdef, ifndef, else, endif: behave mostly like C
 		with exception of the use of arguments in macros, in a case like
