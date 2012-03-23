@@ -443,13 +443,6 @@ void parseargs(char *in, char *mode, ...) {
 				skipsp(&in);
 				break;
 		}
-		if (mode[1] == '+') {
-			if (*in == ',') {
-				++in;
-				skipsp(&in);
-				continue;
-			} else break;
-		}
 		if (*++mode) {
 			if (*in != ',')
 				flerrexit("too few arguments");
