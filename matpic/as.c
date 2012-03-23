@@ -150,17 +150,17 @@ int countargs(char *src) {
 
 void adddata(int size, char *argp) {
 	ins_t ins;
-	int n = countargs(argp) * size;
+	int n = countargs(argp);
 	if (n == 0)
 		return;
 	ins.type = IT_DAT;
 	ins.data.args = argp;
 	ins.data.size = size;
-	ins.data.len = n; /* number of bytes */
+	ins.data.len = n;
 	ins.data.pad = 0;
-	if (n % arch->align)
-		ins.data.pad = arch->align - n % arch->align;
-	address += (n + ins.data.pad) / arch->align;
+	if (n * size % arch->align)
+		ins.data.pad = arch->align - n * size % arch->align;
+	address += (n * size + ins.data.pad) / arch->align;
 	arr_add(&inss, &ins);
 	vstr_skip(&outbuf, n);
 }
@@ -323,16 +323,18 @@ void assemble(char *code) {
 					break;
 				case IT_DAT:
 					getargs(ins->data.args, args, 0, ARG_MAX);
+					mfprintf(mstderr, "%d %d %d\n", ins->data.size, ins->data.len, ins->data.pad);
+					memset(bufp, 0, ins->data.len * ins->data.size + ins->data.pad);
 					for (i = 0; i < ins->data.len; ++i) {
-						j = (ins->data.size - i % ins->data.size - 1);
-						bufp[i - (i % arch->dlen) + arch->dord[i % arch->dlen]] =
-							(args[i / ins->data.size] & (0xFF << (j * 8))) >> (j * 8);
+						for (j = 0; j < ins->data.size; ++j)
+							op[ins->data.size - 1 - j] = (args[i] & (0xFF << (j * 8))) >> (j * 8);
+						for (j = 0; j < ins->data.size; ++j) {
+							c = i * ins->data.size + j;
+							bufp[c - (c % arch->dlen) + arch->dord[c % arch->dlen]] = op[j];
+						}
 					}
-					bufp += ins->data.len;
-					for (i = 0; i < ins->data.pad; ++i)
-						bufp[i] = 0;
-					address += ins->data.len + ins->data.pad / arch->align;
-					bufp += ins->data.pad;
+					bufp += ins->data.len * ins->data.size + ins->data.pad;
+					address += (ins->data.len * ins->data.size + ins->data.pad) / arch->align;
 					break;
 				case IT_ORG:
 					if (lorgend != NULL)

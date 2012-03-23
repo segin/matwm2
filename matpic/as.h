@@ -30,7 +30,7 @@ typedef union {
 	struct data {
 		unsigned int type, line;
 		char *args;
-		int size, len, pad; /* len & pad = in bytes */
+		int size, len, pad;
 	} data;
 	struct lbl {
 		unsigned int type, line;
