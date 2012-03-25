@@ -34,9 +34,6 @@
 
 void num_set32(num_t *lval, unsigned long rval) {
 	int i;
-	num_setsize(lval, 4);
-	if (num_error)
-		return;
 	lval->value[0] = rval & 0xFFFF;
 	lval->value[1] = (rval >> 16) & 0xFFFF;
 	for (i = 2; i < NUM_SIZE; ++i)
@@ -46,33 +43,36 @@ void num_set32(num_t *lval, unsigned long rval) {
 
 unsigned long num_get32(num_t *rval, int opts) {
 	unsigned long ret = 0;
-	ret |= value[0];
-	ret |= value[1] << 16;
+	ret |= rval->value[0];
+	ret |= rval->value[1] << 16;
 	return ret;
 }
 
 int num_iseq(num_t *lval, num_t *rval) {
+	int i;
 	for (i = 0; i < NUM_SIZE; ++i)
-		if (lval[i] != rval[i])
+		if (lval->value[i] != rval->value[i])
 			return 0;
 	return 1;
 }
 
 int num_isgt(num_t *lval, num_t *rval) {
+	int i;
 	for (i = NUM_SIZE - 1; i >= 0; --i) {
-		if (lval[i] < rval[i])
+		if (lval->value[i] < rval->value[i])
 			return 0;
-		if (lval[i] > rval[i])
+		if (lval->value[i] > rval->value[i])
 			return 1;
 	}
 	return 0;
 }
 
 int num_isgte(num_t *lval, num_t *rval) {
+	int i;
 	for (i = NUM_SIZE - 1; i >= 0; --i) {
-		if (lval[i] < rval[i])
+		if (lval->value[i] < rval->value[i])
 			return 0;
-		if (lval[i] > rval[i])
+		if (lval->value[i] > rval->value[i])
 			return 1;
 	}
 	return 1;
@@ -80,6 +80,7 @@ int num_isgte(num_t *lval, num_t *rval) {
 
 void num_add(num_t *lval, num_t *rval) {
 	unsigned long res = 0;
+	int i;
 	lval->flags &= ~(NUM_FLAGS_ZERO|NUM_FLAGS_OVFL);
 	if ((lval->flags ^ rval->flags) & NUM_FLAGS_SIGN) {
 		lval->flags &= ~(rval->flags & NUM_FLAGS_ZERO);
@@ -87,10 +88,10 @@ void num_add(num_t *lval, num_t *rval) {
 		return;
 	}
 	for (i = 0; i < NUM_SIZE; ++i) {
-		res += (unsigned long) lval[i] + rval[i];
-		lval[i] = res & 0xFFFF;
+		res += (unsigned long) lval->value[i] + rval->value[i];
+		lval->value[i] = res & 0xFFFF;
 		res >>= 16;
-		if (lval[i] != 0) lval->flags |= NUM_FLAGS_ZERO;
+		if (lval->value[i] != 0) lval->flags |= NUM_FLAGS_ZERO;
 	}
 	if (res > 0)
 		lval->flags |= NUM_FLAGS_OVFL;

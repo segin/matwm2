@@ -31,7 +31,7 @@
 #ifndef __NUM_H__
 #define __NUM_H__
 
-#define NUM_SIZE 4; /* # of 16bit values per number */
+#define NUM_SIZE 4 /* # of 16bit values per number */
 
 typedef struct {
 	int flags, size;
@@ -45,7 +45,6 @@ typedef struct {
 
 #define islt(a, b) isgt(b, a)
 #define islte(a, b) isgte(b, a)
-
 
 extern void num_set32(num_t *lval, unsigned long rval);
 extern unsigned long num_get32(num_t *rval, int opts);
