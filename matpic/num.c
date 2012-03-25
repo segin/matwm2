@@ -28,19 +28,9 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include "num.h"
+
 #include <stdlib.h>
-
-#define NUM_SIZE 4; /* # of 16bit values per number */
-
-typedef struct {
-	int flags, size;
-	unsigned short value[NUM_SIZE];
-} num_t;
-
-#define NUM_FLAGS_SIGN 1
-#define NUM_FLAGS_ZERO 2
-#define NUM_FLAGS_OVFL 4
-#define NUM_FLAGS_DIVZ 8
 
 void num_set32(num_t *lval, unsigned long rval) {
 	int i;
@@ -87,14 +77,6 @@ int num_isgte(num_t *lval, num_t *rval) {
 	}
 	return 1;
 }
-
-int num_islt(num_t *lval, num_t *rval) {
-	for (i = NUM_SIZE - 1; i >= 0; --i)
-		if (lval[i] > rval[i])
-			return 0;
-	return 1;
-}
-
 
 void num_add(num_t *lval, num_t *rval) {
 	unsigned long res = 0;
