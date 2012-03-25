@@ -80,13 +80,15 @@ int num_isgte(num_t *lval, num_t *rval) {
 
 void num_add(num_t *lval, num_t *rval) {
 	unsigned long res = 0;
-	lval->flags &= ~NUM_FLAGS_ZERO;
+	lval->flags &= ~(NUM_FLAGS_ZERO|NUM_FLAGS_OVFL);
 	for (i = 0; i < NUM_SIZE; ++i) {
-		res >>= 16;
 		res += (unsigned long) lval[i] + rval[i];
 		lval[i] = res & 0xFFFF;
+		res >>= 16;
 		if (lval[i] != 0) lval->flags |= NUM_FLAGS_ZERO;
 	}
+	if (res > 0)
+		lval->flags |= NUM_FLAGS_OVFL;
 }
 
 void num_sub(num_t *lval, num_t *rval) {
