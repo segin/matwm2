@@ -68,14 +68,14 @@ int num_iseq(num_t *lval, num_t *rval) {
 	return 1;
 }
 
-int num_isgte(num_t *lval, num_t *rval) {
+int num_isgt(num_t *lval, num_t *rval) {
 	for (i = NUM_SIZE - 1; i >= 0; --i) {
 		if (lval[i] < rval[i])
 			return 0;
 		if (lval[i] > rval[i])
 			return 1;
 	}
-	return 1;
+	return 0;
 }
 
 int num_islt(num_t *lval, num_t *rval) {
