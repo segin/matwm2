@@ -102,7 +102,7 @@ void num_sub(num_t *lval, num_t *rval) {
 	int i;
 	lval->flags &= ~NUM_FLAGS_ZERO;
 	for (i = 0; i < NUM_SIZE; ++i) {
-
+		
 		if (lval->value[i] != 0) lval->flags |= NUM_FLAGS_ZERO;
 	}
 }
