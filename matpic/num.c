@@ -81,6 +81,11 @@ int num_isgte(num_t *lval, num_t *rval) {
 void num_add(num_t *lval, num_t *rval) {
 	unsigned long res = 0;
 	lval->flags &= ~(NUM_FLAGS_ZERO|NUM_FLAGS_OVFL);
+	if ((lval->flags ^ rval->flags) & NUM_FLAGS_SIGN) {
+		lval->flags &= ~(rval->flags & NUM_FLAGS_ZERO);
+		num_sub(lval, rval);
+		return;
+	}
 	for (i = 0; i < NUM_SIZE; ++i) {
 		res += (unsigned long) lval[i] + rval[i];
 		lval[i] = res & 0xFFFF;

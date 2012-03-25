@@ -46,4 +46,23 @@ typedef struct {
 #define islt(a, b) isgt(b, a)
 #define islte(a, b) isgte(b, a)
 
+
+extern void num_set32(num_t *lval, unsigned long rval);
+extern unsigned long num_get32(num_t *rval, int opts);
+extern int num_iseq(num_t *lval, num_t *rval);
+extern int num_isgt(num_t *lval, num_t *rval);
+extern int num_isgte(num_t *lval, num_t *rval);
+extern void num_add(num_t *lval, num_t *rval);
+extern void num_sub(num_t *lval, num_t *rval);
+extern void num_mul(num_t *lval, num_t *rval);
+extern void num_div(num_t *lval, num_t *rval);
+extern void num_mod(num_t *lval, num_t *rval);
+extern void num_and(num_t *lval, num_t *rval);
+extern void num_ior(num_t *lval, num_t *rval);
+extern void num_eor(num_t *lval, num_t *rval);
+extern void num_shl(num_t *lval, num_t *rval);
+extern void num_shr(num_t *lval, num_t *rval);
+extern void num_not(num_t *lval);
+extern void num_neg(num_t *lval);
+
 #endif /* __NUM_H__ */
