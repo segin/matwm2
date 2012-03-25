@@ -3,6 +3,9 @@
 
 #include <stdarg.h>
 
+typedef signed long long sll;
+typedef unsigned long long ull;
+
 extern char *infile;
 extern unsigned long address;
 
@@ -16,8 +19,8 @@ extern void flmsg(char *msg);
 
 extern char *readfile(char *path);
 
-extern unsigned long getval(char **src);
-extern unsigned long numarg(char **src);
+extern sll getval(char **src);
+extern sll numarg(char **src);
 
 extern int getargs(char *src, int *args, int min, int max);
 extern void parseargs(char *in, char *mode, ...);

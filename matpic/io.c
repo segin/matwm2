@@ -80,8 +80,8 @@ int mfprint(ioh_t *h, char *data) {
 	return mfwrite(h, data, strlen(data));
 }
 
-int mfprintsnum(ioh_t *h, int n, int b, int p) {
-	char rev[24]; /* best stay above 22 */
+int mfprintsnum(ioh_t *h, signed long long n, int b, int p) {
+	char rev[64];
 	int pos = sizeof(rev);
 	if (n < 0) {
 		mfwrite(h, "-", 1);
@@ -96,8 +96,8 @@ int mfprintsnum(ioh_t *h, int n, int b, int p) {
 	return 0;
 }
 
-int mfprintnum(ioh_t *h, unsigned int n, int b, int p) {
-	char rev[24]; /* best stay above 22 */
+int mfprintnum(ioh_t *h, unsigned long long n, int b, int p) {
+	char rev[64];
 	int pos = sizeof(rev);
 	do {
 		rev[--pos] = hex[n % b];
@@ -117,10 +117,24 @@ int mfprintf(ioh_t *h, char *fmt, ...) {
 	return r;
 }
 
+unsigned long long mprintf_getnarg(int l, va_list ap) {
+	switch (l) {
+		case 0:
+			return va_arg(ap, unsigned int);
+		case 1:
+			return va_arg(ap, unsigned long int);
+		case 2:
+			return va_arg(ap, unsigned long long int);
+		default:
+			return va_arg(ap, unsigned int);
+	}
+}
+
 int mvafprintf(ioh_t *h, char *fmt, va_list ap) {
 	char *start, *s;
-	unsigned int p, n;
+	unsigned long long n;
 	unsigned char c;
+	int p, l;
 
 	start = fmt;
 	while (*fmt) {
@@ -134,9 +148,24 @@ int mvafprintf(ioh_t *h, char *fmt, va_list ap) {
 				p += *fmt - '0';
 				++fmt;
 			}
+			l = 2;
+			while (1) {
+				switch (*fmt) {
+					case 'l':
+						++l;
+						break;
+					case 'q':
+						l = 4;
+						break;
+					default:
+						goto lsend;
+				}
+				++fmt;
+			}
+			lsend:
 			switch (*fmt) {
 				case 'c':
-					c = va_arg(ap, unsigned int);
+					c = mprintf_getnarg(l, ap);
 					mfwrite(h, (char *) &c, 1);
 					break;
 				case 's':
@@ -148,20 +177,20 @@ int mvafprintf(ioh_t *h, char *fmt, va_list ap) {
 					break;
 				case 'x':
 				case 'X':
-					n = va_arg(ap, unsigned int);
+					n = mprintf_getnarg(l, ap);
 					mfprintnum(h, n, 16, p);
 					break;
 				case 'i':
 				case 'd':
-					n = va_arg(ap, int);
+					n = mprintf_getnarg(l, ap);
 					mfprintsnum(h, n, 10, p);
 					break;
 				case 'u':
-					n = va_arg(ap, unsigned int);
+					n = mprintf_getnarg(l, ap);
 					mfprintnum(h, n, 10, p);
 					break;
 				case 'o':
-					n = va_arg(ap, unsigned int);
+					n = mprintf_getnarg(l, ap);
 					mfprintnum(h, n, 8, p);
 					break;
 				default:

@@ -101,8 +101,8 @@ int cmplid(char **idlp, char *idr) {
 	return 0;
 }
 
-unsigned long getval(char **src) {
-	unsigned long val;
+sll getval(char **src) {
+	sll val;
 	char *ns, *ne, *s;
 
 	skipsp(src);
@@ -210,7 +210,7 @@ enum ops {
 	OP_LOR
 };
 
-unsigned long calc(int op, unsigned long lval, unsigned long rval) {
+sll calc(int op, sll lval, sll rval) {
 	switch (op) {
 		case OP_ADD:
 			lval += rval;
@@ -276,7 +276,7 @@ unsigned long calc(int op, unsigned long lval, unsigned long rval) {
 
 #define CALC_MAX 512
 
-void _calc(unsigned long *lval, unsigned long *op, int len, int pre_min, int pre_max) {
+void _calc(sll *lval, int *op, int len, int pre_min, int pre_max) {
 	int i, j;
 	for (i = 0, j = 0; i < len; ++i) {
 		if (op[i] >= pre_min && op[i] <= pre_max)
@@ -286,9 +286,10 @@ void _calc(unsigned long *lval, unsigned long *op, int len, int pre_min, int pre
 	}
 }
 
-unsigned long numarg(char **src) {
+sll numarg(char **src) {
 	unsigned int i;
-	unsigned long lval[CALC_MAX], op[CALC_MAX];
+	sll lval[CALC_MAX];
+	int op[CALC_MAX];
 
 	for (i = 0; i < CALC_MAX; ++i) {
 		lval[i] = getval(src);
