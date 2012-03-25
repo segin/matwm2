@@ -190,7 +190,7 @@ int insfind(char *ip, char *argp) {
 	}
 	if (cmpid(ip, "expands")) {
 		char *name, *file;
-		unsigned int line;
+		sll line;
 		parseargs(argp, "isn", &name, &file, &line);
 		name = mstrldup(name, idlen(name));
 		lineno_pushmacro(name, file, line);
