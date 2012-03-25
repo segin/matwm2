@@ -190,7 +190,8 @@ int idlen(char *src) {
 }
 
 int getnum(char **src, signed long long *ret) {
-	unsigned int c, r = 0;
+	unsigned int c;
+	signed long long r = 0;
 	int n = 0, base = 10, sfx = 0, pfx = 0, neg = 0;
 	char *s = *src;
 
@@ -242,8 +243,8 @@ int getnum(char **src, signed long long *ret) {
 		}
 		++s;
 	} else { /* check for suffix notation */
-		oct0:
 		char *t = s;
+		oct0:
 		while ((c = hexlookup[(unsigned char) *t]) != 16)
 			++t;
 		sfx = 1;
@@ -306,6 +307,8 @@ int getnum(char **src, signed long long *ret) {
 			++*src;
 		if (!n)
 			++n;
+		if (neg)
+			r = -r;
 	}
 	*ret = r;
 	return n;

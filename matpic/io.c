@@ -81,19 +81,11 @@ int mfprint(ioh_t *h, char *data) {
 }
 
 int mfprintsnum(ioh_t *h, signed long long n, int b, int p) {
-	char rev[64];
-	int pos = sizeof(rev);
 	if (n < 0) {
 		mfwrite(h, "-", 1);
 		n = -n;
 	}
-	do {
-		rev[--pos] = hex[n % b];
-		n /= b;
-		--p;
-	} while (n || p > 0);
-	mfwrite(h, rev + pos, sizeof(rev) - pos);
-	return 0;
+	return mfprintnum(h, n, b, p);
 }
 
 int mfprintnum(ioh_t *h, unsigned long long n, int b, int p) {
@@ -117,6 +109,19 @@ int mfprintf(ioh_t *h, char *fmt, ...) {
 	return r;
 }
 
+signed long long mprintf_getsnarg(int l, va_list ap) {
+	switch (l) {
+		case 0:
+			return va_arg(ap, signed int);
+		case 1:
+			return va_arg(ap, signed long int);
+		case 2:
+			return va_arg(ap, signed long long int);
+		default:
+			return va_arg(ap, signed int);
+	}
+}
+
 unsigned long long mprintf_getnarg(int l, va_list ap) {
 	switch (l) {
 		case 0:
@@ -133,6 +138,7 @@ unsigned long long mprintf_getnarg(int l, va_list ap) {
 int mvafprintf(ioh_t *h, char *fmt, va_list ap) {
 	char *start, *s;
 	unsigned long long n;
+	signed long long sn;
 	unsigned char c;
 	int p, l;
 
@@ -148,14 +154,14 @@ int mvafprintf(ioh_t *h, char *fmt, va_list ap) {
 				p += *fmt - '0';
 				++fmt;
 			}
-			l = 2;
+			l = 0;
 			while (1) {
 				switch (*fmt) {
 					case 'l':
 						++l;
 						break;
 					case 'q':
-						l = 4;
+						l = 2;
 						break;
 					default:
 						goto lsend;
@@ -182,8 +188,8 @@ int mvafprintf(ioh_t *h, char *fmt, va_list ap) {
 					break;
 				case 'i':
 				case 'd':
-					n = mprintf_getnarg(l, ap);
-					mfprintsnum(h, n, 10, p);
+					sn = mprintf_getsnarg(l, ap);
+					mfprintsnum(h, sn, 10, p);
 					break;
 				case 'u':
 					n = mprintf_getnarg(l, ap);

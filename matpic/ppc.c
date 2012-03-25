@@ -120,8 +120,8 @@ macro_t *macrofind(char *name) {
 
 char *sppsub(char *in, char end);
 
-unsigned int ppgetnum(char **in) {
-	unsigned int ret;
+sll ppgetnum(char **in) {
+	sll ret;
 	char *p, *t;
 	if (**in == '[') {
 		++*in;
@@ -195,7 +195,7 @@ void _ppsub(ioh_t *out, char *in, amacro_t *am, char end) {
 				continue;
 			}
 			if (*in == '[') {
-				mfprintf(out, "%xh", ppgetnum(&in));
+				mfprintf(out, "%lldt", (sll) ppgetnum(&in));
 				continue;
 			}
 			id = in;

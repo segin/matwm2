@@ -107,7 +107,7 @@ sll getval(char **src) {
 
 	skipsp(src);
 	ns = *src;
-	while (**src == '!' || **src == '~' || ctype(**src) & CT_SPC)
+	while (**src == '!' || **src == '~' || **src == '-' || ctype(**src) & CT_SPC)
 		++*src;
 	ne = *src;
 	skipsp(src);
@@ -181,9 +181,17 @@ sll getval(char **src) {
 	}
 	gotval:
 	while (ns != ne--) {
-		if (*ne == '!')
-			val = !val;
-		else val = ~val;
+		switch (*ne) {
+			case '!':
+				val = !val;
+				break;
+			case '~':
+				val = ~val;
+				break;
+			case '-':
+				val = -val;
+				break;
+		}
 	}
 	return val;
 }
