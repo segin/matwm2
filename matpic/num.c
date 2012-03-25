@@ -99,10 +99,11 @@ void num_add(num_t *lval, num_t *rval) {
 
 void num_sub(num_t *lval, num_t *rval) {
 	unsigned long res = 0;
+	int i;
 	lval->flags &= ~NUM_FLAGS_ZERO;
 	for (i = 0; i < NUM_SIZE; ++i) {
 
-		if (lval[i] != 0) lval->flags |= NUM_FLAGS_ZERO;
+		if (lval->value[i] != 0) lval->flags |= NUM_FLAGS_ZERO;
 	}
 }
 
@@ -119,26 +120,29 @@ void num_mod(num_t *lval, num_t *rval) {
 }
 
 void num_and(num_t *lval, num_t *rval) {
+	int i;
 	lval->flags &= ~NUM_FLAGS_ZERO;
 	for (i = 0; i < NUM_SIZE; ++i) {
-		lval[i] &= rval[i];
-		if (lval[i] != 0) lval->flags |= NUM_FLAGS_ZERO;
+		lval->value[i] &= rval->value[i];
+		if (lval->value[i] != 0) lval->flags |= NUM_FLAGS_ZERO;
 	}
 }
 
 void num_ior(num_t *lval, num_t *rval) {
+	int i;
 	lval->flags &= ~NUM_FLAGS_ZERO;
 	for (i = 0; i < NUM_SIZE; ++i) {
-		lval[i] |= rval[i];
-		if (lval[i] != 0) lval->flags |= NUM_FLAGS_ZERO;
+		lval->value[i] |= rval->value[i];
+		if (lval->value[i] != 0) lval->flags |= NUM_FLAGS_ZERO;
 	}
 }
 
 void num_eor(num_t *lval, num_t *rval) {
+	int i;
 	lval->flags &= ~NUM_FLAGS_ZERO;
 	for (i = 0; i < NUM_SIZE; ++i) {
-		lval[i] ^= rval[i];
-		if (lval[i] != 0) lval->flags |= NUM_FLAGS_ZERO;
+		lval->value[i] ^= rval->value[i];
+		if (lval->value[i] != 0) lval->flags |= NUM_FLAGS_ZERO;
 	}
 }
 
@@ -151,10 +155,11 @@ void num_shr(num_t *lval, num_t *rval) {
 }
 
 void num_not(num_t *lval) {
+	int i;
 	lval->flags &= ~NUM_FLAGS_ZERO;
 	for (i = 0; i < NUM_SIZE; ++i) {
-		lval[i] = ~lval[i];
-		if (lval[i] != 0) lval->flags |= NUM_FLAGS_ZERO;
+		lval->value[i] = ~lval->value[i];
+		if (lval->value[i] != 0) lval->flags |= NUM_FLAGS_ZERO;
 	}
 }
 
