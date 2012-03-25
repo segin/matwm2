@@ -191,20 +191,23 @@ int idlen(char *src) {
 
 int getnum(char **src, signed long long *ret) {
 	unsigned int c, r = 0;
-	int n = 0, base = 10, sfx = 0, pfx = 0;
-	char *s;
+	int n = 0, base = 10, sfx = 0, pfx = 0, neg = 0;
+	char *s = *src;
 
-	if (**src == '$') {
-		s = (*src) + 1;
+	if (*s == '-') {
+		neg = 1;
+		++s;
+	}
+	if (*s == '$') {
+		++s;
 		while (*s == '_')
 			++s;
 		if (hexlookup[(unsigned char) *s] != 16) {
 			base = 16;
-			++*src;
 		}
-	} else if (**src == '0') {
+	} else if (*s == '0') {
 		pfx = 1;
-		switch(*++*src) {
+		switch(*++s) {
 			case 'x':
 			case 'X':
 			case 'h':
@@ -237,14 +240,14 @@ int getnum(char **src, signed long long *ret) {
 				base = 8;
 				goto oct0;
 		}
-		++*src;
+		++s;
 	} else { /* check for suffix notation */
 		oct0:
-		s = *src;
-		while ((c = hexlookup[(unsigned char) *s]) != 16)
-			++s;
+		char *t = s;
+		while ((c = hexlookup[(unsigned char) *t]) != 16)
+			++t;
 		sfx = 1;
-		switch(*s) {
+		switch(*t) {
 			case 'h':
 			case 'H':
 			case 'x':
@@ -285,7 +288,6 @@ int getnum(char **src, signed long long *ret) {
 		}
 	}
 
-	s = *src;
 	while ((c = hexlookup[(unsigned char) *s]) != 16) {
 		if (c == 17) {
 			++s;
