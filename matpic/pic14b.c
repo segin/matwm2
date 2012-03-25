@@ -69,7 +69,7 @@ oc_t ocs14b[] = {
 	{ NULL, { 0 }, { 0 }, 0 }, /* important, end of list */
 };
 
-void acmp14b(unsigned char *oc, int atype, int argc, int *argv) {
+void acmp14b(unsigned char *oc, int atype, int argc, signed long long *argv) {
 	switch (atype) {
 		case AT_DF:
 			if (argc != 2)

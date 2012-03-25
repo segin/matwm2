@@ -13,7 +13,7 @@ typedef struct {
 
 typedef struct {
 	oc_t *ocs;
-	void (*acmp)(unsigned char *, int, int, int *);
+	void (*acmp)(unsigned char *, int, int, signed long long *);
 	void (*adis)(ioh_t *out, unsigned char *oc, int atype);
 	int *ord;
 	int align;

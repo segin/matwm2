@@ -195,7 +195,8 @@ void _ppsub(ioh_t *out, char *in, amacro_t *am, char end) {
 				continue;
 			}
 			if (*in == '[') {
-				mfprintf(out, "%lldt", (sll) ppgetnum(&in));
+				/* bracelets around the number cause it could be signed */
+				mfprintf(out, "(%lldt)", (sll) ppgetnum(&in));
 				continue;
 			}
 			id = in;
@@ -445,15 +446,15 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 		return 1;
 	}
 	if (cmpid(ip, "if")) {
-		int args[ARG_MAX];
+		sll arg;
 		if (argp == NULL)
 			flerrexit("too few arguments for if directive");
-		s = argp = sppsub(argp, 0);
-		getargs(argp, args, 1, 1);
+		argp = sppsub(argp, 0);
+		parseargs(argp, "n", &arg);
 		++level;
-		if (!ignore && !args[0])
+		if (!ignore && !arg)
 			ignore = level;
-		free(s);
+		free(argp);
 		return 1;
 	}
 	if (cmpid(ip, "ifdef")) {
@@ -505,13 +506,13 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 		return 1;
 	}
 	if (cmpid(ip, "rep")) {
-		int args[ARG_MAX];
-		s = sppsub(argp, 0);
-		getargs(s, args, 1, 1);
-		free(s);
-		if (args[0]) {
+		sll arg;
+		argp = sppsub(argp, 0);
+		parseargs(argp, "n", &arg);
+		free(argp);
+		if (arg) {
 			rep_t rep;
-			rep.count = args[0];
+			rep.count = arg;
 			rep.start = nextln;
 			rep.repno = 0;
 			rep.line = lineno_get();

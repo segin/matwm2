@@ -408,7 +408,7 @@ sll numarg(char **src) {
 	return lval[0];
 }
 
-int getargs(char *src, int *args, int min, int max) {
+int getargs(char *src, sll *args, int min, int max) {
 	int n = 0;
 
 	if (src != NULL)
@@ -433,7 +433,7 @@ int getargs(char *src, int *args, int min, int max) {
 }
 
 void parseargs(char *in, char *mode, ...) {
-	int *i;
+	sll *i;
 	char **s;
 	va_list ap;
 	if (in == NULL)
@@ -442,7 +442,7 @@ void parseargs(char *in, char *mode, ...) {
 	while (1) {
 		switch (*mode) {
 			case 'n':
-				i = va_arg(ap, int *);
+				i = va_arg(ap, sll *);
 				*i = numarg(&in);
 				break;
 			case 's':

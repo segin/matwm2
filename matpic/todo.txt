@@ -2,7 +2,6 @@ include search path
 db/dw to store string of bytes with "this kind of syntax"
 relocatable code and coff output support
 db/dw/dd/data to take into account limits of chips with odd word size
-signed integers
 
 relating to extra chip support
 	add ihex thing for bigger than 16bit addresses

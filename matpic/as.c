@@ -166,7 +166,7 @@ void adddata(int size, char *argp) {
 }
 
 int insfind(char *ip, char *argp) {
-	int args[ARG_MAX];
+	sll args[ARG_MAX];
 	oc_t *oc = arch->ocs;
 	ins_t ins;
 
@@ -303,7 +303,8 @@ void assemble(char *code) {
 		errexit("context stack unbalanced");
 	{ /* second pass */
 		ins_t *ins = (ins_t *) inss.data;
-		int i, j, c, args[ARG_MAX];
+		int i, j, c;
+		sll args[ARG_MAX];
 		unsigned char *bufp = (unsigned char *) outbuf.data;
 		unsigned char op[8];
 		char **lorgend = NULL;
