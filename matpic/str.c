@@ -243,8 +243,9 @@ int getnum(char **src, signed long long *ret) {
 		}
 		++s;
 	} else { /* check for suffix notation */
-		char *t = s;
+		char *t;
 		oct0:
+		t = s;
 		while ((c = hexlookup[(unsigned char) *t]) != 16)
 			++t;
 		sfx = 1;

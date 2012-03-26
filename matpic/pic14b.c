@@ -134,12 +134,21 @@ void adis14b(ioh_t *out, unsigned char *oc, int atype) {
 	}
 }
 
+unsigned long long nth14b(signed long long n) {
+	unsigned long long r;
+	if (n < 0) {
+		r = (~(-n)) + 1;
+	}
+	return n;
+}
+
 int ord14b[2] = { 0, 1 };
 
 arch_t pic14b = {
 	ocs14b,
 	&acmp14b,
 	&adis14b,
+	&nth14b,
 	ord14b,
 	2,
 };
