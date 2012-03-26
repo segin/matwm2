@@ -13,7 +13,6 @@ enum atype {
 	AT_K8,
 	AT_K11,
 	AT_T, /* for tris instruction */
-	AT_BS /* banksel */
 };
 
 oc_t ocs14b[] = {
@@ -107,8 +106,6 @@ void acmp14b(unsigned char *oc, int atype, int argc, signed long long *argv) {
 		case AT_NA:
 			if (argc)
 				flerrexit("wrong number of arguments");
-		case AT_BS:
-			break;
 	}
 }
 
