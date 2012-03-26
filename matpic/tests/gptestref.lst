@@ -1,96 +1,94 @@
-gpasm-0.14.1 (Jan  1 2012)   gptestref.asm      1-29-2012  14:12:18          PAGE  1
+gpasm-0.13.7 beta               tests/gptestref.asm3-26-2012  07:06:24          PAGE  1
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
-
-                      00001  ; reference test file for gpasm
-                      00002  ; assembled result will differ slightly for matpic
-                      00003  ; 000009:  0103  clrw
-                      00004  ; first two bits are not cared for according to microchip's datasheets
-                      00005  ; gpasm uses ones, datasheet says the assembler uses 0s
-                      00006  ; 0000b3:  3c12  sublw 0x12
-                      00007  ; 
-                      00008 
-0000   0482           00009  iorwf 2,1
-0001   0008           00010  return
-0002   0063           00011  sleep
-0003   0064           00012  clrwdt
-Warning[224]: Use of this instruction is not recommended.
-0004   0062           00013  option
-0005   0000           00014  nop
-0006   077F           00015  addwf 0x7F, w
-0007   05FF           00016  andwf 0x7F, f
-0008   01FF           00017  clrf 0x7F
-0009   0103           00018  clrw
-000A   097F           00019  comf 0x7F, w
-000B   03FF           00020  decf 0x7F, f
-000C   0B7F           00021  decfsz 0x7F, w
-000D   0AFF           00022  incf 0x7F, f
-000E   0F7F           00023  incfsz 0x7F, w
-0050                  00024  org 0x50
-0050   04FF           00025  iorwf 0x7F, f
-0051   087F           00026  movf 0x7F, w
-0052   00FF           00027  movwf 0x7F
-0053   0000           00028  nop
-0054   0D7F           00029  rlf 0x7F, w
-0055   0C7F           00030  rrf 0x7F, w
-00A0                  00031  org 0x50 + 0x50
-00A0   02FF           00032  subwf 0x7F, f
-00A1   0EFF           00033  swapf 0x7F, f
-00A2   06FF           00034  xorwf 0x7F, f
-00A3   13FF           00035  bcf 0x7F, 7
-00A4   17FF           00036  bsf 0x7F, 7
-00A5   1BFF           00037  btfsc 0x7F, 7
-00A6   1FFF           00038  btfss 0x7F, 7
-00A7   13FF           00039  bcf 0x7F, 7
-00A8   3EFF           00040  addlw 0xFF
-00A9   39FF           00041  andlw 0xFF
-00AA   27FF           00042  call 0x7FF
-00AB   0064           00043  clrwdt
-00AC   2FFF           00044  goto 0x7FF
-00AD   380F           00045  iorlw d'15'
-00AE   3010           00046  movlw d'16'
-00AF   0009           00047  retfie
-00B0   3411           00048  retlw d'17'
-00B1   0008           00049  return
-00B2   0063           00050  sleep
-00B3   3C12           00051  sublw d'18'
-00B4   3A13           00052  xorlw d'19'
-gpasm-0.14.1 (Jan  1 2012)   gptestref.asm      1-29-2012  14:12:18          PAGE  2
+ 
+               00001  ; reference test file for gpasm
+               00002  ; assembled result will differ slightly for matpic
+               00003  ; 000009:  0103  clrw
+               00004  ; first two bits are not cared for according to microchip's datasheets
+               00005  ; gpasm uses ones, datasheet says the assembler uses 0s
+               00006 
+0000 0482      00007  iorwf 2,1
+0001 0008      00008  return
+0002 0063      00009  sleep
+0003 0064      00010  clrwdt
+Warning [224] : Use of this instruction is not recommended.
+0004 0062      00011  option
+0005 0000      00012  nop
+0006 077F      00013  addwf 0x7F, w
+0007 05FF      00014  andwf 0x7F, f
+0008 01FF      00015  clrf 0x7F
+0009 0103      00016  clrw
+000A 097F      00017  comf 0x7F, w
+000B 03FF      00018  decf 0x7F, f
+000C 0B7F      00019  decfsz 0x7F, w
+000D 0AFF      00020  incf 0x7F, f
+000E 0F7F      00021  incfsz 0x7F, w
+0050           00022  org 0x50
+0050 04FF      00023  iorwf 0x7F, f
+0051 087F      00024  movf 0x7F, w
+0052 00FF      00025  movwf 0x7F
+0053 0000      00026  nop
+0054 0D7F      00027  rlf 0x7F, w
+0055 0C7F      00028  rrf 0x7F, w
+00A0           00029  org 0x50 + 0x50
+00A0 02FF      00030  subwf 0x7F, f
+00A1 0EFF      00031  swapf 0x7F, f
+00A2 06FF      00032  xorwf 0x7F, f
+00A3 13FF      00033  bcf 0x7F, 7
+00A4 17FF      00034  bsf 0x7F, 7
+00A5 1BFF      00035  btfsc 0x7F, 7
+00A6 1FFF      00036  btfss 0x7F, 7
+00A7 13FF      00037  bcf 0x7F, 7
+00A8 3EFF      00038  addlw 0xFF
+00A9 39FF      00039  andlw 0xFF
+00AA 27FF      00040  call 0x7FF
+00AB 0064      00041  clrwdt
+00AC 2FFF      00042  goto 0x7FF
+00AD 380F      00043  iorlw d'15'
+00AE 3010      00044  movlw d'16'
+00AF 0009      00045  retfie
+00B0 3411      00046  retlw d'17'
+00B1 0008      00047  return
+00B2 0063      00048  sleep
+00B3 3C12      00049  sublw d'18'
+00B4 3A13      00050  xorlw d'19'
+Warning [224] : Use of this instruction is not recommended.
+00B5 0062      00051  option
+Warning [224] : Use of this instruction is not recommended.
+gpasm-0.13.7 beta               tests/gptestref.asm3-26-2012  07:06:24          PAGE  2
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
-
-Warning[224]: Use of this instruction is not recommended.
-00B5   0062           00053  option
-Warning[224]: Use of this instruction is not recommended.
-00B6   0067           00054  tris 0x7
-00B7   3FFF 0000 1010 00055  data 0x3FFF, 0, 0x1010, 0x34, d'10'
-       0034 000A      
-                      00056  end
-gpasm-0.14.1 (Jan  1 2012)   gptestref.asm      1-29-2012  14:12:18          PAGE  3
+ 
+00B6 0067      00052  tris 0x7
+00B7 3FFF 0000 00053  data 0x3FFF, 0, 0x1010, 0x34, d'10'
+     1010 0034 
+     000A      
+gpasm-0.13.7 beta               tests/gptestref.asm3-26-2012  07:06:24          PAGE  3
 
 
 SYMBOL TABLE
-  LABEL                             VALUE
+  LABEL                             VALUE 
 
-__16C84                           00000001
+__16F84                           00000001
 
 
 MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
 
-0000 : XXXXXXXXXXXXXXX- ---------------- ---------------- ----------------
-0040 : ---------------- XXXXXX---------- ---------------- ----------------
-0080 : ---------------- ---------------- XXXXXXXXXXXXXXXX XXXXXXXXXXXX----
+00000000 : XXXXXXXXXXXXXXX- ---------------- ---------------- ----------------
+00000040 : ---------------- XXXXXX---------- ---------------- ----------------
+00000080 : ---------------- ---------------- XXXXXXXXXXXXXXXX XXXXXXXXXXXX----
 
 All other memory blocks unused.
 
-Program Memory Words Used:    49
+Program Memory Words Used: 49
 
-Errors   :     0
-Warnings :     3 reported,     0 suppressed
-Messages :     0 reported,     0 suppressed
 
+Errors   :       0
+Warnings :       3 reported,       0 suppressed
+Messages :       0 reported,       0 suppressed
 
