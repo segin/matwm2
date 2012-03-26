@@ -57,9 +57,11 @@ void flmsg(char *msg) {
 /* this routine is used to negative numbers to 2s complement format */
 unsigned long long ntt(signed long long n) {
 	unsigned long long r;
-	if (n < 0)
+	if (n < 0) {
 		r = (~(-n)) + 1;
-	return r;
+		return r;
+	}
+	return n;
 }
 
 char *readfile(char *path) {
