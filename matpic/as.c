@@ -318,7 +318,7 @@ void assemble(char *code) {
 					memcpy(op, ins->ins.oc->oc, ins->ins.oc->len);
 					arch->acmp(op, ins->ins.oc->atype, c, args);
 					for (i = 0; i < ins->ins.oc->len; ++i)
-						bufp[i] = op[i - i % arch->align + arch->align - 1 - arch->ord[i % arch->align]];
+						bufp[i] = op[i - i % arch->align + arch->ord[i % arch->align]];
 					address += ins->ins.oc->len / arch->align;
 					bufp += ins->ins.oc->len;
 					break;
@@ -328,7 +328,7 @@ void assemble(char *code) {
 					for (i = 0; i < ins->data.len; ++i) {
 						unsigned long long n = ntt(args[i]);
 						for (j = 0; j < ins->data.size; ++j)
-							op[j] = (n & (0xFF << (j * 8))) >> (j * 8);
+							op[ins->data.size - 1 - j] = (n & (0xFF << (j * 8))) >> (j * 8);
 						for (j = 0; j < ins->data.size; ++j) {
 							c = i * ins->data.size + j;
 							bufp[c - (c % arch->align) + arch->ord[c % arch->align]] = op[j];
