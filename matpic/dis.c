@@ -13,7 +13,7 @@ void disassemble(ioh_t *out) {
 	oc_t *oc;
 	unsigned char inop[6];
 
-	while (c) {
+	while (c > 0) {
 		oc = arch->ocs;
 		address = sym->addr;
 		mfprintf(out, "%8x (", address / arch->align);
@@ -35,7 +35,7 @@ void disassemble(ioh_t *out) {
 			docf:
 			++oc;
 		}
-		if (i != oc->len) {
+		if (oc->name == NULL) {
 			for (i = 0; i < arch->align; ++i)
 				mfprintf(out, "%2x", (sym + arch->ord[i])->value);
 			mfprint(out, "): data 0x");
