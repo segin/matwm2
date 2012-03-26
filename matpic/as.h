@@ -15,8 +15,10 @@ struct label_t {
 };
 
 typedef union {
-	unsigned int type;
-	unsigned int line;
+	struct head {
+		unsigned int type;
+		unsigned int line;
+	} head;
 	struct ins {
 		unsigned int type, line;
 		char *args;

@@ -124,8 +124,8 @@ void addlabel(char *lp) {
 			flerrexit("duplicate label '%s'", mstrldup(li->name, idlen(li->name)));
 	}
 	arr_add(&labels, &label);
-	ins.type = IT_LBL;
-	ins.line = lineno_get();
+	ins.head.type = IT_LBL;
+	ins.head.line = lineno_getreal();
 	ins.lbl.lbl = labels.count - 1;
 	arr_add(&inss, &ins);
 }
@@ -153,7 +153,8 @@ void adddata(int size, char *argp) {
 	int n = countargs(argp);
 	if (n == 0)
 		return;
-	ins.type = IT_DAT;
+	ins.head.line = lineno_getreal();
+	ins.head.type = IT_DAT;
 	ins.data.args = argp;
 	ins.data.size = size;
 	ins.data.len = n;
@@ -170,10 +171,10 @@ int insfind(char *ip, char *argp) {
 	oc_t *oc = arch->ocs;
 	ins_t ins;
 
-	ins.line = lineno_get();
+	ins.head.line = lineno_getreal();
 	if (cmpid(ip, "org")) {
 		getargs(argp, args, 1, 1);
-		ins.type = IT_ORG;
+		ins.head.type = IT_ORG;
 		ins.org.address = args[0];
 		address = ins.org.address;
 		arr_add(&inss, &ins);
@@ -183,7 +184,7 @@ int insfind(char *ip, char *argp) {
 		char *file;
 		parseargs(argp, "s", &file);
 		lineno_pushfile(file, 0, 0);
-		ins.type = IT_CTX;
+		ins.head.type = IT_CTX;
 		ins.ctx.ctx = lineno_getctx();
 		arr_add(&inss, &ins);
 		return 1;
@@ -194,7 +195,7 @@ int insfind(char *ip, char *argp) {
 		parseargs(argp, "isn", &name, &file, &line);
 		name = mstrldup(name, idlen(name));
 		lineno_pushmacro(name, file, line);
-		ins.type = IT_CTX;
+		ins.head.type = IT_CTX;
 		ins.ctx.ctx = lineno_getctx();
 		arr_add(&inss, &ins);
 		return 1;
@@ -205,7 +206,7 @@ int insfind(char *ip, char *argp) {
 		if (lineno.count == 1)
 			flerrexit("context stack underrun");
 		lineno_dropctx();
-		ins.type = IT_CTX_END;
+		ins.head.type = IT_CTX_END;
 		arr_add(&inss, &ins);
 	}
 	if (cmpid(ip, "line")) {
@@ -241,7 +242,7 @@ int insfind(char *ip, char *argp) {
 
 	while (oc->name != NULL) {
 		if (cmpid(ip, oc->name)) {
-			ins.type = IT_INS;
+			ins.head.type = IT_INS;
 			ins.ins.oc = oc;
 			ins.ins.args = argp;
 			arr_add(&inss, &ins);
@@ -269,7 +270,8 @@ void assemble(char *code) {
 		address = 0;
 		{ /* start with an org, to be friendly for output modules */
 			ins_t ins;
-			ins.type = IT_ORG;
+			ins.head.line = lineno_getreal();
+			ins.head.type = IT_ORG;
 			ins.org.address = address;
 			arr_add(&inss, &ins);
 		}
@@ -294,8 +296,8 @@ void assemble(char *code) {
 		}
 		{
 			ins_t ins;
-			ins.line = lineno_get();
-			ins.type = IT_END;
+			ins.head.line = lineno_getreal();
+			ins.head.type = IT_END;
 			arr_add(&inss, &ins);
 		}
 	}
@@ -310,9 +312,9 @@ void assemble(char *code) {
 		char **lorgend = NULL;
 
 		address = 0;
-		while (ins->type != IT_END) {
-			lineno_set(ins->line);
-			switch (ins->type) {
+		while (ins->head.type != IT_END) {
+			lineno_set(ins->head.line);
+			switch (ins->head.type) {
 				case IT_INS:
 					c = getargs(ins->ins.args, args, 0, ARG_MAX);
 					memcpy(op, ins->ins.oc->oc, ins->ins.oc->len);

@@ -32,8 +32,8 @@ void ihex_write(ioh_t *out) {
 
 	address = 0;
 	crc = 0;
-	while (ins->type != IT_END) {
-		if (ins->type == IT_ORG) {
+	while (ins->head.type != IT_END) {
+		if (ins->head.type == IT_ORG) {
 				address = ins->org.address * arch->align;
 				while (bufp != ins->org.end) {
 					buf[pos++] = *bufp;
