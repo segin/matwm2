@@ -17,6 +17,8 @@ extern void flerrexit(char *fmt, ...);
 extern void flwarn(char *fmt, ...);
 extern void flmsg(char *msg);
 
+extern unsigned long long ntt(signed long long n);
+
 extern char *readfile(char *path);
 
 extern sll getval(char **src);

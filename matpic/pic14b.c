@@ -2,6 +2,7 @@
  * architecture definitions for PIC chips with 14bit instruction set *
  *********************************************************************/
 
+#include "arch.h"
 #include "pic14b.h"
 
 enum atype {
@@ -114,32 +115,24 @@ void acmp14b(unsigned char *oc, int atype, int argc, signed long long *argv) {
 void adis14b(ioh_t *out, unsigned char *oc, int atype) {
 	switch (atype) {
 		case AT_DF:
-			mfprintf(out, "0x%2x, %i", oc[1] & 0x7F, (oc[1] & 0x80) >> 7);
+			mfprintf(out, "0x%2x, %i", ntt(oc[1]) & 0x7F, (ntt(oc[1]) & 0x80) >> 7);
 			break;
 		case AT_F:
-			mfprintf(out, "0x%2x", oc[1] & 0x7F);
+			mfprintf(out, "0x%2x", ntt(oc[1]) & 0x7F);
 			break;
 		case AT_BF:
-			mfprintf(out, "0x%2x, %i", oc[1] & 0x7F, ((oc[0] & 3) << 1) | ((oc[1] & 0x80) >> 7));
+			mfprintf(out, "0x%2x, %i", ntt(oc[1]) & 0x7F, ((ntt(oc[0]) & 3) << 1) | ((ntt(oc[1]) & 0x80) >> 7));
 			break;
 		case AT_K8:
-				mfprintf(out, "0x%2x", oc[1] & 0xFF);
+				mfprintf(out, "0x%2x", ntt(oc[1]) & 0xFF);
 			break;
 		case AT_K11:
-			mfprintf(out, "0x%3x", ((oc[0] & 7) << 8) | (oc[1] & 0xFF));
+			mfprintf(out, "0x%3x", ((ntt(oc[0]) & 7) << 8) | (ntt(oc[1]) & 0xFF));
 			break;
 		case AT_T:
-			mfprintf(out, "%i", oc[1] & 3);
+			mfprintf(out, "%i", ntt(oc[1]) & 3);
 			break;
 	}
-}
-
-unsigned long long nth14b(signed long long n) {
-	unsigned long long r;
-	if (n < 0) {
-		r = (~(-n)) + 1;
-	}
-	return n;
 }
 
 int ord14b[2] = { 0, 1 };
@@ -148,7 +141,6 @@ arch_t pic14b = {
 	ocs14b,
 	&acmp14b,
 	&adis14b,
-	&nth14b,
 	ord14b,
 	2,
 };

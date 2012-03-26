@@ -327,7 +327,7 @@ void assemble(char *code) {
 					mfprintf(mstderr, "%d %d %d\n", ins->data.size, ins->data.len, ins->data.pad);
 					memset(bufp, 0, ins->data.len * ins->data.size + ins->data.pad);
 					for (i = 0; i < ins->data.len; ++i) {
-						unsigned long long n = arch->nth(args[i]);
+						unsigned long long n = ntt(args[i]);
 						for (j = 0; j < ins->data.size; ++j)
 							op[j] = (n & (0xFF << (j * 8))) >> (j * 8);
 						for (j = 0; j < ins->data.size; ++j) {

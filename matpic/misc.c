@@ -54,6 +54,14 @@ void flmsg(char *msg) {
 	mfprintf(mstderr, "%s: line %u: message: %s\n", lineno_getfile(), lineno_get(), msg);
 }
 
+/* this routine is used to negative numbers to 2s complement format */
+unsigned long long ntt(signed long long n) {
+	unsigned long long r;
+	if (n < 0)
+		r = (~(-n)) + 1;
+	return r;
+}
+
 char *readfile(char *path) {
 	int pos = 0, mem = 0, r = 0;
 	ioh_t *infd = mstdin;
