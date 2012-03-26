@@ -102,6 +102,8 @@ retfie
 retlw c
 return
 sleep
+ ; notable case of ambiguity, if there is no space before these
+ ; then preprocessor thinks it sees a directive with a label in front of it
  sublw enum
  xorlw define
 option
