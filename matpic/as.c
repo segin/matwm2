@@ -324,7 +324,6 @@ void assemble(char *code) {
 					break;
 				case IT_DAT:
 					getargs(ins->data.args, args, 0, ARG_MAX);
-					mfprintf(mstderr, "%d %d %d\n", ins->data.size, ins->data.len, ins->data.pad);
 					memset(bufp, 0, ins->data.len * ins->data.size + ins->data.pad);
 					for (i = 0; i < ins->data.len; ++i) {
 						unsigned long long n = ntt(args[i]);
