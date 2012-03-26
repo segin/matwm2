@@ -102,8 +102,8 @@ retfie
 retlw c
 return
 sleep
-sublw enum
-xorlw define
+ sublw enum
+ xorlw define
 option
 tris 0x7
 ; testing data, and some math
