@@ -22,6 +22,7 @@ void endln(ioh_t *out) {
 	crc += address & 0xFF;
 	mfprintf(out, "%2x", (0x100 - (crc + pos)) & 0xFF);
 	mfprint(out, "\n");
+	address += pos;
 	crc = 0;
 	pos = 0;
 }
