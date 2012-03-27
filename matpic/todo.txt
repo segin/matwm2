@@ -10,5 +10,6 @@ relating to extra chip support
 non-essential (i.e. low priority)
 	macro local variables (possibly as macro)
 	macro local labels (possibly macro)
+	macro context stack
 	fancy disassembler output that can be re-assembled as-is option
 	header files for chips
