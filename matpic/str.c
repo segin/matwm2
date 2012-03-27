@@ -7,7 +7,7 @@
 #include <stdlib.h> /* NULL */
 #include <string.h> /* strcpy() */
 
-int base = 10;
+int radix = 10;
 
 /* alfa[]
  *
@@ -192,7 +192,7 @@ int idlen(char *src) {
 }
 
 int getnum(char **src, signed long long *ret) {
-	unsigned int c;
+	unsigned int c, base = radix;
 	signed long long r = 0;
 	int n = 0, sfx = 0, pfx = 0, neg = 0;
 	char *s = *src;
@@ -211,6 +211,7 @@ int getnum(char **src, signed long long *ret) {
 			pfx = 1;
 		} else goto endnum;
 	} else if (*s == '0') {
+		pfx = 1;
 		switch(*++s) {
 			case 'x':
 			case 'X':
@@ -228,8 +229,7 @@ int getnum(char **src, signed long long *ret) {
 			case 'y':
 			case 'Y':
 				base = 2;
-				--s;
-				goto oct0;
+				break;
 			case 'd':
 			case 'D':
 				if (base > 13) {
@@ -240,8 +240,7 @@ int getnum(char **src, signed long long *ret) {
 			case 't':
 			case 'T':
 				base = 10;
-				--s;
-				goto oct0;
+				break;
 			case 'o':
 			case 'O':
 			case 'q':
@@ -316,7 +315,7 @@ int getnum(char **src, signed long long *ret) {
 		++s, ++n;
 	}
 	endnum:
-	if (n) {
+	if (n || pfx) {
 		*src = s;
 		if (sfx)
 			++*src;

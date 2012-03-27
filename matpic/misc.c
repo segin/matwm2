@@ -21,7 +21,7 @@ void cleanup(void) {
 	arr_free(&dsym);
 	vstr_free(&outbuf);
 	vstr_free(&inbuf);
-	base = 10;
+	radix = 10;
 }
 
 void vaflwarn(char *pro, char *fmt, va_list ap) {
@@ -74,13 +74,13 @@ void setradix(char *argp) {
 	char *s;
 	parseargs(argp, "i", &s);
 	if (cmpid(s, "bin"))
-		base = 2;
+		radix = 2;
 	else if (cmpid(s, "oct"))
-		base = 8;
+		radix = 8;
 	else if (cmpid(s, "dec"))
-		base = 10;
+		radix = 10;
 	else if (cmpid(s, "hex"))
-		base = 16;
+		radix = 16;
 	else flerrexit("invalid radix");
 }
 

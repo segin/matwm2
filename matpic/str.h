@@ -7,7 +7,7 @@
 
 #include <stdlib.h> /* NULL */
 
-extern int base;
+extern int radix;
 
 extern char alfa[256];
 extern unsigned char lower[256];
