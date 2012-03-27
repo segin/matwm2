@@ -130,18 +130,26 @@ void addlabel(char *lp) {
 }
 
 int countargs(char *src) {
-	int n = 1;
+	int n = 1, esc = 0, str = 0;
 	if (src == NULL)
 		return 0;
 	while(!(ctype(*src) & (CT_NUL | CT_NL))) {
 		switch (*src) {
 			case ',':
-				++n;
+				if (!str)
+					++n;
 				break;
-/*			case '"':
+			case '"':
 			case '\'':
-				break; */
+				if (!esc)
+					str ^= 1;
+				break;
+			case '\\':
+				if (str && !esc)
+					++esc;
+				break;
 		}
+		esc = 0;
 		++src;
 	}
 	return n;
