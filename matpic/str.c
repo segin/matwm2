@@ -220,22 +220,28 @@ int getnum(char **src, signed long long *ret) {
 				break;
 			case 'b':
 			case 'B':
-				if (base > 11)
+				if (base > 11) {
+					--s;
 					goto oct0;
+				}
 				/* FALLTHRU */
 			case 'y':
 			case 'Y':
 				base = 2;
-				break;
+				--s;
+				goto oct0;
 			case 'd':
 			case 'D':
-				if (base > 13)
+				if (base > 13) {
+					--s;
 					goto oct0;
+				}
 				/* FALLTHRU */
 			case 't':
 			case 'T':
 				base = 10;
-				break;
+				--s;
+				goto oct0;
 			case 'o':
 			case 'O':
 			case 'q':
@@ -243,7 +249,9 @@ int getnum(char **src, signed long long *ret) {
 				base = 8;
 				break;
 			default:
-				base = 8;
+				if (base <= 10)
+					base = 8;
+				--s;
 				goto oct0;
 		}
 		++s;
@@ -292,6 +300,9 @@ int getnum(char **src, signed long long *ret) {
 				sfx = 0;
 		}
 	}
+
+	if (*s > '9')
+		goto endnum;
 
 	while ((c = hexlookup[(unsigned char) *s]) != 16) {
 		if (c == 17) {

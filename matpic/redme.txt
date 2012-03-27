@@ -40,6 +40,10 @@ also the following which are only meant for the preprocessor to tell the assembl
 	line <line #>: tell assembler what the next line is numbered
 	expands <id>, "<filename>", <line>: tell the macro following code is from a specific macro
 	endexp: tell the assembler we exited a macro
+	radix <radix>: set the default radix, valid values are "bin", "oct", "dec", "hex"
+		this directive also affects the preprocessor
+		with hex radix one should make sure the first digit of a number is 0-9
+		octal 0 will be disabled so you can precede things with 0
 also there is preprocessor directives:
 	define, if, ifdef, ifndef, else, endif: behave mostly like C
 		with exception of the use of arguments in macros, in a case like
@@ -74,10 +78,11 @@ and the following suffixes:
 	x, h: hex
 	b, y: binary
 	o, q: octal
-b and d suffix and 0b and 0d suffix are ignored if the default radix is hex
+b and d suffix and octal 0, 0b and 0d suffix are ignored if the default radix is hex
 underscores within integers are ignored (but not in prefix plz)
 when integers are expected, you can also give a string encapsulated in quotes or double quotes
    "abcd" is equivalent to 0x61626364
+if using x or h suffix, one should make sure the first digit is 0-9
 utf-8 in labels / macro names etc are allowed
 
 BUGS

@@ -10,7 +10,6 @@ relating to extra chip support
 	support pagesel pseudo instruction
 
 non-essential (i.e. low priority)
-	changing default radix
 	macro local variables (possibly as macro)
 	macro local labels (possibly macro)
 	fancy disassembler output that can be re-assembled as-is option

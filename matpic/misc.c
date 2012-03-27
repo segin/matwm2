@@ -70,6 +70,20 @@ unsigned long long ntt(signed long long n) {
 	return n;
 }
 
+void setradix(char *argp) {
+	char *s;
+	parseargs(argp, "i", &s);
+	if (cmpid(s, "bin"))
+		base = 2;
+	else if (cmpid(s, "oct"))
+		base = 8;
+	else if (cmpid(s, "dec"))
+		base = 10;
+	else if (cmpid(s, "hex"))
+		base = 16;
+	else flerrexit("invalid radix");
+}
+
 char *readfile(char *path) {
 	int pos = 0, mem = 0, r = 0;
 	ioh_t *infd = mstdin;

@@ -578,6 +578,14 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 		arr_add(&garbage, &data);
 		return 1;
 	}
+	if (cmpid(ip, "radix")) {
+		setradix(argp);
+		/* we want to reprint it instead of just return 0
+		 * to make sure that this directive is not preprocessed */
+		mfprint(out, "%radix ");
+		mfwrite(out, argp, idlen(argp));
+		return 1;
+	}
 	{
 		macro_t *mac;
 

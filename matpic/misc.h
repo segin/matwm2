@@ -22,6 +22,7 @@ extern void flmsg(char *msg);
 
 extern unsigned long long ntt(signed long long n);
 
+extern void setradix(char *argp);
 extern char *readfile(char *path);
 
 extern sll getval(char **src);

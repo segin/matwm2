@@ -238,6 +238,10 @@ int insfind(char *ip, char *argp) {
 		((label_t *) labels.data + labels.count - 1)->address = args[0];
 		return 1;
 	}
+	if (cmpid(ip, "radix")) {
+		setradix(argp);
+		return 1;
+	}
 
 	while (oc->name != NULL) {
 		if (cmpid(ip, oc->name)) {
