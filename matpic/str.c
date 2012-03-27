@@ -7,6 +7,8 @@
 #include <stdlib.h> /* NULL */
 #include <string.h> /* strcpy() */
 
+int base = 10;
+
 /* alfa[]
  *
  * description
@@ -192,13 +194,14 @@ int idlen(char *src) {
 int getnum(char **src, signed long long *ret) {
 	unsigned int c;
 	signed long long r = 0;
-	int n = 0, base = 10, sfx = 0, pfx = 0, neg = 0;
+	int n = 0, sfx = 0, pfx = 0, neg = 0;
 	char *s = *src;
 
 	if (*s == '-') {
 		neg = 1;
 		++s;
 	}
+
 	if (*s == '$') {
 		++s;
 		while (*s == '_')
@@ -217,16 +220,18 @@ int getnum(char **src, signed long long *ret) {
 				break;
 			case 'b':
 			case 'B':
-				if (base == 16)
+				if (base > 11)
 					goto oct0;
+				/* FALLTHRU */
 			case 'y':
 			case 'Y':
 				base = 2;
 				break;
 			case 'd':
 			case 'D':
-				if (base == 16)
+				if (base > 13)
 					goto oct0;
+				/* FALLTHRU */
 			case 't':
 			case 'T':
 				base = 10;
@@ -248,18 +253,30 @@ int getnum(char **src, signed long long *ret) {
 		t = s;
 		while ((c = hexlookup[(unsigned char) *t]) != 16)
 			++t;
+		if (t == s)
+			goto nosfx;
 		sfx = 1;
 		switch(*t) {
-			case 'h':
-			case 'H':
 			case 'x':
 			case 'X':
+			case 'h':
+			case 'H':
 				base = 16;
 				break;
+			case 'b':
+			case 'B':
+				if (base > 11)
+					goto nosfx;
+				/* FALLTHRU */
 			case 'y':
 			case 'Y':
 				base = 2;
 				break;
+			case 'd':
+			case 'D':
+				if (base > 13)
+					goto nosfx;
+				/* FALLTHRU */
 			case 't':
 			case 'T':
 				base = 10;
@@ -271,22 +288,8 @@ int getnum(char **src, signed long long *ret) {
 				base = 8;
 				break;
 			default:
-				if (base == 16 || s == *src) {
-					sfx = 0;
-					break;
-				}
-				switch (*(s - 1)) {
-					case 'b':
-					case 'B':
-						base = 2;
-						break;
-					case 'd':
-					case 'D':
-						base = 10;
-						break;
-					default:
-						sfx = 0;
-				}
+				nosfx:
+				sfx = 0;
 		}
 	}
 

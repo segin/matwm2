@@ -3,7 +3,7 @@
 #include <stdarg.h>
 #include "as.h" /* inss, labels, llbl */
 #include "dis.h" /* inbuf, dsym */
-#include "str.h" /* skipsp(), getnum(), getid(), cmpid(), ctype(), lower[] */
+#include "str.h" /* base, skipsp(), getnum(), getid(), cmpid(), ctype(), lower[] */
 #include "misc.h"
 #include "lineno.h"
 #include "mem.h" /* string_t */
@@ -21,6 +21,7 @@ void cleanup(void) {
 	arr_free(&dsym);
 	vstr_free(&outbuf);
 	vstr_free(&inbuf);
+	base = 10;
 }
 
 void vaflwarn(char *pro, char *fmt, va_list ap) {

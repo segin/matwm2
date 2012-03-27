@@ -7,6 +7,8 @@
 
 #include <stdlib.h> /* NULL */
 
+extern int base;
+
 extern char alfa[256];
 extern unsigned char lower[256];
 extern char hexlookup[256];
