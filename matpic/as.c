@@ -336,7 +336,9 @@ void assemble(char *code) {
 							op[ins->data.size - 1 - j] = (n & (0xFF << (j * 8))) >> (j * 8);
 						for (j = 0; j < ins->data.size; ++j) {
 							c = i * ins->data.size + j;
-							bufp[c - (c % arch->align) + arch->ord[c % arch->align]] = op[j];
+							bufp[c - (c % arch->align) + arch->ord[c % arch->align]] = op[j] & arch->mask[c % arch->align];
+							if (op[j] & ~arch->mask[c % arch->align])
+								flwarn("data out of range, truncated");
 						}
 					}
 					bufp += ins->data.len * ins->data.size + ins->data.pad;

@@ -138,12 +138,15 @@ void adis14b(ioh_t *out, unsigned char *oc, int atype) {
 	}
 }
 
+unsigned char mask14b[2] = { 0x3F, 0xFF };
+
 int ord14b[2] = { 1, 0 };
 
 arch_t pic14b = {
 	ocs14b,
 	&acmp14b,
 	&adis14b,
+	mask14b,
 	ord14b,
 	2,
 };
