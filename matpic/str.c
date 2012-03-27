@@ -208,9 +208,9 @@ int getnum(char **src, signed long long *ret) {
 			++s;
 		if (hexlookup[(unsigned char) *s] != 16) {
 			base = 16;
-		}
+			pfx = 1;
+		} else goto endnum;
 	} else if (*s == '0') {
-		pfx = 1;
 		switch(*++s) {
 			case 'x':
 			case 'X':
@@ -301,7 +301,7 @@ int getnum(char **src, signed long long *ret) {
 		}
 	}
 
-	if (*s > '9')
+	if (!pfx && *s > '9')
 		goto endnum;
 
 	while ((c = hexlookup[(unsigned char) *s]) != 16) {
@@ -316,7 +316,7 @@ int getnum(char **src, signed long long *ret) {
 		++s, ++n;
 	}
 	endnum:
-	if (n || pfx) {
+	if (n) {
 		*src = s;
 		if (sfx)
 			++*src;
