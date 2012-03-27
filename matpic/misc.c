@@ -2,12 +2,16 @@
 #include <string.h> /* strlen() */
 #include <stdarg.h>
 #include "as.h" /* inss, labels, llbl */
-#include "dis.h" /* dsym */
+#include "dis.h" /* inbuf, dsym */
 #include "str.h" /* skipsp(), getnum(), getid(), cmpid(), ctype(), lower[] */
 #include "misc.h"
 #include "lineno.h"
+#include "mem.h" /* string_t */
 
 char *infile = "<stdin>";
+
+string_t inbuf = { NULL, 0, 0 };
+string_t outbuf = { NULL, 0, 0 };
 
 unsigned long address;
 
@@ -16,6 +20,7 @@ void cleanup(void) {
 	arr_free(&labels);
 	arr_free(&dsym);
 	vstr_free(&outbuf);
+	vstr_free(&inbuf);
 }
 
 void vaflwarn(char *pro, char *fmt, va_list ap) {

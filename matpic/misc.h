@@ -2,12 +2,15 @@
 #define __MISC_H__
 
 #include <stdarg.h>
+#include "mem.h" /* string_t */
 
 typedef signed long long sll;
 typedef unsigned long long ull;
 
 extern char *infile;
 extern unsigned long address;
+extern string_t inbuf;
+extern string_t outbuf;
 
 extern void cleanup(void);
 extern void reset(void);

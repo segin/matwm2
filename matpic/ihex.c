@@ -62,11 +62,13 @@ int gethnum(char **src) {
 }
 
 void ihex_read(char *in) {
-	int n, len, crc, rtype;
+	int len, crc, rtype;
 	unsigned long addr;
+	unsigned char n;
 	dsym_t ds;
 
 	arr_new(&dsym, sizeof(dsym_t));
+	vstr_new(&inbuf);
 	lineno_init();
 	lineno_pushfile(infile, 1, 0);
 	dstartline:
@@ -97,14 +99,15 @@ void ihex_read(char *in) {
 	if ((rtype = gethnum(&in)) == -1)
 		goto dinval;
 	crc += rtype;
+	ds.addr = addr;
 	switch (rtype) {
 		case 0:
+			ds.len = len;
+			arr_add(&dsym, (void *) &ds);
 			while (len--) {
 				n = gethnum(&in);
 				crc += n;
-				ds.addr = addr;
-				ds.value = n;
-				arr_add(&dsym, (void *) &ds);
+				vstr_addl(&inbuf, (char *) &n, 1);
 				++addr;
 			}
 			break;

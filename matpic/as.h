@@ -57,7 +57,6 @@ enum itype {
 extern arr_t inss;
 extern arr_t labels;
 extern int llbl; /* last label */
-extern string_t outbuf;
 
 extern char *lp, *ip, *argp, *nextln;
 extern int prefix, run;

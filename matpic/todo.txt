@@ -3,7 +3,6 @@ db/dw to store string of bytes with "this kind of syntax"
 db/dw/dd/data to take into account limits of chips with odd word size (warn about truncation)
 perhaps warn about integer overflows in general
 relocatable code and coff output support
-more sane internal data storage for disassembler
 
 relating to extra chip support
 	add ihex thing for bigger than 16bit addresses

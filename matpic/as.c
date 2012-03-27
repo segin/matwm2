@@ -16,7 +16,6 @@ unsigned int addrl;
 
 arr_t inss = { NULL, 0, 0, 0 }; /* these need to be 0 so cleanup() before assemble won't fail */
 arr_t labels = { NULL, 0, 0, 0 };
-string_t outbuf = { NULL, 0, 0 };
 
 char *lp, *ip, *argp, *nextln;
 int pspc, tspc, prefix, run;
