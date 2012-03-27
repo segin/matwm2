@@ -69,39 +69,52 @@ oc_t ocs14b[] = {
 	{ NULL, { 0 }, { 0 }, 0 }, /* important, end of list */
 };
 
+void arange14b(signed long long d, int min, int max) {
+	if (d < min || d > max)
+		flwarn("argument out of range, truncated");
+}
+
 void acmp14b(unsigned char *oc, int atype, int argc, signed long long *argv) {
 	switch (atype) {
 		case AT_DF:
 			if (argc != 2)
 				flerrexit("wrong number of arguments");
-			oc[1] = (argv[1] & 1) << 7 | (argv[0] & 0x7F);
+			arange14b(argv[0], -128, 255);
+			arange14b(argv[1], 0, 1);
+			oc[1] = (ntt(argv[1]) & 1) << 7 | (ntt(argv[0]) & 0x7F);
 			break;
 		case AT_F:
 			if (argc != 1)
 				flerrexit("wrong number of arguments");
-			oc[1] |= argv[0] & 0x7F;
+			arange14b(argv[0], -128, 255);
+			oc[1] |= ntt(argv[0]) & 0x7F;
 			break;
 		case AT_BF:
 			if (argc != 2)
 				flerrexit("wrong number of arguments");
-			oc[1] = (argv[1] & 1) << 7 | (argv[0] & 0x7F);
-			oc[0] |= (argv[1] & 6) >> 1;
+			arange14b(argv[0], -128, 255);
+			arange14b(argv[1], -4, 7);
+			oc[1] = (ntt(argv[1]) & 1) << 7 | (ntt(argv[0]) & 0x7F);
+			oc[0] |= (ntt(argv[1]) & 6) >> 1;
 			break;
 		case AT_K8:
 			if (argc != 1)
 				flerrexit("wrong number of arguments");
-			oc[1] |= argv[0] & 0xFF;
+			arange14b(argv[0], -128, 255);
+			oc[1] |= ntt(argv[0]) & 0xFF;
 			break;
 		case AT_K11:
 			if (argc != 1)
 				flerrexit("wrong number of arguments");
-			oc[1] = argv[0] & 0xFF;
-			oc[0] |= (argv[0] & 0x700) >> 8;
+			arange14b(argv[0], -1024, 2047);
+			oc[1] = ntt(argv[0]) & 0xFF;
+			oc[0] |= (ntt(argv[0]) >> 8) & 7;
 			break;
 		case AT_T:
 			if (argc != 1)
 				flerrexit("wrong number of arguments");
-			oc[1] |= argv[0] & 0x3;
+			arange14b(argv[0], -2, 3);
+			oc[1] |= ntt(argv[0]) & 0x3;
 			break;
 		case AT_NA:
 			if (argc)
@@ -112,22 +125,22 @@ void acmp14b(unsigned char *oc, int atype, int argc, signed long long *argv) {
 void adis14b(ioh_t *out, unsigned char *oc, int atype) {
 	switch (atype) {
 		case AT_DF:
-			mfprintf(out, "0x%2x, %i", ntt(oc[1]) & 0x7F, (ntt(oc[1]) & 0x80) >> 7);
+			mfprintf(out, "0x%2x, %i", oc[1] & 0x7F, (oc[1] & 0x80) >> 7);
 			break;
 		case AT_F:
-			mfprintf(out, "0x%2x", ntt(oc[1]) & 0x7F);
+			mfprintf(out, "0x%2x", oc[1] & 0x7F);
 			break;
 		case AT_BF:
-			mfprintf(out, "0x%2x, %i", ntt(oc[1]) & 0x7F, ((ntt(oc[0]) & 3) << 1) | ((ntt(oc[1]) & 0x80) >> 7));
+			mfprintf(out, "0x%2x, %i", oc[1] & 0x7F, ((oc[0] & 3) << 1) | ((oc[1] & 0x80) >> 7));
 			break;
 		case AT_K8:
-				mfprintf(out, "0x%2x", ntt(oc[1]) & 0xFF);
+				mfprintf(out, "0x%2x", oc[1] & 0xFF);
 			break;
 		case AT_K11:
-			mfprintf(out, "0x%3x", ((ntt(oc[0]) & 7) << 8) | (ntt(oc[1]) & 0xFF));
+			mfprintf(out, "0x%3x", ((oc[0] & 7) << 8) | (oc[1] & 0xFF));
 			break;
 		case AT_T:
-			mfprintf(out, "%i", ntt(oc[1]) & 3);
+			mfprintf(out, "%i", oc[1] & 3);
 			break;
 	}
 }
