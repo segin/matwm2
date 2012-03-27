@@ -69,51 +69,44 @@ oc_t ocs14b[] = {
 	{ NULL, { 0 }, { 0 }, 0 }, /* important, end of list */
 };
 
-void arange14b(signed long long d, int min, int max) {
-	if (d < min || d > max)
-		flwarn("argument out of range, truncated");
-}
-
 void acmp14b(unsigned char *oc, int atype, int argc, signed long long *argv) {
 	switch (atype) {
 		case AT_DF:
 			if (argc != 2)
 				flerrexit("wrong number of arguments");
-			arange14b(argv[0], -128, 255);
-			arange14b(argv[1], 0, 1);
+			if (argv[1] > 1 || argv[1] < 0)
+				flwarn("argument out of range, truncated");
 			oc[1] = (ntt(argv[1]) & 1) << 7 | (ntt(argv[0]) & 0x7F);
 			break;
 		case AT_F:
 			if (argc != 1)
 				flerrexit("wrong number of arguments");
-			arange14b(argv[0], -128, 255);
 			oc[1] |= ntt(argv[0]) & 0x7F;
 			break;
 		case AT_BF:
 			if (argc != 2)
 				flerrexit("wrong number of arguments");
-			arange14b(argv[0], -128, 255);
-			arange14b(argv[1], -4, 7);
+			if (argv[1] > 7 || argv[1] < 0)
+				flwarn("argument out of range, truncated");
 			oc[1] = (ntt(argv[1]) & 1) << 7 | (ntt(argv[0]) & 0x7F);
 			oc[0] |= (ntt(argv[1]) & 6) >> 1;
 			break;
 		case AT_K8:
 			if (argc != 1)
 				flerrexit("wrong number of arguments");
-			arange14b(argv[0], -128, 255);
 			oc[1] |= ntt(argv[0]) & 0xFF;
 			break;
 		case AT_K11:
 			if (argc != 1)
 				flerrexit("wrong number of arguments");
-			arange14b(argv[0], -1024, 2047);
 			oc[1] = ntt(argv[0]) & 0xFF;
 			oc[0] |= (ntt(argv[0]) >> 8) & 7;
 			break;
 		case AT_T:
 			if (argc != 1)
 				flerrexit("wrong number of arguments");
-			arange14b(argv[0], -2, 3);
+			if (argv[0] > 3 || argv[0] < 0)
+				flwarn("argument out of range, truncated");
 			oc[1] |= ntt(argv[0]) & 0x3;
 			break;
 		case AT_NA:
