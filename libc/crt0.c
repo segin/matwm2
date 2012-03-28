@@ -13,14 +13,16 @@ char** environ;
 
 extern int main(int argc, char **argv, char **envp);
 
-/* XXX: for now */
-
-char *basename(char *arg)
+char *_crt0_basename(char *name)
 {
-	return arg;
+	const char *base = name;
+	while(*name)
+		if (*name++ == '/') 
+			base = name;
+	return base;
 }
 
-void _start(char **args, void (*cleanup)(void), void *unused, void *unused2)
+void _start(char **args, void (*cleanup)(void), ...)
 {
 	int argc;
 	char **argv;
@@ -31,7 +33,7 @@ void _start(char **args, void (*cleanup)(void), void *unused, void *unused2)
 	envp = args + 2 + argc;
 	environ = envp;
 	
-	__progname = argv[0] ? basename(argv[0]) : "";
-	if (cleanup) atexit(cleanup);
+	__progname = argv[0] ? _crt0_basename(argv[0]) : "";
+	if (cleanup) atexit(cleanup); /* ld.so cleanup function */
 	exit(main(argc, argv, envp));
 }
