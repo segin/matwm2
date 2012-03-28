@@ -129,20 +129,44 @@ void addlabel(char *lp) {
 	arr_add(&inss, &ins);
 }
 
-int countargs(char *src) {
+int dcargs(char *src) {
 	int n = 1, esc = 0, str = 0;
+	char *s = NULL;
 	if (src == NULL)
 		return 0;
+	skipsp(&src);
+	if (*src == '"' || *src == '\'')
+		s = src;
 	while(!(ctype(*src) & (CT_NUL | CT_NL))) {
 		switch (*src) {
 			case ',':
-				if (!str)
+				if (!str) {
 					++n;
+					skipsp(&src);
+					if (*src == '"' || *src == '\'')
+						s = src;
+				}
 				break;
 			case '"':
 			case '\'':
-				if (!esc)
-					str ^= 1;
+				if (esc)
+					break;
+				if (str == *src && s != NULL) {
+					++str;
+					skipsp(&src);
+					if (*src == ',' || ctype(*src) & (CT_NUL | CT_NL)) {
+						char *p;
+						p = getstr(&s);
+						s = unescape(p);
+						free(p);
+						n += strlen(s);
+						/* TODO add to list for second pass */
+					}
+					continue;
+				}
+				if (str == 0)
+					str = *src;
+				else str = 0;
 				break;
 			case '\\':
 				if (str && !esc)
@@ -157,7 +181,7 @@ int countargs(char *src) {
 
 void adddata(int size, char *argp) {
 	ins_t ins;
-	int n = countargs(argp);
+	int n = dcargs(argp);
 	if (n == 0)
 		return;
 	ins.head.line = lineno_getreal();

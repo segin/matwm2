@@ -160,6 +160,8 @@ sll getval(char **src) {
 		int i;
 		for (i = 0; s[i] && i < sizeof(val); ++i)
 			val += s[i] << 8 * i;
+		if (strlen(s) > sizeof(val))
+			flwarn("string constant truncated");
 		free(s);
 		goto gotval;
 	}
