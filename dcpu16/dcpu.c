@@ -69,17 +69,33 @@ enum operands {
 	/* Everything from here to 0x3f is an immediate literal - 0x20 */
 };
 
+enum registers { 
+	REG_A = 0,
+	REG_B,
+	REG_C,
+	REG_X,
+	REG_Y,
+	REG_Z,
+	REG_I,
+	REG_J,
+	REG_PC,
+	REG_O,
+	REG_SP
+};
+
+
+
 int main(int argc, char *argv[]) 
 {
 	/* the registers */ 
-	uint16_t reg_a, reg_b, reg_c, reg_x, reg_y, reg_z, reg_i,
-		 reg_j, reg_pc, reg_sp, reg_o;
+	uint16_t regs[11];
 
 	/* main system memory */
 	uint16_t mem[0x10000];
 	
 	/* CPU internals */
-	uint16_t op_code, op_a, op_b, op_ac, op_bc, tmp_a, tmp_b, o;
+	
+	uint16_t op_code, op_a, op_b, op_tmp, o;
 	uint32_t tmp_ax, tmp_bx;
 
 	/* And finally, a cycle counter for benchmarking */
@@ -87,25 +103,39 @@ int main(int argc, char *argv[])
 
 	/* fuck you, goto is perfectly fine if used correctly */
 init:
-	reg_a = reg_b = reg_c = reg_x = reg_y = reg_z = reg_i = reg_j = reg_pc 
-        = reg_o = 0;
-	reg_sp = 0xffff;
+	for(o = REG_A ; o <= REG_O ; o++) reg[o] = 0;
+	reg[REG_SP] = 0xffff;
 
 	/* CPU main loop */
 	while(1) { 
-		op_code = mem[reg_pc];
-		op_ac = (op_code >> 4) & 0x3f;
-		op_bc = (op_code >> 10) & 0x3f;
-		op_code =& 0xf;
+		op_code = mem[regs[REG_PC]];
+		o = 0;
 		
-		if(!op_code) goto non_basic;
+		if(!(op_code & 0xf)) goto non_basic;
 
 decode_operand: 		
-		switch(o ? op_ac : op_bc) { 
+		switch((op_code >> o ? 4 : 10) & 0x3f) { 
+			
 
+
+
+
+		switch(o) {
+		case 0: 
+			o = 1; 
+			goto decode_operand;
+		case 2:
+			goto non_basic_exec:
+		};
+
+basic_exec:
 		
-
-non_basic: 		
+		
+		
+non_basic:
+	o = 2;
+	goto decode_operand;
+non_basic_exec:
 		switch (op_a) { 
 			case XOP_JSR:
 			/* do shit */
