@@ -19,7 +19,10 @@ int main(int argc, char *argv[])
 	uint16_t mem[0x10000];
 	
 	/* CPU internals */
-	uint16_t op_code, op_a, op_b;
+	uint16_t op_code, op_a, op_b, tmp_a, tmp_b;
+
+	/* And finally, a cycle counter for benchmarking */
+	uint64_t cycles;
 
 	/* fuck you, goto is perfectly fine if used correctly */
 init:
@@ -29,7 +32,8 @@ init:
 
 	/* CPU main loop */
 	while(1) { 
-	
+		op_code = mem[reg_pc];
+		
 
 
 	}
