@@ -9,6 +9,9 @@
 #include <stdio.h>
 #include <sys/types.h>
 
+#define bt(l,x,u) (x >= l && x <= u)
+#define opnd operand[o ? 0 : 1]
+
 enum basicops { 
 	OP_NONBASIC = 0, /* extended opcode */
 	OP_SET, /* sorta like MOV in most archs */
@@ -34,41 +37,6 @@ enum nonbasicops {
 	XOP_JSR = 1 /* jump and save return */ 
 };
 
-enum operands {
-	IMM_A = 0, /* register immediates */
-	IMM_B,
-	IMM_C,
-	IMM_X,
-	IMM_Y, 
-	IMM_Z,
-	IMM_I,
-	IMM_J,
-	PTR_A, /* register is a pointer */
-	PTR_B,
-	PTR_C,
-	PTR_X,
-	PTR_Y,
-	PTR_Z,
-	NWP_A, /* pointer is (PC + 1) + register ? */
-	NWP_B,
-	NWP_C,
-	NWP_X,
-	NWP_Y,
-	NWP_Z,
-	NWP_I,
-	NWP_J,
-	/* Can these be used opposite of their normal intended use?*/
-	POP,   /* read at stack pointer, increment stack pointer */
-	PEEK,  /* read (write?) at stack pointer */
-	PUSH,  /* write to stack pointer, decrement stack pointer */
-	IMM_SP, /* stack pointer as a register immediate */
-	IMM_PC, /* program counter as a register immediate */
-	IMM_O, /* Overflow indicator as a register immediate */
-	NWP,   /* pointer at PC + 1 */
-	IMP   /* literal at PC + 1 */
-	/* Everything from here to 0x3f is an immediate literal - 0x20 */
-};
-
 enum registers { 
 	REG_A = 0,
 	REG_B,
@@ -83,8 +51,6 @@ enum registers {
 	REG_SP
 };
 
-
-
 int main(int argc, char *argv[]) 
 {
 	/* the registers */ 
@@ -95,7 +61,7 @@ int main(int argc, char *argv[])
 	
 	/* CPU internals */
 	
-	uint16_t op_code, op_a, op_b, op_tmp, o;
+	uint16_t op_code, operand[2], op_tmp, o;
 	uint32_t tmp_ax, tmp_bx;
 
 	/* And finally, a cycle counter for benchmarking */
@@ -110,16 +76,36 @@ init:
 	while(1) { 
 		op_code = mem[regs[REG_PC]];
 		o = 0;
-		
 		if(!(op_code & 0xf)) goto non_basic;
-
-decode_operand: 		
-		switch((op_code >> o ? 4 : 10) & 0x3f) { 
-			
-
-
-
-
+decode_operand: 
+		op_tmp = (op_code >> o ? 4 : 10) & 0x3f;
+		/* switch statement was too wordy */
+		if(bt(0,op_tmp,7)) 
+			opnd = reg[op_tmp];
+		else if(bt(8,op_tmp,0xf)) {
+			opnd = mem[regs[op_tmp-8]];
+			cycles++;
+		} else if(bt(0x10,op_tmp,0x17)) {
+			/*wat do if this overflow?*/
+			opnd = mem[++regs[REG_PC]+regs[op_tmp-0x10]];
+			cycles++;
+		} else if(bt(0x20,op_tmp,0x3f))
+			opnd = op_tmp - 0x20;
+		else switch (op_tmp) { 
+		case 0x18: /* POP */
+			opnd = regs[REG_SP]++;
+			cycles++;
+			break;
+		case 0x19;
+			opnd = regs[REG_SP];
+			cycles++;
+			break;
+		case 0x1a:
+			opnd = --reg[REG_SP];
+			cycles++;
+			break;
+		case 
+		}
 		switch(o) {
 		case 0: 
 			o = 1; 
@@ -132,14 +118,18 @@ basic_exec:
 		
 		
 		
+	continue;
 non_basic:
 	o = 2;
 	goto decode_operand;
 non_basic_exec:
 		switch (op_a) { 
-			case XOP_JSR:
+		case XOP_JSR:
 			/* do shit */
 			break;
+		default:
+			/* illegal */ 
+			regs[REG_PC]++;
 		}
 	}
 }
