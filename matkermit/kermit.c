@@ -6,9 +6,11 @@
 #include <stdio.h>     /* fprintf() */
 #include <stdlib.h>    /* EXIT_FAILURE, EXIT_SUCCESS */
 
+#define RETRY_MAX 3
+
 /* Absolute maximum length for kermit packet we will use */
 /* 4 bytes header + max data (94) + 1 byte checksum + \r\n + NUL = 102 */
-#define KPACKET_MAXLEN  102
+#define KPACKET_MAXLEN 102
 
 char kpacket[KPACKET_MAXLEN];
 int kfd, kseq = 0;
@@ -37,10 +39,9 @@ int kermit_send(int type, char *data, int len) {
 		kpacket[i+4] = data[i];
 	}
 	i += 4;
-	kpacket[i] = tochar((s + ((s & 192) / 64)) & 63);
-	kpacket[++i] = '\r';
-	kpacket[++i] = '\n';
-	kpacket[++i] = 0;
+	kpacket[i++] = tochar((s + ((s & 192) / 64)) & 63);
+	kpacket[i++] = '\r';
+	kpacket[i++] = '\n';
 	return write(kfd, kpacket, i);
 }
 
@@ -51,7 +52,9 @@ void kermit_recv(void) {
 			printf("o noes\n");
 		if (kpacket[0] == 01)
 			break;
+		printf("byte\n");
 	}
+	printf("got start\n");
 	while (1) {
 		len += read(kfd, kpacket + len, KPACKET_MAXLEN - len);
 		if (len >= 2 && len >= unchar(kpacket[1]))
@@ -76,8 +79,6 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 	kermit_send(KPACKET_TYPE_CMD, "1 2 3", 5);
-	kermit_recv();
-//	kermit_send(KPACKET_TYPE_ACK, NULL, 0);
 	while (1) kermit_recv();
 	return EXIT_SUCCESS;
 }
