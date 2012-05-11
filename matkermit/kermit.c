@@ -71,10 +71,7 @@ int kermit_recv(void) {
 		if (len >= 2 && len >= unchar(kpacket[1]) + 2)
 			break;
 	}
-	mfprintf(mstderr, "olen: %d\n", len);
 	len = unchar(kpacket[1]) + 2;
-	mfprintf(mstderr, "len: %d\n", len);
-	mfprintf(mstderr, "got packet type %c\n", kpacket[3]);
 	{
 		int i, s = 0;
 		for (i = 1; i < len - 1; ++i)
@@ -97,7 +94,7 @@ int kermit_recv(void) {
  *   dst: destination io handle
  */
 void kermit_decode(ioh_t *dst) {
-	int i, len = unchar(kpacket[1]) - 1;
+	int i, len = unchar(kpacket[1]) + 1;
 	for (i = 4; i < len; ++i) {
 		if (kpacket[i] == '#')
 			mfprintf(dst, "%c", ctl(kpacket[++i]));
@@ -120,15 +117,22 @@ int kermit_get(ioh_t *dst) {
 		if (!kermit_recv())
 			return -1;
 		switch (kpacket[3]) {
-			case 'D':
+			case KPACKET_TYPE_DATA:
 				kermit_decode(dst);
 				kermit_send(KPACKET_TYPE_ACK, NULL, 0);
 				break;
+			case KPACKET_TYPE_EOF:
+				kermit_send(KPACKET_TYPE_ACK, NULL, 0);
+				break;
+			case KPACKET_TYPE_EOT:
+				kermit_send(KPACKET_TYPE_ACK, NULL, 0);
+				return 1;
 			default:
-				mfprintf(mstderr, "unknown packet, sending ACK anyway\n");
+				mfprintf(mstderr, "unknown packet type %c, sending ACK anyway\n", kpacket[3]);
 				kermit_send(KPACKET_TYPE_ACK, NULL, 0);
 		}
 	}
+	mfflush(dst);
 }
 
 int main(int argc, char *argv[]) {

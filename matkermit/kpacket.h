@@ -6,7 +6,7 @@
 #define KPACKET_TYPE_ACK  'Y' /* Acknowledgement */
 #define KPACKET_TYPE_NAK  'N' /* Negative acknowledgement */
 #define KPACKET_TYPE_SEND 'S' /* Send initiative (exchange parameters) */
-#define KPACKET_TYPE_EOT  'E' /* Break transmission */
+#define KPACKET_TYPE_EOT  'B' /* Break transmission */
 #define KPACKET_TYPE_FILE 'F' /* File header */
 #define KPACKET_TYPE_EOF  'Z' /* End of file */
 #define KPACKET_TYPE_ERR  'E' /* Error */
