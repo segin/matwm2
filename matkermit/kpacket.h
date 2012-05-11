@@ -49,6 +49,10 @@
 #define KPACKET_SCMD_JOUR 'J' /* command[argument] - journal */
 #define KPACKET_SCMD_VAR  'V' /* command[argument[argument]] - variable */
 
+#define tochar(x) (x + 32)
+#define unchar(x) (x - 32)
+#define ctl(x)    (x ^ 64)
+
 int kpacket_fill(char *packet, int seq, int type, char *data, int len);
 
 #endif /* __KPACKET_H__ */

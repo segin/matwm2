@@ -1,12 +1,13 @@
 #include "kpacket.h"
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <stdio.h>
+#include <sys/types.h> /* open() */
+#include <sys/stat.h>  /* open() */
+#include <fcntl.h>     /* open() */
+#include <unistd.h>    /* read(), write() */
+#include <stdio.h>     /* fprintf() */
+#include <stdlib.h>    /* EXIT_FAILURE, EXIT_SUCCESS */
 
 char kpacket[KPACKET_MAXLEN];
-int kfd, seq;
+int kfd, seq = 0;
 
 int kermit_send(int type, char *data, int len) {
 	len = kpacket_fill(kpacket, seq, type, data, len);
@@ -18,18 +19,15 @@ void kermit_recv(void) {
 }
 
 int main(int argc, char *argv[]) {
-	int fd, l;
-	fd = open("/dev/ttyUSB0", O_RDWR); /* TODO let user specify & error check */
-	l = kpacket_fill(kpacket, 0, KPACKET_TYPE_GEN, "D", 1);
-	write(fd, kpacket, l);
-	read(fd, kpacket, 4);
-	fprintf(stderr, "%c\n", kpacket[3]);
-	l = kpacket_fill(kpacket, kpacket[2], KPACKET_TYPE_ACK, "", 0);
-	write(fd, kpacket, l);
-	while (kpacket[0] != 01)
-		read(fd, kpacket, 1);
-	read(fd, kpacket, 4);
-	fprintf(stderr, "%c\n", kpacket[2]);
-	return 0;
+	if (argc < 2) {
+		fprintf(stderr, "error: too few arguments\n");
+		return EXIT_FAILURE;
+	}
+	if ((kfd = open(argv[1], O_RDWR)) < 0) {
+		fprintf(stderr, "error: failed to open port %s\n", argv[1]);
+		return EXIT_FAILURE;
+	}
+	kermit_send(KPACKET_TYPE_CMD);
+	return EXIT_SUCCESS;
 }
 

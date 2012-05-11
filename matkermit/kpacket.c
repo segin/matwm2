@@ -1,17 +1,5 @@
 #include "kpacket.h"
 
-char tochar(char x) {
-	return x + 32;
-}
-
-char unchar(char x) {
-	return x - 32;
-}
-
-char ctl(char x) {
-	return x ^ 64;
-}
-
 /* kpacket_fill
  *
  * description
