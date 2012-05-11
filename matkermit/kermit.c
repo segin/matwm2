@@ -8,9 +8,13 @@
 char kpacket[KPACKET_MAXLEN];
 int kfd, seq;
 
-int kpacket_send(int type, char *data, int len) {
+int kermit_send(int type, char *data, int len) {
 	len = kpacket_fill(kpacket, seq, type, data, len);
 	return write(kfd, kpacket, len);
+}
+
+void kermit_recv(void) {
+	
 }
 
 int main(int argc, char *argv[]) {
