@@ -1,9 +1,9 @@
 #include "kpacket.h"
+#include "io.h"
 #include <sys/types.h> /* open() */
 #include <sys/stat.h>  /* open() */
 #include <fcntl.h>     /* open() */
 #include <unistd.h>    /* read(), write() */
-#include <stdio.h>     /* fprintf() */
 #include <stdlib.h>    /* EXIT_FAILURE, EXIT_SUCCESS */
 
 #define RETRY_MAX 3
@@ -50,13 +50,16 @@ int kermit_send(int type, char *data, int len) {
  * description
  *   waits for server data and receives exactly one packet
  * return value
- *   -1: read error
  *   1: success
+ *   -1: read error
  * notes
  *   data field is not decoded by this function
+ *   will hang until either a packet is received or transmission broken
  */
 int kermit_recv(void) {
-	int len = 1;
+	int len;
+	start:
+	len = 1;
 	while (1) {
 		if (read(kfd, kpacket, 1) <= 0)
 			return -1;
@@ -65,34 +68,80 @@ int kermit_recv(void) {
 	}
 	while (1) {
 		len += read(kfd, kpacket + len, KPACKET_MAXLEN - len);
-		if (len >= 2 && len >= unchar(kpacket[1]))
+		if (len >= 2 && len >= unchar(kpacket[1]) + 2)
 			break;
 	}
-	kpacket[len] = 0;
-	printf("len=%d seq=%d t='%c'\n", (int) unchar(kpacket[1]), (int) unchar(kpacket[2]), (int) kpacket[3]);
-	kseq = unchar(kpacket[2]);
-	if (kpacket[3] == 'X' || kpacket[3] == 'D') {
-		printf("%s\n", kpacket + 4);
+	mfprintf(mstderr, "olen: %d\n", len);
+	len = unchar(kpacket[1]) + 2;
+	mfprintf(mstderr, "len: %d\n", len);
+	mfprintf(mstderr, "got packet type %c\n", kpacket[3]);
+	{
+		int i, s = 0;
+		for (i = 1; i < len - 1; ++i)
+			s += kpacket[i];
+		if (kpacket[len-1] != tochar((s + ((s & 192) / 64)) & 63)) {
+			kermit_send(KPACKET_TYPE_NAK, NULL, 0);
+			mfprint(mstderr, "checksum failed, retrying\n");
+			goto start;
+		}
 	}
-	kermit_send(KPACKET_TYPE_ACK, NULL, 0);
+	kseq = unchar(kpacket[2]);
+	return len;
 }
 
+/* kermit_decode
+ *
+ * description
+ *   decodes data field of kermit packet
+ * input
+ *   dst: destination io handle
+ */
+void kermit_decode(ioh_t *dst) {
+	int i, len = unchar(kpacket[1]) - 1;
+	for (i = 4; i < len; ++i) {
+		if (kpacket[i] == '#')
+			mfprintf(dst, "%c", ctl(kpacket[++i]));
+		else mfwrite(dst, kpacket + i, 1);
+	}
+}
 
-int kermit_get(void) {
-	
+/* kermit_get
+ *
+ * description
+ *   retrieves file (after transfer has been initiated some way)
+ * input
+ *   dst: destination io handle
+ * return value
+ *   1: success
+ *   -1: error
+ */
+int kermit_get(ioh_t *dst) {
+	while (1) {
+		if (!kermit_recv())
+			return -1;
+		switch (kpacket[3]) {
+			case 'D':
+				kermit_decode(dst);
+				kermit_send(KPACKET_TYPE_ACK, NULL, 0);
+				break;
+			default:
+				mfprintf(mstderr, "unknown packet, sending ACK anyway\n");
+				kermit_send(KPACKET_TYPE_ACK, NULL, 0);
+		}
+	}
 }
 
 int main(int argc, char *argv[]) {
+	mstdio_init();
 	if (argc < 2) {
-		fprintf(stderr, "error: too few arguments\n");
+		mfprint(mstderr, "error: too few arguments\n");
 		return EXIT_FAILURE;
 	}
 	if ((kfd = open(argv[1], O_RDWR)) < 0) {
-		fprintf(stderr, "error: failed to open port %s\n", argv[1]);
+		mfprintf(mstderr, "error: failed to open port %s\n", argv[1]);
 		return EXIT_FAILURE;
 	}
 	kermit_send(KPACKET_TYPE_CMD, "CLEAR", 5);
-	while (1) kermit_recv();
+	kermit_get(mstdout);
 	return EXIT_SUCCESS;
 }
-
