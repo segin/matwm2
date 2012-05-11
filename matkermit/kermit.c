@@ -6,6 +6,10 @@
 #include <stdio.h>     /* fprintf() */
 #include <stdlib.h>    /* EXIT_FAILURE, EXIT_SUCCESS */
 
+/* Absolute maximum length for kermit packet we will use */
+/* 4 bytes header + max data (94) + 1 byte checksum + \r\n + NUL = 102 */
+#define KPACKET_MAXLEN  102
+
 char kpacket[KPACKET_MAXLEN];
 int kfd, kseq = 0;
 

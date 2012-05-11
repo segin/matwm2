@@ -1,10 +1,6 @@
 #ifndef __KPACKET_H__
 #define __KPACKET_H__
 
-/* Absolute maximum length for kermit packet we will use */
-/* 4 bytes header + max data (94) + 1 byte checksum + \r\n + NUL = 102 */
-#define KPACKET_MAXLEN  102
-
 /* Response types */
 #define KPACKET_TYPE_DATA 'D' /* Data packet */
 #define KPACKET_TYPE_ACK  'Y' /* Acknowledgement */
