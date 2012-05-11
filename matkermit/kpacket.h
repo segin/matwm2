@@ -1,7 +1,7 @@
 #ifndef __KPACKET_H__
 #define __KPACKET_H__
 
-/* Absolute maximum length for kermit packet (with space for a 0) */
+/* Absolute maximum length for kermit packet we will use */
 /* 4 bytes header + max data (94) + 1 byte checksum + \r\n + NUL = 102 */
 #define KPACKET_MAXLEN  102
 
@@ -52,8 +52,6 @@
 #define tochar(x) ((x) + 32)
 #define unchar(x) ((x) - 32)
 #define ctl(x)    ((x) ^ 64)
-
-int kpacket_fill(char *packet, int seq, int type, char *data, int len);
 
 #endif /* __KPACKET_H__ */
 
