@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "error: failed to open port %s\n", argv[1]);
 		return EXIT_FAILURE;
 	}
-	kermit_send(KPACKET_TYPE_CMD);
+	kermit_send(KPACKET_TYPE_CMD, "440 1 BEEP", 10);
 	return EXIT_SUCCESS;
 }
 
