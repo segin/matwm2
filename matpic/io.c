@@ -48,16 +48,6 @@ int mfseek(ioh_t *h, int off, int whence) {
 	return h->seek(h, off, whence);
 }
 
-void mfclose(ioh_t *h) {
-	if (h == NULL)
-		return;
-	mfflush(h);
-	if (h->close != NULL)
-		h->close(h);
-	free(h->data);
-	free((void *) h);
-}
-
 int mfflush(ioh_t *h) {
 	if (h == NULL)
 		return -1;
@@ -74,6 +64,16 @@ int mftrunc(ioh_t *h, int len) {
 		return -1;
 	h->pos = 0;
 	return 0;
+}
+
+void mfclose(ioh_t *h) {
+	if (h == NULL)
+		return;
+	mfflush(h);
+	if (h->close != NULL)
+		h->close(h);
+	free(h->data);
+	free((void *) h);
 }
 
 int mfprint(ioh_t *h, char *data) {
@@ -328,6 +328,7 @@ typedef struct {
 
 int _mmemread(ioh_t *h, char *data, int len) {
 	mmemdata_t *d = (mmemdata_t *) h->data;
+	mfflush(h);
 	if (d->ptr == NULL)
 		return 0;
 	if (len > d->len - d->pos)
@@ -349,14 +350,32 @@ int _mmemwrite(ioh_t *h, char *data, int len) {
 	return len;
 }
 
-int _mmemtrunc(ioh_t *h, int len) {
+int _mmemseek(ioh_t *h, int off, int whence) {
 	mmemdata_t *d;
-	if (h == NULL)
-		return -1;
 	d = (mmemdata_t *) h->data;
 	mfflush(h);
-	d->pos = d->len = len;
-	h->pos = 0;
+	switch (whence) {
+		case MSEEK_SET:
+			d->pos = off;
+			break;
+		case MSEEK_CUR:
+			d->pos += off;
+			break;
+		case MSEEK_END:
+			d->pos = d->len - off;
+			break;
+	}
+	return 0;
+}
+
+int _mmemtrunc(ioh_t *h, int len) {
+	mmemdata_t *d;
+	d = (mmemdata_t *) h->data;
+	mfflush(h);
+	d->len = len;
+	if (d->pos > d->len)
+		d->pos = d->len;
+	d->ptr = (char *) realloc((void *) d->ptr, len);
 	return 0;
 }
 
@@ -372,7 +391,7 @@ ioh_t *mmemopen(int options) {
 	d.pos = 0;
 	d.len = 0;
 	d.options = options;
-	return _mcbopen((void *) &d, sizeof(mmemdata_t), 0, &_mmemread, &_mmemwrite, NULL, &_mmemtrunc, &_mmemclose);
+	return _mcbopen((void *) &d, sizeof(mmemdata_t), 0, &_mmemread, &_mmemwrite, &_mmemseek, &_mmemtrunc, &_mmemclose);
 }
 
 char *mmemget(ioh_t *h) {

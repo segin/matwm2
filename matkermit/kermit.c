@@ -24,9 +24,9 @@ int kfd, kseq = 0;
  *   data: data
  *   len: data length in bytes (not including packet stuff), 0-94
  * return value
- *   the length of the finished packed not including terminating 0
+ *   return of write()
  * notes
- *   data field is not encoded by this function by itself in any way
+ *   data field is not encoded by this function
  */
 int kermit_send(int type, char *data, int len) {
 	int i, s = 0;
@@ -45,16 +45,24 @@ int kermit_send(int type, char *data, int len) {
 	return write(kfd, kpacket, i);
 }
 
-void kermit_recv(void) {
+/* kermit_recv
+ *
+ * description
+ *   waits for server data and receives exactly one packet
+ * return value
+ *   -1: read error
+ *   1: success
+ * notes
+ *   data field is not decoded by this function
+ */
+int kermit_recv(void) {
 	int len = 1;
 	while (1) {
 		if (read(kfd, kpacket, 1) <= 0)
-			printf("o noes\n");
+			return -1;
 		if (kpacket[0] == 01)
 			break;
-		printf("byte\n");
 	}
-	printf("got start\n");
 	while (1) {
 		len += read(kfd, kpacket + len, KPACKET_MAXLEN - len);
 		if (len >= 2 && len >= unchar(kpacket[1]))
@@ -69,6 +77,11 @@ void kermit_recv(void) {
 	kermit_send(KPACKET_TYPE_ACK, NULL, 0);
 }
 
+
+int kermit_get(void) {
+	
+}
+
 int main(int argc, char *argv[]) {
 	if (argc < 2) {
 		fprintf(stderr, "error: too few arguments\n");
@@ -78,7 +91,7 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "error: failed to open port %s\n", argv[1]);
 		return EXIT_FAILURE;
 	}
-	kermit_send(KPACKET_TYPE_CMD, "1 2 3", 5);
+	kermit_send(KPACKET_TYPE_CMD, "CLEAR", 5);
 	while (1) kermit_recv();
 	return EXIT_SUCCESS;
 }

@@ -21,6 +21,7 @@ struct ioh_t {
 
 extern int mfread(ioh_t *h, char *data, int len);
 extern int mfwrite(ioh_t *h, char *data, int len);
+extern int mfseek(ioh_t *h, int off, int whence);
 extern int mfflush(ioh_t *h);
 extern int mftrunc(ioh_t *h, int len);
 extern void mfclose(ioh_t *h);
