@@ -41,7 +41,6 @@ int kermit_send(int type, char *data, int len) {
 	i += 4;
 	kpacket[i++] = tochar((s + ((s & 192) / 64)) & 63);
 	kpacket[i++] = '\r';
-	kpacket[i++] = '\n';
 	return write(kfd, kpacket, i);
 }
 
@@ -110,12 +109,15 @@ void kermit_decode(ioh_t *dst) {
  *   dst: destination io handle
  * return value
  *   1: success
- *   -1: error
+ *   -1: received NAK
+ *   -2: remote error
+ *   -3: 
  */
 int kermit_get(ioh_t *dst) {
 	while (1) {
 		if (!kermit_recv())
-			return -1;
+			return -3;
+		//mfprintf(mstderr, "%d %c\n", unchar(kpacket[2]), kpacket[3]);
 		switch (kpacket[3]) {
 			case KPACKET_TYPE_DATA:
 				kermit_decode(dst);
@@ -127,6 +129,18 @@ int kermit_get(ioh_t *dst) {
 			case KPACKET_TYPE_EOT:
 				kermit_send(KPACKET_TYPE_ACK, NULL, 0);
 				return 1;
+			case KPACKET_TYPE_ERR:
+				mfprint(mstderr, "error: ");
+				kermit_decode(mstderr);
+				mfprint(mstderr, "\n");
+				return -2;
+			case KPACKET_TYPE_SEND:
+				kseq = 0;
+			case KPACKET_TYPE_TEXT:
+				kermit_send(KPACKET_TYPE_ACK, NULL, 0);
+				break;
+			case KPACKET_TYPE_NAK:
+				return -1;
 			default:
 				mfprintf(mstderr, "unknown packet type %c, sending ACK anyway\n", kpacket[3]);
 				kermit_send(KPACKET_TYPE_ACK, NULL, 0);
@@ -135,17 +149,44 @@ int kermit_get(ioh_t *dst) {
 	mfflush(dst);
 }
 
+/* kermit_req
+ *
+ * description
+ *   does the same as kermit_send, and then waits for a file
+ * input
+ *   dst: destination io handle
+ *   type: packet type
+ *   data: data
+ *   len: data length in bytes (not including packet stuff), 0-94
+ * return value
+ *    1 success
+ *   -1 failed sending packet
+ * notes
+ *   data field is not encoded by this function
+ *   seems if we run sequences of this we have to wait 20000 usec
+ *    or receive a NAK for the first try
+ */
+int kermit_req(ioh_t *dst, int type, char *data, int len) {
+	kseq = 0;
+	do if (kermit_send(type, data, len) <= 0)
+		return -1;
+	while (kermit_get(dst) == -1); /* -1 is received NAK */
+	return 1;
+}
+
 int main(int argc, char *argv[]) {
 	mstdio_init();
 	if (argc < 2) {
 		mfprint(mstderr, "error: too few arguments\n");
 		return EXIT_FAILURE;
 	}
-	if ((kfd = open(argv[1], O_RDWR)) < 0) {
+	if ((kfd = open(argv[1], O_RDWR | O_APPEND)) < 0) {
 		mfprintf(mstderr, "error: failed to open port %s\n", argv[1]);
 		return EXIT_FAILURE;
 	}
-	kermit_send(KPACKET_TYPE_CMD, "CLEAR", 5);
-	kermit_get(mstdout);
+/*	kermit_req(mstdout, KPACKET_TYPE_CMD, "CLEAR", 5);
+	mfprint(mstdout, "\n");*/
+	//usleep(20000); /* TODO must figure why it doesn't work without this delay */
+	kermit_req(mstdout, KPACKET_TYPE_GEN, "D", 1);
 	return EXIT_SUCCESS;
 }
