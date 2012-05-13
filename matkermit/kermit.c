@@ -117,7 +117,6 @@ int kermit_get(ioh_t *dst) {
 	while (1) {
 		if (!kermit_recv())
 			return -3;
-		//mfprintf(mstderr, "%d %c\n", unchar(kpacket[2]), kpacket[3]);
 		switch (kpacket[3]) {
 			case KPACKET_TYPE_DATA:
 				kermit_decode(dst);
