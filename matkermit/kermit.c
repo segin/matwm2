@@ -114,15 +114,16 @@ void kermit_decode(ioh_t *dst) {
  *   -3: 
  */
 int kermit_get(ioh_t *dst) {
+	int lastseq = -1;
 	while (1) {
 		if (!kermit_recv())
 			return -3;
+		if (lastseq == kpacket[2])
+			continue;
+		lastseq = kpacket[2];
 		switch (kpacket[3]) {
 			case KPACKET_TYPE_DATA:
 				kermit_decode(dst);
-				kermit_send(KPACKET_TYPE_ACK, NULL, 0);
-				break;
-			case KPACKET_TYPE_EOF:
 				kermit_send(KPACKET_TYPE_ACK, NULL, 0);
 				break;
 			case KPACKET_TYPE_EOT:
@@ -135,6 +136,8 @@ int kermit_get(ioh_t *dst) {
 				return -2;
 			case KPACKET_TYPE_SEND:
 				kseq = 0;
+			case KPACKET_TYPE_EOF:
+			case KPACKET_TYPE_FILE:
 			case KPACKET_TYPE_TEXT:
 				kermit_send(KPACKET_TYPE_ACK, NULL, 0);
 				break;
@@ -186,7 +189,8 @@ int main(int argc, char *argv[]) {
 /*	kermit_req(mstdout, KPACKET_TYPE_CMD, "CLEAR", 5);
 	mfprint(mstdout, "\n");*/
 	//usleep(20000); /* TODO must figure why it doesn't work without this delay */
-	//kermit_req(mstdout, KPACKET_TYPE_GEN, "D", 1);
+	kermit_req(mstdout, KPACKET_TYPE_GEN, "D", 1);
+	usleep(20000);
 	kermit_req(mstdout, KPACKET_TYPE_RECV, "HELLO", 5);
 	return EXIT_SUCCESS;
 }
