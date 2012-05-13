@@ -187,6 +187,7 @@ int main(int argc, char *argv[]) {
 /*	kermit_req(mstdout, KPACKET_TYPE_CMD, "CLEAR", 5);
 	mfprint(mstdout, "\n");*/
 	//usleep(20000); /* TODO must figure why it doesn't work without this delay */
-	kermit_req(mstdout, KPACKET_TYPE_GEN, "D", 1);
+	//kermit_req(mstdout, KPACKET_TYPE_GEN, "D", 1);
+	kermit_req(mstdout, KPACKET_TYPE_RECV, "HELLO", 5);
 	return EXIT_SUCCESS;
 }
