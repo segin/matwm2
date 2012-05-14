@@ -5,8 +5,17 @@
 #include <fcntl.h>     /* open() */
 #include <unistd.h>    /* read(), write() */
 #include <stdlib.h>    /* EXIT_FAILURE, EXIT_SUCCESS */
+#include <string.h>    /* strlen() */
 
 #define RETRY_MAX 3
+
+/* TODO
+ *   time out when no response
+ *
+ * NOTES
+ *   hp-50g rejects packets if we send too fast after an earlier sequence
+ *   best delay seems to be 19000-20000 microseconds
+ */
 
 /* Absolute maximum length for kermit packet we will use */
 /* 4 bytes header + max data (94) + 1 byte checksum + \r\n + NUL = 102 */
@@ -51,12 +60,13 @@ int kermit_send(int type, char *data, int len) {
  * return value
  *   1: success
  *   -1: read error
+ *   -2: max retries
  * notes
  *   data field is not decoded by this function
  *   will hang until either a packet is received or transmission broken
  */
 int kermit_recv(void) {
-	int len;
+	int len, nretry = 0;
 	start:
 	len = 1;
 	while (1) {
@@ -76,8 +86,10 @@ int kermit_recv(void) {
 		for (i = 1; i < len - 1; ++i)
 			s += kpacket[i];
 		if (kpacket[len-1] != tochar((s + ((s & 192) / 64)) & 63)) {
+			if (++nretry > RETRY_MAX)
+				return -2;
 			kermit_send(KPACKET_TYPE_NAK, NULL, 0);
-			mfprint(mstderr, "checksum failed, retrying\n");
+			mfprintf(mstderr, "checksum failed, retry #%d\n", nretry);
 			goto start;
 		}
 	}
@@ -111,7 +123,7 @@ void kermit_decode(ioh_t *dst) {
  *   1: success
  *   -1: received NAK
  *   -2: remote error
- *   -3: 
+ *   -3: kermit_recv fail
  */
 int kermit_get(ioh_t *dst) {
 	int lastseq = -1;
@@ -178,19 +190,63 @@ int kermit_req(ioh_t *dst, int type, char *data, int len) {
 
 int main(int argc, char *argv[]) {
 	mstdio_init();
-	if (argc < 2) {
-		mfprint(mstderr, "error: too few arguments\n");
-		return EXIT_FAILURE;
+	if (argc < 3) {
+		mfprintf(mstderr,
+			"***********************************************************\n"
+			"* matkermit - kermit client especially for hp calculators *\n"
+			"***********************************************************\n"
+			"\nsynopsis\n  %s <port> <command> [<arguments>]\n"
+			"\ncommands\n"
+			"  d                  directory listing\n"
+			"  c <directory>      change working directory\n"
+			"  g <filename>       get file\n"
+			"  p <filename>       upload file (unimplemented atm)\n"
+			"  x <command>        run command on calculator\n"
+			"\nnotes\n"
+			"  messages are sent to stderr (always)\n"
+			"  downloaded files are sent to stdout\n"
+			"  calculator must be in server mode, rshift(hold)-rightarrow activates that\n"
+			"  also you need it to be set to do ASCII transfers (flag 35 on hp-50g)\n"
+			"  you might have to be root to use /dev/tty things\n"
+			"\n"
+			/*"  this is alpha state software, it mite not work well\n"
+			"  i provide no warranty, not even if it kills you (tho i would feel sorry)\n"
+			"  synopsis etc. may will change, so don't depend on their consistency\n" */
+			"  suggestions and comments -> sic_zer0@hotmail.com, my name is mat\n"
+			/*"  a catchier name for the program is one suggestion i am looking for\n"*/
+			/* above commented cause not fit on 80x25 terminal then */
+			,
+			argc ? argv[0] : "matkermit");
+		return EXIT_SUCCESS;
 	}
 	if ((kfd = open(argv[1], O_RDWR | O_APPEND)) < 0) {
 		mfprintf(mstderr, "error: failed to open port %s\n", argv[1]);
 		return EXIT_FAILURE;
 	}
-/*	kermit_req(mstdout, KPACKET_TYPE_CMD, "CLEAR", 5);
-	mfprint(mstdout, "\n");*/
-	//usleep(20000); /* TODO must figure why it doesn't work without this delay */
-	kermit_req(mstdout, KPACKET_TYPE_GEN, "D", 1);
-	usleep(20000);
-	kermit_req(mstdout, KPACKET_TYPE_RECV, "HELLO", 5);
+	switch (*argv[2]) {
+		case 'd':
+		case 'D':
+			kermit_req(mstdout, KPACKET_TYPE_GEN, "D", 1);
+			break;
+		case 'g':
+		case 'G':
+			if (argc < 4) {
+				mfprintf(mstderr, "need more argument\n");
+				return EXIT_FAILURE;
+			}
+			kermit_req(mstdout, KPACKET_TYPE_RECV, argv[3], strlen(argv[3]));
+			break;
+		case 'x':
+		case 'X':
+			if (argc < 4) {
+				mfprintf(mstderr, "need more argument\n");
+				return EXIT_FAILURE;
+			}
+			kermit_req(mstderr, KPACKET_TYPE_CMD, argv[3], strlen(argv[3]));
+			mfprint(mstderr, "\n"); /* "Empty Stack" comes without newline */
+			break;
+		default:
+			mfprintf(mstderr, "invalid command, run without arguments for help\n");
+	}
 	return EXIT_SUCCESS;
 }
