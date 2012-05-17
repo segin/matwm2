@@ -216,18 +216,27 @@ int mvafprintf(ioh_t *h, char *fmt, va_list ap) {
 	return 0;
 }
 
-/* by no means a replacement of poll(), just a quick way to check if an file has data */
-int mfpoll(ioh_t *h, int type, int timeout) {
-	if (h == NULL)
-		return -1;
-	if (h->poll == NULL)
-		return -1;
-	mfflush(h);
-	return h->poll(h, type, timeout);
+int mfpoll(mpollfd_t *fds, int nfds, int timeout) {
+	int i, n = 0;
+	start:
+	for (i = 0; i < nfds; ++i)
+		if (fds[i].h != NULL && fds[i].h->poll != NULL && fds[i].h->poll(&fds[i]))
+			++n;
+	if (n == 0) {
+		if (timeout > 0) {
+			--timeout;
+			usleep(1000);
+			goto start;
+		}
+		if (timeout < 0)
+			goto start;
+	}
+	return n;
 }
 
 int mfxfer(ioh_t *dst, ioh_t *src, int len) {
 	int r = 0;
+	mpollfd_t pfd = { .h = dst, .events = MPOLL_IN };
 	if (dst == NULL || src == NULL)
 		return -1;
 	mfflush(dst);
@@ -235,7 +244,7 @@ int mfxfer(ioh_t *dst, ioh_t *src, int len) {
 		len -= sizeof(dst->buf);
 		r += (dst->pos = mfread(src, dst->buf, sizeof(dst->buf)));
 		mfflush(dst);
-		if (mfpoll(src, MPOLL_IN, 0) <= 0)
+		if (mfpoll(&pfd, 1, 0) <= 0)
 			return r;
 	}
 	r += (dst->pos = mfread(src, dst->buf, len));
@@ -250,7 +259,7 @@ ioh_t *_mcbopen(void *d, int len, int options,
                 int (*write)(ioh_t *, char *, int),
                 int (*seek)(ioh_t *, int, int),
                 int (*trunc)(ioh_t *, int),
-                int (*poll)(ioh_t *, int, int),
+                int (*poll)(mpollfd_t *),
                 void (*close)(ioh_t *)) {
 	ioh_t *new = (ioh_t *) malloc(sizeof(ioh_t));
 	if (new == NULL)
@@ -336,15 +345,21 @@ int _mfdtrunc(ioh_t *h, int len) {
 	return ftruncate(d->fd, len);
 }
 
-int _mfdpoll(ioh_t *h, int type, int timeout) {
-	mfddata_t *d = (mfddata_t *) h->data;
-	struct pollfd pfd = {
-		.fd = d->fd,
-		.events = (type == MPOLL_IN) ? POLLIN : POLLOUT
-	};
-	if (poll(&pfd, 1, timeout) < 0)
-		return -1;
-	return pfd.revents &= pfd.events;
+int _mfdpoll(mpollfd_t *fd) {
+	mfddata_t *d = (mfddata_t *) fd->h->data;
+	struct pollfd pfd = { .fd = d->fd, .events = 0 };
+	if (fd->events & MPOLL_IN)
+		pfd.events |= POLLIN;
+	if (fd->events & MPOLL_OUT)
+		pfd.events |= POLLOUT;
+	if (poll(&pfd, 1, 0) <= 0)
+		return 0;
+	fd->revents = 0;
+	if (pfd.revents & POLLIN)
+		fd->revents |= MPOLL_IN;
+	if (pfd.revents & POLLOUT)
+		fd->revents |= MPOLL_OUT;
+	return 1;
 }
 
 void _mfdclose(ioh_t *h) {
@@ -453,19 +468,13 @@ int _mmemtrunc(ioh_t *h, int len) {
 	return 0;
 }
 
-int _mmempoll(ioh_t *h, int type, int timeout) {
-	mmemdata_t *d = (mmemdata_t *) h->data;
-	start:
-	if (type != MPOLL_IN || d->pos < d->len)
+int _mmempoll(mpollfd_t *fd) {
+	mmemdata_t *d = (mmemdata_t *) fd->h->data;
+	if (fd->events & MPOLL_OUT)
 		return 1;
-	if (timeout) {
-		--timeout;
-		usleep(1000);
-		goto start;
-	}
-	if (timeout < 0)
-		goto start;
-	return 0;
+	if (fd->events & MPOLL_IN && d->pos >= d->len)
+		return 0;
+	return 1;
 }
 
 void _mmemclose(ioh_t *h) {

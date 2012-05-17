@@ -71,8 +71,9 @@ int hpxm_cmd(ioh_t *port, char cmd, char *arg) {
 
 int hpxm_readdir(ioh_t *port) {
 	ioh_t *dirdata = mmemopen(0);
+	mpollfd_t pfd = { .h = port, .events = MPOLL_IN };
 	while (1) {
-		if (mfpoll(port, MPOLL_IN, 50) <= 0)
+		if (mfpoll(&pfd, 1, 100) <= 0)
 			break;
 		mprint("q\n");
 		mfxfer(dirdata, port, 2048);
