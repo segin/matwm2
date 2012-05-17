@@ -15,6 +15,8 @@
  * NOTES
  *   hp-50g rejects packets if we send too fast after an earlier sequence
  *   best delay seems to be 19000-20000 microseconds
+ *   useful calc commands: HOME, UPDIR, EVAL (EVAL makes directory current)
+ *   advanced reference says Xmodem can give calcs memory (does includes flags etc?)
  */
 
 /* Absolute maximum length for kermit packet we will use */
@@ -118,7 +120,7 @@ void kermit_decode(ioh_t *dst) {
  * description
  *   retrieves file (after transfer has been initiated some way)
  * input
- *   dst: destination io handle
+ *   dst: destination io handle (NULL is safe if want no output)
  * return value
  *   1: success
  *   -1: received NAK
@@ -155,6 +157,8 @@ int kermit_get(ioh_t *dst) {
 				break;
 			case KPACKET_TYPE_NAK:
 				return -1;
+			case KPACKET_TYPE_ACK:
+				return 1;
 			default:
 				mfprintf(mstderr, "unknown packet type %c, sending ACK anyway\n", kpacket[3]);
 				kermit_send(KPACKET_TYPE_ACK, NULL, 0);
@@ -166,7 +170,7 @@ int kermit_get(ioh_t *dst) {
 /* kermit_req
  *
  * description
- *   does the same as kermit_send, and then waits for a file
+ *   does the same as kermit_send, and then waits for a file or ACK
  * input
  *   dst: destination io handle
  *   type: packet type
@@ -248,5 +252,7 @@ int main(int argc, char *argv[]) {
 		default:
 			mfprintf(mstderr, "invalid command, run without arguments for help\n");
 	}
+	usleep(20000);
+	//kermit_req(mstderr, KPACKET_TYPE_GEN, "I", 1);
 	return EXIT_SUCCESS;
 }

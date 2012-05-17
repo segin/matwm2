@@ -20,30 +20,35 @@
 #define KPACKET_TYPE_CMD  'C' /* Run host command */
 #define KPACKET_TYPE_KERM 'K' /* Run kermit command */
 #define KPACKET_TYPE_GEN  'G' /* Generic kermit command */
+
 /* Generic kermit commands
  *  in comments before - operands are described
  *  Optional operands are in []
  *  Operands are prefixed with 1 byte specifying their length
  *  With arguments in the form [a][b] i believe a needs length 0 if not given
  */
-#define KPACKET_SCMD_LOGI 'I' /* [user[pass[acct]]] - login */
-#define KPACKET_SCMD_CWD  'C' /* [directory[password]] - change directory */
-#define KPACKET_SCMD_LOGO 'L' /* - logout */
+#define KPACKET_SCMD_LOGO 'L' /* - logout (does same as finish on hp-50g) */
 /* these are optional */
 #define KPACKET_SCMD_FINI 'F' /* - finish (shutdown the server but no logout) */
 #define KPACKET_SCMD_DIR  'D' /* [filespec] - query directory listing */
+
+/* these not implemented on hp-50g */
+#define KPACKET_SCMD_LOGI 'I' /* [user[pass[acct]]] - login */
+#define KPACKET_SCMD_CWD  'C' /* [directory[password]] - change directory */
 #define KPACKET_SCMD_DUSG 'U' /* [area] - disk usage query */
 #define KPACKET_SCMD_DEL  'E' /* filespec - delete */
 #define KPACKET_SCMD_TYPE 'T' /* filespec - type */
 #define KPACKET_SCMD_REN  'R' /* oldname,newname - rename */
 #define KPACKET_SCMD_COPY 'K' /* source,destination - copy */
 #define KPACKET_SCMD_WHO  'W' /* [uid_or_host[options]]- who is logged in */
-#define KPACKET_SCMD_MSG  'M' /* destination,text - send short message */
-#define KPACKET_SCMD_HELP 'H' /* [topic] - ask for help */
 #define KPACKET_SCMD_STAT 'Q' /* - query server status */
+#define KPACKET_SCMD_HELP 'H' /* [topic] - ask for help */
 #define KPACKET_SCMD_PROG 'P' /* [filespec][commands] - program */
 #define KPACKET_SCMD_JOUR 'J' /* command[argument] - journal */
 #define KPACKET_SCMD_VAR  'V' /* command[argument[argument]] - variable */
+
+/* untested */
+#define KPACKET_SCMD_MSG  'M' /* destination,text - send short message */
 
 #define tochar(x) ((x) + 32)
 #define unchar(x) ((x) - 32)
