@@ -1,6 +1,7 @@
 /* io.c - stdio replacement
- * 
- * 
+ *
+ * TODO
+ *   floating point for printf
  */
 
 #include <stdlib.h> /* malloc(), realloc(), free(), NULL */
@@ -356,6 +357,8 @@ int _mfdseek(ioh_t *h, int off, int whence) {
 	return lseek(d->fd, off, wh);
 }
 
+#ifdef __POSIX_IO__
+
 int _mfdtrunc(ioh_t *h, int len) {
 	mfddata_t *d = (mfddata_t *) h->data;
 	return ftruncate(d->fd, len);
@@ -378,6 +381,8 @@ int _mfdpoll(mpollfd_t *fd) {
 	return 1;
 }
 
+#endif /* __POSIX_IO__ */
+
 void _mfdclose(ioh_t *h) {
 	mfddata_t *d = (mfddata_t *) h->data;
 	if (d->close)
@@ -388,7 +393,11 @@ ioh_t *mfdopen(int fd, int close) {
 	mfddata_t d;
 	d.fd = fd;
 	d.close = close;
+	#ifdef __POSIX_IO__
 	return _mcbopen(&d, sizeof(mfddata_t), 0, &_mfdread, &_mfdwrite, &_mfdseek, &_mfdtrunc, &_mfdpoll, &_mfdclose);
+	#else
+	return _mcbopen(&d, sizeof(mfddata_t), 0, &_mfdread, &_mfdwrite, &_mfdseek, NULL, NULL, &_mfdclose);
+	#endif
 }
 
 /*************
@@ -413,8 +422,10 @@ ioh_t *mfopen(char *fn, int mode) {
 		o |= O_TRUNC;
 	if (mode & MFM_APPEND)
 		o |= O_APPEND;
+	#ifdef __POSIX_IO__
 	if (mode & MFM_NONBLOCK)
 		o |= O_NONBLOCK;
+	#endif
 	fd = open(fn, o, 0644);
 	if (fd < 0)
 		return NULL;
