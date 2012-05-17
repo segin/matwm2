@@ -233,6 +233,8 @@ int mvafprintf(ioh_t *h, char *fmt, va_list ap) {
 	return 0;
 }
 
+#ifdef __POSIX_IO__
+
 int mfpoll(mpollfd_t *fds, int nfds, int timeout) {
 	int i, n = 0;
 	start:
@@ -269,6 +271,8 @@ int mfxfer(ioh_t *dst, ioh_t *src, int len) {
 		mfflush(dst);
 	return r;
 }
+
+#endif /* __POSIX_IO__ */
 
 /* generic constructor */
 ioh_t *_mcbopen(void *d, int len, int options,
@@ -322,7 +326,9 @@ void mstdio_init(void) {
 
 #include <sys/types.h> /* lseek(), ftruncate() */
 #include <unistd.h>
+#ifdef __POSIX_IO__
 #include <poll.h> /* poll() */
+#endif
 
 typedef struct {
 	int fd, close;
