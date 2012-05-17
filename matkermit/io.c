@@ -2,6 +2,9 @@
  *
  * TODO
  *   floating point for printf
+ *   better error handling
+ *   better support for windows (polling etc), mebbe even winsock
+ *   hmm or cut all the less portable crap out
  */
 
 #include <stdlib.h> /* malloc(), realloc(), free(), NULL */
