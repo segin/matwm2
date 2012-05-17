@@ -216,6 +216,7 @@ int mvafprintf(ioh_t *h, char *fmt, va_list ap) {
 	return 0;
 }
 
+/* by no means a replacement of poll(), just a quick way to check if an file has data */
 int mfpoll(ioh_t *h, int type, int timeout) {
 	if (h == NULL)
 		return -1;
@@ -441,8 +442,7 @@ int _mmemseek(ioh_t *h, int off, int whence) {
 }
 
 int _mmemtrunc(ioh_t *h, int len) {
-	mmemdata_t *d;
-	d = (mmemdata_t *) h->data;
+	mmemdata_t *d = (mmemdata_t *) h->data;
 	mfflush(h);
 	d->len = len;
 	if (d->pos > d->len)
@@ -454,7 +454,18 @@ int _mmemtrunc(ioh_t *h, int len) {
 }
 
 int _mmempoll(ioh_t *h, int type, int timeout) {
-	return 1;
+	mmemdata_t *d = (mmemdata_t *) h->data;
+	start:
+	if (type != MPOLL_IN || d->pos < d->len)
+		return 1;
+	if (timeout) {
+		--timeout;
+		usleep(1000);
+		goto start;
+	}
+	if (timeout < 0)
+		goto start;
+	return 0;
 }
 
 void _mmemclose(ioh_t *h) {
