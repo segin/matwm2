@@ -1,3 +1,8 @@
+/* io.c - stdio replacement
+ * 
+ * 
+ */
+
 #include <stdlib.h> /* malloc(), realloc(), free(), NULL */
 #include <string.h> /* strlen(), memcpy() */
 #include <stdarg.h>
@@ -183,6 +188,17 @@ int mvafprintf(ioh_t *h, char *fmt, va_list ap) {
 					if (s == NULL)
 						s = "[NULL]";
 					if (mfprint(h, s) < 0)
+						return -1;
+					break;
+				case 'S':
+					s = va_arg(ap, char *);
+					n = va_arg(ap, int);
+					if (s == NULL) {
+						s = "[NULL]";
+						if (mfprint(h, s) < 0)
+							return -1;
+					}
+					if (mfwrite(h, s, n) < 0)
 						return -1;
 					break;
 				case 'x':
