@@ -418,6 +418,8 @@ int _mmemtrunc(ioh_t *h, int len) {
 	if (d->pos > d->len)
 		d->pos = d->len;
 	d->ptr = (char *) realloc((void *) d->ptr, len);
+	if (d->ptr == NULL)
+		return -1;
 	return 0;
 }
 
