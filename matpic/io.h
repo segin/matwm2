@@ -44,8 +44,10 @@ extern int mfprintsnum(ioh_t *h, signed long long n, int b, int p);
 extern int mfprintnum(ioh_t *h, unsigned long long n, int b, int p);
 extern int mfprintf(ioh_t *h, char *fmt, ...);
 extern int mvafprintf(ioh_t *h, char *fmt, va_list l);
+#ifdef __POSIX_IO__
 extern int mfpoll(mpollfd_t *fds, int nfds, int timeout);
 extern int mfxfer(ioh_t *dst, ioh_t *src, int len);
+#endif
 
 /* file descriptor wrappers */
 
