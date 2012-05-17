@@ -160,6 +160,7 @@ int dcargs(char *src) {
 						s = unescape(p);
 						free(p);
 						n += strlen(s);
+						
 						/* TODO add to list for second pass */
 					}
 					continue;
