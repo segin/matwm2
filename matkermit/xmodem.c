@@ -5,6 +5,7 @@
 #include <unistd.h>    /* read(), write() */
 #include <stdlib.h>    /* NULL, EXIT_FAILURE, EXIT_SUCCESS */
 #include <string.h>    /* strlen() */
+#include <poll.h>      /* poll() */
 
 /* NOTES
  *
@@ -47,7 +48,7 @@
  * for the full file listing, after an object of type directory, the same
  * structure restarts, with a 0 lenght name to end the directory.
  */
-
+ 
 char hpxm_buf[1+2+0xFF+1]; /* set max length wisely */
 /* CMD + 2 bytes length + argument max length + CRC byte */
 
@@ -68,7 +69,17 @@ int hpxm_cmd(int fd, char cmd, char *arg) {
 	return write(fd, hpxm_buf, len);
 }
 
-#include <poll.h>
+int hpxm_readdir(int fd) {
+	ioh_t *dirdata = mmemopen(0);
+	struct pollfd pfd = { .fd = fd, .events = POLLIN };
+	while (1) {
+		poll(&pfd, 1, 20);
+		if (pfd.revents != POLLIN)
+			break;
+		
+	};
+	
+}
 
 int main(int argc, char *argv[]) {
 	int fd;

@@ -30,6 +30,7 @@ extern int mfprintsnum(ioh_t *h, signed long long n, int b, int p);
 extern int mfprintnum(ioh_t *h, unsigned long long n, int b, int p);
 extern int mfprintf(ioh_t *h, char *fmt, ...);
 extern int mvafprintf(ioh_t *h, char *fmt, va_list l);
+extern int mfxfer(ioh_t *dst, ioh_t *src, int len);
 
 #define MSEEK_SET 0
 #define MSEEK_CUR 1
@@ -47,6 +48,7 @@ extern ioh_t *mfopen(char *fn, int mode);
 #define MFM_CREAT 4
 #define MFM_TRUNC 8
 #define MFM_APPEND 16
+#define MFM_NONBLOCK 32
 
 /* memory wrappers */
 extern ioh_t *mmemopen(int options);
@@ -56,5 +58,8 @@ extern char *msprintf(char *fmt, ...);
 
 /* mmemopen() options */
 #define MMO_FREE 1
+
+#define mprint(str)       mfprint(mstdout, str)
+#define mprintf(fmt, ...) mfprintf(mstdout, fmt, __VA_ARGS__)
 
 #endif /* __IO_H__ */

@@ -212,6 +212,21 @@ int mvafprintf(ioh_t *h, char *fmt, va_list ap) {
 	return 0;
 }
 
+int mfxfer(ioh_t *dst, ioh_t *src, int len) {
+	int r = 0;
+	if (dst == NULL || src == NULL)
+		return -1;
+	mfflush(dst);
+	while (len > sizeof(dst->buf)) {
+		len -= sizeof(dst->buf);
+		r += (dst->pos = mfread(src, dst->buf, sizeof(dst->buf)));
+		mfflush(dst);
+	}
+	r += (dst->pos = mfread(src, dst->buf, len));
+	mfflush(dst);
+	return r;
+}
+
 /* generic constructor */
 ioh_t *_mcbopen(void *d, int len, int options,
                 int (*read)(ioh_t *, char *, int),
@@ -260,6 +275,7 @@ void mstdio_init(void) {
 	atexit(mstdio_end);
 }
 
+#include <sys/types.h> /* lseek(), ftruncate() */
 #include <unistd.h>
 
 typedef struct {
@@ -282,11 +298,35 @@ void _mfdclose(ioh_t *h) {
 		close(d->fd);
 }
 
+int _mfdseek(ioh_t *h, int off, int whence) {
+	mfddata_t *d = (mfddata_t *) h->data;
+	int wh;
+	switch (whence) {
+		case MSEEK_SET:
+			wh = SEEK_SET;
+			break;
+		case MSEEK_CUR:
+			wh = SEEK_CUR;
+			break;
+		case MSEEK_END:
+			wh = SEEK_END;
+			break;
+		default:
+			return -1;
+	}
+	return lseek(d->fd, off, wh);
+}
+
+int _mfdtrunc(ioh_t *h, int len) {
+	mfddata_t *d = (mfddata_t *) h->data;
+	return ftruncate(d->fd, len);
+}
+
 ioh_t *mfdopen(int fd, int close) {
 	mfddata_t d;
 	d.fd = fd;
 	d.close = close;
-	return _mcbopen(&d, sizeof(mfddata_t), 0, &_mfdread, &_mfdwrite, NULL, NULL, &_mfdclose);
+	return _mcbopen(&d, sizeof(mfddata_t), 0, &_mfdread, &_mfdwrite, &_mfdseek, &_mfdtrunc, &_mfdclose);
 }
 
 /*************
@@ -311,6 +351,8 @@ ioh_t *mfopen(char *fn, int mode) {
 		o |= O_TRUNC;
 	if (mode & MFM_APPEND)
 		o |= O_APPEND;
+	if (mode & MFM_NONBLOCK)
+		o |= O_NONBLOCK;
 	fd = open(fn, o, 0644);
 	if (fd < 0)
 		return NULL;
