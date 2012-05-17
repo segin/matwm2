@@ -52,7 +52,7 @@
 char hpxm_buf[1+2+0xFF+1]; /* set max length wisely */
 /* CMD + 2 bytes length + argument max length + CRC byte */
 
-int hpxm_cmd(int fd, char cmd, char *arg) {
+int hpxm_cmd(ioh_t *port, char cmd, char *arg) {
 	int len = 1;
 	hpxm_buf[0] = cmd;
 	if (arg != NULL) {
@@ -66,34 +66,36 @@ int hpxm_cmd(int fd, char cmd, char *arg) {
 			crc += (hpxm_buf[i+3] = arg[i]);
 		hpxm_buf[i+3] = crc;
 	}
-	return write(fd, hpxm_buf, len);
+	return mfwrite(port, hpxm_buf, len);
 }
 
-int hpxm_readdir(int fd) {
+int hpxm_readdir(ioh_t *port) {
 	ioh_t *dirdata = mmemopen(0);
-	struct pollfd pfd = { .fd = fd, .events = POLLIN };
 	while (1) {
-		poll(&pfd, 1, 20);
-		if (pfd.revents != POLLIN)
+		if (mfpoll(port, MPOLL_IN, 50) <= 0)
 			break;
-		
-	};
-	
+		mprint("q\n");
+		mfxfer(dirdata, port, 2048);
+	}
+	mfwrite(port, "\06", 1);
+	mfprintf(mstderr, "len: %d\n", mmemlen(dirdata));
 }
 
 int main(int argc, char *argv[]) {
-	int fd;
+	ioh_t *port;
 	mstdio_init();
 	if (argc < 2) {
 		mfprintf(mstderr, "error: too few arguments\n");
 		return EXIT_FAILURE;
 	}
-	if ((fd = open(argv[1], O_RDWR | O_APPEND)) < 0) {
+	if ((port = mfopen(argv[1], MFM_RW | MFM_APPEND)) == NULL) {
 		mfprintf(mstderr, "error: failed to open port %s\n", argv[1]);
 		return EXIT_FAILURE;
 	}
-	hpxm_cmd(fd, 'L', NULL);
-	usleep(200000);
+	port->options |= MFO_DIRECT;
+	hpxm_cmd(port, 'L', NULL);
+	hpxm_readdir(port);
+/*	usleep(200000);
 	unsigned char data[0xFFFF];
 	int crc = 0;
 	int i, l = read(fd, data, 0xFFFF);
@@ -106,6 +108,6 @@ int main(int argc, char *argv[]) {
 		unsigned char *p = data+i+1+data[i];
 		mfprintf(mstderr, "\t%X %X %X %X %X %X %X\n", p[0], p[1], p[2], p[3], p[4], p[5], p[6]);
 		i += data[i]+8;
-	}
+	}*/
 	return EXIT_SUCCESS;
 }

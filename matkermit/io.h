@@ -10,6 +10,7 @@ struct ioh_t {
 	int (*write)(ioh_t *, char *, int);
 	int (*seek)(ioh_t *, int, int);
 	int (*trunc)(ioh_t *, int);
+	int (*poll)(ioh_t *, int, int);
 	void (*close)(ioh_t *);
 	void *data;
 	char buf[2048];
@@ -17,7 +18,8 @@ struct ioh_t {
 	int options;
 };
 
-#define MFO_DOSNL 1
+#define MFO_DOSNL  1
+#define MFO_DIRECT 2
 
 extern int mfread(ioh_t *h, char *data, int len);
 extern int mfwrite(ioh_t *h, char *data, int len);
@@ -30,11 +32,15 @@ extern int mfprintsnum(ioh_t *h, signed long long n, int b, int p);
 extern int mfprintnum(ioh_t *h, unsigned long long n, int b, int p);
 extern int mfprintf(ioh_t *h, char *fmt, ...);
 extern int mvafprintf(ioh_t *h, char *fmt, va_list l);
+extern int mfpoll(ioh_t *h, int type, int timeout);
 extern int mfxfer(ioh_t *dst, ioh_t *src, int len);
 
 #define MSEEK_SET 0
 #define MSEEK_CUR 1
 #define MSEEK_END 2
+
+#define MPOLL_IN  0
+#define MPOLL_OUT 1
 
 /* file descriptor wrappers */
 extern ioh_t *mstdin, *mstdout, *mstderr;
