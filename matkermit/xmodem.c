@@ -157,7 +157,6 @@ int hpxm_ireq(ioh_t *port, char cmd, char **resp) {
 
 /* for G, P, E and Q */
 int hpxm_creq(ioh_t *port, char cmd, char *arg) {
-	mpollfd_t pfd = { .h = port, .events = MPOLL_IN };
 	int l, tries = 10;
 	char c;
 	start:

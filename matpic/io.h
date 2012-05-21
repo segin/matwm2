@@ -5,11 +5,6 @@
 
 typedef struct ioh_t ioh_t;
 
-typedef struct {
-	ioh_t *h;
-	short events, revents;
-} mpollfd_t;
-
 struct ioh_t {
 	int (*read)(ioh_t *, char *, int);
 	int (*write)(ioh_t *, char *, int);
@@ -28,9 +23,6 @@ struct ioh_t {
 #define MSEEK_SET 0
 #define MSEEK_CUR 1
 #define MSEEK_END 2
-
-#define MPOLL_IN  1
-#define MPOLL_OUT 2
 
 extern int mfread(ioh_t *h, char *data, int len);
 extern int mfwrite(ioh_t *h, char *data, int len);

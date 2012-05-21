@@ -282,7 +282,7 @@ void mstdio_init(void) {
 	atexit(mstdio_end);
 }
 
-#include <sys/types.h> /* lseek(), ftruncate() */
+#include <sys/types.h> /* lseek() */
 #include <unistd.h>
 
 typedef struct {
