@@ -15,7 +15,6 @@ struct ioh_t {
 	int (*write)(ioh_t *, char *, int);
 	int (*seek)(ioh_t *, int, int);
 	int (*trunc)(ioh_t *, int);
-	int (*poll)(mpollfd_t *);
 	void (*close)(ioh_t *);
 	void *data;
 	char buf[2048];
@@ -44,10 +43,6 @@ extern int mfprintsnum(ioh_t *h, signed long long n, int b, int p);
 extern int mfprintnum(ioh_t *h, unsigned long long n, int b, int p);
 extern int mfprintf(ioh_t *h, char *fmt, ...);
 extern int mvafprintf(ioh_t *h, char *fmt, va_list l);
-#ifdef __POSIX_IO__
-extern int mfpoll(mpollfd_t *fds, int nfds, int timeout);
-extern int mfxfer(ioh_t *dst, ioh_t *src, int len);
-#endif
 
 /* file descriptor wrappers */
 
@@ -57,23 +52,24 @@ extern int mfxfer(ioh_t *dst, ioh_t *src, int len);
 #define MFM_CREAT 4
 #define MFM_TRUNC 8
 #define MFM_APPEND 16
-#define MFM_NONBLOCK 32
 
 extern ioh_t *mstdin, *mstdout, *mstderr;
 extern void mstdio_init(void);
 extern ioh_t *mfdopen(int fd, int close);
+extern int mfdgetfd(ioh_t *h);
 extern ioh_t *mfopen(char *fn, int mode);
 
 /* memory wrappers */
 extern ioh_t *mmemopen(int options);
 extern char *mmemget(ioh_t *h);
 extern int mmemlen(ioh_t *h);
+extern int mmemtrunc(ioh_t *h, int len);
 extern char *msprintf(char *fmt, ...);
 
 /* mmemopen() options */
 #define MMO_FREE 1
 
 #define mprint(str)       mfprint(mstdout, str)
-#define mprintf(fmt, ...) mfprintf(mstdout, fmt, __VA_ARGS__)
+#define mprintf(...) mfprintf(mstdout, __VA_ARGS__)
 
 #endif /* __IO_H__ */
