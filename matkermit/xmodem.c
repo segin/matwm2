@@ -35,6 +35,7 @@
  * LL<name>TTTTSSSSSS????   for individual files, where LL is filename length
  *    TT is type and SSSSSS is file size (big endian, in nyblles, excluding the 8 byte header)
  *    maybe ???? is CRC for the file? (sum1 on usenet says it is CRC of some kind)
+ *    seems a \0 (NUL) marks the end of a subdirectory
  *
  * Citing usenet post on the format of directory listings:
  * I do not remember exactly the format for the directory listing, but I think
@@ -49,10 +50,40 @@
  * structure restarts, with a 0 lenght name to end the directory.
  */
  
-char hpxm_buf[1+2+0xFF+1]; /* set max length wisely */
-/* CMD + 2 bytes length + argument max length + CRC byte */
+/* time to wait before asking for data after initiating transfer
+ * slacking around a little helps speed up transfers, ironically
+ * too short delay, and our first request for data gets lost
+ * this value is in microseconds
+ * 75000 is about the shortest i could get it without any packet loss
+ */
+#define GET_PREDELAY 75000
 
-int hpxm_cmd(ioh_t *port, char cmd, char *arg) {
+/* time before giving up on expected data to arrive in milliseconds
+ * this may be reasonably short, for we will retry a few times
+ * (on retry re-sending our request etc)
+ * too short is pointless cause we'd give up before anything happens
+ * too long and we will get stuck for long time if something goes wrong
+ * 250ms seems about right here (it's a fair bit more than required)
+ */
+#define POLL_DELAY 250
+
+unsigned char hpxm_buf[1+2+0xFF+1]; /* set max length wisely */
+/* CMD + 2 bytes length + argument max length + CRC byte */
+/* that's also is bigger than the file packets (133 bytes) */
+
+int pollread(ioh_t *h, char *dst, int len) {
+	struct pollfd pfd = { .fd = mfdgetfd(h), .events = POLLIN };
+	long int pos = 0;
+	while (1) {
+		if (poll(&pfd, 1, POLL_DELAY) <= 0)
+			return pos;
+		pos += mfread(h, dst + pos, len - pos);
+		if (pos == len)
+			return pos;
+	}
+}
+
+int hpxm_send(ioh_t *port, char cmd, char *arg) {
 	int len = 1;
 	hpxm_buf[0] = cmd;
 	if (arg != NULL) {
@@ -69,17 +100,100 @@ int hpxm_cmd(ioh_t *port, char cmd, char *arg) {
 	return mfwrite(port, hpxm_buf, len);
 }
 
-int hpxm_readdir(ioh_t *port) {
+int hpxm_recv(ioh_t *port, char **dst) {
 	ioh_t *dirdata = mmemopen(0);
-	mpollfd_t pfd = { .h = port, .events = MPOLL_IN };
+	long int i, len, cur;
+	int s = 0, tries = 10;
+	unsigned char *r;
+
+	start:
+	if (pollread(port, hpxm_buf, 2) < 2)
+		return -1;
+	i = len = ((hpxm_buf[0] << 8) | hpxm_buf[1]) + 1;
 	while (1) {
-		if (mfpoll(&pfd, 1, 100) <= 0)
+		if (i > sizeof(hpxm_buf)) {
+			cur = sizeof(hpxm_buf);
+		} else cur = i;
+		i -= cur;
+		if (pollread(port, hpxm_buf, cur) < cur)
+			return -1;
+		mfwrite(dirdata, hpxm_buf, cur);
+		if (i == 0)
 			break;
-		mprint("q\n");
-		mfxfer(dirdata, port, 2048);
 	}
+
+	r = mmemget(dirdata);
+	if (r == NULL)
+		return -1;
+	for (i = 0; i < len - 1; ++i)
+		s += r[i];
+	if ((s & 0xFF) != r[i]) {
+		if (--tries == 0)
+			return -1;
+		mfprintf(mstderr, "checksum mismatch, retrying [%d]\n", tries);
+		mftrunc(dirdata, 0);
+		goto start;
+	}
+
 	mfwrite(port, "\06", 1);
-	mfprintf(mstderr, "len: %d\n", mmemlen(dirdata));
+	*dst = r;
+	return len - 1;
+}
+
+/* for L, l, M and V */
+int hpxm_ireq(ioh_t *port, char cmd, char **resp) {
+	int l, tries = 10; /* that's how many times calc will try */
+	start:
+	hpxm_send(port, cmd, NULL);
+	l = hpxm_recv(port, resp);
+	if (l < 0) {
+		if (--tries > 0) {
+			mfprintf(mstderr, "incomplete or no response, retrying [%d]\n", tries);
+			goto start;
+		} else return -1;
+	}
+	return l;
+}
+
+/* for G, P, E and Q */
+int hpxm_creq(ioh_t *port, char cmd, char *arg) {
+	mpollfd_t pfd = { .h = port, .events = MPOLL_IN };
+	int l, tries = 10;
+	char c;
+	start:
+	hpxm_send(port, cmd, arg);
+	while (pollread(port, &c, 1) > 0) {
+		if (c == 6)
+			return 1;
+	}
+	if (--tries) {
+		mfprintf(mstderr, "no ACK, retrying [%d]\n", tries);
+		goto start;
+	}
+	return -1;
+}
+
+int hpxm_get(ioh_t *port, ioh_t *dst, char *filename) {
+	int l, len = 0;
+	if (hpxm_creq(port, 'G', filename) < 0) {
+		mfprintf(mstderr, "failed to initiate tranfer (no ACK)\n");
+		return -1;
+	}
+	usleep(GET_PREDELAY);
+	mfwrite(port, "D", 1); /* D for data!... or something */
+	while (1) {
+		l = pollread(port, hpxm_buf, 133);
+		if (l < 133) {
+			mfprintf(mstderr, "partial %d\n", l);
+			if (l > 0 && hpxm_buf[0] == 4) { /* EOT */
+				mfwrite(port, "\06", 1);
+				return len;
+			}
+		} else {
+			mfprintf(mstderr, "got packet\n");
+			mfwrite(port, "\06", 1);
+		}
+	}
 }
 
 int main(int argc, char *argv[]) {
@@ -94,8 +208,21 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 	port->options |= MFO_DIRECT;
-	hpxm_cmd(port, 'L', NULL);
-	hpxm_readdir(port);
+	{
+		char *resp;
+		int l;
+		/*l = hpxm_ireq(port, 'V', &resp);
+		if (l > 0) {
+			mfprintf(mstderr, "xserv version:\t%S\n", resp, l);
+		} else mfprintf(mstderr, "version receive fail\n");
+		l = hpxm_ireq(port, 'M', &resp);
+		if (l > 0) {
+			mfprintf(mstderr, "free memory:\t%S\n", resp, l);
+		} else mfprintf(mstderr, "free mem receive fail\n");*/
+		/*if (hpxm_creq(port, 'E', "440 0.05 BEEP 880 0.05 BEEP 1760 0.05 BEEP") <= 0)
+			mfprintf(mstderr, "command fail\n");*/
+		hpxm_get(port, NULL, "HX2");
+	}
 /*	usleep(200000);
 	unsigned char data[0xFFFF];
 	int crc = 0;
@@ -104,11 +231,14 @@ int main(int argc, char *argv[]) {
 		crc += data[i];
 	mfprintf(mstderr, "\tread bytes:\t%Xh\n\tread length:\t%Xh\n\tcrc guess:\t%Xh\n\tcrc read:\t%2Xh\n", l, (data[0] << 8) | data[1], crc & 0xFF, (unsigned int) data[i]);
 	hpxm_cmd(fd, 0x06, NULL);
-	for (i = 2; i < l;) {
-		mfwrite(mstderr, data+i+1, data[i]);
-		unsigned char *p = data+i+1+data[i];
+	*/
+	/*char *resp;
+	int i, l = hpxm_ireq(port, 'L', &resp);
+	for (i = 0; i < l;) {
+		mfwrite(mstderr, resp+i+1, resp[i]);
+		unsigned char *p = resp+i+1+resp[i];
 		mfprintf(mstderr, "\t%X %X %X %X %X %X %X\n", p[0], p[1], p[2], p[3], p[4], p[5], p[6]);
-		i += data[i]+8;
+		i += resp[i]+8;
 	}*/
 	return EXIT_SUCCESS;
 }

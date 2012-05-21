@@ -3,8 +3,6 @@
  * TODO
  *   floating point for printf
  *   better error handling
- *   better support for windows (polling etc), mebbe even winsock
- *   hmm or cut all the less portable crap out
  */
 
 #include <stdlib.h> /* malloc(), realloc(), free(), NULL */
@@ -236,54 +234,12 @@ int mvafprintf(ioh_t *h, char *fmt, va_list ap) {
 	return 0;
 }
 
-#ifdef __POSIX_IO__
-
-int mfpoll(mpollfd_t *fds, int nfds, int timeout) {
-	int i, n = 0;
-	start:
-	for (i = 0; i < nfds; ++i)
-		if (fds[i].h != NULL && fds[i].h->poll != NULL && fds[i].h->poll(&fds[i]))
-			++n;
-	if (n == 0) {
-		if (timeout > 0) {
-			--timeout;
-			usleep(1000);
-			goto start;
-		}
-		if (timeout < 0)
-			goto start;
-	}
-	return n;
-}
-
-int mfxfer(ioh_t *dst, ioh_t *src, int len) {
-	int r = 0;
-	mpollfd_t pfd = { .h = dst, .events = MPOLL_IN };
-	if (dst == NULL || src == NULL)
-		return -1;
-	mfflush(dst);
-	while (len > sizeof(dst->buf)) {
-		len -= sizeof(dst->buf);
-		r += (dst->pos = mfread(src, dst->buf, sizeof(dst->buf)));
-		mfflush(dst);
-		if (mfpoll(&pfd, 1, 0) <= 0)
-			return r;
-	}
-	r += (dst->pos = mfread(src, dst->buf, len));
-	if (dst->options & MFO_DIRECT)
-		mfflush(dst);
-	return r;
-}
-
-#endif /* __POSIX_IO__ */
-
 /* generic constructor */
 ioh_t *_mcbopen(void *d, int len, int options,
                 int (*read)(ioh_t *, char *, int),
                 int (*write)(ioh_t *, char *, int),
                 int (*seek)(ioh_t *, int, int),
                 int (*trunc)(ioh_t *, int),
-                int (*poll)(mpollfd_t *),
                 void (*close)(ioh_t *)) {
 	ioh_t *new = (ioh_t *) malloc(sizeof(ioh_t));
 	if (new == NULL)
@@ -299,7 +255,6 @@ ioh_t *_mcbopen(void *d, int len, int options,
 	new->write = write;
 	new->seek = seek;
 	new->trunc = trunc;
-	new->poll = poll;
 	new->close = close;
 	new->pos = 0;
 	new->options = options;
@@ -329,9 +284,6 @@ void mstdio_init(void) {
 
 #include <sys/types.h> /* lseek(), ftruncate() */
 #include <unistd.h>
-#ifdef __POSIX_IO__
-#include <poll.h> /* poll() */
-#endif
 
 typedef struct {
 	int fd, close;
@@ -366,32 +318,6 @@ int _mfdseek(ioh_t *h, int off, int whence) {
 	return lseek(d->fd, off, wh);
 }
 
-#ifdef __POSIX_IO__
-
-int _mfdtrunc(ioh_t *h, int len) {
-	mfddata_t *d = (mfddata_t *) h->data;
-	return ftruncate(d->fd, len);
-}
-
-int _mfdpoll(mpollfd_t *fd) {
-	mfddata_t *d = (mfddata_t *) fd->h->data;
-	struct pollfd pfd = { .fd = d->fd, .events = 0 };
-	if (fd->events & MPOLL_IN)
-		pfd.events |= POLLIN;
-	if (fd->events & MPOLL_OUT)
-		pfd.events |= POLLOUT;
-	if (poll(&pfd, 1, 0) <= 0)
-		return 0;
-	fd->revents = 0;
-	if (pfd.revents & POLLIN)
-		fd->revents |= MPOLL_IN;
-	if (pfd.revents & POLLOUT)
-		fd->revents |= MPOLL_OUT;
-	return 1;
-}
-
-#endif /* __POSIX_IO__ */
-
 void _mfdclose(ioh_t *h) {
 	mfddata_t *d = (mfddata_t *) h->data;
 	if (d->close)
@@ -402,11 +328,13 @@ ioh_t *mfdopen(int fd, int close) {
 	mfddata_t d;
 	d.fd = fd;
 	d.close = close;
-	#ifdef __POSIX_IO__
-	return _mcbopen(&d, sizeof(mfddata_t), 0, &_mfdread, &_mfdwrite, &_mfdseek, &_mfdtrunc, &_mfdpoll, &_mfdclose);
-	#else
-	return _mcbopen(&d, sizeof(mfddata_t), 0, &_mfdread, &_mfdwrite, &_mfdseek, NULL, NULL, &_mfdclose);
-	#endif
+	return _mcbopen(&d, sizeof(mfddata_t), 0, &_mfdread, &_mfdwrite, &_mfdseek, NULL, &_mfdclose);
+}
+
+int mfdgetfd(ioh_t *h) {
+	if (h == NULL)
+		return -1;
+	return ((mfddata_t *) h->data)->fd;
 }
 
 /*************
@@ -431,10 +359,6 @@ ioh_t *mfopen(char *fn, int mode) {
 		o |= O_TRUNC;
 	if (mode & MFM_APPEND)
 		o |= O_APPEND;
-	#ifdef __POSIX_IO__
-	if (mode & MFM_NONBLOCK)
-		o |= O_NONBLOCK;
-	#endif
 	fd = open(fn, o, 0644);
 	if (fd < 0)
 		return NULL;
@@ -504,15 +428,6 @@ int _mmemtrunc(ioh_t *h, int len) {
 	return 0;
 }
 
-int _mmempoll(mpollfd_t *fd) {
-	mmemdata_t *d = (mmemdata_t *) fd->h->data;
-	if (fd->events & MPOLL_OUT)
-		return 1;
-	if (fd->events & MPOLL_IN && d->pos >= d->len)
-		return 0;
-	return 1;
-}
-
 void _mmemclose(ioh_t *h) {
 	mmemdata_t *d = (mmemdata_t *) h->data;
 	if (d->options & MMO_FREE)
@@ -525,7 +440,7 @@ ioh_t *mmemopen(int options) {
 	d.pos = 0;
 	d.len = 0;
 	d.options = options;
-	return _mcbopen((void *) &d, sizeof(mmemdata_t), 0, &_mmemread, &_mmemwrite, &_mmemseek, &_mmemtrunc, &_mmempoll, &_mmemclose);
+	return _mcbopen((void *) &d, sizeof(mmemdata_t), 0, &_mmemread, &_mmemwrite, &_mmemseek, &_mmemtrunc, &_mmemclose);
 }
 
 char *mmemget(ioh_t *h) {
