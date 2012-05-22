@@ -11,6 +11,7 @@
  *
  * When HP calc is in XSERV mode, there are the following commands:
  *   G <filename>        request file download (reply is ACK (06), then send ascii D to get data)
+ *    requesting file without name gives interesting result (custom keys i think, maybe flags too)
  *   P <filename>        initiate file upload
  *   L                   list files in current directory
  *   l                   list all files in calculator
@@ -273,6 +274,7 @@ int hpxm_get(ioh_t *port, ioh_t *dst, char *filename) {
 				continue;
 			}
 			mfwrite(dst, hpxm_buf + 3, l-5);
+			len += l - 5;
 			++seq;
 			mfwrite(port, "\06", 1);
 		}
@@ -294,9 +296,9 @@ int main(int argc, char *argv[]) {
 
 	{
 		char *resp;
-		int i, l;/*
+		int i, l;
 
-		l = hpxm_ireq(port, 'V', &resp);
+	/*	l = hpxm_ireq(port, 'V', &resp);
 		if (l > 0) {
 			mfprintf(mstderr, "xserv version:\t%S\n", resp, l);
 		} else mfprintf(mstderr, "version receive fail\n");
@@ -306,17 +308,15 @@ int main(int argc, char *argv[]) {
 			mfprintf(mstderr, "free memory:\t%S\n", resp, l);
 		} else mfprintf(mstderr, "free mem receive fail\n");
 */
-		l = hpxm_ireq(port, 'L', &resp);
+		/*l = hpxm_ireq(port, 'L', &resp);
 		for (i = 0; i < l;) {
 			mfprintf(mstderr, "%4X ", crc16(resp+i, resp[i]+6));
 			mfwrite(mstderr, resp+i+1, resp[i]);
 			unsigned char *p = resp+i+1+resp[i];
 			mfprintf(mstderr, "\ttype %2X%2X size %d\t%2X %2X\n", p[0], p[1], p[2] | (p[3] << 8) | (p[4] << 16), p[5], p[6]);
 			i += resp[i]+8;
-		}
-
-		//hpxm_get(port, mstdout, "VX");
-
+		}*/
+		hpxm_get(port, mstdout, "");
 		/*if (hpxm_creq(port, 'E', "440 0.05 BEEP 880 0.05 BEEP 1760 0.05 BEEP") <= 0)
 			mfprintf(mstderr, "command fail\n");*/
 	}
