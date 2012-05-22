@@ -315,7 +315,7 @@ int main(int argc, char *argv[]) {
 			i += resp[i]+8;
 		}
 
-		hpxm_get(port, mstdout, "VX");
+		//hpxm_get(port, mstdout, "VX");
 
 		/*if (hpxm_creq(port, 'E', "440 0.05 BEEP 880 0.05 BEEP 1760 0.05 BEEP") <= 0)
 			mfprintf(mstderr, "command fail\n");*/
