@@ -127,7 +127,7 @@ void adis14b(ioh_t *out, unsigned char *oc, int atype) {
 			mfprintf(out, "0x%2x, %i", oc[1] & 0x7F, ((oc[0] & 3) << 1) | ((oc[1] & 0x80) >> 7));
 			break;
 		case AT_K8:
-				mfprintf(out, "0x%2x", oc[1] & 0xFF);
+			mfprintf(out, "0x%2x", oc[1] & 0xFF);
 			break;
 		case AT_K11:
 			mfprintf(out, "0x%3x", ((oc[0] & 7) << 8) | (oc[1] & 0xFF));
