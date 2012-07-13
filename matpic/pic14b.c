@@ -72,8 +72,10 @@ oc_t ocs14b[] = {
 void acmp14b(unsigned char *oc, int atype, int argc, signed long long *argv) {
 	switch (atype) {
 		case AT_DF:
-			if (argc != 2)
+			if (argc < 1 || argc > 2)
 				flerrexit("wrong number of arguments");
+			if (argc < 2)
+				argv[1] = 1;
 			if (argv[1] > 1 || argv[1] < 0)
 				flwarn("argument out of range, truncated");
 			oc[1] = (ntt(argv[1]) & 1) << 7 | (ntt(argv[0]) & 0x7F);
