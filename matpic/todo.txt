@@ -1,7 +1,6 @@
 include search path
 db/dw to store string of bytes with "this kind of syntax"
 relocatable code and coff output support
-warning for overlapping code
 preprocessor expansion for sticking strings together (i.e. when "#define foo abc", "foo##bar" expanding to "abcbar")
 
 relating to extra chip support

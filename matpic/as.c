@@ -16,9 +16,23 @@ unsigned int addrl;
 
 arr_t inss = { NULL, 0, 0, 0 }; /* these need to be 0 so cleanup() before assemble won't fail */
 arr_t labels = { NULL, 0, 0, 0 };
+arr_t map = { NULL, 0, 0, 0 };
 
 char *lp, *ip, *argp, *nextln;
 int pspc, tspc, prefix, run;
+
+void colcheck(unsigned long addr, unsigned long end) {
+	int i;
+	for (i = 0; i < map.count; ++i) {
+		if (arr_item(map, map_t, i)->start != arr_item(map, map_t, i)->end &&
+			((arr_item(map, map_t, i)->start <= addr && arr_item(map, map_t, i)->end > addr) || /* check if map item encompasses what we checkin */
+		    (arr_item(map, map_t, i)->start <= addr && arr_item(map, map_t, i)->end > end) ||
+			(arr_item(map, map_t, i)->start >= addr && arr_item(map, map_t, i)->end < addr) || /* check the opposite also */
+		    (arr_item(map, map_t, i)->start >= addr && arr_item(map, map_t, i)->end < end))) {
+			flerrexit("adress collision");
+		}
+	}
+}
 
 int getprefix(char **src) {
 	char *p = *src;
@@ -294,6 +308,7 @@ int insfind(char *ip, char *argp) {
 void assemble(char *code) {
 	arr_new(&inss, sizeof(ins_t));
 	arr_new(&labels, sizeof(label_t));
+	arr_new(&map, sizeof(map_t));
 	vstr_new(&outbuf);
 	lineno_init();
 	lineno_pushfile(infile, 1, 0);
@@ -343,9 +358,10 @@ void assemble(char *code) {
 		ins_t *ins = (ins_t *) inss.data;
 		int i, j, c;
 		sll args[ARG_MAX];
-		unsigned char *bufp = (unsigned char *) outbuf.data;
+		unsigned char *bufp = (unsigned char *) outbuf.data; /* this works coz we do not realloc anymore */
 		unsigned char op[8];
-		char **lorgend = NULL;
+		char **lorgend = NULL; /* this too */
+		map_t mapitem = { 0, 0 };
 
 		address = 0;
 		while (ins->head.type != IT_END) {
@@ -357,8 +373,10 @@ void assemble(char *code) {
 					arch->acmp(op, ins->ins.oc->atype, c, args);
 					for (i = 0; i < ins->ins.oc->len; ++i)
 						bufp[i] = op[i - i % arch->align + arch->ord[i % arch->align]];
-					address += ins->ins.oc->len / arch->align;
 					bufp += ins->ins.oc->len;
+					address += ins->ins.oc->len / arch->align;
+					colcheck(mapitem.end, address);
+					mapitem.end = address;
 					break;
 				case IT_DAT:
 					getargs(ins->data.args, args, 0, ARG_MAX);
@@ -376,12 +394,16 @@ void assemble(char *code) {
 					}
 					bufp += ins->data.len * ins->data.size + ins->data.pad;
 					address += (ins->data.len * ins->data.size + ins->data.pad) / arch->align;
+					colcheck(mapitem.end, address);
+					mapitem.end = address;
 					break;
 				case IT_ORG:
 					if (lorgend != NULL)
 						*lorgend = (char *) bufp;
 					lorgend = &ins->org.end;
 					address = ins->org.address;
+					arr_add(&map, &mapitem);
+					mapitem.start = mapitem.end = address;
 					break;
 				case IT_CTX:
 					lineno_pushctx(ins->ctx.ctx);

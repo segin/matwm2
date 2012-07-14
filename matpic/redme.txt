@@ -84,6 +84,7 @@ when integers are expected, you can also give a string encapsulated in quotes or
    "abcd" is equivalent to 0x61626364
 if using x or h suffix, one should make sure the first digit is 0-9
 utf-8 in labels / macro names etc are allowed
+for 14bit PIC if no W or F is given to *wf instructions, F is assumed
 
 BUGS
 	unicode will be case sensitive

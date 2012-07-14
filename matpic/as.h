@@ -11,7 +11,7 @@ struct label_t {
 	char *name;
 	int address;
 	int local;
-	int parent; /* tried to keep this as pointer first, big mistake */
+	int parent; /* tried to keep this as pointer first, big mistake (realloc) */
 };
 
 typedef union {
@@ -43,6 +43,11 @@ typedef union {
 		lineno_t *ctx;
 	} ctx;
 } ins_t;
+
+typedef struct {
+	unsigned long start;
+	unsigned long end;
+} map_t;
 
 enum itype {
 	IT_END, /* end of data */
