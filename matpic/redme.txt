@@ -34,16 +34,16 @@ following directives exist:
 	dd|dw <value>, ...: add data of 2, 4 or 8 byte size respectively into bytecode output
 	                    when number is bigger than the native word size, big endian is assumed
 	equ <number>: assign <number> to the preceding label, instead of the adress it's at
+	radix <radix>: set the default radix, valid values are "bin", "oct", "dec", "hex"
+		this directive also affects the preprocessor
+		with hex radix one should make sure the first digit of a number is 0-9
+		octal 0 will be disabled so you can precede things with 0
 also the following which are only meant for the preprocessor to tell the assembler what's going on
 	file "<filename>": tell assembler what file it is working on (also sets next line # to 1)
 	endfile: tell the assembler we are working on the previous file again
 	line <line #>: tell assembler what the next line is numbered
 	expands <id>, "<filename>", <line>: tell the macro following code is from a specific macro
 	endexp: tell the assembler we exited a macro
-	radix <radix>: set the default radix, valid values are "bin", "oct", "dec", "hex"
-		this directive also affects the preprocessor
-		with hex radix one should make sure the first digit of a number is 0-9
-		octal 0 will be disabled so you can precede things with 0
 also there is preprocessor directives:
 	define, if, ifdef, ifndef, else, endif: behave mostly like C
 		with exception of the use of arguments in macros, in a case like
@@ -66,6 +66,7 @@ in multiline macros '@0' denotes the number of arguments excluding named ones
 expressions can be used to select the argument if you place it in bracelets like '@(<expression>)'
 also those expressions can be preprocessed if you use [] bracelets
 macro arguments won't be expanded in macros expanded inside the macro
+the preprocessor will remove any instance of the ## digraph, so you can concatenate signle line macros to form a single word
 integer notation supports the following prefixes:
 	none at all: decimal
 	0d, 0t: decimal

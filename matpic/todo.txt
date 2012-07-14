@@ -1,12 +1,12 @@
 include search path
 db/dw to store string of bytes with "this kind of syntax"
 relocatable code and coff output support
-preprocessor expansion for sticking strings together (i.e. when "#define foo abc", "foo##bar" expanding to "abcbar")
 
 relating to extra chip support
 	add ihex thing for bigger than 16bit addresses
 	support more chips
 	support pagesel pseudo instruction
+	relative adresses (ATTiny use this for all jumps i herd)
 
 non-essential (i.e. low priority)
 	macro local variables (possibly as macro)

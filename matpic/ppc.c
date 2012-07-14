@@ -153,11 +153,18 @@ void _ppsub(ioh_t *out, char *in, amacro_t *am, char end) {
 	esc = str = 0;
 	while (1) {
 		s = in;
-		while (!(ctype(*in) & (CT_NL | CT_NUL)) && (str || (!(ctype(*in) & (CT_LET | CT_SEP)) && *in != '[' && *in != '@' && *in != end))) {
+		while (!(ctype(*in) & (CT_NL | CT_NUL)) && (str || (!(ctype(*in) & (CT_LET | CT_SEP)) && *in != '[' && *in != '@' && *in != '#' && *in != end))) {
 			strcheck(*in);
 			++in;
 		}
 		mfwrite(out, s, in - s);
+		if (*in == '#') {
+			++in;
+			if (*in == '#')
+				++in;
+			else mfwrite(out, "#", 1);
+			continue;
+		}
 		if (*in == end || ctype(*in) & (CT_NL | CT_NUL)) {
 			sstate_t *s = arr_top(sstack, sstate_t);
 			s = arr_pop(sstack, sstate_t);
