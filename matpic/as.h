@@ -32,7 +32,7 @@ typedef union {
 	struct data {
 		unsigned int type, line;
 		char *args;
-		int size, len, pad;
+		int size;
 	} data;
 	struct lbl {
 		unsigned int type, line;
@@ -49,9 +49,15 @@ typedef struct {
 	unsigned long end;
 } map_t;
 
+typedef struct {
+	unsigned long offset;
+	char *str;
+} strarg_t;
+
 enum itype {
 	IT_END, /* end of data */
 	IT_ORG, /* org directive */
+	IT_PAD, /* padding (used by string stuff) */
 	IT_DAT, /* data directive */
 	IT_INS, /* an actual instruction */
 	IT_CTX, /* change of filename/macro */

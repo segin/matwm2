@@ -195,7 +195,7 @@ int getnum(char **src, signed long long *ret) {
 	unsigned int c, base = radix;
 	signed long long r = 0;
 	int n = 0, sfx = 0, pfx = 0, neg = 0;
-	char *s = *src;
+	unsigned char *s = (unsigned char *) *src;
 
 	if (*s == '-') {
 		neg = 1;
@@ -206,7 +206,7 @@ int getnum(char **src, signed long long *ret) {
 		++s;
 		while (*s == '_')
 			++s;
-		if (hexlookup[(unsigned char) *s] != 16) {
+		if (hexlookup[*s] != 16) {
 			base = 16;
 			pfx = 1;
 		} else goto endnum;
@@ -258,7 +258,7 @@ int getnum(char **src, signed long long *ret) {
 		char *t;
 		oct0:
 		t = s;
-		while ((c = hexlookup[(unsigned char) *t]) != 16)
+		while ((c = hexlookup[*t]) != 16)
 			++t;
 		if (t == s)
 			goto nosfx;
@@ -303,7 +303,7 @@ int getnum(char **src, signed long long *ret) {
 	if (!pfx && *s > '9')
 		goto endnum;
 
-	while ((c = hexlookup[(unsigned char) *s]) != 16) {
+	while ((c = hexlookup[*s]) != 16) {
 		if (c == 17) {
 			++s;
 			continue;

@@ -4,9 +4,9 @@ relocatable code and coff output support
 
 relating to extra chip support
 	add ihex thing for bigger than 16bit addresses
+	relative adresses (ATTiny use this for all jumps i herd)
 	support more chips
 	support pagesel pseudo instruction
-	relative adresses (ATTiny use this for all jumps i herd)
 
 non-essential (i.e. low priority)
 	macro local variables (possibly as macro)

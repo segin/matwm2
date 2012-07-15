@@ -17,22 +17,10 @@ unsigned int addrl;
 arr_t inss = { NULL, 0, 0, 0 }; /* these need to be 0 so cleanup() before assemble won't fail */
 arr_t labels = { NULL, 0, 0, 0 };
 arr_t map = { NULL, 0, 0, 0 };
+arr_t strargs = { NULL, 0, 0, 0 };
 
 char *lp, *ip, *argp, *nextln;
 int pspc, tspc, prefix, run;
-
-void colcheck(unsigned long addr, unsigned long end) {
-	int i;
-	for (i = 0; i < map.count; ++i) {
-		if (arr_item(map, map_t, i)->start != arr_item(map, map_t, i)->end &&
-			((arr_item(map, map_t, i)->start <= addr && arr_item(map, map_t, i)->end > addr) || /* check if map item encompasses what we checkin */
-		    (arr_item(map, map_t, i)->start <= addr && arr_item(map, map_t, i)->end > end) ||
-			(arr_item(map, map_t, i)->start >= addr && arr_item(map, map_t, i)->end < addr) || /* check the opposite also */
-		    (arr_item(map, map_t, i)->start >= addr && arr_item(map, map_t, i)->end < end))) {
-			flerrexit("adress collision");
-		}
-	}
-}
 
 int getprefix(char **src) {
 	char *p = *src;
@@ -143,73 +131,74 @@ void addlabel(char *lp) {
 	arr_add(&inss, &ins);
 }
 
-int dcargs(char *src) {
-	int n = 1, esc = 0, str = 0;
-	char *s = NULL;
-	if (src == NULL)
-		return 0;
-	skipsp(&src);
-	if (*src == '"' || *src == '\'')
-		s = src;
-	while(!(ctype(*src) & (CT_NUL | CT_NL))) {
-		switch (*src) {
-			case ',':
-				if (!str) {
-					++n;
-					skipsp(&src);
-					if (*src == '"' || *src == '\'')
-						s = src;
-				}
-				break;
-			case '"':
-			case '\'':
-				if (esc)
-					break;
-				if (str == *src && s != NULL) {
-					++str;
-					skipsp(&src);
-					if (*src == ',' || ctype(*src) & (CT_NUL | CT_NL)) {
-						char *p;
-						p = getstr(&s);
-						s = unescape(p);
-						free(p);
-						n += strlen(s);
-						
-						/* TODO add to list for second pass */
-					}
-					continue;
-				}
-				if (str == 0)
-					str = *src;
-				else str = 0;
-				break;
-			case '\\':
-				if (str && !esc)
-					++esc;
-				break;
-		}
-		esc = 0;
-		++src;
-	}
-	return n;
-}
-
-void adddata(int size, char *argp) {
+void addargs(char *argp, int size, int n) {
 	ins_t ins;
-	int n = dcargs(argp);
+	int pad;
 	if (n == 0)
 		return;
 	ins.head.line = lineno_getreal();
 	ins.head.type = IT_DAT;
 	ins.data.args = argp;
 	ins.data.size = size;
-	ins.data.len = n;
-	ins.data.pad = 0;
-	if (n * size % arch->align)
-		ins.data.pad = arch->align - n * size % arch->align;
-	address += (n * size + ins.data.pad) / arch->align;
+	pad = (n * size % arch->align) ? pad = arch->align - n * size % arch->align : 0;
+	address += (n * size + pad) / arch->align;
 	arr_add(&inss, &ins);
 	vstr_skip(&outbuf, n);
+}
+
+int addstrdata(char **src, unsigned long offset) {
+	if (**src != '"' && **src != '\'')
+		return -1;
+	{
+		int n;
+		char *s, *p, *b = *src;
+		strarg_t arg;
+
+		p = getstr(src);
+		s = unescape(p);
+		free(p);
+		skipsp(src);
+		if (**src != ',' && !(ctype(**src) & (CT_NUL | CT_NL))) {
+			free(s);
+			--*src;
+			return -1;
+		}
+		n = strlen(s);
+		arg.offset = offset;
+		arg.str = s;
+		arr_add(&strargs, &arg);
+		vstr_skip(&outbuf, n);
+		mfprintf(mstderr, "here %d\n", n);
+		return n;
+	}
+}
+
+void adddata(int size, char *src) {
+	int n = 0, t;
+	char *argp = src;
+	ins_t ins;
+	if (src == NULL)
+		return;
+	ins.head.line = lineno_getreal();
+	ins.head.type = IT_ORG;
+	goto start;
+	while(!(ctype(*src) & (CT_NUL | CT_NL))) {
+		if (*src == ',') {
+			start:
+			skipsp(&src);
+			if ((t = addstrdata(&src, outbuf.len + n * size)) != -1) {
+				addargs(argp, size, n);
+				address += t / arch->align;
+				ins.org.address = address;
+				arr_add(&inss, &ins);
+				argp = src + 1; /* if not ends, it's a comma */
+				n = 0;
+			} else ++n;
+		}
+		++src;
+	}
+	if (n)
+		addargs(argp, size, n);
 }
 
 int insfind(char *ip, char *argp) {
@@ -221,8 +210,8 @@ int insfind(char *ip, char *argp) {
 	if (cmpid(ip, "org")) {
 		getargs(argp, args, 1, 1);
 		ins.head.type = IT_ORG;
-		ins.org.address = args[0];
-		address = ins.org.address;
+		address = args[0];
+		ins.org.address = address;
 		arr_add(&inss, &ins);
 		return 1;
 	}
@@ -305,10 +294,24 @@ int insfind(char *ip, char *argp) {
 	return 0;
 }
 
+void colcheck(unsigned long addr, unsigned long end) {
+	int i;
+	for (i = 0; i < map.count; ++i) {
+		if (arr_item(map, map_t, i)->start != arr_item(map, map_t, i)->end &&
+			((arr_item(map, map_t, i)->start <= addr && arr_item(map, map_t, i)->end > addr) || /* check if map item encompasses what we checkin */
+		    (arr_item(map, map_t, i)->start <= addr && arr_item(map, map_t, i)->end > end) ||
+			(arr_item(map, map_t, i)->start >= addr && arr_item(map, map_t, i)->end < addr) || /* check the opposite also */
+		    (arr_item(map, map_t, i)->start >= addr && arr_item(map, map_t, i)->end < end))) {
+			flerrexit("adress collision");
+		}
+	}
+}
+
 void assemble(char *code) {
 	arr_new(&inss, sizeof(ins_t));
 	arr_new(&labels, sizeof(label_t));
 	arr_new(&map, sizeof(map_t));
+	arr_new(&strargs, sizeof(strarg_t));
 	vstr_new(&outbuf);
 	lineno_init();
 	lineno_pushfile(infile, 1, 0);
@@ -356,7 +359,7 @@ void assemble(char *code) {
 		errexit("context stack unbalanced");
 	{ /* second pass */
 		ins_t *ins = (ins_t *) inss.data;
-		int i, j, c;
+		int i, j, c, l, pad;
 		sll args[ARG_MAX];
 		unsigned char *bufp = (unsigned char *) outbuf.data; /* this works coz we do not realloc anymore */
 		unsigned char op[8];
@@ -379,9 +382,10 @@ void assemble(char *code) {
 					mapitem.end = address;
 					break;
 				case IT_DAT:
-					getargs(ins->data.args, args, 0, ARG_MAX);
-					memset(bufp, 0, ins->data.len * ins->data.size + ins->data.pad);
-					for (i = 0; i < ins->data.len; ++i) {
+					l = getargs(ins->data.args, args, 0, ARG_MAX);
+					pad = (l * ins->data.size % arch->align) ? pad = arch->align - l * ins->data.size % arch->align : 0;
+					memset(bufp, 0, l * ins->data.size + pad);
+					for (i = 0; i < l; ++i) {
 						unsigned long long n = ntt(args[i]);
 						for (j = 0; j < ins->data.size; ++j)
 							op[ins->data.size - 1 - j] = (n & (0xFF << (j * 8))) >> (j * 8);
@@ -392,8 +396,8 @@ void assemble(char *code) {
 								flwarn("data out of range, truncated");
 						}
 					}
-					bufp += ins->data.len * ins->data.size + ins->data.pad;
-					address += (ins->data.len * ins->data.size + ins->data.pad) / arch->align;
+					bufp += l * ins->data.size + pad;
+					address += (l * ins->data.size + pad) / arch->align;
 					colcheck(mapitem.end, address);
 					mapitem.end = address;
 					break;
@@ -422,4 +426,19 @@ void assemble(char *code) {
 	}
 	llbl = -1; /* important */
 	lineno_end();
+	{ /* last pass is to fit in the strings */
+		int i;
+		strarg_t *arg = (strarg_t *) strargs.data;
+		char *ptr, *str;
+		for (i = 0; i < strargs.count; ++i) {
+			ptr = outbuf.data + arg->offset;
+			str = arg->str;
+			while (*ptr = *str)
+				++str, ++ptr;
+			free(arg->str);
+			++arg;
+		}
+	}
+	arr_free(&map);
+	arr_free(&strargs);
 }

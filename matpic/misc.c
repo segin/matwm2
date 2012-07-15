@@ -518,16 +518,6 @@ int egethex(char **s) {
 	return n;
 }
 
-int sclen(char *in) {
-	char end = *in++;
-	int ret = 0;
-	while (!(ctype(*in) & (CT_NL | CT_NUL)) && *in != end && *(in - 1) != '\\')
-		++ret;
-	if (*in != end)
-		flerrexit("missing '%c'", end);
-	return ret;
-}
-
 char *getstr(char **in) {
 	string_t ret;
 	char end, *p;

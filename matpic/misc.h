@@ -30,7 +30,6 @@ extern sll numarg(char **src);
 
 extern int getargs(char *src, sll *args, int min, int max);
 extern void parseargs(char *in, char *mode, ...);
-extern int sclen(char *in);
 extern char *getstr(char **in);
 extern char *unescape(char *in);
 
