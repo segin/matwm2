@@ -540,7 +540,9 @@ char *getstr(char **in) {
 	*in = p;
 	++*in;
 	skipsp(in);
-	return ret.data;
+	p = unescape(ret.data);
+	vstr_free(&ret);
+	return p;
 }
 
 char *unescape(char *in) {

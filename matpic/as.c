@@ -3,7 +3,7 @@
  *************/
 
 #include <stdlib.h> /* NULL */
-#include <string.h> /* memcpy() */
+#include <string.h> /* memcpy(), strlen() */
 #include "as.h"
 #include "str.h"
 #include "mem.h"
@@ -131,74 +131,58 @@ void addlabel(char *lp) {
 	arr_add(&inss, &ins);
 }
 
-void addargs(char *argp, int size, int n) {
-	ins_t ins;
-	int pad;
-	if (n == 0)
-		return;
-	ins.head.line = lineno_getreal();
-	ins.head.type = IT_DAT;
-	ins.data.args = argp;
-	ins.data.size = size;
-	pad = (n * size % arch->align) ? pad = arch->align - n * size % arch->align : 0;
-	address += (n * size + pad) / arch->align;
-	arr_add(&inss, &ins);
-	vstr_skip(&outbuf, n);
-}
-
-int addstrdata(char **src, unsigned long offset) {
+void addstrdata(char **src) {
 	if (**src != '"' && **src != '\'')
-		return -1;
+		return;
 	{
 		int n;
-		char *s, *p, *b = *src;
+		char *s, *b = *src;
 		strarg_t arg;
 
-		p = getstr(src);
-		s = unescape(p);
-		free(p);
+		s = getstr(src);
 		skipsp(src);
 		if (**src != ',' && !(ctype(**src) & (CT_NUL | CT_NL))) {
 			free(s);
 			--*src;
-			return -1;
+			return;
 		}
 		n = strlen(s);
-		arg.offset = offset;
 		arg.str = s;
 		arr_add(&strargs, &arg);
+		*outbuf.data = 1; /* we can do this because vstr_ stuff keeps a trailing 0 (we use its space) */
 		vstr_skip(&outbuf, n);
-		mfprintf(mstderr, "here %d\n", n);
-		return n;
+		address += n / arch->align;
 	}
 }
 
 void adddata(int size, char *src) {
-	int n = 0, t;
+	int n = 0;
 	char *argp = src;
-	ins_t ins;
 	if (src == NULL)
 		return;
-	ins.head.line = lineno_getreal();
-	ins.head.type = IT_ORG;
 	goto start;
 	while(!(ctype(*src) & (CT_NUL | CT_NL))) {
 		if (*src == ',') {
 			start:
 			skipsp(&src);
-			if ((t = addstrdata(&src, outbuf.len + n * size)) != -1) {
-				addargs(argp, size, n);
-				address += t / arch->align;
-				ins.org.address = address;
-				arr_add(&inss, &ins);
-				argp = src + 1; /* if not ends, it's a comma */
-				n = 0;
-			} else ++n;
+			addstrdata(&src);
+			++n;
 		}
 		++src;
 	}
-	if (n)
-		addargs(argp, size, n);
+	if (n) {
+		ins_t ins;
+		int pad;
+		ins.head.line = lineno_getreal();
+		ins.head.type = IT_DAT;
+		ins.data.args = argp;
+		ins.data.size = size;
+		pad = (n * size % arch->align) ? pad = arch->align - n * size % arch->align : 0;
+		address += (n * size + pad) / arch->align;
+		arr_add(&inss, &ins);
+		/* we depend on vstr_ stuff to have provided a 0 at currend end pos! (later) */
+		vstr_skip(&outbuf, n);
+	}
 }
 
 int insfind(char *ip, char *argp) {
@@ -359,21 +343,24 @@ void assemble(char *code) {
 		errexit("context stack unbalanced");
 	{ /* second pass */
 		ins_t *ins = (ins_t *) inss.data;
-		int i, j, c, l, pad;
-		sll args[ARG_MAX];
+		sll args[ARG_MAX], arg;
 		unsigned char *bufp = (unsigned char *) outbuf.data; /* this works coz we do not realloc anymore */
-		unsigned char op[8];
 		char **lorgend = NULL; /* this too */
+		unsigned char op[8];
 		map_t mapitem = { 0, 0 };
+		char *argp;
+		int i, a;
+		ull n;
+		strarg_t *strarg = (strarg_t *) strargs.data;
 
 		address = 0;
 		while (ins->head.type != IT_END) {
 			lineno_set(ins->head.line);
 			switch (ins->head.type) {
 				case IT_INS:
-					c = getargs(ins->ins.args, args, 0, ARG_MAX);
+					a = getargs(ins->ins.args, args, 0, ARG_MAX);
 					memcpy(op, ins->ins.oc->oc, ins->ins.oc->len);
-					arch->acmp(op, ins->ins.oc->atype, c, args);
+					arch->acmp(op, ins->ins.oc->atype, a, args);
 					for (i = 0; i < ins->ins.oc->len; ++i)
 						bufp[i] = op[i - i % arch->align + arch->ord[i % arch->align]];
 					bufp += ins->ins.oc->len;
@@ -382,6 +369,48 @@ void assemble(char *code) {
 					mapitem.end = address;
 					break;
 				case IT_DAT:
+					a = 0;
+					argp = ins->data.args;
+					while (1) {
+						if (*bufp == 1 && 0) { /* string argument */
+							i = strlen(strarg->str);
+							memcpy(bufp, strarg->str, i);
+							free(strarg->str);
+							bufp += i;
+							++strarg;
+							while (!(ctype(*argp) & (CT_NUL | CT_NL)) && *argp != ',')
+								++argp;
+							if (ctype(*argp) & (CT_NUL | CT_NL))
+								break;
+							++argp;
+						} else {
+							arg = numarg(&argp);
+							if (ctype(*argp) & (CT_NUL | CT_NL) || *argp == ',') {
+								n = ntt(arg);
+								for (i = 0; i < ins->data.size; ++i)
+									op[ins->data.size - 1 - i] = (arg & (0xFF << (i * 8))) >> (i * 8);
+								for (i = 0; i < ins->data.size; ++i) {
+									bufp[i - (a % arch->align) + arch->ord[a % arch->align]] = op[i] & arch->mask[a % arch->align];
+									if (op[i] & ~arch->mask[a % arch->align])
+										flwarn("data out of range, truncated");
+									++a;
+								}
+								bufp += ins->data.size;
+								address += ins->data.size / arch->align;
+								mfprintf(mstderr, "ping\n");
+								if (*argp != ',')
+									break;
+							}
+							if (*argp != ',')
+								flerrexit("your argument is invalid");
+							++argp;
+							skipsp(&argp);
+							if (ctype(*argp) & (CT_NUL | CT_NL))
+								flerrexit("expression expected");
+						}
+					}
+
+/*
 					l = getargs(ins->data.args, args, 0, ARG_MAX);
 					pad = (l * ins->data.size % arch->align) ? pad = arch->align - l * ins->data.size % arch->align : 0;
 					memset(bufp, 0, l * ins->data.size + pad);
@@ -399,7 +428,7 @@ void assemble(char *code) {
 					bufp += l * ins->data.size + pad;
 					address += (l * ins->data.size + pad) / arch->align;
 					colcheck(mapitem.end, address);
-					mapitem.end = address;
+					mapitem.end = address;*/
 					break;
 				case IT_ORG:
 					if (lorgend != NULL)
@@ -426,19 +455,6 @@ void assemble(char *code) {
 	}
 	llbl = -1; /* important */
 	lineno_end();
-	{ /* last pass is to fit in the strings */
-		int i;
-		strarg_t *arg = (strarg_t *) strargs.data;
-		char *ptr, *str;
-		for (i = 0; i < strargs.count; ++i) {
-			ptr = outbuf.data + arg->offset;
-			str = arg->str;
-			while (*ptr = *str)
-				++str, ++ptr;
-			free(arg->str);
-			++arg;
-		}
-	}
 	arr_free(&map);
 	arr_free(&strargs);
 }

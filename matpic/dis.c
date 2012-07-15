@@ -38,9 +38,13 @@ void disassemble(ioh_t *out) {
 				docf:
 				++oc;
 			}
+				mfprintf(mstderr, "hi %d\n", arch->align);
 			if (oc->name == NULL) {
 				if (arch->align > end - bufp) {
-					mfprint(out, "data not divisible by alignment\n");
+					for (i = 0; i < end - bufp; ++i)
+						mfprintf(out, "%2x", bufp[i]);
+					mfprint(out, "): data not divisible by alignment\n");
+					break;
 				} else {
 					for (i = 0; i < arch->align; ++i)
 						mfprintf(out, "%2x", bufp[arch->ord[i]]);

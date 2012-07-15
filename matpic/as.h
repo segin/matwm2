@@ -50,7 +50,6 @@ typedef struct {
 } map_t;
 
 typedef struct {
-	unsigned long offset;
 	char *str;
 } strarg_t;
 

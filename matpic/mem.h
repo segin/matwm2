@@ -33,6 +33,7 @@ typedef struct {
 
 extern void vstr_new(string_t *s);
 extern void vstr_skip(string_t *s, unsigned long len);
+extern void vstr_fill(string_t *s, unsigned long len, char what);
 extern void vstr_addl(string_t *s, char *str, unsigned long len);
 extern void vstr_free(string_t *s);
 

@@ -569,11 +569,8 @@ int ppfind(ioh_t *out, char *ip, char *argp) {
 	}
 	if (cmpid(ip, "include")) {
 		file_t ofile;
-		char *fn;
 		parseargs(argp, "s", &s);
-		fn = unescape(s);
-		data = readfile(fn);
-		free(fn);
+		data = readfile(s);
 		if (data == NULL)
 			flerrexit("failed to include file '%s'", s);
 		ofile.nextln = nextln;

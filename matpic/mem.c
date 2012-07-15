@@ -3,7 +3,7 @@
  ************************/
 
 #include <stdlib.h> /* realloc(), free(), NULL */
-#include <string.h> /* memcpy() */
+#include <string.h> /* memcpy(), memset() */
 #include "misc.h" /* errexit() */
 #include "mem.h"
 
@@ -59,6 +59,14 @@ void vstr_grow(string_t *s, unsigned long len) {
 void vstr_skip(string_t *s, unsigned long len) {
 	vstr_grow(s, len);
 	s->len += len;
+}
+
+void vstr_fill(string_t *s, unsigned long len, char what) {
+	unsigned long start = s->len;
+	vstr_grow(s, len);
+	memset(s->data + start, what, len);
+	s->len += len;
+	s->data[s->len] = 0;
 }
 
 void vstr_addl(string_t *s, char *str, unsigned long len) {
