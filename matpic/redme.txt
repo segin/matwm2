@@ -31,8 +31,11 @@ you can call a local label out of its scope like label.locallabel
 following directives exist:
 	org <origin>: set origin
 	data <value>, ...: put stray words into bytecode (native word size)
-	dd|dw <value>, ...: add data of 2, 4 or 8 byte size respectively into bytecode output
+	db|dw|dd <value>, ...: add data of 2, 4 byte size respectively into bytecode output
 	                    when number is bigger than the native word size, big endian is assumed
+		for data/db/dw/dd if you place strings like this "Hello, World!" they stored as string of bytes
+		and if they are not divisible by the data size of the directive used 0 padding is appened
+		if necessary, at the end of any data directive 0 padding is added to align whatever comes next
 	equ <number>: assign <number> to the preceding label, instead of the adress it's at
 	radix <radix>: set the default radix, valid values are "bin", "oct", "dec", "hex"
 		this directive also affects the preprocessor
