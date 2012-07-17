@@ -3,7 +3,7 @@
  *************/
 
 #include <stdlib.h> /* NULL */
-#include <string.h> /* memcpy(), strlen() */
+#include <string.h> /* memcpy(), strlen(), memset() */
 #include "as.h"
 #include "str.h"
 #include "mem.h"
@@ -131,9 +131,9 @@ void addlabel(char *lp) {
 	arr_add(&inss, &ins);
 }
 
-void addstrdata(char **src) {
+int addstrdata(char **src, int size) {
 	if (**src != '"' && **src != '\'')
-		return;
+		return -1;
 	{
 		int n;
 		char *s, *b = *src;
@@ -144,31 +144,34 @@ void addstrdata(char **src) {
 		if (**src != ',' && !(ctype(**src) & (CT_NUL | CT_NL))) {
 			free(s);
 			--*src;
-			return;
+			return -1;
 		}
 		n = strlen(s);
 		arg.str = s;
 		arr_add(&strargs, &arg);
-		*outbuf.data = 1; /* we can do this because vstr_ stuff keeps a trailing 0 (we use its space) */
-		vstr_skip(&outbuf, n);
-		address += n / arch->align;
+		if (n % size)
+			n += size - n % size;
+		vstr_fill(&outbuf, n, 0);
+		return n;
 	}
 }
 
 void adddata(int size, char *src) {
-	int n = 0;
+	int n = 0, s;
 	char *argp = src;
 	if (src == NULL)
 		return;
 	goto start;
 	while(!(ctype(*src) & (CT_NUL | CT_NL))) {
 		if (*src == ',') {
+			++src;
 			start:
 			skipsp(&src);
-			addstrdata(&src);
-			++n;
-		}
-		++src;
+			if ((s = addstrdata(&src, size)) == -1) {
+				vstr_fill(&outbuf, size, 1);
+				++n;
+			} else n += s;
+		} else ++src;
 	}
 	if (n) {
 		ins_t ins;
@@ -180,8 +183,6 @@ void adddata(int size, char *src) {
 		pad = (n * size % arch->align) ? pad = arch->align - n * size % arch->align : 0;
 		address += (n * size + pad) / arch->align;
 		arr_add(&inss, &ins);
-		/* we depend on vstr_ stuff to have provided a 0 at currend end pos! (later) */
-		vstr_skip(&outbuf, n);
 	}
 }
 
@@ -349,7 +350,7 @@ void assemble(char *code) {
 		unsigned char op[8];
 		map_t mapitem = { 0, 0 };
 		char *argp;
-		int i, a;
+		int i, j, a;
 		ull n;
 		strarg_t *strarg = (strarg_t *) strargs.data;
 
@@ -372,14 +373,16 @@ void assemble(char *code) {
 					a = 0;
 					argp = ins->data.args;
 					while (1) {
-						if (*bufp == 1 && 0) { /* string argument */
+						if (bufp[a] == 0) { /* string argument */
 							i = strlen(strarg->str);
-							memcpy(bufp, strarg->str, i);
+							memcpy(bufp + a, strarg->str, i);
+							a += i;
 							free(strarg->str);
-							bufp += i;
 							++strarg;
 							while (!(ctype(*argp) & (CT_NUL | CT_NL)) && *argp != ',')
 								++argp;
+							if (a % ins->data.size)
+								a += ins->data.size - a % ins->data.size;
 							if (ctype(*argp) & (CT_NUL | CT_NL))
 								break;
 							++argp;
@@ -389,15 +392,8 @@ void assemble(char *code) {
 								n = ntt(arg);
 								for (i = 0; i < ins->data.size; ++i)
 									op[ins->data.size - 1 - i] = (arg & (0xFF << (i * 8))) >> (i * 8);
-								for (i = 0; i < ins->data.size; ++i) {
-									bufp[i - (a % arch->align) + arch->ord[a % arch->align]] = op[i] & arch->mask[a % arch->align];
-									if (op[i] & ~arch->mask[a % arch->align])
-										flwarn("data out of range, truncated");
-									++a;
-								}
-								bufp += ins->data.size;
-								address += ins->data.size / arch->align;
-								mfprintf(mstderr, "ping\n");
+								memcpy(bufp + a, op, ins->data.size);
+								a += ins->data.size;
 								if (*argp != ',')
 									break;
 							}
@@ -409,27 +405,22 @@ void assemble(char *code) {
 								flerrexit("expression expected");
 						}
 					}
-
-/*
-					l = getargs(ins->data.args, args, 0, ARG_MAX);
-					pad = (l * ins->data.size % arch->align) ? pad = arch->align - l * ins->data.size % arch->align : 0;
-					memset(bufp, 0, l * ins->data.size + pad);
-					for (i = 0; i < l; ++i) {
-						unsigned long long n = ntt(args[i]);
-						for (j = 0; j < ins->data.size; ++j)
-							op[ins->data.size - 1 - j] = (n & (0xFF << (j * 8))) >> (j * 8);
-						for (j = 0; j < ins->data.size; ++j) {
-							c = i * ins->data.size + j;
-							bufp[c - (c % arch->align) + arch->ord[c % arch->align]] = op[j] & arch->mask[c % arch->align];
-							if (op[j] & ~arch->mask[c % arch->align])
+					if (a % arch->align) {
+						memset(bufp + a, 0, arch->align - a % arch->align);
+						a += arch->align - a % arch->align;
+					}
+					for (i = 0; i < a; i += arch->align) {
+						memcpy(op, bufp + i, arch->align);
+						for (j = 0; j < arch->align; ++j) {
+							bufp[i + arch->ord[j]] = op[j] & arch->mask[j];
+							if (op[j] & ~arch->mask[j])
 								flwarn("data out of range, truncated");
 						}
 					}
-					bufp += l * ins->data.size + pad;
-					address += (l * ins->data.size + pad) / arch->align;
+					bufp += a;
+					address += a / arch->align;
 					colcheck(mapitem.end, address);
-					mapitem.end = address;*/
-					break;
+					mapitem.end = address;
 				case IT_ORG:
 					if (lorgend != NULL)
 						*lorgend = (char *) bufp;

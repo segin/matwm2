@@ -38,7 +38,6 @@ void disassemble(ioh_t *out) {
 				docf:
 				++oc;
 			}
-				mfprintf(mstderr, "hi %d\n", arch->align);
 			if (oc->name == NULL) {
 				if (arch->align > end - bufp) {
 					for (i = 0; i < end - bufp; ++i)
