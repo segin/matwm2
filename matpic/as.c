@@ -136,7 +136,7 @@ int addstrdata(char **src, int size) {
 		return -1;
 	{
 		int n;
-		char *s, *b = *src;
+		char *s;
 		strarg_t arg;
 
 		s = getstr(src);
@@ -180,7 +180,7 @@ void adddata(int size, char *src) {
 		ins.head.type = IT_DAT;
 		ins.data.args = argp;
 		ins.data.size = size;
-		pad = (n * size % arch->align) ? pad = arch->align - n * size % arch->align : 0;
+		pad = (n * size % arch->align) ? arch->align - n * size % arch->align : 0;
 		address += (n * size + pad) / arch->align;
 		arr_add(&inss, &ins);
 	}
@@ -391,7 +391,7 @@ void assemble(char *code) {
 							if (ctype(*argp) & (CT_NUL | CT_NL) || *argp == ',') {
 								n = ntt(arg);
 								for (i = 0; i < ins->data.size; ++i)
-									op[ins->data.size - 1 - i] = (arg & (0xFF << (i * 8))) >> (i * 8);
+									op[ins->data.size - 1 - i] = (n & (0xFF << (i * 8))) >> (i * 8);
 								memcpy(bufp + a, op, ins->data.size);
 								a += ins->data.size;
 								if (*argp != ',')

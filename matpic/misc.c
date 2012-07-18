@@ -547,9 +547,8 @@ char *getstr(char **in) {
 
 char *unescape(char *in) {
 	string_t ret;
-	char end, *p, b[5] = { 0, 0, 0, 0, 0 };
+	char *p, b[5] = { 0, 0, 0, 0, 0 };
 	int n;
-	end = *in;
 	vstr_new(&ret);
 	p = in;
 	while (*p) {
