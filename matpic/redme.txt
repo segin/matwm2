@@ -5,12 +5,15 @@ to build, either copy Makefile.watcom to Makefile and run "wmake" if you are usi
 or on linux/unix copy or link Makefile.nix to Makefile and run "make"
 currently only 14bit PIC chips are supported
 synopsis
-	matpic [-d|p|P|t] [<infile> [<outfile>]]
+	matpic [-d|p|P|t] [-r] [<infile> [<outfile>]]
 options
 	-d	disassemble
 	-p	only preprocess
-	-P	don't preprocess
+	-P	don't preprocess -- ignored if -d is specified
 	-t	after assembling instead of giving ihex output, disassemble again
+	-r	format disassembly listing in such way it can be re-assembled without modification
+			the default is nicer to read but cannot simply be assembled as it list adress and opcode with each line
+			without -d or -t this option is ignored
 when no files specified input file is read from stdin, output written to stdout
 comments can be started with ";", they end together with the line
 multiline or part-of line comments can be started with "/*" and ended with "*/", they can also be nested

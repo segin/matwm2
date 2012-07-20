@@ -36,6 +36,9 @@ int main(int argc, char *argv[]) {
 					case 't': /* assemble then disassemble */
 						++through;
 						break;
+					case 'r':
+						format = 1;
+						break;
 					default:
 						errexit("i am in ur error, your argument is invalid");
 				}

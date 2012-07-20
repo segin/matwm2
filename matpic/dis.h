@@ -9,6 +9,7 @@ typedef struct {
 	unsigned long addr, len;
 } dsym_t;
 
+extern int format;
 extern arr_t dsym;
 
 extern void disassemble(ioh_t *out);
