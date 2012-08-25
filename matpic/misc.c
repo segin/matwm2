@@ -515,7 +515,7 @@ int egethex(char **s) {
 		r |= n;
 		++*s;
 	}
-	return n;
+	return r;
 }
 
 char *getstr(char **in) {
