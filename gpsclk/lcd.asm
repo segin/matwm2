@@ -86,7 +86,7 @@ lcd_timereset
 	bcf T1CON, TMR1ON
 	movlw 0xFF
 	movwf TMR1H
-	movlw 0x9C ; this is approx 40µS (if i don't mistake)
+	movlw 0x80 ; this is approx 50µS (if i don't mistake)
 	movlw TMR1L
 	bcf tmrflags, 0
 	bsf T1CON, TMR1ON
@@ -96,7 +96,7 @@ lcd_timereset_long
 	bcf T1CON, TMR1ON
 	movlw 0xFE
 	movwf TMR1H
-	movlw 0xFF ; this is approx 40µS (if i don't mistake)
+	movlw 0xFF ; this is approx 100µS (if i don't mistake)
 	movlw TMR1L
 	bcf tmrflags, 0
 	bsf T1CON, TMR1ON
