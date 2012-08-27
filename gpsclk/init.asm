@@ -29,15 +29,30 @@ init
 	movwf SPBRG
 	clrf SPBRGH
 
-	banksel 0
-	call longdelay
-	call longdelay
-	call lcd_init
-
 	; turn on interrupts
-	banksel 0x80
+	banksel INTCON
 	bsf INTCON, GIE
 	bsf INTCON, PEIE
+
+	; turn on timer1
+	banksel 0
+	bcf tmrflags, 0
+	clrf TMR1L
+	clrf TMR1H
+	banksel PIE1
+	bsf PIE1, TMR1IE
+	banksel T1CON
+	movlw 0b0000_0001 ; ~ .0000002 sec steps
+	movwf T1CON
+
+	; init the display
+	banksel 0
+	btfss tmrflags, 0 ; we have to wait
+	goto $-1
+	call lcd_init
+
+	; k display is going
+	banksel PIE2
 	bsf PIE2, OSFIE
 
 	; check oscillator

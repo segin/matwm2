@@ -2,14 +2,9 @@
 #include "alloc.inc"
 #include "print.inc"
 
-	alloc recvdata, 80
+	alloc recvdata, 72
+	alloc tmrflags
 	alloc tmp0
-	alloc tmp1
-	alloc tmp2
-	alloc tmp3
-	alloc tmp4
-	alloc dc0
-	alloc dc1
 	define gtmp 0x70 ; for interrupt to store W, status, etc
 
 	org 0x2007
@@ -23,26 +18,35 @@
 	; 10 ieso on
 	; 11 fcmen on
 	; 12-13 reserved (must be 1)
-	data 0b11_1111_1111_1010
+	data 0b11_1111_1111_0010
 
 	org 0
 	goto start
 	org 4
-	movwf gtmp; store W
+	movwf gtmp ; store W
 	movf STATUS, W
 	movwf gtmp+1 ; store STATUS
 	banksel 0
 	btfsc PIR2, OSFIF
 	call oscfail
+	btfsc PIR1, TMR1IF
+	call tmr1flow
 	movf gtmp+1, W
 	movwf STATUS
-	movf gtmp, W
+	movf gtmp, W ; Z could get lost now
+	bcf STATUS, Z
+	btfsc gtmp+1, Z
+	bsf STATUS, Z
 	retfie
+
+tmr1flow
+	bsf tmrflags, 0
+	bcf PIR1, TMR1IF
+	return
 
 oscfail
 	banksel 0
 	showmsg string.eosc
-	banksel OSCCON
 	goto $
 
 start: call init
@@ -109,7 +113,6 @@ loop
 	call lcd_char
 	movf recvdata+0, W
 	call printnum8
-	call lcd_char
 	movlw ' '
 	call lcd_char
 
@@ -144,23 +147,9 @@ loop
 	movlw '5'
 	call lcd_char
 
+	call lcd_init
 	clrwdt
 	goto loop
-
-delay
-	clrf dc0
-_delay
-	decfsz dc0
-	goto _delay
-	return
-
-longdelay
-	clrf dc1
-_ldelay
-	call delay
-	decfsz dc1
-	goto _ldelay
-	return
 
 #include "init.asm"
 #include "uart.asm"

@@ -89,6 +89,19 @@
 #define LTS  1
 #define SCS  0
 
+; timer1
+#define TMR1L 0x0E
+#define TMR1H 0x0F
+#define T1CON 0x10
+#define TMR1ON  0
+#define TMR1CS  1
+#define T1SYNC  2
+#define T1OSCEN 3
+#define T1CKPS0 4
+#define T1CKPS1 5
+#define TMR1GE  6
+#define T1GINV  7
+
 ; eusart
 #define RCSTA   0x18
 #define TXSTA   0x98

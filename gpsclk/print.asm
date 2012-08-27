@@ -25,12 +25,12 @@ _print
 
 printnum8
 	call dec8
-	movwf tmp2
-	swapf tmp2, W
+	movwf tmp0
+	swapf tmp0, W
 	andlw 0x0F
 	addlw '0'
 	call lcd_char
-	movf tmp2, W
+	movf tmp0, W
 	andlw 0x0F
 	addlw '0'
 	call lcd_char

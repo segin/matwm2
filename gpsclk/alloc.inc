@@ -8,5 +8,8 @@ macro alloc name
 	else
 		xdefine __alloc_pos [__alloc_pos+@1]
 	endif
+	if __alloc_pos > 0x70
+		warn "alloc beyond 0x70"
+	endif
 endm
 

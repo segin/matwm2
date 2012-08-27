@@ -40,9 +40,11 @@ lcd_init ; can also be used for reset
 	call lcd_cmd
 	movlw 0x02 ; return home
 	call lcd_cmd
+	call lcd_longwait
 	return
 
 lcd_cmd
+	call lcd_wait
 	movwf lcd_tmp
 	swapf lcd_tmp, W
 	andlw 0x0F
@@ -52,9 +54,11 @@ lcd_cmd
 	andlw 0x0F
 	iorlw lcd_clk
 	call lcd_send
+	call lcd_timereset_long
 	return
 
 lcd_char
+	call lcd_wait
 	movwf lcd_tmp
 	swapf lcd_tmp, W
 	andlw 0x0F
@@ -64,24 +68,45 @@ lcd_char
 	andlw 0x0F
 	iorlw lcd_clk | lcd_rs ; clock and RS
 	call lcd_send
+	call lcd_timereset
 	return
 
 lcd_send
 	movwf lcd_port
 	andlw ~lcd_clk
 	movwf lcd_port
-	call lcd_delay
 	return
 
-lcd_delay ; destroy W and waste time
-	movlw 25 ; set higher to waste more time
-	movwf dc1
-_lcd_delay1
-	clrf dc0
-_lcd_delay0
-	decfsz dc0
-	goto _lcd_delay0
-	decfsz dc1
-	goto _lcd_delay1
+lcd_wait
+	btfss tmrflags, 0
+	goto $-1
+	return
+
+lcd_timereset
+	bcf T1CON, TMR1ON
+	movlw 0xFF
+	movwf TMR1H
+	movlw 0x9C ; this is approx 40µS (if i don't mistake)
+	movlw TMR1L
+	bcf tmrflags, 0
+	bsf T1CON, TMR1ON
+	return
+
+lcd_timereset_long
+	bcf T1CON, TMR1ON
+	movlw 0xFE
+	movwf TMR1H
+	movlw 0xFF ; this is approx 40µS (if i don't mistake)
+	movlw TMR1L
+	bcf tmrflags, 0
+	bsf T1CON, TMR1ON
+	return
+
+lcd_longwait
+	bcf T1CON, TMR1ON
+	clrf TMR1H
+	clrf TMR1L
+	bcf tmrflags, 0
+	bsf T1CON, TMR1ON
 	return
 
