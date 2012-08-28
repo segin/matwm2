@@ -18,7 +18,7 @@ init
 	banksel ANSEL
 	bcf ANSELH, 3
 	banksel RCSTA
-	movlw 0b1001_0000
+	movlw 0b1000_0000
 	movwf RCSTA
 	banksel BAUDCTL
 	movlw 0b0010_0000
@@ -28,6 +28,7 @@ init
 	movlw 129
 	movwf SPBRG
 	clrf SPBRGH
+	clrf rstate
 
 	; turn on interrupts
 	banksel INTCON

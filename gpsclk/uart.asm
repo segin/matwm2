@@ -1,5 +1,13 @@
 	alloc uart_tmp
 
+rcv_enable
+	bsf RCSTA, CREN
+	btfsc RCSTA, FERR
+	movf RCREG, W
+	btfsc RCSTA, FERR
+	goto $-2
+	return
+
 xmit
 	banksel TXSTA
 	btfss TXSTA, TRMT

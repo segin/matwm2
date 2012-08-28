@@ -5,6 +5,7 @@
 	alloc recvdata, 72
 	alloc tmrflags
 	alloc tmp0
+	alloc rstate
 	define gtmp 0x70 ; for interrupt to store W, status, etc
 
 	org 0x2007
@@ -39,17 +40,20 @@
 	bsf STATUS, Z
 	retfie
 
-tmr1flow
-	bsf tmrflags, 0
-	bcf PIR1, TMR1IF
-	return
-
 oscfail
 	banksel 0
 	showmsg string.eosc
 	goto $
 
+tmr1flow
+	bsf tmrflags, 0
+	bcf PIR1, TMR1IF
+	return
+
 start: call init
+
+	; enable uart receiver
+	call rcv_enable
 
 	; request status
 	movlw '@'
@@ -69,8 +73,6 @@ start: call init
 	movlw '\n'
 	call xmit
 
-	movlw 0x80
-	call lcd_cmd
 loop
 	movlw 1
 	call recv
@@ -152,6 +154,7 @@ loop
 	goto loop
 
 #include "init.asm"
+#include "tmr1.asm"
 #include "uart.asm"
 #include "lcd.asm"
 #include "print.asm"
