@@ -1,0 +1,70 @@
+startup screen remains on (and watchdog timer keeps resetting device every few seconds sending initialization data repeatedly)
+	- UART commands do not reach receiever and cannot initialize receiver
+	- GPS receiver board not wired propperly or broken
+	- MCU GPIO broken
+	- MCU clock failure
+	- faulty power supply
+	- corrupted ROM
+	* normal operation should resume when fault resolved in < 30 seconds (watchdog reset + gps board starts)
+
+	- check GPS receiver board and MCU power (5V, must be 4.9V and well regulated - any less and UT oncore board will not start)
+	- check UART wiring between GPS receiver and MCU
+	- check if GPS receiver is sending data (each second) to MCU
+	- if not above one check if MCU tries to initialize receiver (every 10 seconds at least)
+	- if one of the two above ones check rate of transmission (should be ~9600/9615 baud)
+	- check if MCU xtal is oscillating at the proper frequency (20Mhz)
+	- verify code memory of MCU
+
+display shows "UART frame error" continuously
+	- GPS receiver board disconnected or became unresponsive while unit running
+	- MCU GPIO failure
+	- MCU clock failure
+	- faulty power supply
+	- corrupted ROM
+	* normal operation should resume when fault resolved in < 30 seconds (clear error + gps board starts)
+
+	- check GPS receiver board and MCU power (5V, must be 4.9V and well regulated - any less and UT oncore board will not start)
+	- check UART wiring between GPS receiver and MCU
+	- check if GPS receiver is sending data (each second) to MCU
+	- if not above one check if MCU tries to initialize receiver (every 10 seconds at least)
+	- if one of the two above ones check rate of transmission (should be ~9600/9615 baud)
+	- verify code memory of MCU
+
+display shows "MCU clock failed"
+	- faulty xtal oscillator
+	- faulty capacitors for xtal
+	- faulty power supply
+	- broken MCU
+	- corrupted ROM
+	* normal operation should resume when fault resolved in < 30 seconds (watchdog timer reset)
+
+	- check if MCU power properly regulated (must be > 4.5V for xtal to start)
+	- check xtal and associated capacitors
+
+display backlight off and shows nothing at all (yet other things do work)
+	- display not properly connected
+	- display broken
+	- display backlight broken
+	* normal operation should resume in one or two seconds if displaying time and all else ok (display reset sent)
+	* otherwise < 30 seconds startup screen should be shown
+
+	- verify display has backlight power
+	- verify display backlight is working
+
+display backlight on but shows garbage or nothing at all
+	- contrast setting out of bounds
+	- contrast setting potmeter broken
+	- display improperly wired
+	- display broken
+	- MCU or its GPIO broken
+	- faulty power supply
+	* normal operation should resume in one or two seconds if displaying time and all else ok (display reset sent)
+	* otherwise < 30 seconds startup screen should be shown
+
+	- verify contrast setting and if potmeter and its wiring is ok
+	- verify power supply regulation
+	- verify display connection and signals
+	- verify display is working and contrast setting good
+
+nothing happens at all
+	- power supply broken
