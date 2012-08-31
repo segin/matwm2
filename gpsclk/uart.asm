@@ -8,6 +8,20 @@ rcv_enable
 	goto $-2
 	return
 
+_send
+	call string
+	movwf uart_tmp
+.loop
+	incf strlo
+	btfsc STATUS, Z
+	incf strhi
+	call string
+	call xmit
+	decf uart_tmp
+	btfsc STATUS, Z
+	return
+	goto .loop
+
 xmit
 	banksel TXSTA
 	btfss TXSTA, TRMT
@@ -45,4 +59,3 @@ eovfl
 	bcf RCSTA, CREN ; clears overflow
 	bsf RCSTA, CREN
 	goto recv.loop
-

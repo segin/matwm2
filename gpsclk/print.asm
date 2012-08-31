@@ -1,3 +1,5 @@
+print_tmp equ tmp1
+
 _showmsg
 	movlw 0x80
 	call lcd_cmd
@@ -25,14 +27,32 @@ _print
 
 printnum8
 	call dec8
-	movwf tmp0
-	swapf tmp0, W
+	movwf print_tmp
+	swapf print_tmp, W
 	andlw 0x0F
 	addlw '0'
 	call lcd_char
-	movf tmp0, W
+	movf print_tmp, W
 	andlw 0x0F
 	addlw '0'
+	call lcd_char
+	return
+
+printhex8
+	movwf print_tmp
+	swapf print_tmp, W
+	andlw 0x0F
+	call printhex4
+	movf print_tmp, W
+	andlw 0x0F
+	call printhex4
+	return
+
+printhex4
+	addlw 0xFF-9
+	btfsc STATUS, C
+	addlw 'A'-'9'-1
+	addlw '0'+10
 	call lcd_char
 	return
 
@@ -146,4 +166,3 @@ dec8 ; sacrifice some memory words for fast binary to BCD
 	retlw 0x97
 	retlw 0x98
 	retlw 0x99
-

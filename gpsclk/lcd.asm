@@ -18,7 +18,7 @@
 ;         0x02 cursor
 ;         0x01 blinking cursor -- independent of other cursor
 
-	alloc lcd_tmp
+lcd_tmp  equ tmp0
 lcd_port equ PORTC
 lcd_clk  equ 0x40 ; clock bit
 lcd_rs   equ 0x10 ; register select bit
@@ -40,11 +40,11 @@ lcd_init ; can also be used for reset
 	call lcd_cmd
 	movlw 0x02 ; return home
 	call lcd_cmd
-	call t1_reset
+	call t0_reset ; return home may take its sweet time
 	return
 
 lcd_cmd
-	call t1_wait
+	call t0_wait
 	movwf lcd_tmp
 	swapf lcd_tmp, W
 	andlw 0x0F
@@ -54,11 +54,11 @@ lcd_cmd
 	andlw 0x0F
 	iorlw lcd_clk
 	call lcd_send
-	call t1_set100
+	call t0_set100
 	return
 
 lcd_char
-	call t1_wait
+	call t0_wait
 	movwf lcd_tmp
 	swapf lcd_tmp, W
 	andlw 0x0F
@@ -68,7 +68,7 @@ lcd_char
 	andlw 0x0F
 	iorlw lcd_clk | lcd_rs ; clock and RS
 	call lcd_send
-	call t1_set80
+	call t0_set50
 	return
 
 lcd_send
@@ -76,4 +76,3 @@ lcd_send
 	andlw ~lcd_clk
 	movwf lcd_port
 	return
-

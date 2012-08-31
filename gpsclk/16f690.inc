@@ -89,6 +89,9 @@
 #define LTS  1
 #define SCS  0
 
+; timer0
+#define TMR0 0x01
+
 ; timer1
 #define TMR1L 0x0E
 #define TMR1H 0x0F
@@ -136,5 +139,17 @@
 #define RCIDL  6
 #define ABDOVF 7 
 
-#endif ; __PIC16F690_INC__
+; eeprom etc
+#define EEDAT  0x10C
+#define EEADR  0x10D
+#define EEDATH 0x10E
+#define EEADRH 0x10F
+#define EECON1 0x18C
+#define EECON2 0x18D
+#define RD     0
+#define WR     1
+#define WREN   2
+#define WRERR  3
+#define EEPGD  7
 
+#endif ; __PIC16F690_INC__

@@ -96,4 +96,21 @@ string
 	retlw 'e'
 	retlw 'd'
 	retlw 0
-
+.ecsum
+	retlw 'R'
+	retlw 'O'
+	retlw 'M'
+	retlw ' '
+	retlw 'c'
+	retlw 'h'
+	retlw 'e'
+	retlw 'c'
+	retlw 'k'
+	retlw 's'
+	retlw 'u'
+	retlw 'm'
+	retlw ' '
+	retlw 'b'
+	retlw 'a'
+	retlw 'd'
+	retlw 0

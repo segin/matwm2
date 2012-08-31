@@ -4,9 +4,12 @@
 
 	alloc recvdata, 72
 	alloc tmrflags
-	alloc tmp0
-	alloc rstate
+	alloc tmp0 ; used by lcd stuff
+	alloc tmp1 ; used by print stuff
+	alloc tmp2
+	alloc tmp3
 	define gtmp 0x70 ; for interrupt to store W, status, etc
+	; 0x71, 0x72 also used by interrupt handler
 
 	org 0x2007
 	; 0-2 hs osc
@@ -24,20 +27,28 @@
 	org 0
 	goto start
 	org 4
+	; save state
 	movwf gtmp ; store W
+	swapf gtmp ; swap so we can restore with a swapf that does not affect flags
 	movf STATUS, W
 	movwf gtmp+1 ; store STATUS
+	movf PCLATH, W
+	movwf gtmp+2
+	clrf PCLATH
+	; do shit
 	banksel 0
-	btfsc PIR2, OSFIF
-	call oscfail
+	btfsc INTCON, T0IF
+	call tmr0flow
 	btfsc PIR1, TMR1IF
 	call tmr1flow
+	btfsc PIR2, OSFIF
+	call oscfail
+	; restore state
+	movf gtmp+2, W
+	movwf PCLATH
 	movf gtmp+1, W
 	movwf STATUS
-	movf gtmp, W ; Z could get lost now
-	bcf STATUS, Z
-	btfsc gtmp+1, Z
-	bsf STATUS, Z
+	swapf gtmp, W ; restore our swapped W not affecting any flags :)
 	retfie
 
 oscfail
@@ -45,8 +56,13 @@ oscfail
 	showmsg string.eosc
 	goto $
 
-tmr1flow
+tmr0flow
 	bsf tmrflags, 0
+	bcf INTCON, T0IF
+	return
+
+tmr1flow
+	bsf tmrflags, 1
 	bcf PIR1, TMR1IF
 	return
 
@@ -82,6 +98,9 @@ loop
 	goto loop
 	movlw 3
 	call recv
+	movlw '@'
+	subwf recvdata
+	btfss STATUS, Z
 	movlw 'E'
 	subwf recvdata+1
 	btfss STATUS, Z
@@ -154,9 +173,10 @@ loop
 	goto loop
 
 #include "init.asm"
+#include "tmr0.asm"
 #include "tmr1.asm"
 #include "uart.asm"
 #include "lcd.asm"
 #include "print.asm"
 #include "strings.asm"
-
+#include "selftest.asm" ; must be last!

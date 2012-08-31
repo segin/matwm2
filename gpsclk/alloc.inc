@@ -12,4 +12,3 @@ macro alloc name
 		warn "alloc beyond 0x70"
 	endif
 endm
-

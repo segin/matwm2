@@ -1,7 +1,7 @@
 init
 	; hush doggie hush
 	banksel WDTCON
-	movlw 0b0000_1011
+	movlw 0b0001_0111
 	movwf WDTCON
 
 	; configure PORTC (for display)
@@ -28,16 +28,25 @@ init
 	movlw 129
 	movwf SPBRG
 	clrf SPBRGH
-	clrf rstate
 
 	; turn on interrupts
 	banksel INTCON
 	bsf INTCON, GIE
 	bsf INTCON, PEIE
 
+	; clear timer flags
+	banksel 0
+	clrf tmrflags
+
+	; set up timer0
+	banksel OPTION_REG
+	movlw 0b1100_0111 ; use 1:256 prescale
+	movwf OPTION_REG
+	banksel INTCON
+	bsf INTCON, T0IE
+
 	; turn on timer1
 	banksel 0
-	bcf tmrflags, 0
 	clrf TMR1L
 	clrf TMR1H
 	banksel PIE1
@@ -48,7 +57,7 @@ init
 
 	; init the display
 	banksel 0
-	btfss tmrflags, 0 ; we have to wait
+	btfss tmrflags, 1 ; we have to wait
 	goto $-1
 	call lcd_init
 
@@ -72,6 +81,31 @@ init
 	call lcd_cmd
 	print string.starting2
 
+	; do checksum of ROM
+	bsf PCLATH, 3
+	call checkrom
+	bcf PCLATH, 3
+	btfss STATUS, C
+	goto sum_ok
+	showmsg string.ecsum
+	movlw 0xC0
+	call lcd_cmd
+	movf cshi, W
+	call printhex8
+	movf cslo, W
+	call printhex8
+	movlw 0xCC
+	call lcd_cmd
+	bsf PCLATH, 3
+	call endd
+	bcf PCLATH, 3
+	call printhex8
+	bsf PCLATH, 3
+	call endd+1
+	bcf PCLATH, 3
+	call printhex8
+	goto $
+sum_ok
+
 	banksel 0 ; all our base belong to bank0
 	return
-
