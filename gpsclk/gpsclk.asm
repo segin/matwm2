@@ -29,7 +29,6 @@
 	org 4
 	; save state
 	movwf gtmp ; store W
-	swapf gtmp ; swap so we can restore with a swapf that does not affect flags
 	movf STATUS, W
 	movwf gtmp+1 ; store STATUS
 	movf PCLATH, W
@@ -48,6 +47,7 @@
 	movwf PCLATH
 	movf gtmp+1, W
 	movwf STATUS
+	swapf gtmp ; swap so we can restore with a swapf that does not affect flags
 	swapf gtmp, W ; restore our swapped W not affecting any flags :)
 	retfie
 

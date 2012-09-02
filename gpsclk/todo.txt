@@ -1,0 +1,3 @@
+RAM self test
+EEPROM data self-test (if EEPROM used)
+

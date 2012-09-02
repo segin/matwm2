@@ -104,7 +104,7 @@ init
 	call endd+1
 	bcf PCLATH, 3
 	call printhex8
-	goto $
+	; goto $ ; TODO set crc in selftest.asm and uncomment when final version
 sum_ok
 
 	banksel 0 ; all our base belong to bank0
