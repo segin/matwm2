@@ -1,3 +1,22 @@
+checkram
+	movlw 0x20
+	movwf FSR
+.loop
+	movlw 0xFF
+	movwf INDF
+	movf INDF, W
+	sublw 0xFF
+	btfss STATUS, Z
+	goto .fail
+	incf FSR
+	
+	goto .loop
+	bcf status, C
+	return
+.fail
+	bsf STATUS, C
+	return
+
 org 0xF00
 
 cshi equ tmp2 ; bank0
@@ -77,7 +96,3 @@ csum_add
 	btfsc STATUS, C
 	incf cshi
 	return
-
-org endd
-	retlw 0x8F
-	retlw 0x3B

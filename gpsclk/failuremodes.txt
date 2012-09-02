@@ -41,6 +41,15 @@ display shows "MCU clock failed"
 	- check if MCU power properly regulated (must be > 4.5V for xtal to start)
 	- check xtal and associated capacitors
 
+display shows "ROM checksum bad"
+	- ROM data corrupted
+	- firmware no good
+	- MCU broken
+
+	- verify firmware was assembled with the correct checksum in it
+	- rewrite the ROM and check again
+	- replace MCU
+
 display backlight off and shows nothing at all (yet other things do work)
 	- display not properly connected
 	- display broken
