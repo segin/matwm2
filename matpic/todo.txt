@@ -1,10 +1,7 @@
-relative adresses (with AT_REL flag from arch.h)
 include search path
 relocatable code and coff output support
 
 relating to extra chip support
-	add ihex thing for bigger than 16bit addresses
-	relative adresses (ATTiny use this for all jumps i herd)
 	support more chips
 	support pagesel pseudo instruction
 
@@ -14,3 +11,4 @@ non-essential (i.e. low priority)
 	macro context stack
 	ability to loop over each character of a string in macro
 	header files for chips
+	pad disassembly output if double size instructions can occur (or make it nicer otherwise)

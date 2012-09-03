@@ -70,6 +70,11 @@ unsigned long long ntt(signed long long n) {
 	return n;
 }
 
+/* and vice versa */
+signed long long ttn(unsigned long long n, int size) {
+	return (n & (1 << (size - 1))) ? -((1 << size) - n) : n;
+}
+
 void setradix(char *argp) {
 	char *s;
 	parseargs(argp, "i", &s);

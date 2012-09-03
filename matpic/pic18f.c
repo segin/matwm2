@@ -11,15 +11,17 @@ enum atype {
 	AT_FF,
 	AT_F,
 	AT_BF,
+	AT_K4,
 	AT_K8,
 	AT_K20,
 	AT_KS,
+	AT_FK,
 	AT_S,
 	AT_FSR,
 	AT_ULNK,
 	AT_SS,
 	AT_SF,
-	AT_R8 = AT_REL, /* means relative adresses in label argument */
+	AT_R8,
 	AT_R11
 };
 
@@ -69,12 +71,14 @@ oc_t ocs18f[] = {
 	{ "addlw",  { 0x0F, 0x00 }, { 0xFF, 0x00 }, 2, AT_K8  },
 	{ "andlw",  { 0x0B, 0x00 }, { 0xFF, 0x00 }, 2, AT_K8  },
 	{ "iorlw",  { 0x09, 0x00 }, { 0xFF, 0x00 }, 2, AT_K8  },
-	{ "movlb",  { 0x01, 0x00 }, { 0xFF, 0xF0 }, 2, AT_K8  },
+	{ "movlb",  { 0x01, 0x00 }, { 0xFF, 0xF0 }, 2, AT_K4  },
 	{ "movlw",  { 0x0E, 0x00 }, { 0xFF, 0x00 }, 2, AT_K8  },
 	{ "mullw",  { 0x0D, 0x00 }, { 0xFF, 0x00 }, 2, AT_K8  },
 	{ "retlw",  { 0x0C, 0x00 }, { 0xFF, 0x00 }, 2, AT_K8  },
 	{ "sublw",  { 0x08, 0x00 }, { 0xFF, 0x00 }, 2, AT_K8  },
 	{ "xorlw",  { 0x0A, 0x00 }, { 0xFF, 0x00 }, 2, AT_K8  },
+	{ "lfsr",   { 0xEE, 0x00, 0xF0, 0x00 },
+	            { 0xFF, 0xC0, 0xFF, 0x00 }, 4, AT_FK },
 
 	/* control operations */
 	{ "bc",     { 0xE2, 0x00 }, { 0xFF, 0x00 }, 2, AT_R8  },
@@ -131,6 +135,7 @@ oc_t ocs18f[] = {
 };
 
 void acmp18f(unsigned char *oc, int atype, int argc, signed long long *argv) {
+	signed long n;
 	switch (atype) {
 		case AT_DF:
 			if (argc < 1 || argc > 3)
@@ -141,7 +146,7 @@ void acmp18f(unsigned char *oc, int atype, int argc, signed long long *argv) {
 				argv[1] = 1;
 			if (argv[1] > 1 || argv[1] < 0 || argv[2] > 1 || argv[2] < 0)
 				flwarn("argument out of range, truncated");
-			oc[1] = ntt(argv[0]) & 0xFF;
+			oc[1] = ntt(argv[0]);
 			oc[0] |= ((argv[1] & 1) << 1) | (argv[2] & 1);
 			break;
 		case AT_F:
@@ -151,15 +156,15 @@ void acmp18f(unsigned char *oc, int atype, int argc, signed long long *argv) {
 				argv[1] = 0;
 			if (argv[1] > 1 || argv[1] < 0)
 				flwarn("argument out of range, truncated");
-			oc[1] = ntt(argv[0]) & 0xFF;
+			oc[1] = ntt(argv[0]);
 			oc[0] |= argv[1] & 1;
 			break;
 		case AT_FF:
 			if (argc != 2)
 				flerrexit("wrong number of arguments");
-			oc[1] = ntt(argv[0]) & 0xFF;
+			oc[1] = ntt(argv[0]);
 			oc[0] |= (ntt(argv[0]) >> 8) & 0x0F;
-			oc[3] = ntt(argv[1]) & 0xFF;
+			oc[3] = ntt(argv[1]);
 			oc[2] |= (ntt(argv[1]) >> 8) & 0x0F;
 			break;
 		case AT_BF:
@@ -169,21 +174,33 @@ void acmp18f(unsigned char *oc, int atype, int argc, signed long long *argv) {
 				argv[2] = 0;
 			if (argv[1] > 7 || argv[1] < 0 || argv[2] > 1 || argv[2] < 0)
 				flwarn("argument out of range, truncated");
-			oc[1] = ntt(argv[0]) & 0xFF;
+			oc[1] = ntt(argv[0]);
 			oc[0] |= ((argv[1] & 7) << 1) | (argv[2] & 1);
 			break;
+		case AT_K4:
+			if (argc != 1)
+				flerrexit("wrong number of arguments");
+			oc[1] |= ntt(argv[0]) & 0x0F;
+			break;
 		case AT_K8:
+			if (argc != 1)
+				flerrexit("wrong number of arguments");
+			oc[1] |= ntt(argv[0]);
+			break;
 		case AT_R8:
 			if (argc != 1)
 				flerrexit("wrong number of arguments");
-			oc[1] |= ntt(argv[0]) & 0xFF;
+			n = ntt(argv[0]) - (address + 1);
+			if (n > 127 || n < -128)
+				flwarn("relative adress out of bounds, truncated");
+			oc[1] |= n & 0xFF;
 			break;
 		case AT_K20:
 			if (argc != 1)
 				flerrexit("wrong number of arguments");
-			oc[1] = ntt(argv[0]) & 0xFF;
-			oc[3] |= (ntt(argv[0]) >> 8) & 0xFF;
-			oc[2] |= (ntt(argv[0]) >> 16) & 3;
+			oc[1] = ntt(argv[0]);
+			oc[3] |= (ntt(argv[0]) >> 8);
+			oc[2] |= (ntt(argv[0]) >> 16) & 0x0F;
 			break;
 		case AT_KS:
 			if (argc < 1 || argc > 2)
@@ -192,16 +209,27 @@ void acmp18f(unsigned char *oc, int atype, int argc, signed long long *argv) {
 				argv[1] = 0;
 			if (argv[1] > 1 || argv[1] < 0)
 				flwarn("argument out of range, truncated");
-			oc[1] = ntt(argv[0]) & 0xFF;
+			oc[1] = ntt(argv[0]);
 			oc[0] |= argv[1] & 1;
-			oc[3] = (ntt(argv[0]) >> 8) & 0xFF;
-			oc[2] |= (ntt(argv[0]) >> 16) & 3;
+			oc[3] = ntt(argv[0]) >> 8;
+			oc[2] |= (ntt(argv[0]) >> 16) & 0x0F;
+			break;
+		case AT_FK:
+			if (argc != 2)
+				flerrexit("wrong number of arguments");
+			if (argv[0] > 3 || argv[0] < 0)
+				flwarn("argument out of range, truncated");
+			oc[1] |= ((ntt(argv[1]) >> 8) & 0x0F) | ((argv[0] & 3) << 4);
+			oc[3] = ntt(argv[1]);
 			break;
 		case AT_R11:
 			if (argc != 1)
 				flerrexit("wrong number of arguments");
-			oc[1] = ntt(argv[0]) & 0xFF;
-			oc[0] |= (ntt(argv[0]) >> 8) & 7;
+			n = ntt(argv[0]) - (address + 1);
+			if (n > 1023 || n < -1024)
+				flwarn("relative adress out of bounds, truncated");
+			oc[1] = n;
+			oc[0] |= (n >> 8) & 7;
 			break;
 		case AT_S:
 			if (argc > 1)
@@ -217,18 +245,18 @@ void acmp18f(unsigned char *oc, int atype, int argc, signed long long *argv) {
 				flerrexit("wrong number of arguments");
 			if (argv[0] > 3 || argv[0] < 0)
 				flwarn("argument out of range, truncated");
-			oc[1] = (ntt(argv[0]) & 0xFF) | ((argv[1] & 3) << 6);
+			oc[1] = (ntt(argv[1]) & 0x3F) | ((argv[0] & 3) << 6);
 			break;
 		case AT_ULNK:
 			if (argc != 1)
 				flerrexit("wrong number of arguments");
-			oc[1] = ntt(argv[0]) & 0xFF;
+			oc[1] |= ntt(argv[0]) & 0x3F;
 			break;
 		case AT_SF:
 			if (argc != 2)
 				flerrexit("wrong number of arguments");
 			oc[1] = ntt(argv[0]) & 0x7F;
-			oc[3] = ntt(argv[1]) & 0xFF;
+			oc[3] = ntt(argv[1]);
 			oc[2] |= (ntt(argv[1]) >> 8) & 0x0F;
 			break;
 		case AT_SS:
@@ -252,20 +280,28 @@ void adis18f(ioh_t *out, unsigned char *oc, int atype) {
 			mfprintf(out, "0x%2x, %i", oc[1], oc[0] & 1);
 			break;
 		case AT_FF:
-			mfprintf(out, "0x%2x, 0x%2x", oc[1] | ((oc[0] | 0x0F) << 8), oc[3] | ((oc[2] | 0x0F) << 8));
+			mfprintf(out, "0x%3x, 0x%3x", oc[1] | ((oc[0] & 0x0F) << 8), oc[3] | ((oc[2] & 0x0F) << 8));
 			break;
 		case AT_BF:
 			mfprintf(out, "0x%2x, %i, %i", oc[1], (oc[0] & 0x0E) >> 1, oc[0] & 1);
 			break;
+		case AT_K4:
+			mfprintf(out, "0x%x", oc[1] & 0x0F);
+			break;
 		case AT_K8:
-		case AT_R8:
 			mfprintf(out, "0x%2x", oc[1]);
+			break;
+		case AT_R8:
+			mfprintf(out, "%d", ttn(oc[1], 8));
 			break;
 		case AT_K20:
 			mfprintf(out, "0x%5x", oc[1] | (oc[3] << 8) | ((oc[2] & 0x0F) << 16));
 			break;
+		case AT_FK:
+			mfprintf(out, "%i, 0x%3x", (oc[1] >> 4) & 3, ((oc[1] & 0x0F) << 8) | oc[3]);
+			break;
 		case AT_R11:
-			mfprintf(out, "0x%3x", oc[1] | ((oc[0] & 7) << 8));
+			mfprintf(out, "%d", ttn(oc[1] | ((oc[0] & 7) << 8), 11));
 			break;
 		case AT_KS:
 			mfprintf(out, "0x%5x, %i", oc[1] | (oc[3] << 8) | ((oc[2] & 0x0F) << 16), oc[0] & 1);
@@ -280,7 +316,7 @@ void adis18f(ioh_t *out, unsigned char *oc, int atype) {
 			mfprintf(out, "0x%2x", oc[1] & 0x3F);
 			break;
 		case AT_SF:
-			mfprintf(out, "0x%2x, 0x%2x", oc[1] & 0x7F, oc[3] | ((oc[2] | 0x0F) << 8));
+			mfprintf(out, "0x%2x, 0x%3x", oc[1] & 0x7F, oc[3] | ((oc[2] & 0x0F) << 8));
 			break;
 		case AT_SS:
 			mfprintf(out, "0x%2x, 0x%2x", oc[1] & 0x7F, oc[3] & 0x7F);
@@ -293,10 +329,12 @@ unsigned char mask18f[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
 int ord18f[4] = { 1, 0, 3, 2 };
 
 arch_t pic18f = {
+	"pic18f",
 	ocs18f,
 	&acmp18f,
 	&adis18f,
 	mask18f,
 	ord18f,
 	2,
+	4
 };

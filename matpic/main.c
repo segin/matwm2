@@ -47,11 +47,7 @@ int main(int argc, char *argv[]) {
 						break;
 					case 'a':
 						if (argc > i + 1) {
-							if (strcasecmp(argv[i+1], "pic14b") == 0)
-								arch = &pic14b;
-							else if (strcasecmp(argv[i+1], "pic18f") == 0)
-								arch = &pic18f;
-							else errexit("invalid architecture '%s'", argv[i+1]);
+							setarch(argv[i+1]);
 							argv[i+1] = NULL;
 						} else errexit("option a needs argument");
 						break;

@@ -96,12 +96,12 @@ void acmp14b(unsigned char *oc, int atype, int argc, signed long long *argv) {
 		case AT_K8:
 			if (argc != 1)
 				flerrexit("wrong number of arguments");
-			oc[1] |= ntt(argv[0]) & 0xFF;
+			oc[1] |= ntt(argv[0]);
 			break;
 		case AT_K11:
 			if (argc != 1)
 				flerrexit("wrong number of arguments");
-			oc[1] = ntt(argv[0]) & 0xFF;
+			oc[1] = ntt(argv[0]);
 			oc[0] |= (ntt(argv[0]) >> 8) & 7;
 			break;
 		case AT_T:
@@ -129,10 +129,10 @@ void adis14b(ioh_t *out, unsigned char *oc, int atype) {
 			mfprintf(out, "0x%2x, %i", oc[1] & 0x7F, ((oc[0] & 3) << 1) | ((oc[1] & 0x80) >> 7));
 			break;
 		case AT_K8:
-			mfprintf(out, "0x%2x", oc[1] & 0xFF);
+			mfprintf(out, "0x%2x", oc[1]);
 			break;
 		case AT_K11:
-			mfprintf(out, "0x%3x", ((oc[0] & 7) << 8) | (oc[1] & 0xFF));
+			mfprintf(out, "0x%3x", ((oc[0] & 7) << 8) | oc[1]);
 			break;
 		case AT_T:
 			mfprintf(out, "%i", oc[1] & 3);
@@ -145,10 +145,12 @@ unsigned char mask14b[2] = { 0x3F, 0xFF };
 int ord14b[2] = { 1, 0 };
 
 arch_t pic14b = {
+	"pic14b",
 	ocs14b,
 	&acmp14b,
 	&adis14b,
 	mask14b,
 	ord14b,
 	2,
+	2
 };

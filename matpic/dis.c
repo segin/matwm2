@@ -28,13 +28,15 @@ void disassemble(ioh_t *out) {
 			while (oc->name != NULL) {
 				if (oc->len > end - bufp) /* this is to prevent disaster */
 					goto docf;
-				for (i = 0; (bufp[arch->ord[i % arch->align]] & oc->imask[i]) == oc->oc[i] && i < oc->len; ++i);
+				for (i = 0; i < oc->len && (bufp[arch->ord[i]] & oc->imask[i]) == oc->oc[i]; ++i);
 				if (i == oc->len) {
 					for (i = 0; i < oc->len; ++i)
-						inop[i] = bufp[arch->ord[i % arch->align]];
+						inop[i] = bufp[arch->ord[i]];
 					if (format == 0) {
 						for (i = 0; i < oc->len; ++i)
 							mfprintf(out, "%2x", inop[i]);
+						for (; i < arch->inswidth; ++i)
+							mfprint(out, "  ");
 						mfprintf(out, "): %s ", oc->name);
 					} else mfprintf(out, "\t%s ", oc->name);
 					arch->adis(out, inop, oc->atype);

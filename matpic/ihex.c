@@ -12,10 +12,15 @@
 
 unsigned char buf[IHLL];
 int pos = 0, crc;
+unsigned long long top;
 
 void endln(ioh_t *out) {
 	int i;
-	mfprintf(out, ":%2x%4x00", pos, address);
+	if ((top || address >> 16) && top != address >> 16) {
+		top = address >> 16;
+		mfprintf(out, ":02000004%4x%2x\n", top, (0x100 - (6 + (top & 0xFF) + (top >> 8))) & 0xFF);
+	}
+	mfprintf(out, ":%2x%4x00", pos, address & 0xFFFF);
 	for (i = 0; i < pos; ++i)
 		mfprintf(out, "%2x", buf[i]);
 	crc += address >> 8;
@@ -31,6 +36,7 @@ void ihex_write(ioh_t *out) {
 	ins_t *ins = (ins_t *) inss.data;
 	char *bufp = outbuf.data;
 
+	top = 0;
 	address = 0;
 	crc = 0;
 	while (ins->head.type != IT_END) {
@@ -64,10 +70,11 @@ int gethnum(char **src) {
 
 void ihex_read(char *in) {
 	int len, crc, rtype, n;
-	unsigned long addr;
+	unsigned long long addr;
 	char c;
 	dsym_t ds;
 
+	top = 0;
 	arr_new(&dsym, sizeof(dsym_t));
 	vstr_new(&inbuf);
 	lineno_init();
@@ -100,7 +107,7 @@ void ihex_read(char *in) {
 	if ((rtype = gethnum(&in)) == -1)
 		goto dinval;
 	crc += rtype;
-	ds.addr = addr;
+	ds.addr = (top << 16) | addr;
 	switch (rtype) {
 		case 0:
 			ds.len = len;
@@ -121,6 +128,18 @@ void ihex_read(char *in) {
 					goto dinval;
 				crc += n;
 			}
+			break;
+		case 4:
+			if (len != 2)
+				goto dinval;
+			if ((n = gethnum(&in)) == -1)
+				goto dinval;
+			crc += n;
+			top = n << 8;
+			if ((n = gethnum(&in)) == -1)
+				goto dinval;
+			crc += n;
+			top |= n;
 			break;
 		default:
 			goto dinval;

@@ -192,6 +192,12 @@ int insfind(char *ip, char *argp) {
 	ins_t ins;
 
 	ins.head.line = lineno_getreal();
+	if (cmpid(ip, "arch")) {
+		char *s;
+		parseargs(argp, "s", &s);
+		setarch(s);
+		return 1;
+	}
 	if (cmpid(ip, "org")) {
 		getargs(argp, args, 1, 1);
 		ins.head.type = IT_ORG;
@@ -228,6 +234,7 @@ int insfind(char *ip, char *argp) {
 		lineno_dropctx();
 		ins.head.type = IT_CTX_END;
 		arr_add(&inss, &ins);
+		return 1;
 	}
 	if (cmpid(ip, "line")) {
 		getargs(argp, args, 1, 1);
@@ -421,6 +428,7 @@ void assemble(char *code) {
 					address += a / arch->align;
 					colcheck(mapitem.end, address);
 					mapitem.end = address;
+					break;
 				case IT_ORG:
 					if (lorgend != NULL)
 						*lorgend = (char *) bufp;

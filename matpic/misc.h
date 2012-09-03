@@ -21,6 +21,7 @@ extern void flwarn(char *fmt, ...);
 extern void flmsg(char *msg);
 
 extern unsigned long long ntt(signed long long n);
+extern signed long long ttn(unsigned long long n, int size);
 
 extern void setradix(char *argp);
 extern char *readfile(char *path);
