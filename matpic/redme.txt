@@ -3,7 +3,7 @@ red me
 this is about C version of matpic, lua file is older test implementation
 to build, either copy Makefile.watcom to Makefile and run "wmake" if you are using openwatcom
 or on linux/unix copy or link Makefile.nix to Makefile and run "make"
-currently only 14bit PIC chips are supported
+currently only 14bit and 18f series PIC chips are supported
 synopsis
 	matpic [-d|p|P|t] [-r] [<infile> [<outfile>]]
 options
@@ -92,6 +92,7 @@ when integers are expected, you can also give a string encapsulated in quotes or
 if using x or h suffix, one should make sure the first digit is 0-9
 utf-8 in labels / macro names etc are allowed
 for 14bit PIC if no W or F is given to *wf instructions, F is assumed
+in the 18f series instruction set TBLRD*, TBLRD*+, TBLRD*-, TBLRD+* and similar TBLWT instructions have been suffixed i, d and p for post-increment, post-decrement and pre-increment respectively, instead of "*+" etc
 
 BUGS
 	unicode will be case sensitive

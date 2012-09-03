@@ -16,7 +16,7 @@ enum atype {
 };
 
 oc_t ocs14b[] = {
-	/* byte operatios */
+	/* byte operations */
 	{ "clrw",   { 0x01, 0x00 }, { 0xFF, 0x80 }, 2, AT_NA  },
 	{ "clrf",   { 0x01, 0x80 }, { 0xFF, 0x80 }, 2, AT_F   },
 	{ "movf",   { 0x08, 0x00 }, { 0xFF, 0x00 }, 2, AT_DF  },
@@ -64,7 +64,7 @@ oc_t ocs14b[] = {
 	{ "option", { 0x00, 0x62 }, { 0xFF, 0xFF }, 2, AT_NA  },
 	{ "tris",   { 0x00, 0x64 }, { 0xFF, 0xFC }, 2, AT_T   },
 
-	/* note to self, do not forget banksel, bankisel, pagesel */
+	/* note to self, do not forget pagesel */
 
 	{ NULL, { 0 }, { 0 }, 0 }, /* important, end of list */
 };
@@ -78,7 +78,7 @@ void acmp14b(unsigned char *oc, int atype, int argc, signed long long *argv) {
 				argv[1] = 1;
 			if (argv[1] > 1 || argv[1] < 0)
 				flwarn("argument out of range, truncated");
-			oc[1] = (ntt(argv[1]) & 1) << 7 | (ntt(argv[0]) & 0x7F);
+			oc[1] = (argv[1] & 1) << 7 | (ntt(argv[0]) & 0x7F);
 			break;
 		case AT_F:
 			if (argc != 1)
@@ -90,8 +90,8 @@ void acmp14b(unsigned char *oc, int atype, int argc, signed long long *argv) {
 				flerrexit("wrong number of arguments");
 			if (argv[1] > 7 || argv[1] < 0)
 				flwarn("argument out of range, truncated");
-			oc[1] = (ntt(argv[1]) & 1) << 7 | (ntt(argv[0]) & 0x7F);
-			oc[0] |= (ntt(argv[1]) & 6) >> 1;
+			oc[1] = (argv[1] & 1) << 7 | (ntt(argv[0]) & 0x7F);
+			oc[0] |= (argv[1] & 6) >> 1;
 			break;
 		case AT_K8:
 			if (argc != 1)
@@ -109,7 +109,7 @@ void acmp14b(unsigned char *oc, int atype, int argc, signed long long *argv) {
 				flerrexit("wrong number of arguments");
 			if (argv[0] > 3 || argv[0] < 0)
 				flwarn("argument out of range, truncated");
-			oc[1] |= ntt(argv[0]) & 0x3;
+			oc[1] |= argv[0] & 0x3;
 			break;
 		case AT_NA:
 			if (argc)

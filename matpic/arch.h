@@ -11,6 +11,8 @@ typedef struct {
 	int len, atype;
 } oc_t;
 
+#define AT_REL 0x80 /* OR with type for relative adresses in label argument */
+
 typedef struct {
 	oc_t *ocs;
 	void (*acmp)(unsigned char *, int, int, signed long long *);

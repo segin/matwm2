@@ -1,3 +1,4 @@
+relative adresses
 include search path
 relocatable code and coff output support
 

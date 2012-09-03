@@ -35,16 +35,16 @@ void ihex_write(ioh_t *out) {
 	crc = 0;
 	while (ins->head.type != IT_END) {
 		if (ins->head.type == IT_ORG) {
-				address = ins->org.address * arch->align;
-				while (bufp != ins->org.end) {
-					buf[pos++] = *bufp;
-					crc += *bufp;
-					if (pos == 16)
-						endln(out);
-					++bufp;
-				}
-				if (pos)
+			address = ins->org.address * arch->align;
+			while (bufp != ins->org.end) {
+				buf[pos++] = *bufp;
+				crc += *bufp;
+				if (pos == 16)
 					endln(out);
+				++bufp;
+			}
+			if (pos)
+				endln(out);
 		}
 		++ins;
 	}
