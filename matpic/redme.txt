@@ -14,6 +14,7 @@ options
 	-r	format disassembly listing in such way it can be re-assembled without modification
 			the default is nicer to read but cannot simply be assembled as it list adress and opcode with each line
 			without -d or -t this option is ignored
+	-a <pic14b|pic18f>	select target architecture
 when no files specified input file is read from stdin, output written to stdout
 comments can be started with ";", they end together with the line
 multiline or part-of line comments can be started with "/*" and ended with "*/", they can also be nested

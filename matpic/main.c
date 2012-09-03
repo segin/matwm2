@@ -3,12 +3,16 @@
  ***********************/
 
 #include <stdlib.h> /* free(), NULL */
+#include <string.h> /* strcmp() */
 #include "ppc.h"
 #include "as.h"
 #include "dis.h"
 #include "ihex.h"
 #include "misc.h" /* errexit(), cleanup(), readfile(), file, infile */
 #include "io.h"
+#include "arch.h"
+#include "pic14b.h"
+#include "pic18f.h"
 
 int main(int argc, char *argv[]) {
 	char *a, *code;
@@ -19,7 +23,9 @@ int main(int argc, char *argv[]) {
 
 	mstdio_init();
 	for (i = 1; i < argc; ++i) {
-		if (*(argv[i]) == '-') {
+		if (argv[i] == NULL)
+			continue;
+		if(*(argv[i]) == '-') {
 			a = argv[i] + 1;
 			argv[i] = NULL;
 			while (*a) {
@@ -38,6 +44,16 @@ int main(int argc, char *argv[]) {
 						break;
 					case 'r':
 						format = 1;
+						break;
+					case 'a':
+						if (argc > i + 1) {
+							if (strcasecmp(argv[i+1], "pic14b") == 0)
+								arch = &pic14b;
+							else if (strcasecmp(argv[i+1], "pic18f") == 0)
+								arch = &pic18f;
+							else errexit("invalid architecture '%s'", argv[i+1]);
+							argv[i+1] = NULL;
+						} else errexit("option a needs argument");
 						break;
 					default:
 						errexit("i am in ur error, your argument is invalid");
