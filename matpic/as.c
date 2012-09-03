@@ -196,6 +196,7 @@ int insfind(char *ip, char *argp) {
 		char *s;
 		parseargs(argp, "s", &s);
 		setarch(s);
+		free(s);
 		return 1;
 	}
 	if (cmpid(ip, "org")) {

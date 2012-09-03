@@ -91,11 +91,11 @@ int mfprint(ioh_t *h, char *data) {
 	return mfwrite(h, data, strlen(data));
 }
 
-int mfprintsnum(ioh_t *h, signed long long n, int b, int p) {
+int mfprintsnum(ioh_t *h, signed long long n, int b, int p, int plus) {
 	if (n < 0) {
 		mfwrite(h, "-", 1);
 		n = -n;
-	}
+	} else if (plus) mfwrite(h, "+", 1);
 	return mfprintnum(h, n, b, p);
 }
 
@@ -151,7 +151,7 @@ int mvafprintf(ioh_t *h, char *fmt, va_list ap) {
 	unsigned long long n;
 	signed long long sn;
 	unsigned char c;
-	int p, l;
+	int p, l, plus;
 
 	start = fmt;
 	while (*fmt) {
@@ -166,6 +166,7 @@ int mvafprintf(ioh_t *h, char *fmt, va_list ap) {
 				++fmt;
 			}
 			l = 0;
+			plus = 0;
 			while (1) {
 				switch (*fmt) {
 					case 'l':
@@ -173,6 +174,9 @@ int mvafprintf(ioh_t *h, char *fmt, va_list ap) {
 						break;
 					case 'q':
 						l = 2;
+						break;
+					case '+':
+						++plus;
 						break;
 					default:
 						goto lsend;
@@ -211,7 +215,7 @@ int mvafprintf(ioh_t *h, char *fmt, va_list ap) {
 				case 'i':
 				case 'd':
 					sn = mprintf_getsnarg(l, ap);
-					mfprintsnum(h, sn, 10, p);
+					mfprintsnum(h, sn, 10, p, plus);
 					break;
 				case 'u':
 					n = mprintf_getnarg(l, ap);

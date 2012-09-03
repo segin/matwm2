@@ -24,11 +24,11 @@ bcf 0, 7, 0
 bcf 0, 0
 
 ; n (8 and 11 bits)
-bra 0x7FF
-bra 0x700
-bra 0x0FF
-bc 0xFF
-bc 0
+bra $+1+0x7FF
+bra $+1+0x700
+bra $+1+0x0FF
+bc $+1+0xFF
+bc $+1
 
 ; k (4, 8, 20, 'k,s' and 'f,k')
 movlb 0x0F

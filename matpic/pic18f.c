@@ -292,7 +292,7 @@ void adis18f(ioh_t *out, unsigned char *oc, int atype) {
 			mfprintf(out, "0x%2x", oc[1]);
 			break;
 		case AT_R8:
-			mfprintf(out, "%d", ttn(oc[1], 8));
+			mfprintf(out, "$%+d", ttn(oc[1], 8) + 1);
 			break;
 		case AT_K20:
 			mfprintf(out, "0x%5x", oc[1] | (oc[3] << 8) | ((oc[2] & 0x0F) << 16));
@@ -301,7 +301,7 @@ void adis18f(ioh_t *out, unsigned char *oc, int atype) {
 			mfprintf(out, "%i, 0x%3x", (oc[1] >> 4) & 3, ((oc[1] & 0x0F) << 8) | oc[3]);
 			break;
 		case AT_R11:
-			mfprintf(out, "%d", ttn(oc[1] | ((oc[0] & 7) << 8), 11));
+			mfprintf(out, "$%+d", ttn(oc[1] | ((oc[0] & 7) << 8), 11) + 1);
 			break;
 		case AT_KS:
 			mfprintf(out, "0x%5x, %i", oc[1] | (oc[3] << 8) | ((oc[2] & 0x0F) << 16), oc[0] & 1);
