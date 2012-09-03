@@ -1,4 +1,4 @@
-relative adresses
+relative adresses (with AT_REL flag from arch.h)
 include search path
 relocatable code and coff output support
 
