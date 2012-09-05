@@ -1,10 +1,10 @@
 #include <stdlib.h> /* NULL, exit(), EXIT_FAILURE, malloc() */
 #include <string.h> /* strlen() */
 #include <stdarg.h>
+#include "misc.h"
 #include "as.h" /* inss, labels, llbl */
 #include "dis.h" /* inbuf, dsym */
 #include "str.h" /* base, skipsp(), getnum(), getid(), cmpid(), ctype(), lower[] */
-#include "misc.h"
 #include "lineno.h"
 #include "mem.h" /* string_t */
 #include "config.h" /* ARG_MAX, CALC_MAX, INFILE_DEFAULT */

@@ -7,5 +7,6 @@
 
 #define INFILE_DEFAULT "<stdin>" /* input file default name */
 #define ARCH_DEFAULT   pic14b    /* default architecture */
+#define RADIX_DEFAULT  10        /* default radix */
 
 #endif /* __CONFIG_H__ */

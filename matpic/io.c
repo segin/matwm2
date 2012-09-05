@@ -8,7 +8,6 @@
 #include <stdlib.h> /* malloc(), realloc(), free(), NULL */
 #include <string.h> /* strlen(), memcpy() */
 #include <stdarg.h>
-
 #include "io.h"
 
 char hex[16] = {

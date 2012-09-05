@@ -4,8 +4,8 @@
 
 #include <stdlib.h> /* realloc(), free(), NULL */
 #include <string.h> /* memcpy(), memset() */
-#include "misc.h" /* errexit() */
 #include "mem.h"
+#include "misc.h" /* errexit() */
 
 void arr_new(arr_t *a, int size) {
 	a->data = NULL;

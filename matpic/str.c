@@ -2,12 +2,12 @@
  * generic string stuff *
  ************************/
 
-#include "str.h"
-
 #include <stdlib.h> /* NULL */
 #include <string.h> /* strcpy() */
+#include "str.h"
+#include "config.h" /* RADIX_DEFAULT */
 
-int radix = 10;
+int radix = RADIX_DEFAULT;
 
 /* alfa[]
  *

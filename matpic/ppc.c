@@ -1,9 +1,10 @@
 #include <stdlib.h> /* NULL */
+#include "ppc.h"
 #include "as.h" /* parseargs(), parseln() */
 #include "mem.h"
 #include "str.h" /* skipsp(), ctype(), etc */
 #include "misc.h" /* flerrexit(), readfile(), file, infile */
-#include "ppc.h"
+#include "str.h"
 #include "io.h"
 #include "lineno.h"
 
