@@ -7,9 +7,7 @@
 
 #include <stdlib.h> /* NULL */
 #include <string.h> /* strlen() */
-
-#define BLOCK 2048  /* amount of memory to allocate in one go */
-#define ARG_MAX 256 /* maximum number of arguments */
+#include "config.h" /* BLOCK */
 
 typedef struct {
 	void *data;

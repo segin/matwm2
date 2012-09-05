@@ -10,6 +10,7 @@
 #include "arch.h"
 #include "misc.h" /* getargs(), getstr(), file, infile, address */
 #include "lineno.h"
+#include "config.h" /* ARG_MAX */
 
 int llbl;
 unsigned int addrl;

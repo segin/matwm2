@@ -7,8 +7,9 @@
 #include "misc.h"
 #include "lineno.h"
 #include "mem.h" /* string_t */
+#include "config.h" /* ARG_MAX, CALC_MAX, INFILE_DEFAULT */
 
-char *infile = "<stdin>";
+char *infile = INFILE_DEFAULT;
 
 string_t inbuf = { NULL, 0, 0 };
 string_t outbuf = { NULL, 0, 0 };
@@ -318,8 +319,6 @@ sll calc(int op, sll lval, sll rval) {
 	}
 	return lval;
 }
-
-#define CALC_MAX 512
 
 void _calc(sll *lval, int *op, int len, int pre_min, int pre_max) {
 	int i, j;

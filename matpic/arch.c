@@ -2,7 +2,7 @@
 #include "pic14b.h"
 #include "pic18f.h"
 
-arch_t *arch = &pic14b;
+arch_t *arch = &ARCH_DEFAULT;
 arch_t *archs[] = { &pic14b, &pic18f, NULL };
 
 void setarch(char *name) {

@@ -3,6 +3,7 @@
 
 #include "mem.h"
 #include "io.h"
+#include "config.h" /* ARG_MAX */
 
 typedef struct {
 	char *name, *val;
