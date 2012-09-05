@@ -101,6 +101,7 @@ loop
 	movlw '@'
 	subwf recvdata
 	btfss STATUS, Z
+	goto loop
 	movlw 'E'
 	subwf recvdata+1
 	btfss STATUS, Z
