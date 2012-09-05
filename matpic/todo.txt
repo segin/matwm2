@@ -2,7 +2,7 @@ include search path
 relocatable code and coff output support
 
 relating to extra chip support
-	support more chips
+	support more chips (SX, 10f, 24f, ATTiny, ATMega, 8052)
 	support pagesel pseudo instruction
 
 non-essential (i.e. low priority)
@@ -11,4 +11,4 @@ non-essential (i.e. low priority)
 	macro context stack
 	ability to loop over each character of a string in macro
 	header files for chips
-	pad disassembly output if double size instructions can occur (or make it nicer otherwise)
+
