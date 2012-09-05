@@ -1,7 +1,9 @@
 include search path
 relocatable code and coff output support
+find a better name than matpic damnit, sounds like it is about pictures or something
 
 relating to extra chip support
+	support for the 14bit "enhanced mid-range" devices
 	support more chips (SX, 10f, 24f, ATTiny, ATMega, 8052)
 	support pagesel pseudo instruction
 
