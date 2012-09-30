@@ -40,10 +40,10 @@ extern int mvafprintf(ioh_t *h, char *fmt, va_list l);
 
 #define MFM_RD 1
 #define MFM_WR 2
-#define MFM_RW 3
-#define MFM_CREAT 4
-#define MFM_TRUNC 8
-#define MFM_APPEND 16
+#define MFM_RW 4
+#define MFM_CREAT 8
+#define MFM_TRUNC 16
+#define MFM_APPEND 32
 
 extern ioh_t *mstdin, *mstdout, *mstderr;
 extern void mstdio_init(void);
