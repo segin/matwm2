@@ -1,0 +1,5 @@
+Axel is a download "accelerator" that works by opening multiple connections 
+to FTP and HTTP servers that support partial transfers. Axel also supports 
+multiple connections across different servers for mirrored files. Axel is 
+very lightweight and has no dependencies outside of that provided by any normal
+POSIX-compliant OS.
