@@ -11,7 +11,7 @@ CATEGORIES=	net
 MASTER_SITES=	http://alioth.debian.org/frs/download.php/3015/
 DISTNAME=	${PORTNAME}-${PORTVERSION}
 
-MAINTAINER=	giridhar@appaji.net
+MAINTAINER=	segin2005@gmail.com
 COMMENT=	A tiny lightweight download accelerator for Unix.
 
 LICENSE=	GPLv2
