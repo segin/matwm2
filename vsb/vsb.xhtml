@@ -27,7 +27,12 @@
 	<p>This tool is used for building disk-serializable C structs. 
 	Only a subset of standard types are allowed.</p>
 
+	<div>
+		<button type="button">Reset Builder</button>
+	</div>
 	<div id="builder">
+		<label for="typedef">TypeDef?</label>
+		<input type="checkbox" id="typedef" />
 		<label for="structname">struct</label>
 		<input type="text" id="structname" />
 		<script type="text/javascript">
@@ -35,6 +40,19 @@
 		</script>
 		<div id="elems">
 			<span class="elem">
+				<select class="etype" >
+					<option value="char_arr">char[]</option>
+					<option value="int8_t">int8_t</option>
+					<option value="uint8_t">uint8_t</option>
+					<option value="int16_t">int16_t</option>
+					<option value="uint16_t">uint16_t</option>
+					<option value="int32_t">int32_t</option>
+					<option value="uint32_t">uint32_t</option>
+					<option value="int64_t">int64_t</option>
+					<option value="uint64_t">uint64_t</option>
+				</select>
+				<span>Length:</span>
+				<input type="text" class="elen" />
 				<input type="text" class="ename" />
 			</span>
 		</div>
@@ -45,4 +63,3 @@
 	</code></pre>
 </body>
 </html>
-
