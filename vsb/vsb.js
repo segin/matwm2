@@ -65,7 +65,7 @@ function addElem() {
 		types.options.add(item);
 	}
 	elem.appendChild(types);
-	var lbl = document.createElement("label");
+	var lbl = document.createElement("span");
 	lbl.textContent = "Length:";
 	elem.appendChild(lbl);
 	var classes = [ "elen", "ename" ];
