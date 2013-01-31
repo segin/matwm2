@@ -77,7 +77,10 @@ function addElem() {
 	list.appendChild(elem);
 }
  
-function resetElemList() { 
+function resetBuilder() {
+	document.getElementById("structname").value = "";
+	document.getElementById("typedefname").value = "";
+	document.getElementById("typedef").checked = false;
 	var elemlist = document.getElementsByClassName("elem");
 	for (var x = elemlist.length; x > 0; x--) { 
 		document.getElementById("elems").removeChild(elemlist[x - 1]); 
