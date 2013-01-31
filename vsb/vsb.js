@@ -1,4 +1,4 @@
-/* vsb.xhtml - Main program UI
+/* vsb.js - Program logic.
  * This file is a part of Visual struct Builder
  * 
  * Copyright © 2013, Kirn Gill II <segin2005@gmail.com>
