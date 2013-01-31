@@ -46,17 +46,8 @@ function addElem() {
 	var types = document.createElement("select");
 	types.className = "etype";
 	types.onchange = function() { 
-		if(types.value == "char_arr") { 
-			var lbl = types.parentElement.getElementsByTagName("span");
-			lbl[0].hidden = false;
-			var len = types.parentElement.getElementsByClassName("elen");
-			len[0].hidden = false;
-		} else { 
-			var lbl = types.parentElement.getElementsByTagName("span");
-			lbl[0].hidden = true;
-			var len = types.parentElement.getElementsByClassName("elen");
-			len[0].hidden = true;
-		}
+		var len = types.parentElement.getElementsByClassName("elen");
+		len[0].disabled = !(types.value == "char_arr");
 	};
 	for(var i = 0; i < typesList.length; i++) { 
 		var item = new Option();
@@ -98,3 +89,26 @@ function typedefHide() {
 	document.getElementById("tdnh").hidden = !document.getElementById("typedef").checked;
 }
 
+function generateCode() { 
+	var struct, structName = document.getElementById("structname").value;
+	var types = document.getElementsByClassName("etype");
+	var lengths = document.getElementsByClassName("elen");
+	var names = document.getElementsByClassName("ename");
+	struct = "struct " + structName + " {\n";
+	for(var i = 0; i < types.length; i++) { 
+		var type, name;
+		if (types[i].value == "char_arr") { 
+			type = "char";
+			name = names[i].value + "[" + lengths[i].value + "]"
+		} else {
+			type = types[i].value;
+			name = names[i].value;
+		}
+		if (type.length < 8) {
+			type += "\t";
+		}
+		struct += "\t" + type + "\t" + name + ";\n";
+	}
+	struct += "};";
+	document.getElementById("output").textContent = struct;
+}
