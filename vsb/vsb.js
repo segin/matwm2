@@ -88,8 +88,8 @@ function addElem() {
  
 function resetElemList() { 
 	var elemlist = document.getElementsByClassName("elem");
-	for (var x = 0; x < elemlist.length; x++) { 
-		document.getElementById("elems").removeChild(elemlist[x]); 
+	for (var x = elemlist.length; x > 0; x--) { 
+		document.getElementById("elems").removeChild(elemlist[x - 1]); 
 	}
 	addElem();
 }
