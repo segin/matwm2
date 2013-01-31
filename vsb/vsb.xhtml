@@ -29,6 +29,7 @@
 
 	<div>
 		<button type="button" onclick="resetElemList();">Reset Builder</button>
+		<button type="button" onclick="addElem();">Add Element</button>
 	</div>
 	<div id="builder">
 		<label for="typedef">TypeDef?</label>
@@ -41,8 +42,10 @@
 			/* Create the initial element */
 			addElem();
 		</script>
-		<label for="typedefname" class="tdn">Type name:</label>
-		<input type="text" id="typedefname" class="tdn" />
+		<div id="tdnh">
+			<label for="typedefname" class="tdn">Type name:</label>
+			<input type="text" id="typedefname" class="tdn" />
+		</div>
 	</div>
 
 	<p>Output structure:</p>
