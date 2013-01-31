@@ -90,11 +90,15 @@ function typedefHide() {
 }
 
 function generateCode() { 
-	var struct, structName = document.getElementById("structname").value;
+	var struct = "", structName = document.getElementById("structname").value;
 	var types = document.getElementsByClassName("etype");
 	var lengths = document.getElementsByClassName("elen");
 	var names = document.getElementsByClassName("ename");
-	struct = "struct " + structName + " {\n";
+	var typedef = document.getElementById("typedef");
+	if (typedef.checked) {
+		struct = "typedef ";
+	}
+	struct += "struct " + structName + " {\n";
 	for(var i = 0; i < types.length; i++) { 
 		var type, name;
 		if (types[i].value == "char_arr") { 
@@ -109,6 +113,10 @@ function generateCode() {
 		}
 		struct += "\t" + type + "\t" + name + ";\n";
 	}
-	struct += "};";
+	struct += "}";
+	if (typedef.checked) {
+		struct += " " + document.getElementById("typedefname").value;
+	}
+	struct += ";";
 	document.getElementById("output").textContent = struct;
 }
