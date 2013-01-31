@@ -15,9 +15,53 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
- 
+
+var typesList = [ 
+	"char_arr",
+	"int8_t",
+	"uint8_t", 
+	"int16_t",
+	"uint16_t",
+	"int32_t",
+	"uint32_t",
+	"int64_t",
+	"uint64_t"
+];
+
+var typesName = [ 
+	"char[]",
+	"int8_t",
+	"uint8_t", 
+	"int16_t",
+	"uint16_t",
+	"int32_t",
+	"uint32_t",
+	"int64_t",
+	"uint64_t"
+];
+
 function addElem() { 
- 
+	var elem = document.createElement("span");
+	elem.className = "elem"; 
+	var types = document.createElement("select");
+	types.className = "etype";
+	for(var i = 0; i < typesList.length; i++) { 
+		var item = new Option();
+		item.value = typesList[i];
+		item.text = typesName[i];
+		types.options.add(item);
+	}
+	elem.appendChild(types);
+	var lbl = document.createElement("label");
+	lbl.textContent = "Length:";
+	elem.appendChild(lbl);
+	var classes = [ "elen", "ename" ];
+	for(var i = 0; i < classes.length; i++) { 
+		var input = document.createElement("input");
+		input.className = classes[i];
+		input.type = "text";
+		elem.appendChild(input);
+	}
 }
  
 function resetElemList() { 
