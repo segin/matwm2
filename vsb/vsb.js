@@ -47,12 +47,12 @@ function addElem() {
 	types.className = "etype";
 	types.onchange = function() { 
 		if(types.value == "char_arr") { 
-			var lbl = types.parentElement.getElementsByTagName("label");
+			var lbl = types.parentElement.getElementsByTagName("span");
 			lbl[0].hidden = false;
 			var len = types.parentElement.getElementsByClassName("elen");
 			len[0].hidden = false;
 		} else { 
-			var lbl = types.parentElement.getElementsByTagName("label");
+			var lbl = types.parentElement.getElementsByTagName("span");
 			lbl[0].hidden = true;
 			var len = types.parentElement.getElementsByClassName("elen");
 			len[0].hidden = true;
