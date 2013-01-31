@@ -16,7 +16,11 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
  
- function resetElemList() { 
+function addElem() { 
+ 
+}
+ 
+function resetElemList() { 
 	var elemlist = document.getElementsByClassName("elem");
 	for (var x = 0; x < elemlist.length; x++) { 
 		document.getElementById("elems").removeChild(elemlist[x]); 
