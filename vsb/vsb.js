@@ -45,6 +45,19 @@ function addElem() {
 	elem.className = "elem"; 
 	var types = document.createElement("select");
 	types.className = "etype";
+	types.onchange = function() { 
+		if(types.value == "char_arr") { 
+			var lbl = types.parentElement.getElementsByTagName("label");
+			lbl[0].hidden = false;
+			var len = types.parentElement.getElementsByClassName("elen");
+			len[0].hidden = false;
+		} else { 
+			var lbl = types.parentElement.getElementsByTagName("label");
+			lbl[0].hidden = true;
+			var len = types.parentElement.getElementsByClassName("elen");
+			len[0].hidden = true;
+		}
+	};
 	for(var i = 0; i < typesList.length; i++) { 
 		var item = new Option();
 		item.value = typesList[i];
