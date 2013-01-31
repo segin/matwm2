@@ -91,4 +91,5 @@ function resetElemList() {
 	for (var x = 0; x < elemlist.length; x++) { 
 		document.getElementById("elems").removeChild(elemlist[x]); 
 	}
+	addElem();
 }
