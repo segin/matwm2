@@ -49,7 +49,7 @@ function moveUp() {
 	var length, lengths = document.getElementsByClassName("elen");
 	var name, names = document.getElementsByClassName("ename");
 	var check, checks = document.getElementsByClassName("mvchk");
-	if (checks[0].checked == true) {
+	if (checks[0].checked || getCount() == 0) {
 		return; 
 	}
 	for(var i = 0; i < getCount(); i++) {
@@ -77,7 +77,7 @@ function moveDown() {
 	var length, lengths = document.getElementsByClassName("elen");
 	var name, names = document.getElementsByClassName("ename");
 	var check, checks = document.getElementsByClassName("mvchk");
-	if (checks[getCount() - 1].checked == true) {
+	if (checks[getCount() - 1].checked || getCount() == 0) {
 		return; 
 	}
 	for(var i = getCount() - 1; i >= 0; i--) {
