@@ -69,7 +69,7 @@ function addElem() {
 	var btn = document.createElement("button");
 	btn.textContent = "Remove";
 	btn.onclick = function() {
-		btn.parentElement.removeChild(); 
+		btn.parentElement.parentElement.removeChild(btn.parentElement); 
 	};
 	elem.appendChild(btn);
 	elem.appendChild(document.createElement("br"));
