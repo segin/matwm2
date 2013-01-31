@@ -41,15 +41,63 @@ var typesName = [
 ];
 
 function getCount() {
-	return document.getElementsByClassName("elem").count;
+	return document.getElementsByClassName("elem").length;
 }
 
 function moveUp() {
-	
+	var type, types = document.getElementsByClassName("etype");
+	var length, lengths = document.getElementsByClassName("elen");
+	var name, names = document.getElementsByClassName("ename");
+	var check, checks = document.getElementsByClassName("mvchk");
+	if (checks[0].checked == true) {
+		return; 
+	}
+	for(var i = 0; i < getCount(); i++) {
+		if (checks[i].checked) { 
+			type = types[i - 1].value;
+			length = lengths[i - 1].value;
+			name = names[i - 1].value;
+			check = checks[i - 1].checked;
+			types[i - 1].value = types[i].value;
+			lengths[i - 1].value = lengths[i].value;
+			names[i - 1].value = names[i].value;
+			checks[i - 1].checked = checks[i].checked;
+			types[i].value = type;
+			lengths[i].value = length;
+			names[i].value = name;
+			checks[i].checked = check;
+			types[i].onchange();
+			types[i - 1].onchange();
+		}
+	}
 }
 
 function moveDown() {
-	
+	var type, types = document.getElementsByClassName("etype");
+	var length, lengths = document.getElementsByClassName("elen");
+	var name, names = document.getElementsByClassName("ename");
+	var check, checks = document.getElementsByClassName("mvchk");
+	if (checks[getCount() - 1].checked == true) {
+		return; 
+	}
+	for(var i = getCount() - 1; i >= 0; i--) {
+		if (checks[i].checked) { 
+			type = types[i + 1].value;
+			length = lengths[i + 1].value;
+			name = names[i + 1].value;
+			check = checks[i + 1].checked;
+			types[i + 1].value = types[i].value;
+			lengths[i + 1].value = lengths[i].value;
+			names[i + 1].value = names[i].value;
+			checks[i + 1].checked = checks[i].checked;
+			types[i].value = type;
+			lengths[i].value = length;
+			names[i].value = name;
+			checks[i].checked = check;
+			types[i].onchange();
+			types[i + 1].onchange();
+		}
+	}
 }
 
 function addElem() { 
