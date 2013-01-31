@@ -93,3 +93,8 @@ function resetElemList() {
 	}
 	addElem();
 }
+
+function typedefHide() {
+	document.getElementById("tdnh").hidden = !document.getElementById("typedef").checked;
+}
+

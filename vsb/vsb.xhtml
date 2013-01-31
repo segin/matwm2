@@ -33,23 +33,27 @@
 	</div>
 	<div id="builder">
 		<label for="typedef">TypeDef?</label>
-		<input type="checkbox" id="typedef" />
+		<input type="checkbox" id="typedef" onclick="typedefHide();"/>
 		<label for="structname">struct</label>
 		<input type="text" id="structname" />
 		<div id="elems">
 		</div>
-		<script type="text/javascript">
-			/* Create the initial element */
-			addElem();
-		</script>
 		<div id="tdnh">
 			<label for="typedefname" class="tdn">Type name:</label>
 			<input type="text" id="typedefname" class="tdn" />
 		</div>
+		<script type="text/javascript">
+			/* Initialize the builder. */
+			addElem();
+			typedefHide();
+		</script>
 	</div>
 
 	<p>Output structure:</p>
 	<pre><code id="output">
+	struct blah {
+		blah blah;
+	}
 	</code></pre>
 </body>
 </html>
