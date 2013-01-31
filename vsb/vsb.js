@@ -75,6 +75,15 @@ function addElem() {
 		input.type = "text";
 		elem.appendChild(input);
 	}
+	var btn = document.createElement("button");
+	btn.textContent = "Remove";
+	btn.onclick = function() {
+		btn.parentElement.remove(); 
+	};
+	elem.appendChild(btn);
+	elem.appendChild(document.createElement("br"));
+	var list = document.getElementById("elems");
+	list.appendChild(elem);
 }
  
 function resetElemList() { 
