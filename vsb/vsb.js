@@ -82,7 +82,7 @@ function addElem() {
 	};
 	elem.appendChild(btn);
 	elem.appendChild(document.createElement("br"));
-	var list = document.getElementById("elems");
+	var list = window.document.getElementById("elems");
 	list.appendChild(elem);
 }
  
