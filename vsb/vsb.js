@@ -40,6 +40,18 @@ var typesName = [
 	"uint64_t"
 ];
 
+function getCount() {
+	return document.getElementsByClassName("elem").count;
+}
+
+function moveUp() {
+	
+}
+
+function moveDown() {
+	
+}
+
 function addElem() { 
 	var elem = document.createElement("span");
 	elem.className = "elem"; 
@@ -72,6 +84,10 @@ function addElem() {
 		btn.parentElement.parentElement.removeChild(btn.parentElement); 
 	};
 	elem.appendChild(btn);
+	var chk = document.createElement("input");
+	chk.type = "checkbox";
+	chk.className = "mvchk";
+	elem.appendChild(chk);
 	elem.appendChild(document.createElement("br"));
 	var list = window.document.getElementById("elems");
 	list.appendChild(elem);
