@@ -4,10 +4,13 @@
 /* for fstat() */
 #include <sys/stat.h>
 /* for read() */
-#include <sys/uio.h>
+#ifndef _WIN32 
+# include <sys/uio.h>
+#endif
 #include <unistd.h>
 
 void spawn(char *cmd) { /* run a command with sh -c */
+#ifndef _WIN32
 	if(vfork() == 0) {
 		setsid();
 		if(dn)
@@ -15,6 +18,7 @@ void spawn(char *cmd) { /* run a command with sh -c */
 		execlp("sh", "sh", "-c", cmd, (char *) 0);
 		_exit(0);
 	}
+#endif
 }
 
 int read_file(char *path, char **buf) { /* allocates memory at, and reads a file to *buf */

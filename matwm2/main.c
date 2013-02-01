@@ -2,9 +2,11 @@
 #include <signal.h> /* for signal() */
 /* for waitpid */
 #include <sys/types.h>
-#include <sys/wait.h>
+#ifndef _WIN32
+# include <sys/wait.h>
+# include <sys/resource.h>
+#endif
 #include <sys/time.h>
-#include <sys/resource.h>
 
 Display *dpy = NULL;
 int screen, depth, have_shape, shape_event;
@@ -131,9 +133,11 @@ int main(int argc, char *argv[]) {
 	atexit(&quit);
 	signal(SIGTERM, &sighandler);
 	signal(SIGINT, &sighandler);
+#ifndef _WIN32	
 	signal(SIGHUP, &sighandler);
 	signal(SIGUSR1, &sighandler);
 	signal(SIGCHLD, &sighandler);
+#endif 	
 	/* update EWMH hints */
 	ewmh_update(); /* for this we need wlist to be there and configuration to be read */
 	#ifdef USE_SHAPE
@@ -206,10 +210,12 @@ void sighandler(int sig) {
 	Window sh_root;
 	Display *sh_display;
 	int status;
+#ifndef _WIN32
 	if(sig == SIGCHLD) {
 		waitpid(-1, &status, WNOHANG);
 		return;
 	}
+#endif
 	sh_display = XOpenDisplay(dn); /* we can't use our other display, cause we are very probally in the middle of a XNextEvent() call */
 	if(!sh_display) {
 		fprintf(stderr, NAME ": sighandler(): error: can't open display \"%s\"\n", XDisplayName(dn));
@@ -221,7 +227,9 @@ void sighandler(int sig) {
 	ev.xclient.window = wlist;
 	ev.xclient.message_type = XInternAtom(sh_display, XA_INTERNAL_MESSAGE, False);
 	ev.xclient.format = 32;
+#ifndef _WIN32
 	ev.xclient.data.l[0] = XInternAtom(sh_display, (sig == SIGUSR1) ? XA_REINIT : XA_QUIT, False);
+#endif
 	XSendEvent(sh_display, wlist, False, NoEventMask, &ev);
 	XFlush(sh_display);
 	XSync(sh_display, False);
