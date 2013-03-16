@@ -28,6 +28,9 @@ sub chkifdef {
 }
 
 open H, ">", "all.h";
+print H "/* automatically generated header from makeheader.pl */\n";
+print H "#ifndef __ALL_H__\n";
+print H "#define __ALL_H__\n\n";
 opendir DIR, ".";
 foreach(readdir DIR) {
 	next if not(m/.c$/);
@@ -62,4 +65,5 @@ foreach(readdir DIR) {
 	}
 }
 closedir DIR;
+print H "#endif /* __ALL_H__ */\n";
 close H;
