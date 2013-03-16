@@ -10,7 +10,7 @@ void ewmh_initialize(void) {
 	long d;
 	ewmh_atoms[NET_SUPPORTED] = XInternAtom(dpy, "_NET_SUPPORTED", False);
 	ewmh_atoms[NET_SUPPORTING_WM_CHECK] = XInternAtom(dpy, "_NET_SUPPORTING_WM_CHECK", False);
-	ewmh_atoms[NET_WM_NAME] =	279;//XInternAtom(dpy, "_NET_WM_NAME", False);
+	ewmh_atoms[NET_WM_NAME] = XInternAtom(dpy, "_NET_WM_NAME", False);
 	ewmh_atoms[NET_NUMBER_OF_DESKTOPS] = XInternAtom(dpy, "_NET_NUMBER_OF_DESKTOPS", False);
 	ewmh_atoms[NET_DESKTOP_GEOMETRY] = XInternAtom(dpy, "_NET_DESKTOP_GEOMETRY", False);
 	ewmh_atoms[NET_DESKTOP_VIEWPORT] = XInternAtom(dpy, "_NET_DESKTOP_VIEWPORT", False);
