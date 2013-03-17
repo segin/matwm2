@@ -230,7 +230,7 @@ void client_draw_title(client *c) { /* draw the title pixmap for a client */
 	if(xftfont) {
 		if(c->ewmh_name)
 			XftDrawStringUtf8(c->title_draw, (c == current) ? &xftfg : &xftifg, xftfont, 0, xftfont->ascent, (unsigned char *) c->ewmh_name, strlen(c->ewmh_name));
-	  else XftDrawString8(c->title_draw, (c == current) ? &xftfg : &xftifg, xftfont, 0, xftfont->ascent, (unsigned char *) c->name, strlen(c->name));
+		else XftDrawString8(c->title_draw, (c == current) ? &xftfg : &xftifg, xftfont, 0, xftfont->ascent, (unsigned char *) c->name, strlen(c->name));
 	} else
 	#endif
 	XDrawString(dpy, c->title_pixmap, (c == current) ? gc : igc, 0, font->max_bounds.ascent, c->name, strlen(c->name));
