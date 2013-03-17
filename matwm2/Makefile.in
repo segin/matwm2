@@ -16,7 +16,7 @@ OBJFILES  = actions.o buttons.o client.o config.o defcfg.o drag.o events.o evn.o
 
 all: matwm2
 
-matwm2: $(OBJFILES)
+matwm2: $(OBJFILES) matwm.h
 	$(CC) $(LDFLAGS) -o $@ $(OBJFILES) $(LIBS)
 
 clean:
