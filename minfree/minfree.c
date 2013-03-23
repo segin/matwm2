@@ -4,7 +4,7 @@
  * M M M  I  N N N  FFF   RRR    EEE  EEE
  * M   M  I  N  NN  F     R  R   E    E
  * M   M  I  N   N  F     R   R  EEEE EEEE
- *              the linux crash preventer
+ *               the linux crash preventer
  *
  * Copyright (c) 2013, Mattis Michel <sic_zer0@hotmail.com>
  *
