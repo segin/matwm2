@@ -1,11 +1,12 @@
-NAME=minfree
+PREFIX = /usr/bin
+NAME   = minfree
 
 all: $(NAME)
 
 $(NAME): $(NAME).o
 
 install:
-	install minfree /usr/bin
+	install minfree $(PREFIX)
 
 clean:
 	rm -f $(NAME) $(NAME).o

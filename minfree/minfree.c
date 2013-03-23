@@ -16,11 +16,18 @@
 #include <sys/types.h>
 #include <signal.h>
 
+/* time(), ctime() */
+#include <time.h>
+
 useconds_t interval = 100000;
-int minfree = 100*1024*1024; /* minimum free space in bytes */
+int minfree = 32*1024*1024; /* minimum free space in bytes */
 char *pid_pfx = "/proc/";
 char *pid_sfx = "/statm";
+#ifndef NOPROCINFO
+char *pid_sfx_status = "/status";
+#endif
 char *proc_path = "/proc";
+char *name = "minfree";
 
 signed char isnum[256] = {
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -53,6 +60,18 @@ void openproc(DIR **proc) {
 
 #define scpy(dst, src, pos)  { pos = 0; scat(dst, src, pos) }
 #define scat(dst, src, pos)  { int i = 0; while ((dst[pos] = src[i]) != 0) ++pos, ++i; }
+#define scatn(dst, src, pos) _scatn(dst, src, &(pos))
+
+void _scatn(char *dst, int src, int *pos) {
+	int m = 1;
+	while (src / m > 10)
+		m *= 10;
+	while (m >= 1) {
+		dst[*pos] = '0' + (src / m) % 10;
+		m /= 10;
+		++*pos;
+	}
+}
 
 int stonum(char *str) { /* probly faster */
 	int i = 1, num = 0;
@@ -69,9 +88,18 @@ int main(int argc, char *argv[]) {
 	struct dirent *entry;
 	DIR *proc = NULL;
 	int bpos, i, fd, target_pid, target_size;
-	char buf[512]; /* only needed to read a number, 512 bytes oughta be enough */
+	char buf[2048], buf2[256];
+	time_t t;
+	struct tm *lt;
+
+	if (argc > 1)
+		minfree = strtol(argv[1], NULL, 0) * 1024;
+	if (argc > 2)
+		interval = strtol(argv[2], NULL, 0) * 1000;
 
 	openproc(&proc); /* open /proc so it is ready when we need it */
+	printf("%s started\n", name);
+	printf("treshold = %d kB\ninterval = %d ms\n\n", minfree / 1024, interval / 1000);
 	while (1) {
 		sysinfo(&info);
 		if ((info.freeram + info.bufferram) < minfree/info.mem_unit) {
@@ -83,16 +111,43 @@ int main(int argc, char *argv[]) {
 				scat(buf, pid_sfx, bpos);
 				fd = open(buf, O_RDONLY);
 				if (fd < 0) continue;
-				read(fd, buf, sizeof(buf) - 1);
+				i = read(fd, buf, sizeof(buf) - 1);
 				close(fd);
+				if (i < 0) {
+					printf("read error (%s)\n", buf);
+					continue;
+				}
+
 				i = stonum(buf);
 				if (i > target_size) {
 					target_size = i;
 					target_pid = stonum(entry->d_name);
 				}
 			}
+#ifndef NOPROCINFO
+			scpy(buf, pid_pfx, bpos);
+			scatn(buf, target_pid, bpos);
+			scat(buf, pid_sfx_status, bpos);
+			fd = open(buf, O_RDONLY);
+			if (fd < 0) continue;
+			i = read(fd, buf, sizeof(buf) - 1);
+			close(fd);
+			if (i < 0) {
+				i = 0;
+				printf("read error (%s)\n", buf);
+			}
+			buf[i] = 0;
+#endif
 			kill(target_pid, 9);
-			printf("target %d annihilated\n", target_pid);
+			time(&t);
+			lt = localtime(&t);
+			strftime(buf2, sizeof(buf2), "%F %T", lt);
+			for (i = 6; buf[i] != '\n' && buf[i] != 0; ++i);
+				buf[i] = 0;
+			printf("%s process %d (%s) annihilated\n", buf2, target_pid, buf+6);
+#ifdef ALLPROCINFO
+			printf("%s", buf);
+#endif
 			openproc(&proc); /* close and re-open /proc */
 		}
 		usleep(interval);
