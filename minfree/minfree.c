@@ -55,13 +55,12 @@ void openproc(DIR **proc) {
 #define scat(dst, src, pos)  { int i = 0; while ((dst[pos] = src[i]) != 0) ++pos, ++i; }
 
 int stonum(char *str) { /* probly faster */
-	int i, num;
+	int i = 1, num = 0;
 	signed char x;
-	for (i = 0, num = 0;; ++i) {
-		x = isnum[(int) str[i]];
-		if (x == -1) break;
-		num *= 10, num += x;
-	}
+	if ((x = isnum[(int) str[0]]) == -1) return 0;
+	num += x;
+	while ((x = isnum[(int) str[i]]) != -1)
+		num = num * 10 + x, ++i;
 	return num;
 }
 
