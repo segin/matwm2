@@ -21,8 +21,6 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-
-
 #include <sys/sysinfo.h> /* sysinfo() */
 #include <unistd.h> /* usleep() */
 #include <stdio.h> /* stderr, fprintf() */
