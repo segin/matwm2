@@ -165,11 +165,15 @@ int main(int argc, char *argv[]) {
 			time(&t);
 			lt = localtime(&t);
 			strftime(buf2, sizeof(buf2), "%F %T", lt);
+#if !defined(NOPROCINFO) && !defined(ALLPROCINFO)
 			for (i = 6; buf[i] != '\n' && buf[i] != 0; ++i);
 				buf[i] = 0;
 			printf("%s process %d (%s) annihilated\n", buf2, target_pid, buf+6);
+#else
+			printf("%s process %d annihilated\n", buf2, target_pid);
+#endif
 #ifdef ALLPROCINFO
-			printf("%s", buf);
+			printf("%s\n", buf);
 #endif
 			openproc(&proc); /* close and re-open /proc */
 		}
