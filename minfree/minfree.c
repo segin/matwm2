@@ -1,3 +1,28 @@
+/*
+ * M   M  I  N   N  FFFF  RRR    EEEE EEEE
+ * MM MM  I  NN  N  F     R  R   E    E
+ * M M M  I  N N N  FFF   RRR    EEE  EEE
+ * M   M  I  N  NN  F     R  R   E    E
+ * M   M  I  N   N  F     R   R  EEEE EEEE
+ *              the linux crash preventer
+ *
+ * Copyright (c) 2013, Mattis Michel <sic_zer0@hotmail.com>
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER
+ * RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF
+ * CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
+
+
+
 #include <sys/sysinfo.h> /* sysinfo() */
 #include <unistd.h> /* usleep() */
 #include <stdio.h> /* stderr, fprintf() */
