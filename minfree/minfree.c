@@ -85,7 +85,6 @@ signed char isnum[256] = {
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 };
 
-
 unsigned long long stonum(char *str) { /* probly faster */
 	int i = 1;
 	unsigned long long num = 0;

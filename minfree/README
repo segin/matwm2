@@ -26,4 +26,3 @@ Running:
 	than 64MB memory is free. Or you can tell amount of memory to keep free
 	in kB as the first argument. And the second argument can be an interval
 	in ms to tell it how often to check how much free memory we have.
-

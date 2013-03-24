@@ -10,4 +10,3 @@ install:
 
 clean:
 	rm -f $(NAME) $(NAME).o
-
