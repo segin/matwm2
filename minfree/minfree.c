@@ -42,8 +42,11 @@
 /* time(), ctime() */
 #include <time.h>
 
+/* strcpy(), strcat() */
+#include <string.h>
+
 #ifndef MIN_FREE
-#define MIN_FREE 128*1024 /* minimum free space in kilobytes */
+#define MIN_FREE 64*1024 /* minimum free space in kilobytes */
 #endif
 #ifndef PROC_PATH
 #define PROC_PATH "/proc" /* no trailing slash */
@@ -54,41 +57,14 @@
 
 useconds_t interval = INTERVAL;
 int minfree = MIN_FREE;
+
 char *pid_pfx = PROC_PATH "/";
-char *pid_sfx = "/statm";
-#ifndef NOPROCINFO
-char *pid_sfx_status = "/status";
-#endif
+char *pid_sfx = "/status";
 char *proc_path = PROC_PATH;
 char *meminfo_path = PROC_PATH "/meminfo";
 char *name = "minfree";
 
 char buf[2048];
-
-void openproc(DIR **proc) {
-	if (*proc != NULL)
-		closedir(*proc);
-	*proc = opendir(proc_path);
-	if (*proc == NULL) {
-		fprintf(stderr, "can't open /proc\n");
-		exit(EXIT_FAILURE);
-	}
-}
-
-#define scpy(dst, src, pos)  { pos = 0; scat(dst, src, pos) }
-#define scat(dst, src, pos)  { int i = 0; while ((dst[pos] = src[i]) != 0) ++pos, ++i; }
-#define scatn(dst, src, pos) _scatn(dst, src, &(pos))
-
-void _scatn(char *dst, int src, int *pos) {
-	int m = 1;
-	while (src / m > 10)
-		m *= 10;
-	while (m >= 1) {
-		dst[*pos] = '0' + (src / m) % 10;
-		m /= 10;
-		++*pos;
-	}
-}
 
 signed char isnum[256] = {
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -109,8 +85,10 @@ signed char isnum[256] = {
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 };
 
-int stonum(char *str) { /* probly faster */
-	int i = 1, num = 0;
+
+unsigned long long stonum(char *str) { /* probly faster */
+	int i = 1;
+	unsigned long long num = 0;
 	signed char x;
 	if ((x = isnum[(int) str[0]]) == -1) return 0;
 	num += x;
@@ -118,7 +96,6 @@ int stonum(char *str) { /* probly faster */
 		num = num * 10 + x, ++i;
 	return num;
 }
-
 
 int meminfo_isitem(char *buf, char *item) { /* make sure item is smaller than buf (!) */
 	int i;
@@ -148,6 +125,7 @@ void meminfo_name(char *buf, char *item, char *ret, int l) {
 		while (*buf == ' ' || *buf == '\t') ++buf;
 		while (*buf != '\n' && *buf != 0 && l-- >= 0)
 			*(ret++) = *(buf++);
+		*ret = 0;
 	}
 }
 
@@ -213,6 +191,16 @@ int meminfo_statusread(char *fn, meminfo_status_t *pstatus) {
 	return 1;
 }
 
+void openproc(DIR **proc) {
+	if (*proc != NULL)
+		closedir(*proc);
+	*proc = opendir(proc_path);
+	if (*proc == NULL) {
+		fprintf(stderr, "can't open /proc\n");
+		exit(EXIT_FAILURE);
+	}
+}
+
 int main(int argc, char *argv[]) {
 	struct dirent *entry;
 	DIR *proc = NULL;
@@ -222,13 +210,13 @@ int main(int argc, char *argv[]) {
 	struct tm *lt;
 	meminfo_t minfo;
 	meminfo_status_t pstatus;
+	char target_name[sizeof(pstatus.name)];
 
 	if (argc > 1)
 		minfree = strtol(argv[1], NULL, 0);
 	if (argc > 2)
 		interval = strtol(argv[2], NULL, 0) * 1000;
 
-	openproc(&proc); /* open /proc so it is ready when we need it */
 	printf("%s started\n", name);
 	printf("treshold = %d kB\ninterval = %d ms\n\n", minfree, interval / 1000);
 	while (1) {
@@ -238,55 +226,36 @@ int main(int argc, char *argv[]) {
 		}
 		if ((minfo.free + minfo.buffers + minfo.cache) < minfree) {
 			/* too few memory is available, we quickly find which process to kill */
+			printf("memory running out, finding process to kill\n");
+			openproc(&proc); /* open or re-open /proc */
 			target_size = 0;
 			while((entry = readdir(proc)) != NULL) if (isnum[(int) *entry->d_name] != -1) {
-				scpy(buf, pid_pfx, bpos);
-				scat(buf, entry->d_name, bpos);
-				scat(buf, pid_sfx, bpos);
-				fd = open(buf, O_RDONLY);
-				if (fd < 0) continue;
-				i = read(fd, buf, sizeof(buf) - 1);
-				close(fd);
-				if (i < 0) {
-					printf("read error (%s)\n", buf);
+				strcpy(buf, pid_pfx);
+				strcat(buf, entry->d_name);
+				strcat(buf, pid_sfx);
+				if (meminfo_statusread(buf, &pstatus) <= 0)
 					continue;
-				}
-				i = stonum(buf);
-				printf("%s : %d\n", entry->d_name, i);
-				if (i > target_size) {
-					target_size = i;
+				if (pstatus.size > target_size) {
+					target_size = pstatus.size;
 					target_pid = stonum(entry->d_name);
+					strcpy(target_name, pstatus.name);
 				}
 			}
-#ifndef NOPROCINFO
-			scpy(buf, pid_pfx, bpos);
-			scatn(buf, target_pid, bpos);
-			scat(buf, pid_sfx_status, bpos);
-			fd = open(buf, O_RDONLY);
-			if (fd < 0) continue;
-			i = read(fd, buf, sizeof(buf) - 1);
-			close(fd);
-			if (i < 0) {
-				i = 0;
-				printf("read error (%s)\n", buf);
+			if (meminfo_read(meminfo_path, &minfo) <= 0) {
+				fprintf(stderr, "failed to read meminfo\n");
+				return EXIT_FAILURE;
 			}
-			buf[i] = 0;
-#endif
+			if ((minfo.free + minfo.buffers + minfo.cache) >= minfree) {
+				printf("situation resolved itself somehow, cancelling\n");
+				goto nokill;
+			}
 			kill(target_pid, 9);
 			time(&t);
 			lt = localtime(&t);
 			strftime(buf2, sizeof(buf2), "%F %T", lt);
-#if !defined(NOPROCINFO) && !defined(ALLPROCINFO)
-			for (i = 6; buf[i] != '\n' && buf[i] != 0; ++i);
-				buf[i] = 0;
-			printf("%s process %d (%s) annihilated\n", buf2, target_pid, buf+6);
-#else
-			printf("%s process %d annihilated\n", buf2, target_pid);
-#endif
-#ifdef ALLPROCINFO
-			printf("%s\n", buf);
-#endif
-			openproc(&proc); /* close and re-open /proc */
+			printf("%s process %d (%s) annihilated\n", buf2, target_pid, target_name);
+			usleep(500000); /* sometimes takes a while before /proc is updated */
+			nokill:;
 		}
 		usleep(interval);
 	}
