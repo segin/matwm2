@@ -42,34 +42,28 @@
 /* time(), ctime() */
 #include <time.h>
 
-useconds_t interval = 100000;
-int minfree = 32*1024*1024; /* minimum free space in bytes */
-char *pid_pfx = "/proc/";
+#ifndef MIN_FREE
+#define MIN_FREE 128*1024 /* minimum free space in kilobytes */
+#endif
+#ifndef PROC_PATH
+#define PROC_PATH "/proc" /* no trailing slash */
+#endif
+#ifndef INTERVAL
+#define INTERVAL 100000 /* interval in microseconds */
+#endif
+
+useconds_t interval = INTERVAL;
+int minfree = MIN_FREE;
+char *pid_pfx = PROC_PATH "/";
 char *pid_sfx = "/statm";
 #ifndef NOPROCINFO
 char *pid_sfx_status = "/status";
 #endif
-char *proc_path = "/proc";
+char *proc_path = PROC_PATH;
+char *meminfo_path = PROC_PATH "/meminfo";
 char *name = "minfree";
 
-signed char isnum[256] = {
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-};
+char buf[2048];
 
 void openproc(DIR **proc) {
 	if (*proc != NULL)
@@ -96,6 +90,25 @@ void _scatn(char *dst, int src, int *pos) {
 	}
 }
 
+signed char isnum[256] = {
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+};
+
 int stonum(char *str) { /* probly faster */
 	int i = 1, num = 0;
 	signed char x;
@@ -106,26 +119,124 @@ int stonum(char *str) { /* probly faster */
 	return num;
 }
 
+
+int meminfo_isitem(char *buf, char *item) { /* make sure item is smaller than buf (!) */
+	int i;
+	for (i = 0;; ++i) {
+		if (item[i] != buf[i] || item[i] == 0) {
+			if (item[i] == 0 && buf[i] == ':')
+				return i;
+			return 0;
+		}
+	}
+	return 0;
+}
+
+void meminfo_numitem(char *buf, char *item, unsigned long long *ret) {
+	int x;
+	if ((x = meminfo_isitem(buf, item)) > 0) {
+		buf += x + 1;
+		while (*buf == ' ' || *buf == '\t') ++buf;
+		*ret = stonum(buf);
+	}
+}
+
+void meminfo_name(char *buf, char *item, char *ret, int l) {
+	int x;
+	if ((x = meminfo_isitem(buf, item)) > 0) {
+		buf += x + 1;
+		while (*buf == ' ' || *buf == '\t') ++buf;
+		while (*buf != '\n' && *buf != 0 && l-- >= 0)
+			*(ret++) = *(buf++);
+	}
+}
+
+typedef struct {
+	unsigned long long total;
+	unsigned long long free;
+	unsigned long long buffers;
+	unsigned long long cache;
+} meminfo_t;
+
+typedef struct {
+	char name[128];
+	unsigned long long size;
+} meminfo_status_t;
+
+int meminfo_read(char *fn, meminfo_t *minfo) {
+	int fd, i, j, l = 0;
+	minfo->total = 0;
+	minfo->free = 0;
+	minfo->buffers = 0;
+	minfo->cache = 0;
+	fd = open(fn, O_RDONLY);
+	if (fd == 0) return 0;
+	while (1) {
+		if ((i = read(fd, buf + l, sizeof(buf) - l)) > 0) l += i;
+		if (l <= 0) break;
+		meminfo_numitem(buf, "MemTotal", &minfo->total);
+		meminfo_numitem(buf, "MemFree", &minfo->free);
+		meminfo_numitem(buf, "Buffers", &minfo->buffers);
+		meminfo_numitem(buf, "Cached", &minfo->cache);
+		for (i = 0; i < l && buf[i] != '\n'; ++i);
+		if (buf[i] != '\n') break;
+		++i;
+		for (j = i; i < l; ++i)
+			buf[i - j] = buf[i];
+		l -= j;
+		buf[l] = 0;
+	}
+	close(fd);
+	return 1;
+}
+
+int meminfo_statusread(char *fn, meminfo_status_t *pstatus) {
+	int fd, i, j, l = 0;
+	pstatus->name[0] = 0;
+	pstatus->size = 0;
+	fd = open(fn, O_RDONLY);
+	if (fd == 0) return 0;
+	while (1) {
+		if ((i = read(fd, buf + l, sizeof(buf) - l)) > 0) l += i;
+		if (l <= 0) break;
+		meminfo_name(buf, "Name", pstatus->name, sizeof(pstatus->name));
+		meminfo_numitem(buf, "VmSize", &pstatus->size);
+		for (i = 0; i < l && buf[i] != '\n'; ++i);
+		if (buf[i] != '\n') break;
+		++i;
+		for (j = i; i < l; ++i)
+			buf[i - j] = buf[i];
+		l -= j;
+		buf[l] = 0;
+	}
+	close(fd);
+	return 1;
+}
+
 int main(int argc, char *argv[]) {
-	struct sysinfo info;
 	struct dirent *entry;
 	DIR *proc = NULL;
 	int bpos, i, fd, target_pid, target_size;
-	char buf[2048], buf2[256];
+	char buf2[256];
 	time_t t;
 	struct tm *lt;
+	meminfo_t minfo;
+	meminfo_status_t pstatus;
 
 	if (argc > 1)
-		minfree = strtol(argv[1], NULL, 0) * 1024;
+		minfree = strtol(argv[1], NULL, 0);
 	if (argc > 2)
 		interval = strtol(argv[2], NULL, 0) * 1000;
 
 	openproc(&proc); /* open /proc so it is ready when we need it */
 	printf("%s started\n", name);
-	printf("treshold = %d kB\ninterval = %d ms\n\n", minfree / 1024, interval / 1000);
+	printf("treshold = %d kB\ninterval = %d ms\n\n", minfree, interval / 1000);
 	while (1) {
-		sysinfo(&info);
-		if ((info.freeram + info.bufferram) < minfree/info.mem_unit) {
+		if (meminfo_read(meminfo_path, &minfo) <= 0) {
+				fprintf(stderr, "failed to read meminfo\n");
+				return EXIT_FAILURE;
+		}
+		if ((minfo.free + minfo.buffers + minfo.cache) < minfree) {
 			/* too few memory is available, we quickly find which process to kill */
 			target_size = 0;
 			while((entry = readdir(proc)) != NULL) if (isnum[(int) *entry->d_name] != -1) {
@@ -140,8 +251,8 @@ int main(int argc, char *argv[]) {
 					printf("read error (%s)\n", buf);
 					continue;
 				}
-
 				i = stonum(buf);
+				printf("%s : %d\n", entry->d_name, i);
 				if (i > target_size) {
 					target_size = i;
 					target_pid = stonum(entry->d_name);
@@ -180,4 +291,3 @@ int main(int argc, char *argv[]) {
 		usleep(interval);
 	}
 }
-
