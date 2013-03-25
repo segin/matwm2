@@ -42,7 +42,7 @@
 /* time(), ctime() */
 #include <time.h>
 
-/* strcpy(), strcat(), strerror() */
+/* strcpy(), strcat(), strerror(), strcmp() */
 #include <string.h>
 
 /* errno */
@@ -78,7 +78,7 @@ int list_color = 0;
 #define WHITE 1
 #define BLACK 2
 
-signed char isnum[256] = {128
+signed char isnum[256] = {
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -99,12 +99,12 @@ signed char isnum[256] = {128
 
 unsigned long long stonum(char *str) { /* probly faster */
 	int i = 1;
-	unsigned long long num = 0;
+	unsigned long long num;
 	signed char x;
 	if ((x = isnum[(int) str[0]]) == -1) return 0;
-	num += x;
-	while ((x = isnum[(int) str[i]]) != -1)
-		num = num * 10 + x, ++i;
+	num = x;
+	while ((x = isnum[(int) str[i++]]) != -1)
+		num = num * 10 + x;
 	return num;
 }
 
@@ -212,12 +212,14 @@ int readlist(char *fn) {
 		if (l <= 0) break;
 		for (i = 0; i < l && buf[i] != '\n' && i < sizeof(list[list_len]); ++i)
 			list[list_len][i] = buf[i];
-		++list_len;
+		list[list_len][i] = 0;
+		if (i > 0)
+			++list_len;
 		if (list_len > MAX_LIST_ITEMS) {
 			printf("maximum list items reached\n");
 			goto endreadlist;
 		}
-		if (i != 0) {
+		if (buf[i] != '\n') {
 			printf("list item too long\n");
 			for (; i < l && buf[i] != '\n' && i < sizeof(list[list_len]); ++i);
 		}
@@ -281,7 +283,7 @@ int main(int argc, char *argv[]) {
 	printf("treshold = %d kB\ninterval = %d ms\n\n", minfree, interval / 1000);
 
 	while (1) {
-		if (meminfo_read(meminfo_path, &minfo) <= 0) {
+		if (meminfo_read(meminfo_path, &minfo) == 0) {
 				fprintf(stderr, "failed to read meminfo\n");
 				return EXIT_FAILURE;
 		}
@@ -298,6 +300,18 @@ int main(int argc, char *argv[]) {
 				if (meminfo_statusread(buf, &pstatus) <= 0)
 					continue;
 				if (pstatus.size > target_size) {
+					if (list_color == BLACK) {
+						for (i = 0; i < list_len; ++i)
+							if (strcmp(list[i], pstatus.name) == 0)
+								continue;
+					} else if (list_color == WHITE) {
+						int ok = 1;
+						for (i = 0; i < list_len; ++i)
+							if (strcmp(list[i], pstatus.name) == 0)
+								ok = 0;
+						if (ok == 0)
+							continue;
+					}
 					target_size = pstatus.size;
 					target_pid = stonum(entry->d_name);
 					strcpy(target_name, pstatus.name);
@@ -308,7 +322,7 @@ int main(int argc, char *argv[]) {
 				return EXIT_FAILURE;
 			}
 			if ((minfo.free + minfo.buffers + minfo.cache) >= minfree) {
-				printf("%s situation resolved itself somehow, cancelling\n", gettime());
+				printf("%s situation re<solved itself somehow, cancelling\n", gettime());
 				goto nokill;
 			}
 			if (target_pid == 0) {
@@ -316,7 +330,7 @@ int main(int argc, char *argv[]) {
 				goto nokill;
 			}
 			if (kill(target_pid, 9) != 0) {
-				printf("%s failed to kill %d (%s) (%s)", gettime(), target_pid, target_name, strerror(errno));
+				printf("%s failed to kill %d (%s): %s\n", gettime(), target_pid, target_name, strerror(errno));
 				goto nokill;
 			}
 
