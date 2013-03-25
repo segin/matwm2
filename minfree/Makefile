@@ -6,7 +6,7 @@ all: $(NAME)
 
 $(NAME): $(NAME).o
 
-install:
+install: $(NAME)
 	install minfree $(PREFIX)
 
 clean:
