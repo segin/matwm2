@@ -57,6 +57,9 @@
 #ifndef INTERVAL
 #define INTERVAL 100000 /* interval in microseconds */
 #endif
+#ifndef MAX_LIST_ITEMS
+#define MAX_LIST_ITEMS 2048
+#endif
 
 useconds_t interval = INTERVAL;
 int minfree = MIN_FREE;
@@ -69,12 +72,13 @@ char *name = "minfree";
 
 char buf[2048];
 
-#ifndef NO_LIST
-char list[128][2048];
+char list[MAX_LIST_ITEMS][128];
+int list_len = 0;
+int list_color = 0;
+#define WHITE 1
+#define BLACK 2
 
-#endif
-
-signed char isnum[256] = {
+signed char isnum[256] = {128
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -155,7 +159,7 @@ int meminfo_read(char *fn, meminfo_t *minfo) {
 	minfo->buffers = 0;
 	minfo->cache = 0;
 	fd = open(fn, O_RDONLY);
-	if (fd == 0) return 0;
+	if (fd <= 0) return 0;
 	while (1) {
 		if ((i = read(fd, buf + l, sizeof(buf) - l)) > 0) l += i;
 		if (l <= 0) break;
@@ -180,7 +184,7 @@ int meminfo_statusread(char *fn, meminfo_status_t *pstatus) {
 	pstatus->name[0] = 0;
 	pstatus->size = 0;
 	fd = open(fn, O_RDONLY);
-	if (fd == 0) return 0;
+	if (fd <= 0) return 0;
 	while (1) {
 		if ((i = read(fd, buf + l, sizeof(buf) - l)) > 0) l += i;
 		if (l <= 0) break;
@@ -194,6 +198,37 @@ int meminfo_statusread(char *fn, meminfo_status_t *pstatus) {
 		l -= j;
 		buf[l] = 0;
 	}
+	close(fd);
+	return 1;
+}
+
+int readlist(char *fn) {
+	int fd, i, j, l = 0;
+	fd = open(fn, O_RDONLY);
+	if (fd <= 0) return 0;
+	list_len = 0;
+	while (1) {
+		if ((i = read(fd, buf + l, sizeof(buf) - l)) > 0) l += i;
+		if (l <= 0) break;
+		for (i = 0; i < l && buf[i] != '\n' && i < sizeof(list[list_len]); ++i)
+			list[list_len][i] = buf[i];
+		++list_len;
+		if (list_len > MAX_LIST_ITEMS) {
+			printf("maximum list items reached\n");
+			goto endreadlist;
+		}
+		if (i != 0) {
+			printf("list item too long\n");
+			for (; i < l && buf[i] != '\n' && i < sizeof(list[list_len]); ++i);
+		}
+		if (buf[i] != '\n') break;
+		++i;
+		for (j = i; i < l; ++i)
+			buf[i - j] = buf[i];
+		l -= j;
+		buf[l] = 0;
+	}
+	endreadlist:;
 	close(fd);
 	return 1;
 }
@@ -234,7 +269,17 @@ int main(int argc, char *argv[]) {
 		interval = strtol(argv[2], NULL, 0) * 1000;
 
 	printf("%s %s started\n", gettime(), name);
+
+	if (readlist("/etc/mfwhitelist")) {
+		list_color = WHITE;
+		printf("whitelist found\n");
+	} else if (readlist("/etc/mfblacklist")) {
+		list_color = BLACK;
+		printf("blacklist found\n");
+	} else printf("no white- or blacklist found, all processes targetted\n");
+
 	printf("treshold = %d kB\ninterval = %d ms\n\n", minfree, interval / 1000);
+
 	while (1) {
 		if (meminfo_read(meminfo_path, &minfo) <= 0) {
 				fprintf(stderr, "failed to read meminfo\n");
