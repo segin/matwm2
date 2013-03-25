@@ -203,7 +203,8 @@ void openproc(DIR **proc) {
 int main(int argc, char *argv[]) {
 	struct dirent *entry;
 	DIR *proc = NULL;
-	int bpos, i, fd, target_pid, target_size;
+	int bpos, i, fd, target_size;
+	pid_t target_pid;
 	char buf2[256];
 	time_t t;
 	struct tm *lt;
@@ -228,6 +229,7 @@ int main(int argc, char *argv[]) {
 			printf("memory running out, finding process to kill\n");
 			openproc(&proc); /* open or re-open /proc */
 			target_size = 0;
+			target_pid = 0;
 			while((entry = readdir(proc)) != NULL) if (isnum[(int) *entry->d_name] != -1) {
 				strcpy(buf, pid_pfx);
 				strcat(buf, entry->d_name);
@@ -246,6 +248,10 @@ int main(int argc, char *argv[]) {
 			}
 			if ((minfo.free + minfo.buffers + minfo.cache) >= minfree) {
 				printf("situation resolved itself somehow, cancelling\n");
+				goto nokill;
+			}
+			if (target_pid == 0) {
+				printf("found nothing we are allowed to kill :(\n");
 				goto nokill;
 			}
 			kill(target_pid, 9);

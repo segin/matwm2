@@ -1,5 +1,6 @@
 PREFIX = /usr/bin
 NAME   = minfree
+CFLAGS += -O2
 
 all: $(NAME)
 
