@@ -26,3 +26,12 @@ Running:
 	than 64MB memory is free. Or you can tell amount of memory to keep free
 	in kB as the first argument. And the second argument can be an interval
 	in ms to tell it how often to check how much free memory we have.
+
+Preventing disaster:
+	Sometimes it happens say X11 or something else is always the process
+	using most memory, to prevent such situations from being trouble you can
+	put a list with processes not to be killed in /etc/mfblacklist.
+	A whitelist can also be provided instead in /etc/mfwhitelist, in which
+	case minfree will only kill processes shown on that list.
+	The lists should be newline separated lists of names as they appear	in
+	/proc/x/status. No whitespace other than newlines is allowed.
