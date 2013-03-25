@@ -42,8 +42,11 @@
 /* time(), ctime() */
 #include <time.h>
 
-/* strcpy(), strcat() */
+/* strcpy(), strcat(), strerror() */
 #include <string.h>
+
+/* errno */
+#include <errno.h>
 
 #ifndef MIN_FREE
 #define MIN_FREE 64*1024 /* minimum free space in kilobytes */
@@ -65,6 +68,11 @@ char *meminfo_path = PROC_PATH "/meminfo";
 char *name = "minfree";
 
 char buf[2048];
+
+#ifndef NO_LIST
+char list[128][2048];
+
+#endif
 
 signed char isnum[256] = {
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -200,14 +208,22 @@ void openproc(DIR **proc) {
 	}
 }
 
+char tbuf[256];
+
+char *gettime(void) {
+	time_t t;
+	struct tm *lt;
+	time(&t);
+	lt = localtime(&t);
+	strftime(tbuf, sizeof(tbuf), "%F %T", lt);
+	return tbuf;
+}
+
 int main(int argc, char *argv[]) {
 	struct dirent *entry;
 	DIR *proc = NULL;
 	int bpos, i, fd, target_size;
 	pid_t target_pid;
-	char buf2[256];
-	time_t t;
-	struct tm *lt;
 	meminfo_t minfo;
 	meminfo_status_t pstatus;
 	char target_name[sizeof(pstatus.name)];
@@ -217,7 +233,7 @@ int main(int argc, char *argv[]) {
 	if (argc > 2)
 		interval = strtol(argv[2], NULL, 0) * 1000;
 
-	printf("%s started\n", name);
+	printf("%s %s started\n", gettime(), name);
 	printf("treshold = %d kB\ninterval = %d ms\n\n", minfree, interval / 1000);
 	while (1) {
 		if (meminfo_read(meminfo_path, &minfo) <= 0) {
@@ -247,20 +263,21 @@ int main(int argc, char *argv[]) {
 				return EXIT_FAILURE;
 			}
 			if ((minfo.free + minfo.buffers + minfo.cache) >= minfree) {
-				printf("situation resolved itself somehow, cancelling\n");
+				printf("%s situation resolved itself somehow, cancelling\n", gettime());
 				goto nokill;
 			}
 			if (target_pid == 0) {
-				printf("found nothing we are allowed to kill :(\n");
+				printf("%s found nothing we are allowed to kill :(\n", gettime());
 				goto nokill;
 			}
-			kill(target_pid, 9);
-			time(&t);
-			lt = localtime(&t);
-			strftime(buf2, sizeof(buf2), "%F %T", lt);
-			printf("%s process %d (%s) annihilated\n", buf2, target_pid, target_name);
-			usleep(500000); /* sometimes takes a while before /proc is updated */
+			if (kill(target_pid, 9) != 0) {
+				printf("%s failed to kill %d (%s) (%s)", gettime(), target_pid, target_name, strerror(errno));
+				goto nokill;
+			}
+
+			printf("%s process %d (%s) annihilated\n", gettime(), target_pid, target_name);
 			nokill:;
+			usleep(500000); /* sometimes takes a while before /proc is updated */
 		}
 		usleep(interval);
 	}
