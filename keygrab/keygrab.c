@@ -14,7 +14,7 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * Based upon Logos' CD-Key Grabber for StarCraft, see http://www.bwhacks.com/
+ * Based upon Logos' CD-Key Grabber for StarCraft, see http://www.gamethreat.net/
  * in the forum section for more information.
  */
  
