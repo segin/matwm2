@@ -1,0 +1,76 @@
+#compdef zypper
+#
+# zsh completion for 'zypper' package manager (openSuse)
+#
+# Copyright (C) 2013 Mattis Michel <sic_zer0@hotmail.com>
+#
+
+_zypper() {
+	if (( CURRENT > 2 )); then
+		local cmd=${words[2]}
+		case "$cmd" in
+			'install') _zypper_all ;;
+			'in') _zypper_all ;;
+			'info') _zypper_all ;;
+			'if') _zypper_all ;;
+			'search') _zypper_all ;;
+			'se') _zypper_all ;;
+			'update') _zypper_installed ;;
+			'up') _zypper_installed ;;
+			'remove') _zypper_installed ;;
+			'rm') _zypper_installed ;;
+		esac
+	else
+		compadd install info remove search
+	fi
+}
+
+_zypper_all() {
+	local update=0
+	typeset -gA _zyppercomp_repodates # global
+	for d in /var/cache/zypp/raw/*; do
+		local pkgs=$d/suse/setup/descr/packages.gz;
+		if [[ -e $pkgs ]]; then
+			local newdate=`stat -c "%Z" $pkgs`
+			if [[ "$_zyppercomp_repodates[$pkgs]" != "$newdate" ]]; then
+				_zyppercomp_repodates[$pkgs]="$newdate"
+				update=1
+			fi
+		fi
+		for f in $d/repodata/*primary.xml.gz; do
+			local newdate=`stat -c "%Z" $f`
+			if [[ "$_zyppercomp_repodates[$f]" != "$newdate" ]]; then
+				_zyppercomp_repodates[$f]="$newdate"
+				update=1
+			fi
+		done
+	done
+	if (( update == 1 )); then
+		_zypper_update_repos
+	fi
+	compadd $(echo $_zyppercomp_packages)
+}
+
+_zypper_installed() {
+	local newdate=`stat -c "%Z" /var/lib/rpm/Packages`
+	if [[ "$_zyppercomp_rpm_date" != "$newdate" ]]; then
+		_zyppercomp_rpm_list=`rpm -qa` # global
+		_zyppercomp_rpm_date="$newdate" # global
+	fi
+	compadd $(echo $_zyppercomp_rpm_list)
+}
+
+_zypper_update_repos() {
+	local packages
+	for d in /var/cache/zypp/raw/*; do
+		local pkgs=$d/suse/setup/descr/packages.gz;
+		if [[ -e $pkgs ]]; then
+			packages=($packages `gunzip -c $pkgs | sed -n 's/^=Pkg:\s\s*\([^ ]*\).*$/\1/p'`)
+		fi
+		for f in $d/repodata/*primary.xml.gz; do
+			packages=($packages `gunzip -c $f | sed -n 's/.*<name>\(.*\)<\/name>.*/\1/p'`)
+		done
+	done
+	_zyppercomp_packages=$packages # global
+}
+
