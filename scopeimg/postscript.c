@@ -36,3 +36,5 @@ void draw_text(int x, int y, char *str, int color) {
 	mprintf("newpath %d %d moveto (%s) show\n", lmargin + (width - (x + 1)), height - (y + 1), str);
 }
 
+void draw_finish(void) {
+}

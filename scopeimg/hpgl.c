@@ -87,7 +87,7 @@ void hpgl_plot(char *data) {
 	int pen = 0;
 	int down = 0;
 	double x = 0, y = 0, fontheight = 10;
-	char buf[512];
+	char buf[255];
 
 	draw_init();
 	start:
@@ -142,7 +142,7 @@ void hpgl_plot(char *data) {
 			++data;
 		if (*data == 0) {
 			mfprintf(mstderr, "warning: unexpected EOF or 0\n");
-			return;
+			goto stop;
 		}
 		*data = 0;
 		while (1) {
@@ -166,7 +166,7 @@ void hpgl_plot(char *data) {
 		goto nextcmd;
 	}
 	if (*data == 0)
-		return;
+		goto stop;
 	mfprintf(mstderr, "warning: unknown command\n");
 	nextcmd:
 		while (*data != ';' && *data != '\n' && *data != 0 && *data != 0x03)
@@ -174,10 +174,12 @@ void hpgl_plot(char *data) {
 		++data;
 		if (*data != 0)
 			goto start;
-		return;
+		goto stop;
 	toofew:
 		mfprintf(mstderr, "warning: too few arguments for command\n");
 		goto nextcmd;
+	stop:
+	draw_finish();
 }
 
 #include <stdlib.h> /* NULL, exit(), EXIT_FAILURE, realloc() */
@@ -221,14 +223,11 @@ char *readfile(char *path) {
 	return ret;
 }
 
-#include "bitmap.h"
-
 int main(int argc, char *argv[]) {
 	char *file;
 	mstdio_init();
 	file = readfile((argc > 1) ? argv[1] : NULL);
 	hpgl_plot(file);
-//	bitmap_write();
 	return 0;
 }
 
