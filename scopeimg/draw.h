@@ -4,7 +4,7 @@
 void draw_init(void);
 void draw_dot(int x, int y, int color);
 void draw_line(int x0, int y0, int x1, int y1, int color);
-void draw_text(int x, int y, char *str);
+void draw_text(int x, int y, char *str, int color);
 
 #endif /* __DRAW_H__ */
 

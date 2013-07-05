@@ -81,11 +81,13 @@ int getargs(char **data, int min) {
 
 #include "io.h"
 #include "draw.h"
+#include <string.h> /* strncpy() */
 
 void hpgl_plot(char *data) {
 	int pen = 0;
 	int down = 0;
-	double x = 0, y = 0;
+	double x = 0, y = 0, fontheight = 10;
+	char buf[512];
 
 	draw_init();
 	start:
@@ -135,6 +137,7 @@ void hpgl_plot(char *data) {
 	}
 	if (iscmd(&data, "LB")) {
 		char *str = data;
+		int end;
 		while (*data != 0x03 && *data != 0)
 			++data;
 		if (*data == 0) {
@@ -142,7 +145,24 @@ void hpgl_plot(char *data) {
 			return;
 		}
 		*data = 0;
-		draw_text(x, y, str);
+		while (1) {
+			while (*str == '\n' || *str == '\r') {
+				if (*str == '\n')
+					y += fontheight;
+				++str;
+			}
+			end = 0;
+			while (str[end] != '\n' && str[end] != 0)
+				++end;
+			if (end > sizeof(buf) - 1)
+				end = sizeof(buf) - 1;
+			strncpy(buf, str, end);
+			buf[end] = 0;
+			str += end;
+			draw_text((int) x, (int) y, buf, pen);
+			if (*str != '\n')
+				break;
+		}
 		goto nextcmd;
 	}
 	if (*data == 0)
@@ -208,7 +228,7 @@ int main(int argc, char *argv[]) {
 	mstdio_init();
 	file = readfile((argc > 1) ? argv[1] : NULL);
 	hpgl_plot(file);
-	bitmap_write();
+//	bitmap_write();
 	return 0;
 }
 
