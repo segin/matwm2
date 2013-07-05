@@ -94,11 +94,8 @@ char *readfile(char *path) {
 	int pos = 0, mem = 0, r = 0;
 	ioh_t *infd = mstdin;
 	char *ret = NULL;
-	if (path != NULL) {
+	if (path != NULL)
 		infd = mfopen(path, MFM_RD);
-		if (infd == NULL)
-			return ret;
-	}
 	if (infd == NULL)
 		errexit("failed to open file \"%s\"", path);
 	do {
