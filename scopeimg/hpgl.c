@@ -156,7 +156,8 @@ void hpgl_plot(char *data) {
 				++end;
 			if (end > sizeof(buf) - 1)
 				end = sizeof(buf) - 1;
-			strncpy(buf, str, end);
+			if (end > 0)
+				strncpy(buf, str, end);
 			buf[end] = 0;
 			str += end;
 			draw_text((int) x, (int) y, buf, pen);
@@ -201,7 +202,7 @@ void errexit(char *fmt, ...) {
 char *readfile(char *path) {
 	int pos = 0, mem = 0, r = 0;
 	ioh_t *infd = mstdin;
-	char *ret;
+	char *ret = NULL;
 	if (path != NULL)
 		infd = mfopen(path, MFM_RD);
 	if (infd == NULL)
@@ -230,4 +231,3 @@ int main(int argc, char *argv[]) {
 	hpgl_plot(file);
 	return 0;
 }
-

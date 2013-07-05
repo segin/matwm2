@@ -8,4 +8,3 @@ void draw_text(int x, int y, char *str, int color);
 void draw_finish(void);
 
 #endif /* __DRAW_H__ */
-
