@@ -115,14 +115,14 @@ void hpgl_plot(char *data) {
 		if (!getargs(&data, 2))
 			goto toofew;
 		if (down) {
-			draw_line(x, y, args[0], args[1]);
+			draw_line((int) x, (int) y, (int) args[0], (int) args[1], pen);
 		}
 		x = args[0];
 		y = args[1];
 		goto nextcmd;
 	}
 	if (iscmd(&data, "PD;PU")) {
-		draw_dot(x, y);
+		draw_dot((int) x, (int) y, pen);
 		goto nextcmd;
 	}
 	if (iscmd(&data, "PD")) {
