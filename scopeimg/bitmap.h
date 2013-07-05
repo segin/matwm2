@@ -4,3 +4,4 @@
 void bitmap_write(void);
 
 #endif /* __BITMAP_H__ */
+

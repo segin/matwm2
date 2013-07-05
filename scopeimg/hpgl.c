@@ -201,11 +201,14 @@ char *readfile(char *path) {
 	return ret;
 }
 
+#include "bitmap.h"
+
 int main(int argc, char *argv[]) {
 	char *file;
 	mstdio_init();
 	file = readfile((argc > 1) ? argv[1] : NULL);
 	hpgl_plot(file);
+	bitmap_write();
 	return 0;
 }
 
