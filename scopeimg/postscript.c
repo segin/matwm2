@@ -18,7 +18,7 @@ char *colors[9] = {
 };
 
 void draw_init(void) {
-	mprintf("%%!PS-Adobe-3.0 EPSF-3.0\n%%%%BoundingBox: 0 0 541 741\n1 setlinewidth\n/ComputerModern findfont\n6.8 scalefont\nsetfont\n");
+	mprintf("%%!PS-Adobe-3.0 EPSF-3.0\n%%%%BoundingBox: 0 0 541 741\n0.1 setlinewidth\n/DejaVuSansMono findfont\n6.8 scalefont\nsetfont\n");
 }
 
 void draw_dot(int x, int y, int color) {
