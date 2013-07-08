@@ -57,7 +57,7 @@ void draw_init(void) {
 		fontfail();
 	if (FT_New_Face(library, "/usr/share/fonts/truetype/DejaVuSansMono.ttf", 0, &face))
 		fontfail();
-	if (FT_Set_Char_Size(face, 0*64, 300, 100, 100))
+	if (FT_Set_Char_Size(face, 0*64, 5*64, 100, 100))
 		fontfail();
 	if (FT_Select_Charmap(face, FT_ENCODING_UNICODE))
 		fontfail();
@@ -111,9 +111,9 @@ void draw_text(int x, int y, char *str, int color) {
 					break;
 			}
 			if (cbm->buffer[xo + yo * cbm->width] > 0)
-				plot((xp >> 8) + x + xo + face->glyph->bitmap_left, y + yo - face->glyph->bitmap_top, color, cbm->buffer[xo + yo * cbm->width]);
+				plot((xp >> 6) + x + xo + face->glyph->bitmap_left, y + yo - face->glyph->bitmap_top, color, cbm->buffer[xo + yo * cbm->width]);
 		}
-		xp += advance;
+		xp += face->glyph->advance.x;
 	}
 }
 
