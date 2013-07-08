@@ -98,13 +98,13 @@ void hpgl_plot(char *data) {
 	if (iscmd(&data, "SC")) {
 		if (!getargs(&data, 4))
 			goto toofew;
-		/* TODO set the scale */
+		/* TODO? set the scale */
 		goto nextcmd;
 	}
 	if (iscmd(&data, "SR")) {
 		if (!getargs(&data, 2))
 			goto toofew;
-		/* TODO set font size */
+		/* TODO? set font size */
 		goto nextcmd;
 	}
 	if (iscmd(&data, "SP")) {
@@ -156,11 +156,12 @@ void hpgl_plot(char *data) {
 				++end;
 			if (end > sizeof(buf) - 1)
 				end = sizeof(buf) - 1;
-			if (end > 0)
+			if (end > 0) {
 				strncpy(buf, str, end);
-			buf[end] = 0;
-			str += end;
-			draw_text((int) x, (int) y, buf, pen);
+				buf[end] = 0;
+				str += end;
+				draw_text((int) x, (int) y, buf, pen);
+			}
 			if (*str != '\n')
 				break;
 		}

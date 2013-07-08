@@ -19,7 +19,7 @@ int colors[] = {
 	0x00AA00,
 	0xAA0000,
 	0x00AAAA,
-	0x000000,
+	0x999999,
 	0x000000,
 	0x000000,
 	0x000000,
@@ -96,7 +96,7 @@ void draw_line(int x0, int y0, int x1, int y1, int color) {
 }
 
 void draw_text(int x, int y, char *str, int color) {
-	int xo, yo, xp = 0;
+	int xo, yo, xp = 0, err = 0, advance = (bwidth * 0x100) / 123;
 	FT_Bitmap *cbm;
 	x = bwidth - (x + 1);
 	for (; *str != 0; ++str) {
@@ -110,9 +110,9 @@ void draw_text(int x, int y, char *str, int color) {
 					break;
 			}
 			if (cbm->buffer[xo + yo * cbm->width] > 0)
-				plot(xp + x + xo + face->glyph->bitmap_left, y + yo - face->glyph->bitmap_top, color, cbm->buffer[xo + yo * cbm->width]);
+				plot((xp >> 8) + x + xo + face->glyph->bitmap_left, y + yo - face->glyph->bitmap_top, color, cbm->buffer[xo + yo * cbm->width]);
 		}
-		xp += face->glyph->advance.x >> 6; /* TODO tighter scaling */
+		xp += advance;
 	}
 }
 
