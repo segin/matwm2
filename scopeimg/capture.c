@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
 
 	fd = openterm(device);
 	if (fd < 0) {
-		perror("error");
+		fprintf(stderr, "Error opening device '%s'.\n", device);
 		return EXIT_FAILURE;
 	}
 	do {
