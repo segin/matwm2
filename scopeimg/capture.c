@@ -20,7 +20,7 @@ struct termios oldattr;
 
 int openterm(char *filename) {
 	struct termios tattr;
-	int mcs, fd = open(filename, O_RDWR | O_NOCTTY);
+	int fd = open(filename, O_RDWR | O_NOCTTY);
 	if (fd < 0)
 		return fd;
 	tcflush(fd, TCIOFLUSH);
@@ -76,7 +76,7 @@ int getfile(int fd) {
 		int i, ofd, flen = 0;
 		char filename[128] = "capture.txt";
 		time_t t = time(NULL);
-		snprintf(filename, sizeof(filename), "capture-%d.txt", t);
+		snprintf(filename, sizeof(filename), "capture-%d.txt", (int) t);
 		fprintf(stderr, "\tReceiving '%s'\n", filename);
 		ofd = open(filename, O_RDWR | O_CREAT, 644);
 		if (ofd < 0)
@@ -94,7 +94,7 @@ int getfile(int fd) {
 			flen += i;
 			ftruncate(ofd, flen);
 			close(ofd);
-			fprintf(stderr, "\tDone.\n", filename);
+			fprintf(stderr, "\tDone.\n");
 			return 1;
 		nocreat:
 			fprintf(stderr, "\tError opening file '%s'.\n", filename);
