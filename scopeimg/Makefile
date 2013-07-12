@@ -15,4 +15,4 @@ plt2ppm: $(OBJS_PPM)
 	$(CC) $(LDFLAGS) `pkg-config --libs freetype2` $(OBJS_PPM) -o $@
 
 clean:
-	rm -rf *.o capture plt2ps
+	rm -rf *.o capture plt2ps plt2ppm
