@@ -6,7 +6,7 @@
 #include <termios.h> /* tcsetattr() */
 #include <stdio.h> /* perror() */
 #include <stdlib.h> /* EXIT_FAILURE */
-#include <string.h> /* memcpy() */
+#include <string.h> /* memcpy(), strcmp() */
 #include <time.h> /* time() */
 /* ioctl(), TIOCMGET, TIOCMSET */
 #include <sys/ioctl.h>
@@ -14,7 +14,7 @@
 
 #define DEVICE_DEFAULT "/dev/ttyUSB0"
 
-int softflow = 1;
+int softflow = 0;
 int speed = B19200;
 struct termios oldattr;
 
@@ -106,8 +106,14 @@ int getfile(int fd) {
 }
 
 int main(int argc, char *argv[]) {
-	int fd;
+	int fd, i;
 	char *device = DEVICE_DEFAULT;
+
+	++argv, --argc;
+	for (i = 0; i < argc; ++i) {
+		if (strcmp(argv[i], "-x") == 0)
+			softflow = 1;
+	}
 
 	fd = openterm(device);
 	if (fd < 0) {
