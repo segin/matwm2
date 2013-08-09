@@ -30,15 +30,24 @@ int main() {
 		die();	
 	}
 
+	srand(time(NULL));
+
 	while (1) {
 		double t;      
+		char r = rand() % 256, g = rand() % 256, b = rand() % 256;  
 		pixelColor(screen, first[X], first[Y], 0xFFFFFFFF);
 		pixelColor(screen, second[X], second[Y], 0xFFFFFFFF);
+
 		for(t = 0.0; t < 1.0; t += 0.003) {
 			short sol[2];
 			compute_subpoint(first, second, (short *) &sol, t);
-			pixelColor(screen, sol[X], sol[Y], 0xFFFFFFFF);
+			pixelRGBA(screen, sol[X], sol[Y], r, g, b, 0xFF);
 		};
+		first[X] = rand() % 640;
+		first[Y] = rand() % 480;
+		second[X] = rand() % 640;
+		second[Y] = rand() % 480; 
+		
 		SDL_UpdateRect(screen, 0, 0, 0, 0);
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
