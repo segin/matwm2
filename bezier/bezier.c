@@ -16,8 +16,8 @@ void compute_subpoint(short first[2], short second[2], short *sol, double t) {
 }
 
 int main() {
-	short first[2] = { 100, 100 };
-	short second[2] = { 240, 320 };
+	short first[2] = { 150, 150 };
+	short second[2] = { 100, 100 };
 	if ((SDL_Init(SDL_INIT_VIDEO) > 0)) {
 		die();
 	}
@@ -26,16 +26,16 @@ int main() {
 		die();	
 	}
 
+	double t;      
+	pixelColor(screen, first[X], first[Y], 0xFFFFFFFF);
+	pixelColor(screen, second[X], second[Y], 0xFFFFFFFF);
+	for(t = 0; t < 1; t += 0.003) {
+		short sol[2];
+		compute_subpoint(first, second, (short *) &sol, t);
+		pixelColor(screen, sol[X], sol[Y], 0xFFFFFFFF);
+	}
+
 	while (1) {
-		double t;      
-      pixelColor(screen, first[X], first[Y], 0xFFFFFFFF);
-		pixelColor(screen, second[X], second[Y], 0xFFFFFFFF);
-		for(t = 0; t < 1; t += 0.003) {
-			short sol[2];
-			compute_subpoint(first, second, (short *) &sol, t);
-			pixelColor(screen, sol[X], sol[Y], 0xFFFFFFFF);
-		}
-		//render();
 		
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
