@@ -5,7 +5,7 @@ void die() {
    exit(9001);
 }
 
-void compute_subpoint(short first[2], short second[2], short *sol, float t) {
+void compute_subpoint(short first[2], short second[2], short *sol, double t) {
 	short delta[2], psol[2];
 	delta[X] = first[X] - second[X];
 	delta[Y] = first[Y] - second[Y];
@@ -17,7 +17,7 @@ void compute_subpoint(short first[2], short second[2], short *sol, float t) {
 
 int main() {
 	short first[2] = { 100, 100 };
-	short second[2] = { 150, 150 };
+	short second[2] = { 240, 320 };
 	if ((SDL_Init(SDL_INIT_VIDEO) > 0)) {
 		die();
 	}
@@ -27,9 +27,9 @@ int main() {
 	}
 
 	while (1) {
-		float t;      
-      pixelColor(screen, 100, 100, 0xFFFFFFFF);
-		pixelColor(screen, 150, 150, 0xFFFFFFFF);
+		double t;      
+      pixelColor(screen, first[X], first[Y], 0xFFFFFFFF);
+		pixelColor(screen, second[X], second[Y], 0xFFFFFFFF);
 		for(t = 0; t < 1; t += 0.003) {
 			short sol[2];
 			compute_subpoint(first, second, (short *) &sol, t);
