@@ -6,12 +6,16 @@ void die() {
 }
 
 void compute_subpoint(short first[2], short second[2], short *sol, double t) {
-	short delta[2], psol[2];
-	delta[X] = first[X] - second[X];
-	delta[Y] = first[Y] - second[Y];
+	short delta[2];
+	double psol[2];
+	delta[X] = second[X] - first[X];
+//	printf("delta[X] (%hd) = second[X] (%hd) - first[X] (%hd)\n", delta[X], second[X], first[X]);
+	delta[Y] = second[Y] - first[Y];
 	psol[X] = delta[X] * t;
+//	printf("psol[X] (%f) = delta[X] (%hd) * t (%f)\n", psol[X], delta[X], t);
 	psol[Y] = delta[Y] * t;
 	sol[X] = first[X] + psol[X];
+//	printf("sol[X] (%hd) = first[X] (%hd) + psol[X] (%f)\n",sol[X], first[X], psol[X]);
 	sol[Y] = first[Y] + psol[Y];
 }
 
@@ -26,17 +30,16 @@ int main() {
 		die();	
 	}
 
-	double t;      
-	pixelColor(screen, first[X], first[Y], 0xFFFFFFFF);
-	pixelColor(screen, second[X], second[Y], 0xFFFFFFFF);
-	for(t = 0; t < 1; t += 0.003) {
-		short sol[2];
-		compute_subpoint(first, second, (short *) &sol, t);
-		pixelColor(screen, sol[X], sol[Y], 0xFFFFFFFF);
-	}
-
 	while (1) {
-		
+		double t;      
+		pixelColor(screen, first[X], first[Y], 0xFFFFFFFF);
+		pixelColor(screen, second[X], second[Y], 0xFFFFFFFF);
+		for(t = 0.0; t < 1.0; t += 0.003) {
+			short sol[2];
+			compute_subpoint(first, second, (short *) &sol, t);
+			pixelColor(screen, sol[X], sol[Y], 0xFFFFFFFF);
+		};
+		SDL_UpdateRect(screen, 0, 0, 0, 0);
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
 			switch (event.type) {
