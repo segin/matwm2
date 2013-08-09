@@ -27,11 +27,12 @@ int main() {
 	}
 
 	while (1) {
+		float t;      
       pixelColor(screen, 100, 100, 0xFFFFFFFF);
 		pixelColor(screen, 150, 150, 0xFFFFFFFF);
-		for(float t = 0; t < 1; t += 0.001) {
+		for(t = 0; t < 1; t += 0.001) {
 			short sol[2];
-			compute_subpoint(first, second, &sol, t);
+			compute_subpoint(first, second, (short *) &sol, t);
 			pixelColor(screen, sol[X], sol[Y], 0xFFFFFFFF);
 		}
 		//render();
