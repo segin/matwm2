@@ -80,7 +80,7 @@ int main() {
 		second[Y] = rand() % 480; 
 		*/		
 		double points[6][2] = { { 12, 366 }, { 124, 13 }, { 237, 277 }, { 348, 102 }, {460, 189 }, { 348, 277 } };		
-		for(t = 0.0; t < 1.0; t += 0.003) {
+		for(t = 0.0; t < 1.0; t += 0.00003) {
 			short sol[2];
 			compute_bezier_point(5, points, sol, t);
 			pixelColor(screen, sol[X], sol[Y], 0xFFFFFFFF);
