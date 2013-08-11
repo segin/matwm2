@@ -40,13 +40,13 @@ void compute_bezier_point(short order, short ipoints[][2], short *sol, double t)
 	};
 	sol[X] = npoints[order][0][X];
 	sol[Y] = npoints[order][0][Y];
-/*	for (i = 0; i < (order + 1); i++) {
+	for (i = 0; i < (order + 1); i++) {
 		for(j = 0; j <= (order + 1) - i; j++) { 
 			free((void *) npoints[i][j]);
 		};
 		free((void *) npoints[i]);
 	};
-	free((void *) npoints); */
+	free((void *) npoints);
 }
 
 int main() {
