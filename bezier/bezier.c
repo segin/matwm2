@@ -66,7 +66,6 @@ int main() {
 		double t;
 		/*
 		char r = rand() % 256, g = rand() % 256, b = rand() % 256;  
-		char r = rand() % 256, g = rand() % 256, b = rand() % 256;  
 		pixelColor(screen, first[X], first[Y], 0xFFFFFFFF);
 		pixelColor(screen, second[X], second[Y], 0xFFFFFFFF);
 
@@ -79,7 +78,14 @@ int main() {
 		first[Y] = rand() % 480;
 		second[X] = rand() % 640;
 		second[Y] = rand() % 480; 
-		
+		*/		
+		short points[6][2] = { { 12, 366 }, { 124, 13 }, { 237, 277 }, { 348, 102 }, {460, 189 }, { 348, 277 } };		
+		for(t = 0.0; t < 1.0; t += 0.003) {
+			short sol[2];
+			compute_bezier_point(5, points, sol, t);
+			pixelColor(screen, sol[X], sol[Y], 0xFFFFFFFF);
+		};
+
 		SDL_UpdateRect(screen, 0, 0, 0, 0);
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
