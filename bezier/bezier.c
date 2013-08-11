@@ -5,7 +5,7 @@ void die() {
    exit(9001);
 }
 
-void compute_subpoint(short first[2], short second[2], short *sol, double t) {
+void compute_subpoint(double first[2], double second[2], short *sol, double t) {
 	short delta[2];
 	double psol[2];
 	delta[X] = second[X] - first[X];
@@ -19,14 +19,14 @@ void compute_subpoint(short first[2], short second[2], short *sol, double t) {
 	sol[Y] = first[Y] + psol[Y];
 }
 
-void compute_bezier_point(short order, short ipoints[][2], short *sol, double t) {
+void compute_bezier_point(short order, double ipoints[][2], short *sol, double t) {
 	short int ***npoints;
 	int i, j;
-	npoints = malloc(sizeof(short *) * (order + 1));
+	npoints = malloc(sizeof(double *) * (order + 1));
 	for (i = 0; i < (order + 1); i++) {
-		npoints[i] = malloc(sizeof(short *) * ((order + 1) - i));
+		npoints[i] = malloc(sizeof(double *) * ((order + 1) - i));
 		for(j = 0; j < (order + 1) - i; j++) { 
-			npoints[i][j] = malloc(sizeof(short) * 2);
+			npoints[i][j] = malloc(sizeof(double) * 2);
 		};
 	};
 	for (i = 0; i < order + 1; i++) {
@@ -79,7 +79,7 @@ int main() {
 		second[X] = rand() % 640;
 		second[Y] = rand() % 480; 
 		*/		
-		short points[6][2] = { { 12, 366 }, { 124, 13 }, { 237, 277 }, { 348, 102 }, {460, 189 }, { 348, 277 } };		
+		double points[6][2] = { { 12, 366 }, { 124, 13 }, { 237, 277 }, { 348, 102 }, {460, 189 }, { 348, 277 } };		
 		for(t = 0.0; t < 1.0; t += 0.003) {
 			short sol[2];
 			compute_bezier_point(5, points, sol, t);
