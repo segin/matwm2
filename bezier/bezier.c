@@ -5,7 +5,7 @@ void die() {
    exit(9001);
 }
 
-void compute_subpoint(double first[2], double second[2], short *sol, double t) {
+void compute_subpoint(double first[2], double second[2], double *sol, double t) {
 	short delta[2];
 	double psol[2];
 	delta[X] = second[X] - first[X];
@@ -20,7 +20,7 @@ void compute_subpoint(double first[2], double second[2], short *sol, double t) {
 }
 
 void compute_bezier_point(short order, double ipoints[][2], short *sol, double t) {
-	double int ***npoints;
+	double ***npoints;
 	int i, j;
 	npoints = malloc(sizeof(double *) * (order + 1));
 	for (i = 0; i < (order + 1); i++) {
