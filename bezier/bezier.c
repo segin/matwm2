@@ -20,7 +20,7 @@ void compute_subpoint(double first[2], double second[2], short *sol, double t) {
 }
 
 void compute_bezier_point(short order, double ipoints[][2], short *sol, double t) {
-	short int ***npoints;
+	double int ***npoints;
 	int i, j;
 	npoints = malloc(sizeof(double *) * (order + 1));
 	for (i = 0; i < (order + 1); i++) {
