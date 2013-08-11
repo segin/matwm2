@@ -25,7 +25,7 @@ void compute_bezier_point(short order, short ipoints[][2], short *sol, double t)
 	npoints = malloc(sizeof(short *) * (order + 1));
 	for (i = 0; i < (order + 1); i++) {
 		npoints[i] = malloc(sizeof(short *) * ((order + 1) - i));
-		for(j = 0; j <= (order + 1) - i; j++) { 
+		for(j = 0; j < (order + 1) - i; j++) { 
 			npoints[i][j] = malloc(sizeof(short) * 2);
 		};
 	};
@@ -34,17 +34,17 @@ void compute_bezier_point(short order, short ipoints[][2], short *sol, double t)
 		npoints[0][i][Y] = ipoints[i][Y];
 	};
 	for (i = 0; i < order; i++) {
-		for(j = 0; j <= order - i; j++) { 
+		for(j = 0; j < order - i; j++) { 
 			compute_subpoint(npoints[i][j], npoints[i][j+1], npoints[i+1][j], t);
 		};
 	};
 	sol[X] = npoints[order][0][X];
 	sol[Y] = npoints[order][0][Y];
 	for (i = 0; i < (order + 1); i++) {
-		for(j = 0; j <= (order + 1) - i; j++) { 
-			free((void *) npoints[i][j]);
+		for(j = 0; j < (order + 1) - i; j++) { 
+			free(npoints[i][j]);
 		};
-		free((void *) npoints[i]);
+		free(npoints[i]);
 	};
 	free((void *) npoints);
 }
