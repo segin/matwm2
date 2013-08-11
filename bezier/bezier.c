@@ -19,6 +19,36 @@ void compute_subpoint(short first[2], short second[2], short *sol, double t) {
 	sol[Y] = first[Y] + psol[Y];
 }
 
+void compute_bezier_point(short order, short ipoints[][2], short *sol, double t) {
+	short int ***npoints;
+	int i, j;
+	npoints = malloc(sizeof(short *) * (order + 1));
+	for (i = 0; i < (order + 1); i++) {
+		npoints[i] = malloc(sizeof(short *) * ((order + 1) - i));
+		for(j = 0; j <= (order + 1) - i; j++) { 
+			npoints[i][j] = malloc(sizeof(short) * 2);
+		};
+	};
+	for (i = 0; i < order + 1; i++) {
+		npoints[0][i][X] = ipoints[i][X];
+		npoints[0][i][Y] = ipoints[i][Y];
+	};
+	for (i = 0; i < order; i++) {
+		for(j = 0; j <= order - i; j++) { 
+			compute_subpoint(npoints[i][j], npoints[i][j+1], npoints[i+1][j], t);
+		};
+	};
+	sol[X] = npoints[order][0][X];
+	sol[Y] = npoints[order][0][Y];
+/*	for (i = 0; i < (order + 1); i++) {
+		for(j = 0; j <= (order + 1) - i; j++) { 
+			free((void *) npoints[i][j]);
+		};
+		free((void *) npoints[i]);
+	};
+	free((void *) npoints); */
+}
+
 int main() {
 	short first[2] = { 150, 150 };
 	short second[2] = { 100, 100 };
@@ -33,7 +63,9 @@ int main() {
 	srand(time(NULL));
 
 	while (1) {
-		double t;      
+		double t;
+		/*
+		char r = rand() % 256, g = rand() % 256, b = rand() % 256;  
 		char r = rand() % 256, g = rand() % 256, b = rand() % 256;  
 		pixelColor(screen, first[X], first[Y], 0xFFFFFFFF);
 		pixelColor(screen, second[X], second[Y], 0xFFFFFFFF);
