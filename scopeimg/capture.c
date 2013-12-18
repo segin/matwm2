@@ -78,7 +78,7 @@ int getfile(int fd) {
 		time_t t = time(NULL);
 		snprintf(filename, sizeof(filename), "capture-%d.txt", (int) t);
 		fprintf(stderr, "\tReceiving '%s'\n", filename);
-		ofd = open(filename, O_RDWR | O_CREAT, 644);
+		ofd = open(filename, O_RDWR | O_CREAT, 0644);
 		if (ofd < 0)
 			goto nocreat;
 		while ((n = read(fd, buf, sizeof(buf))) > 0) {
