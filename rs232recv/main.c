@@ -19,7 +19,7 @@
 #define DEVICE_DEFAULT "/dev/ttyUSB0"
 
 int softflow = 0;
-int speed = B19200;
+int speed = B300;
 struct termios oldattr;
 
 int openterm(char *filename) {
@@ -35,8 +35,8 @@ int openterm(char *filename) {
 	tattr.c_cflag |= CLOCAL | CREAD;
 	tattr.c_lflag = 0;
 	tattr.c_oflag = 0;
-	tattr.c_cc[VTIME] = 10; /* 1 second timeout for noncanonical read */
-	tattr.c_cc[VMIN] = 0; /* 0 characters minimum for noncanonical read */
+	tattr.c_cc[VTIME] = 10; /* 1 sec timeout for noncanonical read */
+	tattr.c_cc[VMIN] = 1; /* 1 characters minimum for noncanonical read */
 	if (softflow) {
 		tattr.c_cflag &= ~CRTSCTS;
 		tattr.c_iflag |= IXON | IXOFF;
@@ -59,13 +59,13 @@ void closeterm(int fd) {
 }
 
 int getfile(int fd) {
-	char buf[512]; /* must be > 3 or segfault (look below for why) */
+	char buf[512];
 	int n;
 	{
 		int i, ofd, flen = 0;
 		char filename[128] = "capture.txt";
 		fprintf(stderr, "\tReceiving '%s'\n", filename);
-		ofd = open(filename, O_RDWR | O_CREAT, 644);
+		ofd = open(filename, O_RDWR | O_CREAT, 0644);
 		if (ofd < 0)
 			goto nocreat;
 		while ((n = read(fd, buf, sizeof(buf))) > 0) {
