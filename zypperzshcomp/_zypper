@@ -5,6 +5,8 @@
 # Copyright (C) 2013 Mattis Michel <sic_zer0@hotmail.com>
 #
 
+cache="$(HOME)/.zzccache"
+
 _zypper() {
 	if (( CURRENT > 2 )); then
 		local cmd=${words[2]}

@@ -7,13 +7,13 @@ _cache_update() {
 	for d in /var/cache/zypp/raw/*; do
 		local pkgs=$d/suse/setup/descr/packages.gz;
 		local base=${d:t}
-		rm "$cache/$base"
+		rm -f "$cache/$base"
 		if [[ -e "$pkgs" ]]; then
 			# using grep before sed really speeds things up
-			gunzip -c $pkgs | grep "^=Pkg" | sed -n 's/^=Pkg:\s\s*\([^ ]*\).*$/\1/p' >> "$cache/$base"
+			gunzip -c $pkgs | grep "^=Pkg: " | sed -n 's/^=Pkg:\s\s*\([^ ]*\).*/\1/p' >> "$cache/$base"
 		fi
 		for f in $d/repodata/*primary.xml.gz(N); do
-			gunzip -c $f | sed -n 's/.*<name>\(.*\)<\/name>.*/\1/p' >> "$cache/$base"
+			gunzip -c $f | grep "<name>" | sed -n 's/.*<name>\(.*\)<\/name>.*/\1/p' >> "$cache/$base"
 		done
 		
 		echo $base
