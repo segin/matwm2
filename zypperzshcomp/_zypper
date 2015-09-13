@@ -81,7 +81,7 @@ _cache_update() {
 					zyppercomp_pkgnames "$pkgs" >> "$cache/$base"
 				fi
 			fi
-			for f in $d/repodata/*primary.xml.gz(N); do
+			for f in $d/repodata/*-primary.xml.gz(N); do
 				#gunzip -c $f | grep "<name>" | sed -n 's/.*<name>\(.*\)<\/name>.*/\1/p' >> "$cache/$base"
 				zyppercomp_pkgnames "$f" >> "$cache/$base"
 			done

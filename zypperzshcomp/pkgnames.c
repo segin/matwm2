@@ -4,13 +4,16 @@
  * Extract package names from RPM database or suse zypper cache.
  * Because it's faster than the others.
  * Note: This is kindof a hack, and might not work under all conditions.
+ * The kind of files I'm talking about are like:
+ * /var/cache/zypp/raw/openSUSE-13.2-0/suse/setup/descr/packages.gz
+ * /var/cache/zypp/raw/repo-update/...-primary.xml.gz
  * 
  * Compiling:
  *   CFLAGS="-lz -O3" make pkgnames
  * 
  * Running:
- *   
- * 
+ *   pkgnames <filename>
+ *
  */
 
 #include <stdio.h>
