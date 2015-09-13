@@ -1,3 +1,18 @@
+/*
+ * PkgNames
+ * 
+ * Extract package names from RPM database or suse zypper cache.
+ * Because it's faster than the others.
+ * Note: This is kindof a hack, and might not work under all conditions.
+ * 
+ * Compiling:
+ *   CFLAGS="-lz -O3" make pkgnames
+ * 
+ * Running:
+ *   
+ * 
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <zlib.h>
@@ -22,12 +37,34 @@ int ispkg(char *str) {
 	return 1;
 }
 
+int isxname(char *str) {
+	if (*(str++) != '<')
+		return 0;
+	if (*(str++) != 'n')
+		return 0;
+	if (*(str++) != 'a')
+		return 0;
+	if (*(str++) != 'm')
+		return 0;
+	if (*(str++) != 'e')
+		return 0;
+	if (*(str++) != '>')
+		return 0;
+	return 1;
+}
+
 int main(int argc, char *argv[]) {
 	char *buffer = NULL;
 	int buffer_size = 0;
 	int file_size = 0;
-	
 	gzFile file;
+	
+	if (argc < 2) {
+		fprintf(stderr, "usage: %s <filename>\n", argv[0]);
+		exit(EXIT_FAILURE);
+	}
+	filename = argv[1];
+	
 	file = gzopen(filename, "r");
 	if (! file) {
 		fprintf(stderr, "gzopen of '%s' failed: %s.\n", filename, strerror(errno));
@@ -64,19 +101,31 @@ int main(int argc, char *argv[]) {
 	{
 		char *d = buffer;
 		while (*d != 0) {
+			while (*d == ' ' || *d == '\t') ++d;
 			if (ispkg(d)) {
 				char *p;
 				d += 5; /* =Pkg: */
-				while (*d == ' ' || *d == '\t')
-					++d;
+				while (*d == ' ' || *d == '\t') ++d;
 				p = d;
 				while (*d != 0 && *d != ' ' && *d != '\t' && *d != '\n')
 					++d;
 				if (*d == 0)
 					break;
 				*d = 0;
-				printf("%s\n", p);
+				printf("%s ", p);
 				++d;
+			}
+			if (isxname(d)) {
+				char *p;
+				d += 6; /* <name> */
+				p = d;
+				while (*d != 0 && *d != '<')
+					++d;
+				if (*d == 0)
+					break;
+				*d = 0;
+				printf("%s ", p);
+				++d;	
 			}
 			while (*d != 0 && *d != '\n')
 				++d;
