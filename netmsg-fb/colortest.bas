@@ -1,5 +1,0 @@
-Dim i As Integer
-For i = 0 To 15 
-	Color i
-	Print i & " ";
-Next I

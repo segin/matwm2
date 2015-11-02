@@ -1,1 +1,0 @@
-OBJS += stdlib/errno.o

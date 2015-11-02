@@ -1,9 +1,0 @@
-#!/bin/sh
-#
-#
-# Minix 3 build script for sto
-#
-
-make && make install
-
-#install -s -m 755 -S 64kw sto /usr/local/bin

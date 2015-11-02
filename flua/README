@@ -1,9 +1,0 @@
-
-This was Lua 5.2.3, released on 11 Nov 2013.
-Now it will be my attempt to make lua somewhat different.
-I want arrays to start from 0. Add facilities for scope reduction, etc.
-Maybe modify the syntax completely if practical.
-
-For installation instructions, license details, and
-further information about Lua, see doc/readme.html.
-
