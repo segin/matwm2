@@ -362,7 +362,7 @@ void client_focus_first(void) { /* to be called when focus window is lost */
 void client_action(client *c, action *act, XEvent *ev) {
 	char *a;
 	int i = 0, j = 0;
-	if(!act) /* this happens */
+	if(act == NULL) /* this happens */
 		return;
 	a = act->arg;
 	if(current)

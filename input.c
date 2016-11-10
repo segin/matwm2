@@ -102,7 +102,7 @@ action *buttonaction(int button, int is_double) {
 			case Button5:
 				return button5;
 		}
-	return A_NONE;
+	return NULL;
 }
 
 action *root_buttonaction(int root_button, int is_double) {
@@ -132,7 +132,7 @@ action *root_buttonaction(int root_button, int is_double) {
 			case Button5:
 				return root_button5;
 		}
-	return A_NONE;
+	return NULL;
 }
 
 action *keyaction(XEvent *ev) {

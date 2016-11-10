@@ -203,9 +203,9 @@ void client_grab_button(client *c, int button) {
 	action *a;
 	unsigned char na, da;
 	a = buttonaction(button, false);
-	na = a ? a->code : A_NONE;
+	na = (a != NULL) ? a->code : A_NONE;
 	a = buttonaction(button, true);
-	da = a ? a->code : A_NONE;
+	da = (a != NULL) ? a->code : A_NONE;
 	if(!(!(c->flags & CAN_MOVE) && (na == A_MOVE || na == A_EXPAND || na == A_MAXIMIZE || na == A_NONE) && (da == A_MOVE || da == A_EXPAND || da == A_MAXIMIZE || da == A_NONE)) && !(!(c->flags & CAN_RESIZE) && (na == A_RESIZE || na == A_EXPAND || na == A_MAXIMIZE || na == A_NONE) && (da == A_RESIZE || da == A_EXPAND || da == A_MAXIMIZE || da == A_NONE)) && !(!(c->flags & CAN_MOVE) && !(c->flags & CAN_RESIZE) && (na == A_MOVE || na == A_RESIZE || na == A_EXPAND || na == A_MAXIMIZE || na == A_NONE) && (da == A_MOVE || da == A_RESIZE || da == A_EXPAND || da == A_MAXIMIZE || da == A_NONE)) && !(c->flags & DONT_FOCUS && (na == A_MOVE || na == A_RESIZE || na == A_NONE) && (da == A_MOVE || da == A_RESIZE || da == A_NONE))) {
 		button_grab(c->parent, button, mousemodmask, ButtonPressMask | ButtonReleaseMask);
 		if(nosnapmodmask && (na == A_MOVE || na == A_RESIZE || da == A_MOVE || da == A_RESIZE))
