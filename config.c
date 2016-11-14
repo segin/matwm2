@@ -108,7 +108,7 @@ void cfg_parse(char *cfg, int initial) {
 	while(cfg) {
 		opt = eat(&cfg, "\n");
 		opt = eat(&opt, "#");
-  	unescape(opt);
+		unescape(opt);
 		key = eat(&opt, " \t");
 		if(opt) {
 			while(*opt == ' ' || *opt == '\t')
