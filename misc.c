@@ -18,6 +18,8 @@ void spawn(char *cmd) { /* run a command with sh -c */
 		execlp("sh", "sh", "-c", cmd, (char *) 0);
 		_exit(0);
 	}
+#else
+#warning "TODO"
 #endif
 }
 

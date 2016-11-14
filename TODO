@@ -1,5 +1,6 @@
 option to change settings for windows that match a given regex
 themes support
 write a small toolkit that can do menus and dialogs and use it to give a menu for windows etc
+fix spawn() on windows
 --release 0.2.0
 
