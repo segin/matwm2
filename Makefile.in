@@ -23,12 +23,12 @@ clean:
 	$(RM) matwm2 *.o
 
 install: matwm2
-	mkdir -p $(PREFIX)/bin $(MANDIR)/man1
-	install -s matwm2 $(PREFIX)/bin
-	install matwm2.1 $(MANDIR)/man1
+	mkdir -p $(DESTDIR)$(PREFIX)/bin $(DESTDIR)$(MANDIR)/man1
+	install -s matwm2 $(DESTDIR)$(PREFIX)/bin
+	install matwm2.1 $(DESTDIR)$(MANDIR)/man1
 
 deinstall:
-	$(RM) $(PREFIX)/bin/matwm2 $(MANDIR)/man1/matwm2.1* $(MANDIR)/cat1/matwm2.1*
+	$(RM) $(DESTDIR)$(PREFIX)/bin/matwm2 $(DESTDIR)$(MANDIR)/man1/matwm2.1* $(DESTDIR)$(MANDIR)/cat1/matwm2.1*
 
 # converts default_matwmrc into C code that can be compiled into the binary
 defcfg:
