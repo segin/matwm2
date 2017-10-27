@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
 		if(strcmp(argv[i], "-defaults") == 0) {
 			for(ui = 0; ui < DEF_CFG_LINES; ui++)
 				printf("%s\n", def_cfg[ui]);
-			return 0;
+			return EXIT_SUCCESS;
 		}
 		if(strcmp(argv[i], "-version") == 0) {
 			printf(NAME " version " VERSION "\n"
@@ -72,25 +72,25 @@ int main(int argc, char *argv[]) {
 				#endif
 				"\n"
 			);
-			return 0;
+			return EXIT_SUCCESS;
 		}
 		if(strcmp(argv[i], "-display") == 0) {
 			if(i + 1 >= argc) {
 				fprintf(stderr, NAME ": error: argument -display needs an argument\n");
-				return 1;
+				return EXIT_FAILURE;
 			}
  			dn = argv[i + 1];
 			i++;
 			continue;
 		}
 		fprintf(stderr, NAME ": error: argument %s not recognised\n", argv[i]);
-		return 1;
+		return EXIT_FAILURE;
 	}
 	/* open connection with X and aquire some important info */
 	dpy = XOpenDisplay(dn); /* if dn is NULL, XOpenDisplay() schould use the DISPLAY environment variable instead */
 	if(!dpy) {
 		fprintf(stderr, NAME ": error: can't open display \"%s\"\n", XDisplayName(dn));
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	#ifdef SYNC
 	XSynchronize(dpy, True); /* synchronise all events, useful to make output from DEBUG_EVENTS more useful */
@@ -118,7 +118,7 @@ int main(int argc, char *argv[]) {
 	cfg_read(1); /* read configuration - see config.c */
 	/* select events on the root window */
 	if(!select_root_events()) /* config has to be read before this */
-		exit(1);
+		exit(EXIT_FAILURE);
 	/* create window list window */
 	p_attr.override_redirect = True;
 	p_attr.background_pixel = fg.pixel;

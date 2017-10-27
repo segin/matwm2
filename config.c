@@ -45,7 +45,7 @@ void cfg_read(int initial) {
 	if(!font) {
 	#endif
 		fprintf(stderr, NAME ": error: font not found\n");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	/* set variables that depend on font dimensions */
 	#ifdef USE_XFT
