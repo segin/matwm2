@@ -416,21 +416,7 @@ void ewmh_update_strut(void) {
 	workarea[1] = screens[scr].y + screens[scr].ewmh_strut[2];
 	workarea[2] = (screens[scr].width - screens[scr].x) - (screens[scr].ewmh_strut[0] + screens[scr].ewmh_strut[1]);
 	workarea[3] = (screens[scr].height - screens[scr].y) - (screens[scr].ewmh_strut[2] + screens[scr].ewmh_strut[3]);
-	*/
-	
-	workarea[2] = 0;
-	workarea[3] = 0;
-	for (i = 0; i < nscreens; ++i) {
-		int x = screens[i].x + screens[i].ewmh_strut[0];
-		int y = screens[i].y + screens[i].ewmh_strut[2];
-		workarea[0] = ((workarea[0] < x) ? workarea[0] : x);
-		workarea[1] = ((workarea[1] < y) ? workarea[1] : y);
-		workarea[2] += screens[i].width - (screens[i].ewmh_strut[0] + screens[i].ewmh_strut[1]);
-		workarea[3] += screens[i].height - (screens[i].ewmh_strut[2] + screens[i].ewmh_strut[3]);
-	}
-	//printf("%d %d %d %d", screens[scr].x, screens[scr].y, screens[scr].width, screens[scr].height);
-	
-	workarea[4] = workarea[0]; /* why 4 times? ask gnome developpers, this is the only way nautilus will listen to it */
+	workarea[4] = workarea[0]; // why 4 times? ask gnome developpers, this is the only way nautilus will listen to it
 	workarea[5] = workarea[1];
 	workarea[6] = workarea[2];
 	workarea[7] = workarea[3];
@@ -442,6 +428,22 @@ void ewmh_update_strut(void) {
 	workarea[13] = workarea[1];
 	workarea[14] = workarea[2];
 	workarea[15] = workarea[3];
+	*/
+	
+	for (i = 0; i < nscreens && i < 4; ++i) {
+		workarea[4 * i + 0] = screens[i].x + screens[i].ewmh_strut[0];
+		workarea[4 * i + 1] = screens[i].y + screens[i].ewmh_strut[2];
+		workarea[4 * i + 2] = screens[i].width - (screens[i].ewmh_strut[0] + screens[i].ewmh_strut[1]);
+		workarea[4 * i + 3] = screens[i].height - (screens[i].ewmh_strut[2] + screens[i].ewmh_strut[3]);
+	}
+	for (; i < 4; ++i) {
+		workarea[4 * i + 0] = 0;
+		workarea[4 * i + 1] = 0;
+		workarea[4 * i + 2] = 0;
+		workarea[4 * i + 3] = 0;
+	}
+	//printf("%d %d %d %d", screens[scr].x, screens[scr].y, screens[scr].width, screens[scr].height);
+	
 	XChangeProperty(dpy, root, ewmh_atoms[NET_WORKAREA], XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &workarea, sizeof(workarea) / sizeof(long));
 	for(i = 0; i < cn; i++)
 		client_update(clients[i]);
