@@ -433,8 +433,8 @@ void ewmh_update_strut(void) {
 	for (i = 0; i < nscreens && i < 4; ++i) {
 		workarea[4 * i + 0] = screens[i].x + screens[i].ewmh_strut[0];
 		workarea[4 * i + 1] = screens[i].y + screens[i].ewmh_strut[2];
-		workarea[4 * i + 2] = screens[i].width - (screens[i].ewmh_strut[0] + screens[i].ewmh_strut[1]);
-		workarea[4 * i + 3] = screens[i].height - (screens[i].ewmh_strut[2] + screens[i].ewmh_strut[3]);
+		workarea[4 * i + 2] = workarea[4 * i + 0] + screens[i].width - (screens[i].ewmh_strut[0] + screens[i].ewmh_strut[1]);
+		workarea[4 * i + 3] = workarea[4 * i + 0] + screens[i].height - (screens[i].ewmh_strut[2] + screens[i].ewmh_strut[3]);
 	}
 	for (; i < 4; ++i) {
 		workarea[4 * i + 0] = 0;
