@@ -410,11 +410,26 @@ void ewmh_update_strut(void) {
 			screens[clients[i]->screen].ewmh_strut[3] += data[3] - (screens_bottom() - (screens[clients[i]->screen].y + screens[clients[i]->screen].height));
 		XFree((void *) p);
 	}
+	/* This is the old code, i have no idea what i was thinking back then.
 	scr = (ewmh_screen < nscreens) ? ewmh_screen : nscreens - 1;
 	workarea[0] = screens[scr].x + screens[scr].ewmh_strut[0];
-	workarea[1] = screens[scr].x + screens[scr].ewmh_strut[2];
+	workarea[1] = screens[scr].y + screens[scr].ewmh_strut[2];
 	workarea[2] = (screens[scr].width - screens[scr].x) - (screens[scr].ewmh_strut[0] + screens[scr].ewmh_strut[1]);
 	workarea[3] = (screens[scr].height - screens[scr].y) - (screens[scr].ewmh_strut[2] + screens[scr].ewmh_strut[3]);
+	*/
+	
+	workarea[2] = 0;
+	workarea[3] = 0;
+	for (i = 0; i < nscreens; ++i) {
+		int x = screens[i].x + screens[i].ewmh_strut[0];
+		int y = screens[i].y + screens[i].ewmh_strut[2];
+		workarea[0] = ((workarea[0] < x) ? workarea[0] : x);
+		workarea[1] = ((workarea[1] < y) ? workarea[1] : y);
+		workarea[2] += screens[i].width - (screens[i].ewmh_strut[0] + screens[i].ewmh_strut[1]);
+		workarea[3] += screens[i].height - (screens[i].ewmh_strut[2] + screens[i].ewmh_strut[3]);
+	}
+	//printf("%d %d %d %d", screens[scr].x, screens[scr].y, screens[scr].width, screens[scr].height);
+	
 	workarea[4] = workarea[0]; /* why 4 times? ask gnome developpers, this is the only way nautilus will listen to it */
 	workarea[5] = workarea[1];
 	workarea[6] = workarea[2];
