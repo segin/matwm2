@@ -194,55 +194,55 @@ unset defines
 echo "processing command line arguments..."
 for opt in "$@"; do
 	case $opt in
-	--prefix=*)         prefix="`echo ${opt} | cut -d '=' -f 2`"
-	                    echo "	prefix explicitly set to $prefix";;
-	--mandir=*)         mandir="`echo ${opt} | cut -d '=' -f 2`"
-	                    echo "	man directory explicitly set to $mandir";;
-	--cc=*)             cc="`echo ${opt} | cut -d '=' -f 2`"
-	                    echo "	compiler explicitly set to $cc";;
-	--rm=*)             rm="`echo ${opt} | cut -d '=' -f 2`"
-	                    echo "	rm command explicitly set to $rm";;
-	--cflags=*)         opta="`echo ${opt} | cut -d '=' -f 2`"
-	                    cflags="${cflags} ${opta}"
-	                    echo "	added extra cflags '$opta'";;
-	--defines=*)        opta="`echo ${opt} | cut -d '=' -f 2`"
-	                    defines="${defines} ${opta}"
-	                    echo "	added extra defines '$opta'";;
-	--ldflags=*)        opta="`echo ${opt} | cut -d '=' -f 2`"
-	                    ldflags="${ldflags} ${opta}"
-	                    echo "	added extra ldflags '$opta'";;
-	--libs=*)           opta="`echo ${opt} | cut -d '=' -f 2`"
-	                    libs="${libs} ${opta}"
-	                    echo "	added extra -l flags '$opta'";;
-	--disable-shape)    shape="no"
-	                    echo "	shaped windows support explicitly disabled";;
-	--disable-xinerama) xinerama="no"
-	                    echo "	xinerama support explicitly disabled";;
-	--disable-xft)      xft="no"
-	                    echo "	Xft support explicitly disabled";;
-	--disable-vfork)    vfork="no"
-	                    echo "	use of vfork system call explicitly disabled";;
-	--enable-debug)     debug="yes"
-	                    echo "	debugging output enabled explicitly";;
-	--disable-pkg-conf) pkgconfig="no"
-	                    echo "	use of pkg-config disabled";;
-	--force-x11)        forcex11="yes"
-	                    echo "	use of pkg-config for x11 overridden";;
-	--force-shape)      forceshape="yes"
-	                    echo "	use of pkg-config for xext overridden";;
-	--force-xinerama)   forcexinerama="yes"
-	                    echo "	use of pkg-config for xinerama overridden";;
-	--force-xft)        forcexinerama="yes"
-	                    echo "	use of pkg-config for xft overridden";;
-	--force-all)        forceall="yes"
-	                    echo "	all use of pkg-config disabled";;
-	-h)                 usage
-	                    exit;;
-	--help)             usage
-	                    exit;;
-	*)                  echo "	error: invalid argument \"$opt\""
-	                    echo "	run '${0} --help' for more info"
-	                    exit 1;;
+		--prefix=*)         prefix="`echo ${opt} | cut -d '=' -f 2`"
+		                    echo "	prefix explicitly set to $prefix";;
+		--mandir=*)         mandir="`echo ${opt} | cut -d '=' -f 2`"
+		                    echo "	man directory explicitly set to $mandir";;
+		--cc=*)             cc="`echo ${opt} | cut -d '=' -f 2`"
+		                    echo "	compiler explicitly set to $cc";;
+		--rm=*)             rm="`echo ${opt} | cut -d '=' -f 2`"
+		                    echo "	rm command explicitly set to $rm";;
+		--cflags=*)         opta="`echo ${opt} | cut -d '=' -f 2`"
+		                    cflags="${cflags} ${opta}"
+		                    echo "	added extra cflags '$opta'";;
+		--defines=*)        opta="`echo ${opt} | cut -d '=' -f 2`"
+		                    defines="${defines} ${opta}"
+		                    echo "	added extra defines '$opta'";;
+		--ldflags=*)        opta="`echo ${opt} | cut -d '=' -f 2`"
+		                    ldflags="${ldflags} ${opta}"
+		                    echo "	added extra ldflags '$opta'";;
+		--libs=*)           opta="`echo ${opt} | cut -d '=' -f 2`"
+		                    libs="${libs} ${opta}"
+		                    echo "	added extra -l flags '$opta'";;
+		--disable-shape)    shape="no"
+		                    echo "	shaped windows support explicitly disabled";;
+		--disable-xinerama) xinerama="no"
+		                    echo "	xinerama support explicitly disabled";;
+		--disable-xft)      xft="no"
+		                    echo "	Xft support explicitly disabled";;
+		--disable-vfork)    vfork="no"
+		                    echo "	use of vfork system call explicitly disabled";;
+		--enable-debug)     debug="yes"
+		                    echo "	debugging output enabled explicitly";;
+		--disable-pkg-conf) pkgconfig="no"
+		                    echo "	use of pkg-config disabled";;
+		--force-x11)        forcex11="yes"
+		                    echo "	use of pkg-config for x11 overridden";;
+		--force-shape)      forceshape="yes"
+		                    echo "	use of pkg-config for xext overridden";;
+		--force-xinerama)   forcexinerama="yes"
+		                    echo "	use of pkg-config for xinerama overridden";;
+		--force-xft)        forcexinerama="yes"
+		                    echo "	use of pkg-config for xft overridden";;
+		--force-all)        forceall="yes"
+		                    echo "	all use of pkg-config disabled";;
+		-h)                 usage
+		                    exit;;
+		--help)             usage
+		                    exit;;
+		*)                  echo "	error: invalid argument \"$opt\""
+		                    echo "	run '${0} --help' for more info"
+		                    exit 1;;
 	esac
 done
 
