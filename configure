@@ -145,9 +145,9 @@ usage() {
 	echo "	--cc=[cc]                Set the compiler"
 	echo "	--rm=[rm -f]             Set the command to delete files"
 	echo
-	echo "	--cflags                 Set extra compiler flags"
-	echo "	--ldflags                Set extra library search path flags"
-	echo "	--libs                   Set extra library flags"
+	echo "	--cflags=[cflags]        Add extra compiler flags"
+	echo "	--ldflags=[ldflags]      Add extra library search path flags"
+	echo "	--libs=[libs]            Add extra library flags"
 	echo
 	echo "	--disable-shape          Disable support for shaped windows (and use of xext)"
 	echo "	--disable-xinerama       Disable support for xinerama"
@@ -192,24 +192,28 @@ unset defines
 
 # process command line arguments
 echo "processing command line arguments..."
-for opt in $*; do
+for opt in "$@"; do
 	case $opt in
-	--prefix=*)         prefix=`echo ${opt} | cut -d '=' -f 2`
+	--prefix=*)         prefix="`echo ${opt} | cut -d '=' -f 2`"
 	                    echo "	prefix explicitly set to $prefix";;
-	--mandir=*)         mandir=`echo ${opt} | cut -d '=' -f 2`
+	--mandir=*)         mandir="`echo ${opt} | cut -d '=' -f 2`"
 	                    echo "	man directory explicitly set to $mandir";;
-	--cc=*)             cc=`echo ${opt} | cut -d '=' -f 2`
+	--cc=*)             cc="`echo ${opt} | cut -d '=' -f 2`"
 	                    echo "	compiler explicitly set to $cc";;
-	--rm=*)             rm=`echo ${opt} | cut -d '=' -f 2`
+	--rm=*)             rm="`echo ${opt} | cut -d '=' -f 2`"
 	                    echo "	rm command explicitly set to $rm";;
-	--cflags=*)         cflags="${cflags} `echo ${opt} | cut -d '=' -f 2`"
-	                    echo "	extra cflags set to '$cflags'";;
-	--defines=*)        defines="${defines} `echo ${opt} | cut -d '=' -f 2`"
-	                    echo "	extra defines set to '$defines'";;
-	--ldflags=*)        ldflags="${ldflags} `echo ${opt} | cut -d '=' -f 2`"
-	                    echo "	extra ldflags set to '$ldflags'";;
-	--libs=*)           libs="${libs} `echo ${opt} | cut -d '=' -f 2`"
-	                    echo "	extra -l flags set to '$libs'";;
+	--cflags=*)         opta="`echo ${opt} | cut -d '=' -f 2`"
+	                    cflags="${cflags} ${opta}"
+	                    echo "	added extra cflags '$opta'";;
+	--defines=*)        opta="`echo ${opt} | cut -d '=' -f 2`"
+	                    defines="${defines} ${opta}"
+	                    echo "	added extra defines '$opta'";;
+	--ldflags=*)        opta="`echo ${opt} | cut -d '=' -f 2`"
+	                    ldflags="${ldflags} ${opta}"
+	                    echo "	added extra ldflags '$opta'";;
+	--libs=*)           opta="`echo ${opt} | cut -d '=' -f 2`"
+	                    libs="${libs} ${opta}"
+	                    echo "	added extra -l flags '$opta'";;
 	--disable-shape)    shape="no"
 	                    echo "	shaped windows support explicitly disabled";;
 	--disable-xinerama) xinerama="no"
@@ -238,7 +242,7 @@ for opt in $*; do
 	                    exit;;
 	*)                  echo "	error: invalid argument \"$opt\""
 	                    echo "	run '${0} --help' for more info"
-											exit 1;;
+	                    exit 1;;
 	esac
 done
 

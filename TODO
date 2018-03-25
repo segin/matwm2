@@ -1,4 +1,3 @@
-BUG: spaces in extra ldflags for compile script not working
 option to change settings for windows that match a given regex
 themes support
 write a small toolkit that can do menus and dialogs and use it to give a menu for windows etc
