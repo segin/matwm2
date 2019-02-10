@@ -312,7 +312,6 @@ if [ "$forceall" = "no" ]; then
 			echo "not found"
 			echo "disabling use of pkg-config"
 			pkgconfig="no"
-			exit 1
 		fi
 	fi
 
