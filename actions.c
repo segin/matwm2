@@ -465,7 +465,6 @@ void client_action(client *c, action *act, XEvent *ev) {
 				desktop_goto(desktop - 1);
 			return;
 		case A_QUIT:
-			exit(EXIT_FAILURE); /* Why does this exit 1, I forgot what this does */
-			return;
+			exit(EXIT_SUCCESS);
 	}
 }
