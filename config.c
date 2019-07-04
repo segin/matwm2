@@ -440,6 +440,7 @@ unsigned int str_modifier(char *name) {
 
 void str_action(char *str, action **ret) {
 	char *act = eat(&str, " \t");
+	size_t len;
 	free(*ret);
 	*ret = _malloc(sizeof(action));
 	if(strcmp(act, "next") == 0)
@@ -492,8 +493,9 @@ void str_action(char *str, action **ret) {
 	if(str) {
 		while(*str == ' ' || *str == '\t')
 			str++;
-		(*ret)->arg = (char *) _malloc(strlen(str) + 1);
-		strncpy((*ret)->arg, str, strlen(str) + 1);
+		len = strlen(str) + 1;
+		(*ret)->arg = (char *) _malloc(len);
+		strncpy((*ret)->arg, str, len);
 	} else if((*ret)->code == A_EXEC) {
 		free(*ret);
 		*ret = NULL;
