@@ -207,7 +207,6 @@ void quit(void) {
 
 void sighandler(int sig) {
 	XEvent ev;
-	Window sh_root;
 	Display *sh_display;
 	int status;
 #ifndef _WIN32
@@ -222,7 +221,6 @@ void sighandler(int sig) {
 		fprintf(stderr, "\tsomething went horribly wrong, if you are trying to quit: use SIGKILL instead\n");
 		return;
 	}
-	sh_root = RootWindow(sh_display, DefaultScreen(sh_display));
 	ev.type = ClientMessage;
 	ev.xclient.window = wlist;
 	ev.xclient.message_type = XInternAtom(sh_display, XA_INTERNAL_MESSAGE, False);
