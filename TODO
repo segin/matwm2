@@ -3,4 +3,5 @@ themes support
 write a small toolkit that can do menus and dialogs and use it to give a menu for windows etc
 fix spawn() on windows
 --release 0.2.0
+action to center windows (or perhaps more flexible feature that allows this)
 
