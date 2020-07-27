@@ -146,7 +146,7 @@ void wlist_item_draw(client *c) {
 	if(xftfont) {
 		XClearWindow(dpy, c->wlist_item);
 		if(c->ewmh_name)
-		  XftDrawStringUtf8(c->wlist_draw, (c == current) ? &xftfg : &xftifg, xftfont, wlist_margin + (center_wlist_items ? center : 0), wlist_margin + xftfont->ascent, (unsigned char *) c->ewmh_name, strlen(c->ewmh_name));
+			XftDrawStringUtf8(c->wlist_draw, (c == current) ? &xftfg : &xftifg, xftfont, wlist_margin + (center_wlist_items ? center : 0), wlist_margin + xftfont->ascent, (unsigned char *) c->ewmh_name, strlen(c->ewmh_name));
 		else XftDrawString8(c->wlist_draw, (c == current) ? &xftfg : &xftifg, xftfont, wlist_margin + (center_wlist_items ? center : 0), wlist_margin + xftfont->ascent, (unsigned char *) c->name, strlen(c->name));
 	} else
 	#endif
