@@ -1,5 +1,6 @@
 0.1.3:
 	no longer use A_NONE as null pointer equivalent (shouldn't make a difference unless your platform doesn't use ((void *)0) as NULL, which is unlikely)
+	handle NET_WM_WINDOW_TYPE_NOTIFICATION
 
 0.1.2:
 	take into account the action with NET_WM_STATE messages for NET_WM_STATE_ABOVE and NET_WM_STATE_BELOW

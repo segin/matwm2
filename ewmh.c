@@ -33,6 +33,7 @@ void ewmh_initialize(void) {
 	ewmh_atoms[NET_WM_WINDOW_TYPE] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
 	ewmh_atoms[NET_WM_WINDOW_TYPE_DESKTOP] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DESKTOP", False);
 	ewmh_atoms[NET_WM_WINDOW_TYPE_DOCK] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DOCK", False);
+	ewmh_atoms[NET_WM_WINDOW_TYPE_NOTIFICATION] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_NOTIFICATION", False);
 	ewmh_atoms[NET_WM_ALLOWED_ACTIONS] = XInternAtom(dpy, "_NET_WM_ALLOWED_ACTIONS", False);
 	ewmh_atoms[NET_WM_ACTION_MINIMIZE] = XInternAtom(dpy, "_NET_WM_ACTION_MINIMIZE", False);
 	ewmh_atoms[NET_WM_ACTION_CLOSE] = XInternAtom(dpy, "_NET_WM_ACTION_CLOSE", False);
@@ -279,6 +280,10 @@ void ewmh_get_hints(client *c) {
 				c->screen = ewmh_screen;
 				if(taskbar_ontop)
 					c->layer = TOP;
+			}
+			if(data == ewmh_atoms[NET_WM_WINDOW_TYPE_NOTIFICATION]) {
+				c->flags ^= c->flags & (CAN_MOVE | CAN_RESIZE | HAS_BORDER | HAS_TITLE);
+				c->flags |= NO_STRUT | DONT_LIST | DONT_FOCUS;
 			}
 			if(data == ewmh_atoms[KDE_NET_WM_WINDOW_TYPE_OVERRIDE])
 				c->flags |= DONT_LIST | NO_STRUT;
