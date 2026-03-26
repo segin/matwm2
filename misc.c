@@ -11,7 +11,11 @@
 
 void spawn(char *cmd) { /* run a command with sh -c */
 #ifndef _WIN32
+#ifdef HAVE_VFORK
 	if(vfork() == 0) {
+#else
+	if(fork() == 0) {
+#endif
 		setsid();
 		if(dn)
 			setenv("DISPLAY", dn, 1);

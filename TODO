@@ -1,6 +1,5 @@
 fix/rewrite focus system
 go through bugs and figure out why i have 2 changelog files (merge them or just ditch in favor of git log?)
-make vfork optional and implement spawn with normal fork()
 (optional) resize method that allows picking corners other than bottom right
 option to change settings for windows that match a given regex
 themes support
