@@ -376,7 +376,6 @@ void client_over_fullscreen(client *c) { /* help a window getting above fullscre
 }
 
 void clients_alloc(void) { /* to make sure enough memory is allocated for cn clients */
-	client **newptr;
 	if(!cn) {
 		free(clients);
 		free(stacking);
@@ -384,8 +383,6 @@ void clients_alloc(void) { /* to make sure enough memory is allocated for cn cli
 		stacking = NULL;
 		return;
 	}
-	newptr = (client **) _realloc((void *) clients, cn * sizeof(client *));
-	clients = newptr;
-	newptr = (client **) _realloc((void *) stacking, cn * sizeof(client *));
-	stacking = newptr;
+	clients = (client **) _realloc((void *) clients, cn * sizeof(client *));
+	stacking = (client **) _realloc((void *) stacking, cn * sizeof(client *));
 }
