@@ -1,6 +1,7 @@
 fix/rewrite focus system
 go through bugs and figure out why i have 2 changelog files (merge them or just ditch in favor of git log?)
 (optional) resize method that allows picking corners other than bottom right
+squint over config_reinit and make sure it doesn't leak memory and properly reinitializes everything
 option to change settings for windows that match a given regex
 themes support
 write a small toolkit that can do menus and dialogs and use it to give a menu for windows etc
