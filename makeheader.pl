@@ -5,25 +5,17 @@
 use strict;
 use warnings;
 
-my $level = 0;
-my $w = 0;
-
 sub chkifdef {
 	my ($line, $stack) = @_;
-	if($level && ($line =~ m/^#else/ || $line =~ m/^#endif/)) {
+	if ($line =~ m/^#ifn?def/ || $line =~ m/^#else/) {
+		push(@{$stack}, $line);
+	} elsif ($line =~ m/^#endif/) {
+		pop(@{$stack}) if(${$stack}[$#{$stack}] && ${$stack}[$#{$stack}] =~ m/^#else/);
 		if(${$stack}[$#{$stack}] && ${$stack}[$#{$stack}] =~ m/^#ifn?def/) {
 			pop(@{$stack});
-			$w++ if($line =~ m/^#else/);
-		} elsif(!($line =~ m/^#endif/ && $w)) {
-			push(@{$stack}, $line);
 		} else {
-			$w--;
+			push(@{$stack}, $line);
 		}
-		$level-- if($line =~ m/^#endif/);
-	}
-	if($line =~ m/^#ifn?def/) {
-		push(@{$stack}, $line);
-		$level++;
 	}
 }
 
@@ -38,27 +30,27 @@ foreach(readdir DIR) {
 	my @file = <F>;
 	close F;
 	my @gv;
-	foreach(@file) {
+	foreach (@file) {
 		&chkifdef($_, \@gv);
-		if(s/^([\n\w]+\s+[\s\*\n\w\W\_\-\(\)\[\],=]+;).*$/$1/gi) {
+		if (s/^([\n\w]+\s+[\s\*\n\w\W\_\-\(\)\[\],=]+;).*$/$1/gi) {
 			s/\s*=.+?([,;])/$1/g;
 			push(@gv, "extern $_");
 		}
 	}
-	if(@gv) {
+	if (@gv) {
 		print H "/* global variables from $_ */\n";
 		print H @gv;
 		print H "\n";
 	}
 	my @f;
-	foreach(@file) {
+	foreach (@file) {
 		&chkifdef($_, \@f);
-		if(s/^([\n\w]+\s+[\s\*\n\w\_\-\(\)\[\]]+\(.*\))\s*{.*$/$1/gi) {
+		if (s/^([\n\w]+\s+[\s\*\n\w\_\-\(\)\[\]]+\(.*\))\s*{.*$/$1/gi) {
 			chomp;
 			push(@f, "$_;\n");
 		}
 	}
-	if(@f) {
+	if (@f) {
 		print H "/* functions from $_ */\n";
 		print H @f;
 		print H "\n";
