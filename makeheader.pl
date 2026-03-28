@@ -7,11 +7,11 @@ use warnings;
 
 sub chkifdef {
 	my ($line, $stack) = @_;
-	if ($line =~ m/^#ifn?def/ || $line =~ m/^#else/) {
+	if ($line =~ m/^\s*#ifn?def\s|^\s*#if\s/ || $line =~ m/^\s*#else/) {
 		push(@{$stack}, $line);
-	} elsif ($line =~ m/^#endif/) {
-		pop(@{$stack}) if(${$stack}[$#{$stack}] && ${$stack}[$#{$stack}] =~ m/^#else/);
-		if(${$stack}[$#{$stack}] && ${$stack}[$#{$stack}] =~ m/^#ifn?def/) {
+	} elsif ($line =~ m/^\s*#endif/) {
+		pop(@{$stack}) if(${$stack}[$#{$stack}] && ${$stack}[$#{$stack}] =~ m/^\s*#else/);
+		if(${$stack}[$#{$stack}] && ${$stack}[$#{$stack}] =~ m/^\s*#ifn?def\s|^\s*#if\s/) {
 			pop(@{$stack});
 		} else {
 			push(@{$stack}, $line);
